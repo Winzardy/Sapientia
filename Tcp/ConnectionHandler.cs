@@ -102,16 +102,6 @@ namespace Sapientia.Tcp
 			return false;
 		}
 
-		internal void Update()
-		{
-			if (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
-				return;
-
-			DisconnectClosedConnections();
-
-			_state = (int)State.Free;
-		}
-
 		internal void AcceptConnection(Socket connectionSocket)
 		{
 			while (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
@@ -136,6 +126,16 @@ namespace Sapientia.Tcp
 
 			Interlocked.Increment(ref _nextConnectionId);
 			Interlocked.Increment(ref _newConnectionsCount);
+			_state = (int)State.Free;
+		}
+
+		internal void Update()
+		{
+			if (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
+				return;
+
+			DisconnectClosedConnections();
+
 			_state = (int)State.Free;
 		}
 

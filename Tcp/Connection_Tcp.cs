@@ -134,7 +134,7 @@ namespace Sapientia.Tcp
 		internal void Disconnect()
 		{
 			_receiveMessageSender.Dispose();
-			_socket.Close();
+			_socket?.Close();
 
 			Reset();
 		}

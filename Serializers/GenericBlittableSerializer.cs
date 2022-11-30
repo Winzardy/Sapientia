@@ -43,6 +43,13 @@ namespace Sapientia.Serializers
 			return Deserialize<T>(reader.DequeueData(sizeof(T)));
 		}
 
+		public static T Receive<T>(this ref Span<byte> span) where T : unmanaged
+		{
+			var valueSlice = span.Slice(0, sizeof(T));
+			span = span.Slice(sizeof(T), span.Length - sizeof(T));
+			return valueSlice.Deserialize<T>();
+		}
+
 		public static T Receive<T>(this Socket socket) where T : unmanaged
 		{
 			Span<byte> span = stackalloc byte[sizeof(T)];

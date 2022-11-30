@@ -26,14 +26,13 @@ namespace Sapientia.Tcp
 		public readonly int messageCapacity;
 		public readonly int messageDataCapacity;
 
-		private Socket _serverSocket;
-		private volatile int _state;
-
-		private IAsyncResult _currentAccepting;
-
 		public readonly ConnectionHandler connectionHandler;
 		public readonly SendingHandler sendingHandler;
 		public readonly ReceivingHandler receivingHandler;
+
+		private Socket _serverSocket;
+
+		private volatile int _state;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public State GetState() => _state.ToEnum<State>();
@@ -52,7 +51,7 @@ namespace Sapientia.Tcp
 			sendingHandler = new SendingHandler(connectionHandler, messageDataCapacity, poolCapacity);
 			receivingHandler = new ReceivingHandler(connectionHandler, messageDataCapacity, poolCapacity);
 
-			_state = 0;
+			_state = (int)State.Initialized;
 
 			Initialize();
 		}
@@ -107,12 +106,11 @@ namespace Sapientia.Tcp
 		private void EndAccepting()
 		{
 			_state.Interlocked_RemoveIntFlag_ReturnInt(State.Accepting);
-			_currentAccepting?.AsyncWaitHandle?.Dispose();
 		}
 
 		private void Accepting()
 		{
-			_currentAccepting = _serverSocket.BeginAccept(messageCapacity, OnAccepted, null);
+			_serverSocket.BeginAccept(messageDataCapacity, OnAccepted, null);
 		}
 
 		private void OnAccepted(IAsyncResult asyncResult)
@@ -159,8 +157,8 @@ namespace Sapientia.Tcp
 
 			var socket = (Socket)asyncResult.AsyncState!;
 			var connectionData = GetConnectionData();
-
 			var sendData = connectionData.Reader.Serialize();
+
 			socket.Send(sendData);
 			socket.EndConnect(asyncResult);
 
