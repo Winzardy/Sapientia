@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using Sapientia.Collections.ByteReader;
 
 namespace Sapientia.Transport.RemoteMessage
