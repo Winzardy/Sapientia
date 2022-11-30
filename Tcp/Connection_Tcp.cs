@@ -1,11 +1,10 @@
 ﻿using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using Fusumity.Transport;
-using Fusumity.Transport.RemoteMessage;
-using Fusumity.Collections.ByteReader;
-using Fusumity.Serializers;
+using Sapientia.Serializers;
+using Sapientia.Transport;
+using Sapientia.Transport.RemoteMessage;
 
-namespace Fusumity.Tcp
+namespace Sapientia.Tcp
 {
 	public class Connection_Tcp
 	{
@@ -79,7 +78,7 @@ namespace Fusumity.Tcp
 
 					_countToReceive = _socket.Receive<int>();
 
-					if (_countToReceive > receiveMessageStack.messageCapacity | _countToReceive <= 0)
+					if (_countToReceive > receiveMessageStack.messageDataCapacity | _countToReceive <= 0)
 					{
 						return;
 					}
@@ -100,7 +99,7 @@ namespace Fusumity.Tcp
 
 					if (++_messagesCount == _maxMessagesCount)
 					{
-						// Server overload
+						// Server_OLD overload
 						if (_state == ConnectionState.Closing)
 						{
 							_state = ConnectionState.Disconnecting;

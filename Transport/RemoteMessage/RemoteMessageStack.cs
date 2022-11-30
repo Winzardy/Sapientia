@@ -1,12 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
-using Fusumity.Collections;
-using Fusumity.Collections.ByteReader;
+using Sapientia.Collections;
+using Sapientia.Collections.ByteReader;
 
-namespace Fusumity.Transport.RemoteMessage
+namespace Sapientia.Transport.RemoteMessage
 {
 	public class RemoteMessageStack
 	{
-		public readonly int messageCapacity;
+		public readonly int messageDataCapacity;
 
 		private ByteReaderPool _readerPool;
 
@@ -30,13 +30,16 @@ namespace Fusumity.Transport.RemoteMessage
 			get => _readerPool.AllocatedCount;
 		}
 
-		internal RemoteMessageStack(int messageCapacity, int poolCapacity, int poolCount) : this(messageCapacity, poolCapacity, poolCount, poolCount) {}
-
-		internal RemoteMessageStack(int messageCapacity, int poolCapacity, int poolCount, int poolCountExpandStep)
+		internal RemoteMessageStack(int messageDataCapacity, int poolCapacity, int poolCount) : this(messageDataCapacity,
+			poolCapacity, poolCount, poolCount)
 		{
-			this.messageCapacity = messageCapacity;
+		}
 
-			_readerPool = new ByteReaderPool(messageCapacity, poolCapacity, poolCount, poolCountExpandStep);
+		internal RemoteMessageStack(int messageDataCapacity, int poolCapacity, int poolCount, int poolCountExpandStep)
+		{
+			this.messageDataCapacity = messageDataCapacity;
+
+			_readerPool = new ByteReaderPool(messageDataCapacity, poolCapacity, poolCount, poolCountExpandStep);
 			_buffer = new CircularBuffer<RemoteMessage>(poolCapacity);
 		}
 
@@ -75,6 +78,12 @@ namespace Fusumity.Transport.RemoteMessage
 		internal ByteReaderPool.Element AllocateReader()
 		{
 			return _readerPool.AllocateWithExpand();
+		}
+
+		public void Dispose()
+		{
+			_readerPool.Dispose();
+			_buffer.Dispose();
 		}
 	}
 }

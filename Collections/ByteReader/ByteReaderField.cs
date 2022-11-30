@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Sapientia.Collections.ByteReader
@@ -7,7 +6,7 @@ namespace Sapientia.Collections.ByteReader
 	public class ByteReaderField : IDisposable
 	{
 		public readonly int poolCountExpandStep;
-		public readonly int elementCapacity;
+		public readonly int elementDataCapacity;
 		public readonly int poolCapacity;
 
 		private SimpleList<IntPtr> _poolsPointers;
@@ -25,17 +24,17 @@ namespace Sapientia.Collections.ByteReader
 			get => _poolsPointers.Count;
 		}
 
-		public ByteReaderField(int elementCapacity, int poolCapacity, int poolCount) : this(elementCapacity,
+		public ByteReaderField(int elementDataCapacity, int poolCapacity, int poolCount) : this(elementDataCapacity,
 			poolCapacity, poolCount, poolCount)
 		{
 		}
 
-		public ByteReaderField(int elementCapacity, int poolCapacity, int poolCount, int poolCountExpandStep)
+		public ByteReaderField(int elementDataCapacity, int poolCapacity, int poolCount, int poolCountExpandStep)
 		{
 			_poolsPointers = new SimpleList<IntPtr>(poolCount);
 			_readerField = new SimpleList<ByteReader>(poolCount * poolCapacity);
 
-			this.elementCapacity = elementCapacity;
+			this.elementDataCapacity = elementDataCapacity;
 			this.poolCapacity = poolCapacity;
 			this.poolCountExpandStep = poolCountExpandStep;
 
@@ -56,13 +55,13 @@ namespace Sapientia.Collections.ByteReader
 		{
 			while (_poolsPointers.Count < _poolsPointers.Capacity)
 			{
-				_poolsPointers.Add(Marshal.AllocHGlobal(elementCapacity * poolCapacity));
+				_poolsPointers.Add(Marshal.AllocHGlobal(elementDataCapacity * poolCapacity));
 
 				var ptr = _poolsPointers.Last;
 				for (var i = 0; i < poolCapacity; i++)
 				{
-					_readerField.Add(new ByteReader(ptr, elementCapacity));
-					ptr += elementCapacity;
+					_readerField.Add(new ByteReader(ptr, elementDataCapacity));
+					ptr += elementDataCapacity;
 				}
 			}
 		}

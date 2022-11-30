@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Sapientia.Collections.ByteReader
@@ -47,6 +48,8 @@ namespace Sapientia.Collections.ByteReader
 
 		public ByteReader(byte* ptr, int capacity)
 		{
+			Debug.Assert(capacity > _headerSize);
+
 			_bufferPtr = ptr;
 			_readPtrPtr = (byte**)ptr;
 			_countPtr = (int*)(ptr + _readPtrSize);

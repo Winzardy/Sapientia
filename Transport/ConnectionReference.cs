@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Fusumity.Transport
+namespace Sapientia.Transport
 {
 	public readonly struct ConnectionReference
 	{

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using Fusumity.Collections.ByteReader;
+﻿using System.Runtime.CompilerServices;
+using Sapientia.Collections.ByteReader;
 
-namespace Fusumity.Transport.RemoteMessage
+namespace Sapientia.Transport.RemoteMessage
 {
 	public struct RemoteMessage : IDisposable
 	{

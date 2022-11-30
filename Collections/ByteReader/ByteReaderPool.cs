@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace Sapientia.Collections.ByteReader
 {
@@ -20,14 +19,14 @@ namespace Sapientia.Collections.ByteReader
 			get => _allocatedCount;
 		}
 
-		public ByteReaderPool(int elementCapacity, int poolCapacity, int poolCount) : this(elementCapacity,
+		public ByteReaderPool(int elementDataCapacity, int poolCapacity, int poolCount) : this(elementDataCapacity,
 			poolCapacity, poolCount, poolCount)
 		{
 		}
 
-		public ByteReaderPool(int elementCapacity, int poolCapacity, int poolCount, int poolCountExpandStep)
+		public ByteReaderPool(int elementDataCapacity, int poolCapacity, int poolCount, int poolCountExpandStep)
 		{
-			_pool = new ByteReaderField(elementCapacity, poolCapacity, poolCount, poolCountExpandStep);
+			_pool = new ByteReaderField(elementDataCapacity, poolCapacity, poolCount, poolCountExpandStep);
 			_allocatedCount = 0;
 		}
 
