@@ -8,10 +8,17 @@ namespace Sapientia.Serializers
 	public static class StringSerializer
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Serialize_String(this Span<byte> span, string value)
+		public static ReadOnlySpan<byte> Serialize_String(this string value, out int byteLenght)
 		{
 			var bytes = new ReadOnlySpan<byte>(Encoding.ASCII.GetBytes(value));
-			var bytesLength = bytes.Length;
+			byteLenght = bytes.Length;
+			return bytes;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Serialize_String(this Span<byte> span, string value)
+		{
+			var bytes = value.Serialize_String(out var bytesLength);
 			var ushortBytesLength = (ushort)bytesLength;
 
 			// Serialize header
