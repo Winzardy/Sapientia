@@ -17,6 +17,8 @@ namespace Sapientia.Sample
 
 			const int maxConnections = 10;
 
+			const int messageDataCapacity = 1024;
+
 			Console.WriteLine("Begin");
 
 			var serverEndPoint = new IPEndPoint(IPAddress.Parse(address), port);
@@ -33,7 +35,7 @@ namespace Sapientia.Sample
 
 			void DoServer()
 			{
-				var server = new TransportHandler_Tcp(maxConnections, 10, 512);
+				var server = new TransportHandler_Tcp(maxConnections, 10, messageDataCapacity);
 				server.SetupServer(serverEndPoint);
 				server.Start();
 
@@ -73,7 +75,7 @@ namespace Sapientia.Sample
 
 			void DoClient()
 			{
-				var client = new TransportHandler_Tcp(maxConnections, 10, 512);
+				var client = new TransportHandler_Tcp(maxConnections, 10, messageDataCapacity);
 				client.SetupClient();
 				client.Start();
 
