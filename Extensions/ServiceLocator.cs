@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace Sapentia.Extensions
+namespace Sapientia.Extensions
 {
 	public static class ServiceLocator<T> where T: IService
 	{

@@ -1,7 +1,7 @@
 using System.Threading;
 using Sapientia.Extensions;
 
-namespace Sapentia.Data
+namespace Sapientia.Data
 {
 	public struct AsyncValue<T>
 	{
