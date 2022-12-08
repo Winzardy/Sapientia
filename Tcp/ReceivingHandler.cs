@@ -120,7 +120,15 @@ namespace Sapientia.Tcp
 
 			for (var i = 0; i < connections.Count; i++)
 			{
-				connections[i].Receive(_receiveStack);
+				try
+				{
+					connections[i].Receive(_receiveStack);
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e);
+					connections[i].Close();
+				}
 			}
 		}
 

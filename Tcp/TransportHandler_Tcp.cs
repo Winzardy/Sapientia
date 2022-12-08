@@ -71,6 +71,11 @@ namespace Sapientia.Tcp
 			StartConnecting();
 		}
 
+		public void SetupServer(string address, int port)
+		{
+			SetupServer(new IPEndPoint(IPAddress.Parse(address), port));
+		}
+
 		public void SetupServer(EndPoint endPoint)
 		{
 			Debug.Assert(_state.HasIntFlag(State.Initialized) &

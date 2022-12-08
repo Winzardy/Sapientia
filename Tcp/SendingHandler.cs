@@ -1,95 +1,107 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Threading;
 using Sapientia.Collections;
-using Sapientia.Extensions;
+using Sapientia.Data;
 using Sapientia.Transport.RemoteMessage;
 
 namespace Sapientia.Tcp
 {
 	public class SendingHandler
 	{
-		private const int EXCHANGE_INTERVAL = 10;
-		public enum State
+		private const int EXCHANGE_INTERVAL = 3;
+
+		private class SendingBuffers : AsyncClass
 		{
-			Free = 0,
-			Busy = 1,
+			public CircularBuffer<RemoteMessage> sendBuffer;
+			public CircularBuffer<RemoteMessage> disposeBuffer;
+
+			public SendingBuffers(int poolCapacity) : base(EXCHANGE_INTERVAL)
+			{
+				sendBuffer = new CircularBuffer<RemoteMessage>(poolCapacity);
+				disposeBuffer = new CircularBuffer<RemoteMessage>(poolCapacity);
+			}
+
+			public void Dispose()
+			{
+				using (GetScope())
+				{
+					sendBuffer.Dispose();
+					disposeBuffer.Dispose();
+				}
+			}
 		}
 
 		private readonly ConnectionHandler _connectionHandler;
 
 		private readonly RemoteMessageStack _sendStack;
-		private CircularBuffer<RemoteMessage> _sendBuffer;
-		private CircularBuffer<RemoteMessage> _disposeBuffer;
+		private SendingBuffers _sendingBuffers;
 
-		private volatile int _state;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public State GetState() => _state.ToEnum<State>();
-
-		public SendingHandler(ConnectionHandler connectionHandler, int messageDataCapacity,
-			int poolCapacity)
+		public SendingHandler(ConnectionHandler connectionHandler, int messageDataCapacity, int poolCapacity)
 		{
 			_connectionHandler = connectionHandler;
 
 			_sendStack = new RemoteMessageStack(messageDataCapacity, poolCapacity, 2);
-			_sendBuffer = new CircularBuffer<RemoteMessage>(poolCapacity);
-			_disposeBuffer = new CircularBuffer<RemoteMessage>(poolCapacity);
+			_sendingBuffers = new SendingBuffers(poolCapacity);
 
-			_state = (int)State.Free;
+			_sendStack.SetMillisecondsTimeout(EXCHANGE_INTERVAL);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public RemoteMessageSender CreateMessageSender()
 		{
-			RemoteMessageSender result;
-			while (!TryCreateMessageSender(out result))
+			using (_sendStack.GetScope())
 			{
-				Thread.Sleep(EXCHANGE_INTERVAL);
+				return _sendStack.GetSender();
 			}
-			return result;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryCreateMessageSender(out RemoteMessageSender messageSender)
 		{
-			if (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
+			if (_sendStack.TrySetBusy())
 			{
 				messageSender = default;
 				return false;
 			}
 
 			messageSender = _sendStack.GetSender();
-			_state = (int)State.Free;
+
+			_sendStack.SetFree();
 			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ApplySendStack()
 		{
-			while (!TryApplySendStack())
+			using (_sendingBuffers.GetScope())
 			{
-				Thread.Sleep(EXCHANGE_INTERVAL);
+				SendStack();
 			}
 		}
 
 		public bool TryApplySendStack()
 		{
-			if (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
+			if (!_sendingBuffers.TrySetBusy())
 				return false;
-
-			// Dispose handled messages
-			while (!_disposeBuffer.IsEmpty)
-			{
-				_disposeBuffer.RemoveFirst().Dispose();
-			}
-
-			while (_sendStack.TryRead(out var remoteMessage))
-			{
-				_sendBuffer.AddLast(remoteMessage);
-			}
-
-			_state = (int)State.Free;
+			SendStack();
+			_sendingBuffers.SetFree();
 			return true;
+		}
+
+		private void SendStack()
+		{
+			// Dispose handled messages
+			while (!_sendingBuffers.disposeBuffer.IsEmpty)
+			{
+				_sendingBuffers.disposeBuffer.RemoveFirst().Dispose();
+			}
+
+			using (_sendStack.GetScope())
+			{
+				while (_sendStack.TryRead(out var remoteMessage))
+				{
+					_sendingBuffers.sendBuffer.AddLast(remoteMessage);
+				}
+			}
 		}
 
 		internal void Update()
@@ -100,29 +112,28 @@ namespace Sapientia.Tcp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void SendMessages()
 		{
-			if (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
+			if (!_sendingBuffers.TrySetBusy())
 				return;
 
-			while (!_sendBuffer.IsEmpty)
+			while (!_sendingBuffers.sendBuffer.IsEmpty)
 			{
-				var remoteMessage = _sendBuffer.RemoveFirst();
+				var remoteMessage = _sendingBuffers.sendBuffer.RemoveFirst();
 
 				if (_connectionHandler.TryGetConnection(remoteMessage.connectionReference, out var connection))
 				{
 					connection.Send(remoteMessage);
 				}
 
-				_disposeBuffer.AddLast(remoteMessage);
+				_sendingBuffers.disposeBuffer.AddLast(remoteMessage);
 			}
 
-			_state = (int)State.Free;
+			_sendingBuffers.SetFree();
 		}
 
 		internal void Dispose()
 		{
 			_sendStack.Dispose();
-			_sendBuffer.Dispose();
-			_disposeBuffer.Dispose();
+			_sendingBuffers.Dispose();
 		}
 	}
 }

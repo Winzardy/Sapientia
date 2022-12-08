@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using Sapientia.Serializers;
 using Sapientia.Transport;
@@ -80,10 +81,13 @@ namespace Sapientia.Tcp
 
 					if (_countToReceive > receiveMessageStack.messageDataCapacity | _countToReceive <= 0)
 					{
-						return;
+						throw new Exception($"The count to receive is out of range. Count To Receive: {_countToReceive}, Range: (0, {receiveMessageStack.messageDataCapacity}].");
 					}
 
-					_receiveMessageSender = receiveMessageStack.GetSender();
+					using (receiveMessageStack.GetScope())
+					{
+						_receiveMessageSender = receiveMessageStack.GetSender();
+					}
 				}
 
 				var reader = _receiveMessageSender.Reader;

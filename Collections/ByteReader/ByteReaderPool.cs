@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 
 namespace Sapientia.Collections.ByteReader
 {
-	public class ByteReaderPool : IDisposable
+	public class ByteReaderPool : AsyncClass, IDisposable
 	{
 		private ByteReaderField _pool;
 		private int _allocatedCount;
@@ -38,6 +39,15 @@ namespace Sapientia.Collections.ByteReader
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Element AllocateWithExpand_Interlocked()
+		{
+			using (GetScope)
+			{
+				return AllocateWithExpand();
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Element AllocateWithExpand()
 		{
 			if (AllocatedCount + 1 > Capacity)
@@ -56,7 +66,10 @@ namespace Sapientia.Collections.ByteReader
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			_pool.Dispose();
+			using (GetScope())
+			{
+				_pool.Dispose();
+			}
 		}
 
 		public struct Element : IDisposable
@@ -79,9 +92,11 @@ namespace Sapientia.Collections.ByteReader
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Dispose()
 			{
+				_pool?.SetBusy();
 				_pool?.Release(_reader);
+				_pool?.SetFree();
 
-				_pool = default;
+				_pool = default!;
 				_reader = default;
 			}
 		}

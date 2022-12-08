@@ -19,20 +19,20 @@ namespace Sapientia.Transport.RemoteMessage
 		public RemoteMessageSender(RemoteMessageStack stack)
 		{
 			_stack = stack;
-			_readerContainer = stack.AllocateReader();
+			_readerContainer = _stack.AllocateReader_Interlocked();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Send(ConnectionReference connectionReference)
 		{
-			_stack.AddMessage(new RemoteMessage(connectionReference, _readerContainer));
+			_stack.AddMessage_Interlocked(new RemoteMessage(connectionReference, _readerContainer));
 			Reset();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SendAndExpand(ConnectionReference connectionReference)
 		{
-			_stack.AddMessageAndExpand(new RemoteMessage(connectionReference, _readerContainer));
+			_stack.AddMessageAndExpand_Interlocked(new RemoteMessage(connectionReference, _readerContainer));
 			Reset();
 		}
 
@@ -46,7 +46,7 @@ namespace Sapientia.Transport.RemoteMessage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Reset()
 		{
-			_stack = default;
+			_stack = default!;
 			_readerContainer = default;
 		}
 	}

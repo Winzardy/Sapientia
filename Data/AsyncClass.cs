@@ -1,30 +1,28 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Threading;
 using Sapientia.Extensions;
 
 namespace Sapientia.Data
 {
-	public struct AsyncValue<T> where T: unmanaged
+	public class AsyncClass
 	{
-		public T value;
-
 		private int _millisecondsTimeout;
 		private int _state;
 
 		public State State => _state.ToEnum<State>();
 
-		public AsyncValue(T value, int millisecondsTimeout = 1)
+		public AsyncClass(int millisecondsTimeout = 1)
 		{
-			this.value = value;
 			_millisecondsTimeout = millisecondsTimeout;
 			_state = (int)State.Free;
 		}
 
 		public void SetMillisecondsTimeout(int millisecondsTimeout)
 		{
-			SetBusy();
-			_millisecondsTimeout = millisecondsTimeout;
-			SetFree();
+			using (GetScope())
+			{
+				_millisecondsTimeout = millisecondsTimeout;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,36 +45,27 @@ namespace Sapientia.Data
 		{
 			_state = (int)State.Free;
 		}
-	}
 
-	public static class AsyncValueExt
-	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static AsyncValueScope<T> GetScope<T>(this ref AsyncValue<T> asyncValue) where T: unmanaged
+		public AsyncClassScope GetScope()
 		{
-			return new AsyncValueScope<T>(ref asyncValue);
+			return new AsyncClassScope(this);
 		}
 	}
 
-	public readonly unsafe ref struct AsyncValueScope<T> where T: unmanaged
+	public readonly ref struct AsyncClassScope
 	{
-		private readonly void* _asyncValue;
+		private readonly AsyncClass _asyncClass;
 
-		public AsyncValueScope(ref AsyncValue<T> asyncValue)
+		public AsyncClassScope(AsyncClass asyncClass)
 		{
-			asyncValue.SetBusy();
-			_asyncValue = Unsafe.AsPointer(ref asyncValue);
+			asyncClass.SetBusy();
+			_asyncClass = asyncClass;
 		}
 
 		public void Dispose()
 		{
-			((AsyncValue<T>*)_asyncValue)->SetFree();
+			_asyncClass.SetFree();
 		}
-	}
-
-	public enum State
-	{
-		Free,
-		Busy,
 	}
 }

@@ -1,10 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Collections.ByteReader;
+using Sapientia.Data;
 
 namespace Sapientia.Transport.RemoteMessage
 {
-	public class RemoteMessageStack
+	public class RemoteMessageStack : AsyncClass
 	{
 		public readonly int messageDataCapacity;
 
@@ -69,15 +70,33 @@ namespace Sapientia.Transport.RemoteMessage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal void AddMessage_Interlocked(RemoteMessage remoteMessage)
+		{
+			using (GetScope())
+			{
+				AddMessage(remoteMessage);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal void AddMessageAndExpand(RemoteMessage remoteMessage)
 		{
 			_buffer.AddLastAndExpand(remoteMessage);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal ByteReaderPool.Element AllocateReader()
+		internal void AddMessageAndExpand_Interlocked(RemoteMessage remoteMessage)
 		{
-			return _readerPool.AllocateWithExpand();
+			using (GetScope())
+			{
+				AddMessageAndExpand(remoteMessage);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal ByteReaderPool.Element AllocateReader_Interlocked()
+		{
+			return _readerPool.AllocateWithExpand_Interlocked();
 		}
 
 		public void Dispose()
