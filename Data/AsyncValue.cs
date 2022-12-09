@@ -65,7 +65,11 @@ namespace Sapientia.Data
 		public AsyncValueScope(ref AsyncValue<T> asyncValue)
 		{
 			asyncValue.SetBusy();
+#if UNITY_5_3_OR_NEWER
+			_asyncValue = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.AddressOf(ref asyncValue);
+#else
 			_asyncValue = Unsafe.AsPointer(ref asyncValue);
+#endif
 		}
 
 		public void Dispose()
