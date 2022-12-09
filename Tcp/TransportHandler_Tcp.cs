@@ -163,6 +163,13 @@ namespace Sapientia.Tcp
 				return;
 
 			var socket = (Socket)asyncResult.AsyncState!;
+			if (!socket.Connected)
+			{
+				connectionHandler.AcceptConnection(null!);
+				socket.Dispose();
+				return;
+			}
+
 			var connectionData = GetConnectionData();
 			var sendData = connectionData.Reader.Serialize();
 

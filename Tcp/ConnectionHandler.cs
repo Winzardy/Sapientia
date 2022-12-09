@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Sapientia.Collections;
@@ -14,6 +15,9 @@ namespace Sapientia.Tcp
 			Free = 0,
 			Busy = 1,
 		}
+
+		public event Action ConnectiolFailedEvent;
+		public event Action<Socket> ConnectiolDeclinedEvent;
 
 		private const int EXCHANGE_INTERVAL = 10;
 
@@ -78,8 +82,7 @@ namespace Sapientia.Tcp
 
 		public bool TryReceiveNewConnection(out ConnectionReference connectionReference)
 		{
-			if (_newConnectionsCount > 0 &&
-			    _state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Free)
+			if (_newConnectionsCount > 0 && _state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Free)
 			{
 				while (!_newConnectionBuffer.IsEmpty)
 				{
@@ -103,8 +106,14 @@ namespace Sapientia.Tcp
 			return false;
 		}
 
-		internal void AcceptConnection(Socket connectionSocket)
+		internal void AcceptConnection(Socket? connectionSocket)
 		{
+			if (connectionSocket == null)
+			{
+				ConnectiolFailedEvent?.Invoke();
+				return;
+			}
+
 			while (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
 			{
 				Thread.Sleep(EXCHANGE_INTERVAL);
@@ -113,6 +122,7 @@ namespace Sapientia.Tcp
 			if (_connections.IsFull)
 			{
 				// Overloaded
+				ConnectiolDeclinedEvent?.Invoke(connectionSocket);
 				connectionSocket.Close();
 				return;
 			}
