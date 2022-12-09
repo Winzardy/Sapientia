@@ -36,6 +36,9 @@ namespace Sapientia.Transport.RemoteMessage
 			Reset();
 		}
 
+		/// <summary>
+		/// Use it for message cancellation. Don't use after sending.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{

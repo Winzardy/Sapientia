@@ -41,7 +41,7 @@ namespace Sapientia.Sample
 
 				var serverThread = new Thread(() =>
 				{
-					Console.WriteLine("Server thread was started");
+					Console.WriteLine("Test thread was started");
 
 					while (server.GetState().HasNotIntFlag(TransportHandler_Tcp.State.Disposed))
 					{
@@ -68,7 +68,7 @@ namespace Sapientia.Sample
 						Thread.Sleep(10);
 					}
 
-					Console.WriteLine("Server thread was closed");
+					Console.WriteLine("Test thread was closed");
 				});
 				serverThread.Start();
 			}
@@ -89,7 +89,7 @@ namespace Sapientia.Sample
 
 				Console.WriteLine("CONNECTION RECEIVED");
 				var sender = client.sendingHandler.CreateMessageSender();
-				sender.Reader.Push_String($"Hello Server {connectionReference.id}!");
+				sender.Reader.Push_String($"Hello Test {connectionReference.id}!");
 				sender.Send(connectionReference);
 
 				if (!client.sendingHandler.TryApplySendStack())

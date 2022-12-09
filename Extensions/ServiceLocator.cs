@@ -41,6 +41,12 @@ namespace Sapientia.Extensions
 	public static class ServiceLocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService<T, T1>() where T: IService where T1 : T, new()
+		{
+			ServiceLocator<T>.Register<T1>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void RegisterService<T>() where T: IService, new()
 		{
 			ServiceLocator<T>.Register<T>();

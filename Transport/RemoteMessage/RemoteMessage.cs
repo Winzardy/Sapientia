@@ -22,6 +22,9 @@ namespace Sapientia.Transport.RemoteMessage
 			_readerContainer = readerContainer;
 		}
 
+		/// <summary>
+		/// Be sure to dispose RemoteMessage after reading.
+		/// </summary>
 		public void Dispose()
 		{
 			_readerContainer.Dispose();
