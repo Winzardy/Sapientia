@@ -1,9 +1,5 @@
-using System.Runtime.CompilerServices;
-#if UNITY_ENGINE
-using UnityEngine;
-#else
 using System.Diagnostics;
-#endif
+using System.Runtime.CompilerServices;
 
 namespace Sapientia.Extensions
 {
