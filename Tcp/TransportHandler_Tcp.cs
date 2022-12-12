@@ -158,15 +158,39 @@ namespace Sapientia.Tcp
 			socket.BeginConnect(remoteEndPoint, OnConnected, (socket, customId));
 		}
 
+		public async Task ConnectAsync(EndPoint remoteEndPoint, int customId = -1)
+		{
+			Debug.Assert(_state.HasIntFlag(State.Started) & _state.HasIntFlag(State.Connecting) &
+			             _state.HasNotIntFlag(State.Disposed));
+
+			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			await socket.ConnectAsync(remoteEndPoint);
+
+			OnConnected(socket, customId);
+		}
+
 		private void OnConnected(IAsyncResult asyncResult)
 		{
 			if (_state.HasNotIntFlag(State.Connecting))
 				return;
 
 			var result = ((Socket socket, int customId))asyncResult.AsyncState!;
+			OnConnected(result.socket, result.customId, asyncResult);
+		}
 
-			var socket = result.socket;
-			var customId = result.customId;
+		private void OnConnected(Socket socket, int customId)
+		{
+			if (_state.HasNotIntFlag(State.Connecting))
+				return;
+
+			OnConnected(socket, customId, null);
+		}
+
+		private void OnConnected(Socket socket, int customId, IAsyncResult asyncResult)
+		{
+			if (_state.HasNotIntFlag(State.Connecting))
+				return;
+
 			if (!socket.Connected)
 			{
 				connectionHandler.AcceptConnection(null!, customId);
@@ -178,7 +202,8 @@ namespace Sapientia.Tcp
 			var sendData = connectionData.Reader.Serialize();
 
 			socket.Send(sendData);
-			socket.EndConnect(asyncResult);
+			if (asyncResult != null)
+				socket.EndConnect(asyncResult);
 
 			connectionData.Dispose();
 
