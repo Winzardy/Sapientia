@@ -43,7 +43,7 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetFree()
 		{
-			_state = (int)State.Free;
+			Interlocked.Exchange(ref _state, (int)State.Free);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
