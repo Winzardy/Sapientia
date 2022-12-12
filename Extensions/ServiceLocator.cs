@@ -8,16 +8,20 @@ namespace Sapientia.Extensions
 		public static T Instance { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; [MethodImpl(MethodImplOptions.AggressiveInlining)] private set; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Register<T1>() where T1: T, new()
+		public static T1 Register<T1>() where T1: T, new()
 		{
-			Register(new T1());
+			var value = new T1();
+			Register(value);
+			return value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Register(T service)
+		public static T Register(T service)
 		{
 			Debug.Assert(Instance == null);
 			Instance = service;
+
+			return Instance;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -37,21 +41,21 @@ namespace Sapientia.Extensions
 	public static class ServiceLocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterService<T, T1>() where T: IService where T1 : T, new()
+		public static T RegisterService<T, T1>() where T: IService where T1 : T, new()
 		{
-			ServiceLocator<T>.Register<T1>();
+			return ServiceLocator<T>.Register<T1>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterService<T>() where T: IService, new()
+		public static T RegisterService<T>() where T: IService, new()
 		{
-			ServiceLocator<T>.Register<T>();
+			return ServiceLocator<T>.Register<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterAsService<T>(this T service) where T: IService
+		public static T RegisterAsService<T>(this T service) where T: IService
 		{
-			ServiceLocator<T>.Register(service);
+			return ServiceLocator<T>.Register(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

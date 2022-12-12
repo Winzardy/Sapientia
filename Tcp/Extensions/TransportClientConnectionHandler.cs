@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using Sapientia.Transport;
 using Sapientia.Transport.RemoteMessage;
 
@@ -31,14 +32,24 @@ namespace Sapientia.Tcp.Extensions
 			_customId = customId;
 		}
 
-		public void Connect()
+		private void SubscribeEvents()
 		{
 			_clientTransportService.ConnectionReceivedEvent += OnConnectionReceived;
 			_clientTransportService.ConnectionFailedEvent += OnConnectionFailed;
 			_clientTransportService.ConnectionDeclinedEvent += OnConnectionDeclined;
 			_clientTransportService.MessageReceivedEvent += OnMessageReceived;
+		}
 
+		public void Connect()
+		{
+			SubscribeEvents();
 			_clientTransportService.Connect(_endPoint, _customId);
+		}
+
+		public async Task ConnectAsync()
+		{
+			SubscribeEvents();
+			await _clientTransportService.ConnectAsync(_endPoint, _customId);
 		}
 
 		private void OnConnectionReceived(ConnectionReference connectionReference)
