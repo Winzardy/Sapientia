@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 using System.Threading;
 using Sapientia.Extensions;
 using Sapientia.Transport;
@@ -6,7 +7,7 @@ using Sapientia.Transport.RemoteMessage;
 
 namespace Sapientia.Tcp.Extensions
 {
-	public class TransportService : ITransportService
+	public abstract class TransportService : ITransportService
 	{
 		private const int UPDATE_TIMEOUT = 3;
 
@@ -14,10 +15,20 @@ namespace Sapientia.Tcp.Extensions
 
 		public event Action<ConnectionReference> ConnectionReceivedEvent;
 		public event Action<RemoteMessage> MessageReceivedEvent;
-
-		public TransportService(in TransportServerContext serverContext)
+		public event Action<int> ConnectionFailedEvent
 		{
-			transportHandler = serverContext.CreateTransportHandler();
+			add => transportHandler.connectionHandler.ConnectionFailedEvent += value;
+			remove => transportHandler.connectionHandler.ConnectionFailedEvent -= value;
+		}
+		public event Action<Socket, int> ConnectionDeclinedEvent
+		{
+			add => transportHandler.connectionHandler.ConnectionDeclinedEvent += value;
+			remove => transportHandler.connectionHandler.ConnectionDeclinedEvent -= value;
+		}
+
+		public TransportService(in TransportHandler_Tcp transportHandler)
+		{
+			this.transportHandler = transportHandler;
 
 			ConnectionReceivedEvent = default!;
 			MessageReceivedEvent = default!;

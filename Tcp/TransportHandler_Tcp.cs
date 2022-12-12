@@ -128,7 +128,7 @@ namespace Sapientia.Tcp
 			var connectionSocket = _serverSocket.EndAccept(out var acceptData, out var dataCount, asyncResult);
 			if (IsConnectionValid(connectionSocket, acceptData, dataCount))
 			{
-				connectionHandler.AcceptConnection(connectionSocket);
+				connectionHandler.AcceptConnection(connectionSocket, -1);
 			}
 			else
 			{
@@ -148,13 +148,13 @@ namespace Sapientia.Tcp
 			_state.AddIntFlag_Interlocked_ReturnInt(State.Connecting);
 		}
 
-		public void Connect(EndPoint remoteEndPoint)
+		public void Connect(EndPoint remoteEndPoint, int customId = -1)
 		{
 			Debug.Assert(_state.HasIntFlag(State.Started) & _state.HasIntFlag(State.Connecting) &
 			             _state.HasNotIntFlag(State.Disposed));
 
 			var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			socket.BeginConnect(remoteEndPoint, OnConnected, socket);
+			socket.BeginConnect(remoteEndPoint, OnConnected, (socket, customId));
 		}
 
 		private void OnConnected(IAsyncResult asyncResult)
@@ -162,10 +162,13 @@ namespace Sapientia.Tcp
 			if (_state.HasNotIntFlag(State.Connecting))
 				return;
 
-			var socket = (Socket)asyncResult.AsyncState!;
+			var result = ((Socket socket, int customId))asyncResult.AsyncState!;
+
+			var socket = result.socket;
+			var customId = result.customId;
 			if (!socket.Connected)
 			{
-				connectionHandler.AcceptConnection(null!);
+				connectionHandler.AcceptConnection(null!, customId);
 				socket.Dispose();
 				return;
 			}
@@ -178,7 +181,7 @@ namespace Sapientia.Tcp
 
 			connectionData.Dispose();
 
-			connectionHandler.AcceptConnection(socket);
+			connectionHandler.AcceptConnection(socket, customId);
 		}
 
 		private RemoteMessageSender GetConnectionData()

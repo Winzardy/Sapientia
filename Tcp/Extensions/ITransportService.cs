@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 using Sapientia.Extensions;
 using Sapientia.Transport;
 using Sapientia.Transport.RemoteMessage;
@@ -9,6 +10,8 @@ namespace Sapientia.Tcp.Extensions
 	{
 		public event Action<ConnectionReference> ConnectionReceivedEvent;
 		public event Action<RemoteMessage> MessageReceivedEvent;
+		public event Action<int> ConnectionFailedEvent;
+		public event Action<Socket, int> ConnectionDeclinedEvent;
 
 		public RemoteMessageSender GetMessageSender();
 

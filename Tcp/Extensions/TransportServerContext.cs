@@ -2,7 +2,7 @@
 
 namespace Sapientia.Tcp.Extensions
 {
-	public readonly struct TransportServerContext
+	public readonly struct TransportServerContext : ITransportContext
 	{
 		public readonly EndPoint endPoint;
 		public readonly int maxConnections;

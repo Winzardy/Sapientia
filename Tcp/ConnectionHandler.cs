@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -16,8 +17,8 @@ namespace Sapientia.Tcp
 			Busy = 1,
 		}
 
-		public event Action ConnectiolFailedEvent;
-		public event Action<Socket> ConnectiolDeclinedEvent;
+		public event Action<int> ConnectionFailedEvent;
+		public event Action<Socket, int> ConnectionDeclinedEvent;
 
 		private const int EXCHANGE_INTERVAL = 10;
 
@@ -106,11 +107,11 @@ namespace Sapientia.Tcp
 			return false;
 		}
 
-		internal void AcceptConnection(Socket? connectionSocket)
+		internal void AcceptConnection(Socket? connectionSocket, int customId)
 		{
 			if (connectionSocket == null)
 			{
-				ConnectiolFailedEvent?.Invoke();
+				ConnectionFailedEvent?.Invoke(customId);
 				return;
 			}
 
@@ -122,14 +123,14 @@ namespace Sapientia.Tcp
 			if (_connections.IsFull)
 			{
 				// Overloaded
-				ConnectiolDeclinedEvent?.Invoke(connectionSocket);
+				ConnectionDeclinedEvent?.Invoke(connectionSocket, customId);
 				connectionSocket.Close();
 				return;
 			}
 
 			var index = _connections.AllocateValueIndex();
 			var connection = _connections.GetValue(index);
-			var connectionReference = new ConnectionReference(index, _nextConnectionId);
+			var connectionReference = new ConnectionReference(index, _nextConnectionId, customId);
 
 			connection.Start(connectionSocket, connectionReference);
 
