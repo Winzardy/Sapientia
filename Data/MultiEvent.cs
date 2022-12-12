@@ -3,7 +3,50 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Data
 {
-	public struct EmptyEventContext {}
+	public class MultiEvent<TIntFlag> : AsyncClass where TIntFlag: unmanaged, Enum
+	{
+		public delegate void OnEventDelegate(TIntFlag eventType);
+
+		public event Action AllEventsTriggered;
+
+		private int _state;
+
+		public MultiEvent()
+		{
+			_state = ~EnumExtensions<TIntFlag>.filledFlag;
+		}
+
+		public void OnEvent(TIntFlag eventType)
+		{
+			using (GetBusyScope())
+			{
+				_state |= eventType.ToInt();
+				if (_state == ~0)
+					InnerInvoke();
+			}
+		}
+
+		public void Invoke()
+		{
+			using (GetBusyScope())
+			{
+				InnerInvoke();
+			}
+		}
+
+		private void InnerInvoke()
+		{
+			AllEventsTriggered?.Invoke();
+		}
+
+		public void Reset()
+		{
+			using (GetBusyScope())
+			{
+				_state = ~EnumExtensions<TIntFlag>.filledFlag;
+			}
+		}
+	}
 
 	public class MultiEvent<TIntFlag, TContext> : AsyncClass where TIntFlag: unmanaged, Enum
 	{
