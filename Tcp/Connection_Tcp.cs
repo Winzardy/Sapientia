@@ -84,7 +84,7 @@ namespace Sapientia.Tcp
 						throw new Exception($"The count to receive is out of range. Count To Receive: {_countToReceive}, Range: (0, {receiveMessageStack.messageDataCapacity}].");
 					}
 
-					using (receiveMessageStack.GetScope())
+					using (receiveMessageStack.GetBusyScope())
 					{
 						_receiveMessageSender = receiveMessageStack.GetSender();
 					}

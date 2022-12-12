@@ -52,17 +52,17 @@ namespace Sapientia.Data
 	public static class AsyncValueExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static AsyncValueScope<T> GetScope<T>(this ref AsyncValue<T> asyncValue) where T: unmanaged
+		public static AsyncValueBusyScope<T> GetBusyScope<T>(this ref AsyncValue<T> asyncValue) where T: unmanaged
 		{
-			return new AsyncValueScope<T>(ref asyncValue);
+			return new AsyncValueBusyScope<T>(ref asyncValue);
 		}
 	}
 
-	public readonly unsafe ref struct AsyncValueScope<T> where T: unmanaged
+	public readonly unsafe ref struct AsyncValueBusyScope<T> where T: unmanaged
 	{
 		private readonly void* _asyncValue;
 
-		public AsyncValueScope(ref AsyncValue<T> asyncValue)
+		public AsyncValueBusyScope(ref AsyncValue<T> asyncValue)
 		{
 			asyncValue.SetBusy();
 #if UNITY_5_3_OR_NEWER

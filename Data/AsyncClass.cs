@@ -19,7 +19,7 @@ namespace Sapientia.Data
 
 		public void SetMillisecondsTimeout(int millisecondsTimeout)
 		{
-			using (GetScope())
+			using (GetBusyScope())
 			{
 				_millisecondsTimeout = millisecondsTimeout;
 			}
@@ -47,17 +47,17 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncClassScope GetScope()
+		public AsyncClassBusyScope GetBusyScope()
 		{
-			return new AsyncClassScope(this);
+			return new AsyncClassBusyScope(this);
 		}
 	}
 
-	public readonly ref struct AsyncClassScope
+	public readonly ref struct AsyncClassBusyScope
 	{
 		private readonly AsyncClass _asyncClass;
 
-		public AsyncClassScope(AsyncClass asyncClass)
+		public AsyncClassBusyScope(AsyncClass asyncClass)
 		{
 			asyncClass.SetBusy();
 			_asyncClass = asyncClass;

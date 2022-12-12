@@ -49,17 +49,17 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassScope<T> GetScope()
+		public AsyncValueClassBusyScope<T> GetBusyScope()
 		{
-			return new AsyncValueClassScope<T>(this);
+			return new AsyncValueClassBusyScope<T>(this);
 		}
 	}
 
-	public readonly ref struct AsyncValueClassScope<T>
+	public readonly ref struct AsyncValueClassBusyScope<T>
 	{
 		private readonly AsyncValueClass<T> _asyncValue;
 
-		public AsyncValueClassScope(AsyncValueClass<T> asyncValue)
+		public AsyncValueClassBusyScope(AsyncValueClass<T> asyncValue)
 		{
 			asyncValue.SetBusy();
 			_asyncValue = asyncValue;

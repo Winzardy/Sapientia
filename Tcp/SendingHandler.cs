@@ -22,7 +22,7 @@ namespace Sapientia.Tcp
 
 			public void Dispose()
 			{
-				using (GetScope())
+				using (GetBusyScope())
 				{
 					sendBuffer.Dispose();
 					disposeBuffer.Dispose();
@@ -48,7 +48,7 @@ namespace Sapientia.Tcp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public RemoteMessageSender CreateMessageSender()
 		{
-			using (_sendStack.GetScope())
+			using (_sendStack.GetBusyScope())
 			{
 				return _sendStack.GetSender();
 			}
@@ -72,7 +72,7 @@ namespace Sapientia.Tcp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ApplySendStack()
 		{
-			using (_sendingBuffers.GetScope())
+			using (_sendingBuffers.GetBusyScope())
 			{
 				SendStack();
 			}
@@ -95,7 +95,7 @@ namespace Sapientia.Tcp
 				_sendingBuffers.disposeBuffer.RemoveFirst().Dispose();
 			}
 
-			using (_sendStack.GetScope())
+			using (_sendStack.GetBusyScope())
 			{
 				while (_sendStack.TryRead(out var remoteMessage))
 				{

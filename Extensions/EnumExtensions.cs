@@ -4,6 +4,23 @@ using System.Threading;
 
 namespace Sapientia.Extensions
 {
+	public static class EnumExtensions<T> where T: unmanaged, Enum
+	{
+		public static readonly int filledFlag = GetFullFlag();
+
+		private static int GetFullFlag()
+		{
+			var result = 0;
+
+			var values = Enum.GetValues(typeof(T));
+			foreach (var value in values)
+			{
+				result |= (int)value;
+			}
+			return result;
+		}
+	}
+
 	public static class EnumExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

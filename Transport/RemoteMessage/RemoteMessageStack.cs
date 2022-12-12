@@ -72,7 +72,7 @@ namespace Sapientia.Transport.RemoteMessage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal void AddMessage_Interlocked(RemoteMessage remoteMessage)
 		{
-			using (GetScope())
+			using (GetBusyScope())
 			{
 				AddMessage(remoteMessage);
 			}
@@ -87,7 +87,7 @@ namespace Sapientia.Transport.RemoteMessage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal void AddMessageAndExpand_Interlocked(RemoteMessage remoteMessage)
 		{
-			using (GetScope())
+			using (GetBusyScope())
 			{
 				AddMessageAndExpand(remoteMessage);
 			}

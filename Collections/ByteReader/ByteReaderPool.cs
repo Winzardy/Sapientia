@@ -41,7 +41,7 @@ namespace Sapientia.Collections.ByteReader
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Element AllocateWithExpand_Interlocked()
 		{
-			using (GetScope())
+			using (GetBusyScope())
 			{
 				return AllocateWithExpand();
 			}
@@ -66,7 +66,7 @@ namespace Sapientia.Collections.ByteReader
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			using (GetScope())
+			using (GetBusyScope())
 			{
 				_pool.Dispose();
 			}
