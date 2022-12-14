@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -9,11 +10,22 @@ namespace Sapientia.Tcp.Extensions
 {
 	public class TransportClientConnectionHandler
 	{
-		public ConnectionReference Connection { get; private set; }
+		public enum ConnectionState
+		{
+			WaitingForConnection,
+			Connection,
+			Connected,
+			Disconnected,
+		}
+
+		public ConnectionReference ConnectionReference { get; private set; }
 
 		public event Action<ConnectionReference> ConnectionReceivedEvent;
 		public event Action ConnectionFailedEvent;
 		public event Action ConnectionDeclinedEvent;
+
+		public event Action ConnectionDisconnectedEvent;
+
 		public event Action<RemoteMessage> MessageReceivedEvent;
 
 		private int _customId;
@@ -22,7 +34,7 @@ namespace Sapientia.Tcp.Extensions
 		private ClientTransportService _clientTransportService;
 		private IPEndPoint _endPoint;
 
-		public bool IsConnected => Connection != default;
+		public ConnectionState State { get; private set; }
 
 		public TransportClientConnectionHandler(ClientTransportService clientTransportService, string address, int port, int customId)
 		{
@@ -30,6 +42,9 @@ namespace Sapientia.Tcp.Extensions
 			_endPoint = new IPEndPoint(IPAddress.Parse(address), port);
 
 			_customId = customId;
+
+			SubscribeEvents();
+			State = ConnectionState.WaitingForConnection;
 		}
 
 		private void SubscribeEvents()
@@ -37,19 +52,34 @@ namespace Sapientia.Tcp.Extensions
 			_clientTransportService.ConnectionReceivedEvent += OnConnectionReceived;
 			_clientTransportService.ConnectionFailedEvent += OnConnectionFailed;
 			_clientTransportService.ConnectionDeclinedEvent += OnConnectionDeclined;
+
+			_clientTransportService.ConnectionDisconnectedEvent += OnConnectionDisconnected;
+
 			_clientTransportService.MessageReceivedEvent += OnMessageReceived;
 		}
 
 		public void Connect()
 		{
-			SubscribeEvents();
+			Debug.Assert(State != ConnectionState.Connected & State != ConnectionState.Connection);
+
+			State = ConnectionState.Connection;
 			_clientTransportService.Connect(_endPoint, _customId);
 		}
 
 		public async Task ConnectAsync()
 		{
-			SubscribeEvents();
+			State = ConnectionState.Connection;
 			await _clientTransportService.ConnectAsync(_endPoint, _customId);
+		}
+
+		public void Disconnect()
+		{
+			_clientTransportService.Disconnect(ConnectionReference);
+		}
+
+		public void Send(RemoteMessageSender sender)
+		{
+			sender.SendAndExpand(ConnectionReference);
 		}
 
 		private void OnConnectionReceived(ConnectionReference connectionReference)
@@ -57,7 +87,9 @@ namespace Sapientia.Tcp.Extensions
 			if (_customId != connectionReference.customId)
 				return;
 
-			Connection = connectionReference;
+			ConnectionReference = connectionReference;
+
+			State = ConnectionState.Connected;
 			ConnectionReceivedEvent?.Invoke(connectionReference);
 		}
 
@@ -66,6 +98,7 @@ namespace Sapientia.Tcp.Extensions
 			if (_customId != customId)
 				return;
 
+			State = ConnectionState.Disconnected;
 			ConnectionFailedEvent?.Invoke();
 		}
 
@@ -74,7 +107,17 @@ namespace Sapientia.Tcp.Extensions
 			if (_customId != customId)
 				return;
 
+			State = ConnectionState.Disconnected;
 			ConnectionDeclinedEvent?.Invoke();
+		}
+
+		private void OnConnectionDisconnected(int customId)
+		{
+			if (_customId != customId)
+				return;
+
+			State = ConnectionState.Disconnected;
+			ConnectionDisconnectedEvent?.Invoke();
 		}
 
 		private void OnMessageReceived(RemoteMessage remoteMessage)

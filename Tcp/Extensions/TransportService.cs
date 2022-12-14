@@ -14,7 +14,6 @@ namespace Sapientia.Tcp.Extensions
 		public readonly TransportHandler_Tcp transportHandler;
 
 		public event Action<ConnectionReference> ConnectionReceivedEvent;
-		public event Action<RemoteMessage> MessageReceivedEvent;
 		public event Action<int> ConnectionFailedEvent
 		{
 			add => transportHandler.connectionHandler.ConnectionFailedEvent += value;
@@ -25,6 +24,14 @@ namespace Sapientia.Tcp.Extensions
 			add => transportHandler.connectionHandler.ConnectionDeclinedEvent += value;
 			remove => transportHandler.connectionHandler.ConnectionDeclinedEvent -= value;
 		}
+
+		public event Action<int> ConnectionDisconnectedEvent
+		{
+			add => transportHandler.connectionHandler.ConnectionDisconnectedEvent += value;
+			remove => transportHandler.connectionHandler.ConnectionDisconnectedEvent -= value;
+		}
+
+		public event Action<RemoteMessage> MessageReceivedEvent;
 
 		public TransportService(in TransportHandler_Tcp transportHandler)
 		{
@@ -37,6 +44,11 @@ namespace Sapientia.Tcp.Extensions
 		public RemoteMessageSender GetMessageSender()
 		{
 			return transportHandler.sendingHandler.CreateMessageSender();
+		}
+
+		public void Disconnect(ConnectionReference connectionReference)
+		{
+			transportHandler.connectionHandler.Disconnect(connectionReference);
 		}
 
 		public void Run()

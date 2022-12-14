@@ -4,23 +4,16 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Sapientia.Collections;
-using Sapientia.Extensions;
+using Sapientia.Data;
 using Sapientia.Transport;
 
 namespace Sapientia.Tcp
 {
-	public class ConnectionHandler
+	public class ConnectionHandler : AsyncClass
 	{
-		public enum State
-		{
-			Free = 0,
-			Busy = 1,
-		}
-
 		public event Action<int> ConnectionFailedEvent;
 		public event Action<Socket, int> ConnectionDeclinedEvent;
-
-		private const int EXCHANGE_INTERVAL = 10;
+		public event Action<int> ConnectionDisconnectedEvent;
 
 		private readonly SparseSet<Connection_Tcp> _connections;
 		private readonly SimpleList<Connection_Tcp> _existingConnections;
@@ -31,18 +24,13 @@ namespace Sapientia.Tcp
 		private CircularBuffer<ConnectionReference> _newConnectionBuffer;
 		private volatile int _newConnectionsCount;
 
-		private volatile int _state;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public State GetState() => _state.ToEnum<State>();
-
 		public int NewConnectionsCount
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _newConnectionsCount;
 		}
 
-		internal ConnectionHandler(int connectionsCapacity, int messageCapacity)
+		internal ConnectionHandler(int connectionsCapacity, int messageCapacity) : base()
 		{
 			_connections = new SparseSet<Connection_Tcp>(connectionsCapacity);
 			_existingConnections = new SimpleList<Connection_Tcp>(connectionsCapacity);
@@ -50,7 +38,6 @@ namespace Sapientia.Tcp
 			_nextConnectionId = 0;
 
 			_newConnectionBuffer = new CircularBuffer<ConnectionReference>(connectionsCapacity);
-			_state = (int)State.Free;
 
 			var connections = _connections.GetValueArray();
 
@@ -60,7 +47,7 @@ namespace Sapientia.Tcp
 			}
 		}
 
-		public void CloseConnection(ConnectionReference connectionReference)
+		public void Disconnect(ConnectionReference connectionReference)
 		{
 			if (TryGetConnection(connectionReference, out var connection))
 				return;
@@ -83,7 +70,7 @@ namespace Sapientia.Tcp
 
 		public bool TryReceiveNewConnection(out ConnectionReference connectionReference)
 		{
-			if (_newConnectionsCount > 0 && _state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Free)
+			if (_newConnectionsCount > 0 && TrySetBusy())
 			{
 				while (!_newConnectionBuffer.IsEmpty)
 				{
@@ -95,12 +82,12 @@ namespace Sapientia.Tcp
 						_existingConnections.Add(connection);
 						Interlocked.Decrement(ref _newConnectionsCount);
 
-						_state = (int)State.Free;
+						SetFree();
 						return true;
 					}
 				}
 
-				_state = (int)State.Free;
+				SetFree();
 			}
 
 			connectionReference = default;
@@ -115,16 +102,14 @@ namespace Sapientia.Tcp
 				return;
 			}
 
-			while (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
-			{
-				Thread.Sleep(EXCHANGE_INTERVAL);
-			}
+			using var scope = GetBusyScope();
 
 			if (_connections.IsFull)
 			{
 				// Overloaded
 				ConnectionDeclinedEvent?.Invoke(connectionSocket, customId);
 				connectionSocket.Close();
+
 				return;
 			}
 
@@ -138,17 +123,16 @@ namespace Sapientia.Tcp
 
 			Interlocked.Increment(ref _nextConnectionId);
 			Interlocked.Increment(ref _newConnectionsCount);
-			_state = (int)State.Free;
 		}
 
 		internal void Update()
 		{
-			if (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
+			if (!TrySetBusy())
 				return;
 
 			DisconnectClosedConnections();
 
-			_state = (int)State.Free;
+			SetFree();
 		}
 
 		private void DisconnectClosedConnections()
@@ -159,9 +143,13 @@ namespace Sapientia.Tcp
 
 				if (connection.State == Connection_Tcp.ConnectionState.Disconnecting)
 				{
+					var connectionReference = connection.ConnectionReference;
+
 					connection.Disconnect();
 					_existingConnections.RemoveAtSwapBack(i);
-					_connections.ReleaseValueIndex(connection.ConnectionReference.index);
+					_connections.ReleaseValueIndex(connectionReference.index);
+
+					ConnectionDisconnectedEvent?.Invoke(connectionReference.customId);
 				}
 				else
 				{
@@ -172,6 +160,8 @@ namespace Sapientia.Tcp
 
 		internal void Dispose()
 		{
+			using var scope = GetBusyScope();
+
 			for (var i = 0; i < _existingConnections.Count; i++)
 			{
 				_existingConnections[i].Disconnect();

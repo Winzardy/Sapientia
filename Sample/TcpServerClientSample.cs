@@ -121,7 +121,7 @@ namespace Sapientia.Sample
 						Thread.Sleep(10);
 					}
 
-					client.connectionHandler.CloseConnection(connectionReference);
+					client.connectionHandler.Disconnect(connectionReference);
 					client.Dispose();
 					Console.WriteLine("Client thread was closed");
 				});

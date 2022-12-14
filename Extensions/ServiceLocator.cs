@@ -8,7 +8,15 @@ namespace Sapientia.Extensions
 		public static T Instance { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; [MethodImpl(MethodImplOptions.AggressiveInlining)] private set; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T1 Register<T1>() where T1: T, new()
+		public static T GetOrCreate<T1>() where T1: T, new()
+		{
+			if (Instance == null)
+				return Create<T1>();
+			return Instance;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T Create<T1>() where T1: T, new()
 		{
 			var value = new T1();
 			Register(value);
@@ -41,15 +49,27 @@ namespace Sapientia.Extensions
 	public static class ServiceLocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T RegisterService<T, T1>() where T: IService where T1 : T, new()
+		public static T GetOrCreate<T>() where T: IService, new()
 		{
-			return ServiceLocator<T>.Register<T1>();
+			return ServiceLocator<T>.GetOrCreate<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T RegisterService<T>() where T: IService, new()
+		public static T GetOrCreate<T, T1>() where T: IService where T1 : T, new()
 		{
-			return ServiceLocator<T>.Register<T>();
+			return ServiceLocator<T>.GetOrCreate<T1>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T Create<T>() where T: IService, new()
+		{
+			return ServiceLocator<T>.Create<T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T Create<T, T1>() where T: IService where T1 : T, new()
+		{
+			return ServiceLocator<T>.Create<T1>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

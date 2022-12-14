@@ -57,13 +57,13 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(T value)
+		public void Add<T1>(T1 value) where T1: T
 		{
 			_array[_count++] = value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddWithExpand(T value)
+		public void AddWithExpand<T1>(T1 value) where T1: T
 		{
 			Expand(_count + 1);
 			_array[_count++] = value;
@@ -125,10 +125,17 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void FullClear()
+		{
+			Array.Fill(_array, default);
+			_count = 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
+			Array.Fill(_array, default, 0, _count);
 			_count = 0;
-			Array.Fill(_array, default);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
