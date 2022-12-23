@@ -7,6 +7,8 @@ namespace Sapientia.Collections
 {
 	public class SimpleList<T> : IDisposable
 	{
+		private const int DEFAULT_CAPACITY = 8;
+
 		private T[] _array;
 		private int _count;
 		private int _capacity;
@@ -41,7 +43,7 @@ namespace Sapientia.Collections
 			get => ref _array[index];
 		}
 
-		public SimpleList(int capacity)
+		public SimpleList(int capacity = DEFAULT_CAPACITY)
 		{
 			_count = 0;
 			_capacity = capacity;
@@ -134,6 +136,8 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
+			if (_count == 0)
+				return;
 			Array.Fill(_array, default, 0, _count);
 			_count = 0;
 		}
@@ -144,9 +148,19 @@ namespace Sapientia.Collections
 			_count = 0;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
+			if (_array == null)
+				return;
+
 			ArrayPool<T>.Shared.Return(_array);
+			_array = null;
+		}
+
+		~SimpleList()
+		{
+			Dispose();
 		}
 	}
 }
