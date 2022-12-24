@@ -57,11 +57,6 @@ namespace Sapientia.Collections
 			return _valueIndexes[_count++];
 		}
 
-		public int GetValueIndex(int index)
-		{
-			return _valueIndexes[index];
-		}
-
 		public ref T GetValue(int valueIndex)
 		{
 			return ref _values[valueIndex];
