@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
@@ -94,6 +95,16 @@ namespace Sapientia.Collections
 			}
 		}
 
+		public void InsertAt(int index, in T value)
+		{
+			Expand(_count + 1);
+
+			Array.Copy(_array, index, _array, index + 1, _count - index);
+			_array[index] = value;
+
+			_count++;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Expand(int newCapacity)
 		{
@@ -161,6 +172,50 @@ namespace Sapientia.Collections
 		~SimpleList()
 		{
 			Dispose();
+		}
+	}
+
+	public static class SimpleListExt
+	{
+		public struct DefaultComparer<T> : IComparer<T> where T : IComparable<T>
+		{
+			/// <summary>
+			/// Compares two values.
+			/// </summary>
+			/// <param name="x">First value to compare.</param>
+			/// <param name="y">Second value to compare.</param>
+			/// <returns>A signed integer that denotes the relative values of `x` and `y`:
+			/// 0 if they're equal, negative if `x &lt; y`, and positive if `x &gt; y`.</returns>
+			public int Compare(T x, T y) => x.CompareTo(y);
+		}
+
+		public static int BinarySearch<T>(this SimpleList<T> list, T value) where T: IComparable<T>
+		{
+			return BinarySearch(list, list.Count, value, new DefaultComparer<T>());
+		}
+
+		public static int BinarySearch<T, TComparer>(this SimpleList<T> list, int length, T value, TComparer comparer) where TComparer: IComparer<T>
+		{
+			var offset = 0;
+
+			for (var l = length; l != 0; l >>= 1)
+			{
+				var idx = offset + (l >> 1);
+				var curr = list[idx];
+				var r = comparer.Compare(value, curr);
+				if (r == 0)
+				{
+					return idx;
+				}
+
+				if (r > 0)
+				{
+					offset = idx + 1;
+					--l;
+				}
+			}
+
+			return ~offset;
 		}
 	}
 }
