@@ -7,6 +7,11 @@ namespace Sapientia.Extensions
 	{
 		public static T Instance { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; [MethodImpl(MethodImplOptions.AggressiveInlining)] private set; }
 
+		public static bool HasInstance()
+		{
+			return Instance != null;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T GetOrCreate<T1>() where T1: T, new()
 		{
