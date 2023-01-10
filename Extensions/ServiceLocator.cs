@@ -41,7 +41,8 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void UnRegister(T service)
 		{
-			Debug.Assert(Instance.Equals(service));
+			if (!Instance.Equals(service))
+				return;
 			Instance = default;
 		}
 	}
