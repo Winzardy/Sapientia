@@ -13,7 +13,7 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GetOrCreate<T1>() where T1: T, new()
+		public static T Get<T1>() where T1: T, new()
 		{
 			if (Instance == null)
 				return Create<T1>();
@@ -55,15 +55,15 @@ namespace Sapientia.Extensions
 	public static class ServiceLocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GetOrCreate<T>() where T: IService, new()
+		public static T Get<T>() where T: IService, new()
 		{
-			return ServiceLocator<T>.GetOrCreate<T>();
+			return ServiceLocator<T>.Get<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GetOrCreate<T, T1>() where T: IService where T1 : T, new()
+		public static T Get<T, T1>() where T: IService where T1 : T, new()
 		{
-			return ServiceLocator<T>.GetOrCreate<T1>();
+			return ServiceLocator<T>.Get<T1>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
