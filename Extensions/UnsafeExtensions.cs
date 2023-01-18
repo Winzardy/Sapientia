@@ -1,9 +1,23 @@
+#if UNITY_5_3_OR_NEWER
 using Unity.Collections.LowLevel.Unsafe;
+#else
+using System.Runtime.CompilerServices;
+#endif
 
 namespace Sapientia.Extensions
 {
 	public static unsafe class UnsafeExtensions
 	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void* AsPointer<T>(ref T value)
+		{
+#if UNITY_5_3_OR_NEWER
+			return UnsafeUtility.AddressOf(ref a);
+#else
+			return Unsafe.AsPointer(ref value);
+#endif
+		}
+
 		public static bool IsEquals<T>(this ref T a, ref T b) where T : unmanaged
 		{
 			var size = sizeof(T);
@@ -11,8 +25,8 @@ namespace Sapientia.Extensions
 			var bytes = size % sizeof(int);
 			var ints = (size - bytes) / sizeof(int);
 
-			var intPtrA = (int*)UnsafeUtility.AddressOf(ref a);
-			var intPtrB = (int*)UnsafeUtility.AddressOf(ref b);
+			var intPtrA = (int*)AsPointer(ref a);
+			var intPtrB = (int*)AsPointer(ref b);
 			for (var i = 0; i < ints; i++)
 			{
 				if (intPtrA[i] != intPtrB[i])
@@ -36,7 +50,7 @@ namespace Sapientia.Extensions
 			var bytes = size % sizeof(int);
 			var ints = (size - bytes) / sizeof(int);
 
-			var intPtr = (int*)UnsafeUtility.AddressOf(ref value);
+			var intPtr = (int*)AsPointer(ref value);
 			for (var i = 0; i < ints; i++)
 			{
 				if (intPtr[i] != default)
