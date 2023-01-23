@@ -8,7 +8,7 @@ namespace Sapientia.Extensions
 	public static unsafe class UnsafeExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void* AsPointer<T>(ref T value) where T : struct
+		public static void* AsPointer<T>(this ref T value) where T : struct
 		{
 #if UNITY_5_3_OR_NEWER
 			return UnsafeUtility.AddressOf(ref value);
