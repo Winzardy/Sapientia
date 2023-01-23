@@ -56,12 +56,12 @@ namespace Sapientia.Collections.ByteReader
 		{
 			while (_poolsPointers.Count < _poolsPointers.Capacity)
 			{
-				_poolsPointers.Add(Marshal.AllocHGlobal(elementDataCapacity * poolCapacity));
+				_poolsPointers.AddWithoutExpand(Marshal.AllocHGlobal(elementDataCapacity * poolCapacity));
 
 				var ptr = _poolsPointers.Last;
 				for (var i = 0; i < poolCapacity; i++)
 				{
-					_readerField.Add(new ByteReader(ptr, elementDataCapacity));
+					_readerField.AddWithoutExpand(new ByteReader(ptr, elementDataCapacity));
 					ptr += elementDataCapacity;
 				}
 			}

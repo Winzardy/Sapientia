@@ -4,7 +4,7 @@ namespace Sapientia.Transport
 {
 	public readonly struct ConnectionReference
 	{
-		public static readonly ConnectionReference empty = new(-1, -1, -1);
+		public static readonly ConnectionReference EMPTY = new(-1, -1, -1);
 
 		public readonly int index;
 		public readonly int id;

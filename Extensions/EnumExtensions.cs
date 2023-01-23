@@ -6,7 +6,7 @@ namespace Sapientia.Extensions
 {
 	public static class EnumExtensions<T> where T: unmanaged, Enum
 	{
-		public static readonly int filledFlag = GetFullFlag();
+		public static readonly int FILLED_FLAG = GetFullFlag();
 
 		private static int GetFullFlag()
 		{

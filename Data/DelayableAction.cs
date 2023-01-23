@@ -78,7 +78,7 @@ namespace Sapientia.Data
 		public void DelayInvoke(TContext context)
 		{
 			using var scope = GetBusyScope();
-			_invocationContextList.Add(context);
+			_invocationContextList.AddWithoutExpand(context);
 		}
 
 		public void InvokeDelayed()

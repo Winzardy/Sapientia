@@ -19,7 +19,7 @@ namespace Sapientia.Tcp
 
 		// Reset:
 		private ConnectionState _state;
-		private ConnectionReference _connectionReference = ConnectionReference.empty;
+		private ConnectionReference _connectionReference = ConnectionReference.EMPTY;
 
 		public ConnectionState State
 		{
@@ -146,7 +146,7 @@ namespace Sapientia.Tcp
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Reset()
 		{
-			_connectionReference = ConnectionReference.empty;
+			_connectionReference = ConnectionReference.EMPTY;
 			_socket = default!;
 			_receiveMessageSender = default;
 			_countToReceive = 0;

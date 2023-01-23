@@ -79,7 +79,7 @@ namespace Sapientia.Tcp
 
 					if (connectionReference.id == connection.ConnectionReference.id)
 					{
-						_existingConnections.Add(connection);
+						_existingConnections.AddWithoutExpand(connection);
 						Interlocked.Decrement(ref _newConnectionsCount);
 
 						SetFree();

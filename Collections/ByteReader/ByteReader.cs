@@ -7,9 +7,9 @@ namespace Sapientia.Collections.ByteReader
 {
 	public unsafe struct ByteReader : IDisposable
 	{
-		private static readonly int _readPtrSize = sizeof(byte*);
-		private static readonly int _countSize = sizeof(Int32);
-		private static readonly int _headerSize = _readPtrSize + _countSize;
+		private static readonly int READ_PTR_SIZE = sizeof(byte*);
+		private static readonly int COUNT_SIZE = sizeof(Int32);
+		private static readonly int HEADER_SIZE = READ_PTR_SIZE + COUNT_SIZE;
 
 		private readonly byte* _bufferPtr;
 		private readonly byte** _readPtrPtr;
@@ -28,7 +28,7 @@ namespace Sapientia.Collections.ByteReader
 		public int DequeuedCount
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (int)(ReadPtr - _headerSize - _bufferPtr);
+			get => (int)(ReadPtr - HEADER_SIZE - _bufferPtr);
 		}
 
 		private byte* ReadPtr
@@ -49,14 +49,14 @@ namespace Sapientia.Collections.ByteReader
 
 		public ByteReader(byte* ptr, int capacity)
 		{
-			Debug.Assert(capacity > _headerSize);
+			Debug.Assert(capacity > HEADER_SIZE);
 
 			_bufferPtr = ptr;
 			_readPtrPtr = (byte**)ptr;
-			_countPtr = (int*)(ptr + _readPtrSize);
-			dataCapacity = capacity - _headerSize;
+			_countPtr = (int*)(ptr + READ_PTR_SIZE);
+			dataCapacity = capacity - HEADER_SIZE;
 
-			ReadPtr = ptr + _headerSize;
+			ReadPtr = ptr + HEADER_SIZE;
 			Count = 0;
 		}
 
@@ -132,7 +132,7 @@ namespace Sapientia.Collections.ByteReader
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Reset()
 		{
-			ReadPtr = _bufferPtr + _headerSize;
+			ReadPtr = _bufferPtr + HEADER_SIZE;
 			Count = 0;
 		}
 
@@ -145,7 +145,7 @@ namespace Sapientia.Collections.ByteReader
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ReadOnlySpan<byte> Serialize()
 		{
-			return new ReadOnlySpan<byte>(_bufferPtr + _readPtrSize, _countSize + Count);
+			return new ReadOnlySpan<byte>(_bufferPtr + READ_PTR_SIZE, COUNT_SIZE + Count);
 		}
 	}
 }
