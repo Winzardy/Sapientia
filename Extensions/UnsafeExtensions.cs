@@ -1,7 +1,6 @@
+using System.Runtime.CompilerServices;
 #if UNITY_5_3_OR_NEWER
 using Unity.Collections.LowLevel.Unsafe;
-#else
-using System.Runtime.CompilerServices;
 #endif
 
 namespace Sapientia.Extensions
@@ -9,10 +8,10 @@ namespace Sapientia.Extensions
 	public static unsafe class UnsafeExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void* AsPointer<T>(ref T value)
+		public static void* AsPointer<T>(ref T value) where T : struct
 		{
 #if UNITY_5_3_OR_NEWER
-			return UnsafeUtility.AddressOf(ref a);
+			return UnsafeUtility.AddressOf(ref value);
 #else
 			return Unsafe.AsPointer(ref value);
 #endif
