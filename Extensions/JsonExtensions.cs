@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Sapientia.Collections;
@@ -27,7 +28,7 @@ namespace Sapientia.Extensions
 
 		public static T FromJson<T>(this string json)
 		{
-			return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS);
+			return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS)!;
 		}
 
 		public static T FromJsonFile<T>(this string path)
@@ -45,7 +46,7 @@ namespace Sapientia.Extensions
 		public static SimpleList<T> ListFromJson<T>(this string fileString)
 		{
 			if (string.IsNullOrEmpty(fileString))
-				return null;
+				return default!;
 
 			var changeItemEvents = new SimpleList<T>();
 
