@@ -26,6 +26,12 @@ namespace Sapientia.Extensions
 			streamWriter.WriteLine(json);
 		}
 
+		public static void AppendToJsonFile<T>(this T from, StreamWriter streamWriter)
+		{
+			var json = from.ToJson();
+			streamWriter.WriteLine(json);
+		}
+
 		public static T FromJson<T>(this string json)
 		{
 			return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS)!;
