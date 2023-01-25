@@ -32,6 +32,20 @@ namespace Sapientia.Extensions
 			streamWriter.WriteLine(json);
 		}
 
+		public static bool TryFromJson<T>(this string json, out T value)
+		{
+			try
+			{
+				value = JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS)!;
+				return true;
+			}
+			catch (Exception e)
+			{
+				value = default!;
+				return false;
+			}
+		}
+
 		public static T FromJson<T>(this string json)
 		{
 			return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS)!;
