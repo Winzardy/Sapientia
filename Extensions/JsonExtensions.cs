@@ -68,12 +68,19 @@ namespace Sapientia.Extensions
 			if (string.IsNullOrEmpty(fileString))
 				return default!;
 
+			using var stringReader = new StringReader(fileString);
+			var changeItemEvents = ListFromJson<T>(stringReader);
+
+			return changeItemEvents;
+		}
+
+		public static SimpleList<T> ListFromJson<T>(this TextReader textReader)
+		{
 			var changeItemEvents = new SimpleList<T>();
 
-			using var stringReader = new StringReader(fileString);
-			while (stringReader.Peek() > 0)
+			while (textReader.Peek() > 0)
 			{
-				var json = stringReader.ReadLine()!;
+				var json = textReader.ReadLine()!;
 				var changeItemEvent = json.FromJson<T>();
 				changeItemEvents.Add(changeItemEvent);
 			}
