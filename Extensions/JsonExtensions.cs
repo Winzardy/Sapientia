@@ -8,7 +8,7 @@ namespace Sapientia.Extensions
 {
 	public static class JsonExtensions
 	{
-		private static readonly JsonSerializerSettings JSON_SETTINGS = new ()
+		private static readonly JsonSerializerSettings JSON_SETTINGS = new()
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
 		};
@@ -63,10 +63,10 @@ namespace Sapientia.Extensions
 			return json.FromJson<T>();
 		}
 
-		public static SimpleList<T> ListFromJson<T>(this string fileString)
+		public static SimpleList<T>? ListFromJson<T>(this string fileString)
 		{
 			if (string.IsNullOrEmpty(fileString))
-				return default!;
+				return default;
 
 			using var stringReader = new StringReader(fileString);
 			var changeItemEvents = ListFromJson<T>(stringReader);
@@ -74,18 +74,48 @@ namespace Sapientia.Extensions
 			return changeItemEvents;
 		}
 
-		public static SimpleList<T> ListFromJson<T>(this TextReader textReader)
+		public static SimpleList<T>? ListFromJson<T>(this TextReader textReader)
 		{
-			var changeItemEvents = new SimpleList<T>();
+			if (textReader.Peek() == 0)
+				return default;
 
-			while (textReader.Peek() > 0)
+			var result = new SimpleList<T>();
+			do
 			{
 				var json = textReader.ReadLine()!;
 				var changeItemEvent = json.FromJson<T>();
-				changeItemEvents.Add(changeItemEvent);
-			}
+				result.Add(changeItemEvent);
+			} while (textReader.Peek() > 0);
+
+			return result;
+		}
+
+		public static async Task<SimpleList<T>?> ListFromJsonAsync<T>(this string fileString)
+		{
+			if (string.IsNullOrEmpty(fileString))
+				return default;
+
+			using var stringReader = new StringReader(fileString);
+			var changeItemEvents = await ListFromJsonAsync<T>(stringReader);
 
 			return changeItemEvents;
+		}
+
+		public static async Task<SimpleList<T>?> ListFromJsonAsync<T>(this TextReader textReader)
+		{
+			if (textReader.Peek() == 0)
+				return default;
+
+			var result = new SimpleList<T>();
+
+			do
+			{
+				var json = (await textReader.ReadLineAsync())!;
+				var changeItemEvent = json.FromJson<T>();
+				result.Add(changeItemEvent);
+			} while (textReader.Peek() > 0);
+
+			return result;
 		}
 	}
 }
