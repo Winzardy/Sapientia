@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Sapientia.Extensions;
@@ -53,6 +54,12 @@ namespace Sapientia.Data
 		{
 			return new AsyncValueClassBusyScope<T>(this);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public AsyncValueClassBusyScopeAsync<T> GetBusyScopeAsync()
+		{
+			return new AsyncValueClassBusyScopeAsync<T>(this);
+		}
 	}
 
 	public readonly ref struct AsyncValueClassBusyScope<T>
@@ -60,6 +67,22 @@ namespace Sapientia.Data
 		private readonly AsyncValueClass<T> _asyncValue;
 
 		public AsyncValueClassBusyScope(AsyncValueClass<T> asyncValue)
+		{
+			asyncValue.SetBusy();
+			_asyncValue = asyncValue;
+		}
+
+		public void Dispose()
+		{
+			_asyncValue.SetFree();
+		}
+	}
+
+	public readonly struct AsyncValueClassBusyScopeAsync<T> : IDisposable
+	{
+		private readonly AsyncValueClass<T> _asyncValue;
+
+		public AsyncValueClassBusyScopeAsync(AsyncValueClass<T> asyncValue)
 		{
 			asyncValue.SetBusy();
 			_asyncValue = asyncValue;

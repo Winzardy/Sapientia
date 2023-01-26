@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Sapientia.Extensions;
@@ -104,6 +105,18 @@ namespace Sapientia.Data
 		{
 			return new AsyncValueBusyScope<T>(ref asyncValue);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static AsyncValueBusyScopeAsync GetBusyScopeAsync(this ref AsyncValue asyncValue)
+		{
+			return new AsyncValueBusyScopeAsync(ref asyncValue);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static AsyncValueBusyScopeAsync<T> GetBusyScopeAsync<T>(this ref AsyncValue<T> asyncValue) where T: unmanaged
+		{
+			return new AsyncValueBusyScopeAsync<T>(ref asyncValue);
+		}
 	}
 
 	public readonly unsafe ref struct AsyncValueBusyScope
@@ -122,11 +135,43 @@ namespace Sapientia.Data
 		}
 	}
 
+	public readonly unsafe struct AsyncValueBusyScopeAsync : IDisposable
+	{
+		private readonly void* _asyncValue;
+
+		public AsyncValueBusyScopeAsync(ref AsyncValue asyncValue)
+		{
+			asyncValue.SetBusy();
+			_asyncValue = asyncValue.AsPointer();
+		}
+
+		public void Dispose()
+		{
+			((AsyncValue*)_asyncValue)->SetFree();
+		}
+	}
+
 	public readonly unsafe ref struct AsyncValueBusyScope<T> where T: unmanaged
 	{
 		private readonly void* _asyncValue;
 
 		public AsyncValueBusyScope(ref AsyncValue<T> asyncValue)
+		{
+			asyncValue.SetBusy();
+			_asyncValue = asyncValue.AsPointer();
+		}
+
+		public void Dispose()
+		{
+			((AsyncValue<T>*)_asyncValue)->SetFree();
+		}
+	}
+
+	public readonly unsafe struct AsyncValueBusyScopeAsync<T> : IDisposable where T: unmanaged
+	{
+		private readonly void* _asyncValue;
+
+		public AsyncValueBusyScopeAsync(ref AsyncValue<T> asyncValue)
 		{
 			asyncValue.SetBusy();
 			_asyncValue = asyncValue.AsPointer();
