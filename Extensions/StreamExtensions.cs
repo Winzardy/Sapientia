@@ -1,14 +1,15 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 
-namespace Sapientia.Extensions;
-
-public static class StreamExtensions
+namespace Sapientia.Extensions
 {
-	public static async Task<string> ReadToEndAsync(this Stream stream)
+	public static class StreamExtensions
 	{
-		using var reader = new StreamReader(stream);
-		var result = await reader.ReadToEndAsync();
-		return result;
+		public static async Task<string> ReadToEndAsync(this Stream stream)
+		{
+			using var reader = new StreamReader(stream);
+			var result = await reader.ReadToEndAsync();
+			return result;
+		}
 	}
 }
