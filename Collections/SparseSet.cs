@@ -96,7 +96,7 @@ namespace Sapientia.Collections
 
 		private int SnapCeilCapacity(int newCapacity)
 		{
-			return (newCapacity + expandStep - 1) / expandStep * expandStep;
+			return ((newCapacity + expandStep - 1) / expandStep) * expandStep;
 		}
 
 		private void Fill(int from, int to)
