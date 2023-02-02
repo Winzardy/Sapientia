@@ -32,6 +32,12 @@ namespace Sapientia.Collections
 			get => ref _array[Count - 1];
 		}
 
+		public bool IsEmpty
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _count == 0;
+		}
+
 		public bool IsFull
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,7 +54,12 @@ namespace Sapientia.Collections
 		{
 			_count = 0;
 			_capacity = capacity;
-			_array = ArrayPool<T>.Shared.Rent(capacity);
+			_array = ArrayPool<T>.Shared.Rent(_capacity);
+		}
+
+		public SimpleList(T[] array) : this(array.Length)
+		{
+			array.CopyTo(_array, 0);
 		}
 
 		public SimpleList(int capacity, T defaultValue)
@@ -76,6 +87,15 @@ namespace Sapientia.Collections
 		public int Allocate()
 		{
 			return _count++;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T ExtractAtSwapBack(int index)
+		{
+			_count--;
+			var value = _array[index];
+			_array[index] = _array[_count];
+			return value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
