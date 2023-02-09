@@ -24,5 +24,24 @@ namespace Sapientia.Extensions
 
 			array = newArray;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T[] Copy_WithPool<T>(this T[] array)
+		{
+			var newArray = ArrayPool<T>.Shared.Rent(array.Length);
+			Array.Copy(array, newArray, array.Length);
+
+			ArrayPool<T>.Shared.Return(array);
+			return newArray;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T[] Copy<T>(this T[] array)
+		{
+			var newArray = new T[array.Length];
+			Array.Copy(array, newArray, array.Length);
+
+			return newArray;
+		}
 	}
 }
