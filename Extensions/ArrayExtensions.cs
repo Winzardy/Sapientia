@@ -43,5 +43,11 @@ namespace Sapientia.Extensions
 
 			return newArray;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Fill<T>(this T[] array, T defaultValue)
+		{
+			Array.Fill(array, defaultValue);
+		}
 	}
 }
