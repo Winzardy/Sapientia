@@ -29,6 +29,15 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryRegister(T service)
+		{
+			if (Instance != null)
+				return false;
+			Instance = service;
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T Register(T service)
 		{
 			Debug.Assert(Instance == null);
@@ -76,6 +85,12 @@ namespace Sapientia.Extensions
 		public static T Create<T, T1>() where T: IService where T1 : T, new()
 		{
 			return ServiceLocator<T>.Create<T1>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryRegisterAsService<T>(this T service) where T: IService
+		{
+			return ServiceLocator<T>.TryRegister(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
