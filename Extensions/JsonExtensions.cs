@@ -8,27 +8,33 @@ namespace Sapientia.Extensions
 {
 	public static class JsonExtensions
 	{
-		private static readonly JsonSerializerSettings JSON_SETTINGS = new()
+		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED = new()
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
 		};
 
-		public static string ToJson<T>(this T from)
+		private static readonly JsonSerializerSettings JSON_SETTINGS_STRICTLY_TYPED = new()
 		{
-			return JsonConvert.SerializeObject(from, JSON_SETTINGS);
+			TypeNameHandling = TypeNameHandling.All,
+		};
+
+		public static string ToJson<T>(this T from, bool isCut = true)
+		{
+			var settings = isCut ? JSON_SETTINGS_AUTO_TYPED : JSON_SETTINGS_STRICTLY_TYPED;
+			return JsonConvert.SerializeObject(from, settings);
 		}
 
-		public static void AppendToJsonFile<T>(this T from, string filePath)
+		public static void AppendToJsonFile<T>(this T from, string filePath, bool isCut = true)
 		{
 			using var streamWriter = File.AppendText(filePath);
 
-			var json = from.ToJson();
+			var json = from.ToJson(isCut);
 			streamWriter.WriteLine(json);
 		}
 
-		public static void AppendToJsonFile<T>(this T from, StreamWriter streamWriter)
+		public static void AppendToJsonFile<T>(this T from, StreamWriter streamWriter, bool isCut = true)
 		{
-			var json = from.ToJson();
+			var json = from.ToJson(isCut);
 			streamWriter.WriteLine(json);
 		}
 
@@ -36,7 +42,7 @@ namespace Sapientia.Extensions
 		{
 			try
 			{
-				value = JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS)!;
+				value = JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
 				return true;
 			}
 			catch (Exception e)
@@ -48,7 +54,7 @@ namespace Sapientia.Extensions
 
 		public static T FromJson<T>(this string json)
 		{
-			return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS)!;
+			return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
 		}
 
 		public static T FromJsonFile<T>(this string path)
