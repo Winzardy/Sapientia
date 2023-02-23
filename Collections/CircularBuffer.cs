@@ -8,8 +8,8 @@ namespace Sapientia.Collections
 	{
 		private T[] _buffer;
 
-		private int _firstData;
-		private int _last;
+		private int _firstIndex;
+		private int _lastIndex;
 		private int _length;
 
 		private readonly int _expandStep;
@@ -17,13 +17,13 @@ namespace Sapientia.Collections
 		public int FirstBufferIndex
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _firstData;
+			get => _firstIndex;
 		}
 
 		public int LastBufferIndex
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _last;
+			get => _lastIndex;
 		}
 
 		public int Length
@@ -41,13 +41,13 @@ namespace Sapientia.Collections
 		public T First
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _buffer[_firstData];
+			get => _buffer[_firstIndex];
 		}
 
 		public T Last
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _buffer[_last];
+			get => _buffer[_lastIndex];
 		}
 
 		public bool IsEmpty
@@ -70,8 +70,8 @@ namespace Sapientia.Collections
 		{
 			_buffer = ArrayPool<T>.Shared.Rent(bufferLength);
 
-			_last = _buffer.Length - 1;
-			_firstData = _length = 0;
+			_lastIndex = _buffer.Length - 1;
+			_firstIndex = _length = 0;
 
 			_expandStep = expandStep;
 		}
@@ -91,15 +91,15 @@ namespace Sapientia.Collections
 		{
 			if (IsFull)
 			{
-				_firstData = NextPosition(_firstData);
+				_firstIndex = NextPosition(_firstIndex);
 			}
 			else
 			{
 				_length++;
 			}
 
-			_last = NextPosition(_last);
-			_buffer[_last] = toAdd;
+			_lastIndex = NextPosition(_lastIndex);
+			_buffer[_lastIndex] = toAdd;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -107,7 +107,7 @@ namespace Sapientia.Collections
 		{
 			if (IsFull)
 			{
-				Expand();
+				ExpandCapacity();
 			}
 
 			AddFirst(toAdd);
@@ -118,7 +118,7 @@ namespace Sapientia.Collections
 		{
 			if (IsFull)
 			{
-				Expand();
+				ExpandCapacity();
 			}
 
 			AddLast(toAdd);
@@ -129,15 +129,15 @@ namespace Sapientia.Collections
 		{
 			if (IsFull)
 			{
-				_last = PreviousPosition(_last);
+				_lastIndex = PreviousPosition(_lastIndex);
 			}
 			else
 			{
 				_length++;
 			}
 
-			_firstData = PreviousPosition(_firstData);
-			_buffer[_firstData] = toAdd;
+			_firstIndex = PreviousPosition(_firstIndex);
+			_buffer[_firstIndex] = toAdd;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -156,8 +156,8 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveFirst()
 		{
-			var removed = _buffer[_firstData];
-			_firstData = NextPosition(_firstData);
+			var removed = _buffer[_firstIndex];
+			_firstIndex = NextPosition(_firstIndex);
 			_length--;
 			return removed;
 		}
@@ -178,8 +178,8 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveLast()
 		{
-			var removed = _buffer[_last];
-			_last = PreviousPosition(_last);
+			var removed = _buffer[_lastIndex];
+			_lastIndex = PreviousPosition(_lastIndex);
 			_length--;
 			return removed;
 		}
@@ -197,11 +197,24 @@ namespace Sapientia.Collections
 			return (position == 0 ? _buffer.Length : position) - 1;
 		}
 
-		public void Expand()
+		private void ExpandCapacity()
 		{
-			var newLength = _buffer.Length + _expandStep;
+			var newCapacity = _buffer.Length + _expandStep;
 
-			var newArr = ArrayPool<T>.Shared.Rent(newLength);
+			var newArr = ArrayPool<T>.Shared.Rent(newCapacity);
+			CopyAndOrderData(newArr);
+
+			ArrayPool<T>.Shared.Return(_buffer);
+
+			_buffer = newArr;
+		}
+
+		public void ExpandCapacity(int newCapacity)
+		{
+			if (newCapacity <= _buffer.Length)
+				return;
+
+			var newArr = ArrayPool<T>.Shared.Rent(newCapacity);
 			CopyAndOrderData(newArr);
 
 			ArrayPool<T>.Shared.Return(_buffer);
@@ -212,25 +225,25 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void CopyAndOrderData(T[] to)
 		{
-			if (_firstData > _last)
+			if (_firstIndex > _lastIndex)
 			{
-				var firstToEnd = _buffer.Length - _firstData;
-				Array.Copy(_buffer, _firstData, to, 0, firstToEnd);
-				Array.Copy(_buffer, 0, to, firstToEnd, _last + 1);
+				var firstToEnd = _buffer.Length - _firstIndex;
+				Array.Copy(_buffer, _firstIndex, to, 0, firstToEnd);
+				Array.Copy(_buffer, 0, to, firstToEnd, _lastIndex + 1);
 			}
 			else
 			{
-				Array.Copy(_buffer, _firstData, to, 0, Length);
+				Array.Copy(_buffer, _firstIndex, to, 0, Length);
 			}
 
-			_firstData = 0;
-			_last = Length - 1;
+			_firstIndex = 0;
+			_lastIndex = Length - 1;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private int BufferIndex(int index)
 		{
-			return (_firstData + index) % _buffer.Length;
+			return (_firstIndex + index) % _buffer.Length;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
