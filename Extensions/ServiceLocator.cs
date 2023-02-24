@@ -21,6 +21,18 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGet(out T service)
+		{
+			if (Instance == null)
+			{
+				service = default;
+				return false;
+			}
+			service = Instance;
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T Create<T1>() where T1: T, new()
 		{
 			var value = new T1();
