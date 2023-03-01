@@ -11,17 +11,19 @@ namespace Sapientia.Extensions
 		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED = new()
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
+			MissingMemberHandling = MissingMemberHandling.Ignore,
 		};
 
 		private static readonly JsonSerializerSettings JSON_SETTINGS_STRICTLY_TYPED = new()
 		{
 			TypeNameHandling = TypeNameHandling.All,
+			MissingMemberHandling = MissingMemberHandling.Ignore,
 		};
 
 		public static string ToJson<T>(this T from, bool isCut = true)
 		{
 			var settings = isCut ? JSON_SETTINGS_AUTO_TYPED : JSON_SETTINGS_STRICTLY_TYPED;
-			return JsonConvert.SerializeObject(from, settings);
+			return JsonConvert.SerializeObject(from, typeof(T), settings);
 		}
 
 		public static void AppendToJsonFile<T>(this T from, string filePath, bool isCut = true)
