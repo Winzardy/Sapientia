@@ -49,5 +49,11 @@ namespace Sapientia.Extensions
 		{
 			Array.Fill(array, defaultValue);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Sort<T>(this T[] array)
+		{
+			Array.Sort(array);
+		}
 	}
 }
