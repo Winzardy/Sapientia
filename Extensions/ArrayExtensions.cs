@@ -7,6 +7,15 @@ namespace Sapientia.Extensions
 	public static class ArrayExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void MoveToEnd<T>(this T[] array, int index)
+		{
+			var value = array[index];
+			var sourceIndex = index + 1;
+			Array.Copy(array, sourceIndex, array, index, array.Length - sourceIndex);
+			array[^1] = value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Expand_WithPool<T>(ref T[] array, int newCapacity)
 		{
 			var newArray = ArrayPool<T>.Shared.Rent(newCapacity);
