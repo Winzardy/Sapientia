@@ -64,5 +64,15 @@ namespace Sapientia.Extensions
 		{
 			Array.Sort(array);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void ShiftRight<T>(this T[] array, int index, int shiftLenght)
+		{
+			var destinationIndex = index + shiftLenght;
+			var count = array.Length - destinationIndex;
+
+			if (count > 0)
+				Array.Copy(array, index, array, destinationIndex, count);
+		}
 	}
 }
