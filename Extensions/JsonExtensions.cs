@@ -11,13 +11,11 @@ namespace Sapientia.Extensions
 		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED = new()
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
-			MissingMemberHandling = MissingMemberHandling.Ignore,
 		};
 
 		private static readonly JsonSerializerSettings JSON_SETTINGS_STRICTLY_TYPED = new()
 		{
 			TypeNameHandling = TypeNameHandling.All,
-			MissingMemberHandling = MissingMemberHandling.Ignore,
 		};
 
 		public static string ToJson<T>(this T from, bool isCut = true)
