@@ -8,6 +8,11 @@ namespace Sapientia.Extensions
 {
 	public static class JsonExtensions
 	{
+		private static readonly JsonSerializerSettings JSON_SETTINGS_NONE_TYPED = new()
+		{
+			TypeNameHandling = TypeNameHandling.None,
+		};
+
 		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED = new()
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
@@ -20,7 +25,7 @@ namespace Sapientia.Extensions
 
 		public static string ToJson<T>(this T from, bool isCut = true)
 		{
-			var settings = isCut ? JSON_SETTINGS_AUTO_TYPED : JSON_SETTINGS_STRICTLY_TYPED;
+			var settings = isCut ? JSON_SETTINGS_NONE_TYPED : JSON_SETTINGS_STRICTLY_TYPED;
 			return JsonConvert.SerializeObject(from, typeof(T), settings);
 		}
 
