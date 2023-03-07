@@ -24,6 +24,18 @@ namespace Sapientia.Extensions
 	public static class EnumExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe T Min<T>(this T a, T b) where T : unmanaged, Enum
+		{
+			return *(int*)(&a) < *(int*)(&b) ? a : b;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe T Max<T>(this T a, T b) where T : unmanaged, Enum
+		{
+			return *(int*)(&a) > *(int*)(&b) ? a : b;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe int ToInt<T>(this T value) where T : unmanaged, Enum
 		{
 			return *(int*)(&value);
