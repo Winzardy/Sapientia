@@ -59,6 +59,15 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryUnRegister(T service)
+		{
+			if (Instance == null || !Instance.Equals(service))
+				return false;
+			Instance = default;
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void UnRegister()
 		{
 			Instance = default;
@@ -103,6 +112,12 @@ namespace Sapientia.Extensions
 		public static bool TryRegisterAsService<T>(this T service) where T: IService
 		{
 			return ServiceLocator<T>.TryRegister(service);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryUnRegisterAsService<T>(this T service) where T: IService
+		{
+			return ServiceLocator<T>.TryUnRegister(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
