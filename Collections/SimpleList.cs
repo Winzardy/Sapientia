@@ -193,6 +193,13 @@ namespace Sapientia.Collections
 		{
 			Dispose();
 		}
+
+		public T[] ToArray()
+		{
+			var result = new T[_count];
+			Array.Copy(_array, 0, result, 0, _count);
+			return result;
+		}
 	}
 
 	public static class SimpleListExt
