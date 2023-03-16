@@ -60,6 +60,7 @@ namespace Sapientia.Collections
 		public SimpleList(T[] array) : this(array.Length)
 		{
 			array.CopyTo(_array, 0);
+			_count = array.Length;
 		}
 
 		public SimpleList(int capacity, T defaultValue)
