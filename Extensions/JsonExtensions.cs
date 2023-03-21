@@ -6,6 +6,13 @@ using Sapientia.Collections;
 
 namespace Sapientia.Extensions
 {
+	public enum SerializationType
+	{
+		Cut,
+		Auto,
+		Full,
+	}
+
 	public static class JsonExtensions
 	{
 		private static readonly JsonSerializerSettings JSON_SETTINGS_NONE_TYPED = new()
@@ -18,28 +25,34 @@ namespace Sapientia.Extensions
 			TypeNameHandling = TypeNameHandling.Auto,
 		};
 
-		private static readonly JsonSerializerSettings JSON_SETTINGS_STRICTLY_TYPED = new()
+		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED = new()
 		{
 			TypeNameHandling = TypeNameHandling.All,
 		};
 
-		public static string ToJson<T>(this T from, bool isCut = true)
+		public static string ToJson<T>(this T from, SerializationType serializationType = SerializationType.Cut)
 		{
-			var settings = isCut ? JSON_SETTINGS_NONE_TYPED : JSON_SETTINGS_STRICTLY_TYPED;
+			var settings = serializationType switch
+			{
+				SerializationType.Cut => JSON_SETTINGS_NONE_TYPED,
+				SerializationType.Auto => JSON_SETTINGS_AUTO_TYPED,
+				SerializationType.Full => JSON_SETTINGS_FULL_TYPED,
+				_ => JSON_SETTINGS_NONE_TYPED
+			};
 			return JsonConvert.SerializeObject(from, typeof(T), settings);
 		}
 
-		public static void AppendToJsonFile<T>(this T from, string filePath, bool isCut = true)
+		public static void AppendToJsonFile<T>(this T from, string filePath, SerializationType serializationType = SerializationType.Cut, bool isCut = true)
 		{
 			using var streamWriter = File.AppendText(filePath);
 
-			var json = from.ToJson(isCut);
+			var json = from.ToJson(serializationType);
 			streamWriter.WriteLine(json);
 		}
 
-		public static void AppendToJsonFile<T>(this T from, StreamWriter streamWriter, bool isCut = true)
+		public static void AppendToJsonFile<T>(this T from, StreamWriter streamWriter, SerializationType serializationType = SerializationType.Cut)
 		{
-			var json = from.ToJson(isCut);
+			var json = from.ToJson(serializationType);
 			streamWriter.WriteLine(json);
 		}
 
