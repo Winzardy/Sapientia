@@ -7,6 +7,23 @@ namespace Sapientia.Extensions
 	public static class ArrayExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Move<T>(this T[] array, int from, int to)
+		{
+			var value = array[from];
+			if (to < from)
+			{
+				Array.Copy(array, to, array, to + 1, from - to);
+			}
+			else if (to > from)
+			{
+				Array.Copy(array, from + 1, array, from, to - from);
+			}
+			else return;
+
+			array[to] = value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MoveToEnd<T>(this T[] array, int index)
 		{
 			var value = array[index];
