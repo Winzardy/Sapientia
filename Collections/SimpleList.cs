@@ -91,6 +91,18 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Swap(int indexA, int indexB)
+		{
+			(_array[indexA], _array[indexB]) = (_array[indexB], _array[indexA]);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Move(int from, int to)
+		{
+			_array.Move(from, to);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T ExtractAtSwapBack(int index)
 		{
 			_count--;
@@ -201,6 +213,11 @@ namespace Sapientia.Collections
 			Array.Copy(_array, 0, result, 0, _count);
 			return result;
 		}
+
+		public T[] GetInnerArray()
+		{
+			return _array;
+		}
 	}
 
 	public static class SimpleListExt
@@ -217,9 +234,36 @@ namespace Sapientia.Collections
 			public int Compare(T x, T y) => x.CompareTo(y);
 		}
 
+		public static void Sort<T>(this SimpleList<T> list) where T: IComparable<T>
+		{
+			list.Sort(0, list.Count, new DefaultComparer<T>());
+		}
+
+		public static void Sort<T>(this SimpleList<T> list, int index, int count) where T: IComparable<T>
+		{
+			list.Sort(index, count, new DefaultComparer<T>());
+		}
+
+		public static void Sort<T, TComparer>(this SimpleList<T> list, TComparer comparer) where TComparer : IComparer<T>
+		{
+			list.Sort(0, list.Count, comparer);
+		}
+
+		public static void Sort<T, TComparer>(this SimpleList<T> list, int index, int count, TComparer comparer) where TComparer : IComparer<T>
+		{
+			var array = list.GetInnerArray();
+			Array.Sort(array, index, count, comparer);
+		}
+
 		public static int BinarySearch<T>(this SimpleList<T> list, T value) where T: IComparable<T>
 		{
 			return BinarySearch(list, list.Count, value, new DefaultComparer<T>());
+		}
+
+		public static int BinarySearch<T, TComparer>(this SimpleList<T> list, T value, TComparer comparer)
+			where TComparer : IComparer<T>
+		{
+			return BinarySearch(list, list.Count, value, comparer);
 		}
 
 		public static int BinarySearch<T, TComparer>(this SimpleList<T> list, int length, T value, TComparer comparer) where TComparer: IComparer<T>
