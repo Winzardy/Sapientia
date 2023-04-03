@@ -6,14 +6,15 @@ namespace Sapientia.Extensions
 {
 	public static class EnumExtensions<T> where T: unmanaged, Enum
 	{
+		public static readonly Array VALUES = Enum.GetValues(typeof(T));
+		public static readonly int ENUM_LENGHT = VALUES.Length;
 		public static readonly int FILLED_FLAG = GetFullFlag();
 
 		private static int GetFullFlag()
 		{
 			var result = 0;
 
-			var values = Enum.GetValues(typeof(T));
-			foreach (var value in values)
+			foreach (var value in VALUES)
 			{
 				result |= (int)value;
 			}
