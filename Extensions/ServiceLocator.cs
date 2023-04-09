@@ -68,6 +68,14 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T ReplaceService(T service)
+		{
+			var result = Instance;
+			Instance = service;
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void UnRegister()
 		{
 			Instance = default;
@@ -130,6 +138,12 @@ namespace Sapientia.Extensions
 		public static void UnRegisterAsService<T>(this T service) where T: IService
 		{
 			ServiceLocator<T>.UnRegister(service);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T ReplaceService<T>(this T service) where T: IService
+		{
+			return ServiceLocator<T>.ReplaceService(service);
 		}
 	}
 
