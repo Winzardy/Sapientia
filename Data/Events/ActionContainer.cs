@@ -2,7 +2,7 @@ using System;
 
 namespace Sapientia.Data.Events
 {
-	public struct ActionContainer<TContext>
+	public class ActionContainer<TContext>
 	{
 		private event Action<TContext> ActionEvent;
 
@@ -11,12 +11,12 @@ namespace Sapientia.Data.Events
 			ActionEvent?.Invoke(context);
 		}
 
-		public readonly void Subscribe(Action<TContext> action)
+		public void Subscribe(Action<TContext> action)
 		{
 			ActionEvent += action;
 		}
 
-		public readonly void UnSubscribe(Action<TContext> action)
+		public void UnSubscribe(Action<TContext> action)
 		{
 			ActionEvent -= action;
 		}
@@ -34,15 +34,17 @@ namespace Sapientia.Data.Events
 			return container.Invoke;
 		}
 
-		public static ActionContainer<TContext> operator +(in ActionContainer<TContext> container, Action<TContext> action)
+		public static ActionContainer<TContext> operator +(ActionContainer<TContext> container, Action<TContext> action)
 		{
+			container ??= new();
 			container.ActionEvent += action;
 			return container;
 		}
 
-		public static ActionContainer<TContext> operator -(in ActionContainer<TContext> container, Action<TContext> action)
+		public static ActionContainer<TContext> operator -(ActionContainer<TContext> container, Action<TContext> action)
 		{
-			container.ActionEvent -= action;
+			if (container != null)
+				container.ActionEvent -= action;
 			return container;
 		}
 	}
