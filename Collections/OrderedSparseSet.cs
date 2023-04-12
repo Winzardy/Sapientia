@@ -5,14 +5,21 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
-	public class SparseSet<T> : IDisposable
+	public class OrderedSparseSet<T> : IDisposable
 	{
+		public struct Value
+		{
+			public int indexId;
+			public T value;
+		}
+
 		public delegate void ResetAction(ref T item);
 
 		public readonly int expandStep;
 
-		private T[] _values;
+		private Value[] _values;
 		private int[] _valueIndexes;
+		private int[] _indexIds;
 
 		private readonly bool _useIndexPool;
 		private bool _useValuePool;
@@ -38,9 +45,9 @@ namespace Sapientia.Collections
 			get => _count >= _capacity;
 		}
 
-		public SparseSet(int capacity, ResetAction resetValue = null) : this(capacity, capacity, true, true, resetValue) {}
+		public OrderedSparseSet(int capacity, ResetAction resetValue = null) : this(capacity, capacity, true, true, resetValue) {}
 
-		public SparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
+		public OrderedSparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
 		{
 			this.expandStep = expandStep;
 
@@ -52,37 +59,47 @@ namespace Sapientia.Collections
 			if (_useValuePool)
 				_resetValue = resetValue;
 
+			_indexIds = _useIndexPool ? ArrayPool<int>.Shared.Rent(capacity) : new int[capacity];
 			_valueIndexes = _useIndexPool ? ArrayPool<int>.Shared.Rent(capacity) : new int[capacity];
-			_values = _useValuePool ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
+			_values = _useValuePool ? ArrayPool<Value>.Shared.Rent(capacity) : new Value[capacity];
 
-			Fill(0, capacity);
+			FillIndexes(0, capacity);
 		}
 
-		public T[] GetValueArray()
+		public Value[] GetValueArray()
 		{
 			return _values;
 		}
 
-		public int AllocateValueIndex_NoExpand()
+		public int AllocateIndexId_NoExpand()
 		{
-			return _valueIndexes[_count++];
+			var indexId = _indexIds[_count];
+			_valueIndexes[indexId] = _count;
+			_values[_count++].indexId = indexId;
+			return indexId;
 		}
 
-		public ref T GetValue(int valueIndex)
+		public ref T GetValue(int indexId)
 		{
-			return ref _values[valueIndex];
+			var valueIndex = _valueIndexes[indexId];
+			return ref _values[valueIndex].value;
 		}
 
-		public int AllocateValueIndex()
+		public int AllocateIndexId()
 		{
 			ExpandIfNeeded(_count + 1);
 
-			return AllocateValueIndex_NoExpand();
+			return AllocateIndexId_NoExpand();
 		}
 
-		public void ReleaseValueIndex(int valueIndex)
+		public void ReleaseIndexId(int indexId)
 		{
-			_valueIndexes[--_count] = valueIndex;
+			var valueIndex = _valueIndexes[indexId];
+
+			_values[valueIndex] = _values[_count - 1];
+			_valueIndexes[_values[valueIndex].indexId] = valueIndex;
+
+			_indexIds[--_count] = indexId;
 		}
 
 		private void ExpandIfNeeded(int newCapacity)
@@ -98,15 +115,21 @@ namespace Sapientia.Collections
 		private void Expand(int newCapacity)
 		{
 			if (_useIndexPool)
+			{
 				ArrayExtensions.Expand_WithPool(ref _valueIndexes, newCapacity);
+				ArrayExtensions.Expand_WithPool(ref _indexIds, newCapacity);
+			}
 			else
+			{
 				ArrayExtensions.Expand(ref _valueIndexes, newCapacity);
+				ArrayExtensions.Expand(ref _indexIds, newCapacity);
+			}
 			if (_useValuePool)
 				ArrayExtensions.Expand_WithPool(ref _values, newCapacity);
 			else
 				ArrayExtensions.Expand(ref _values, newCapacity);
 
-			Fill(_capacity, newCapacity);
+			FillIndexes(_capacity, newCapacity);
 
 			_capacity = newCapacity;
 		}
@@ -116,17 +139,17 @@ namespace Sapientia.Collections
 			return ((newCapacity + expandStep - 1) / expandStep) * expandStep;
 		}
 
-		private void Fill(int from, int to)
+		private void FillIndexes(int from, int to)
 		{
 			for (var i = from; i < to; i++)
 			{
-				_valueIndexes[i] = i;
+				_indexIds[i] = i;
 			}
 			if (_resetValue == null)
 				return;
 			for (var i = from; i < to; i++)
 			{
-				_resetValue.Invoke(ref _values[i]);
+				_resetValue.Invoke(ref _values[i].value);
 			}
 		}
 
@@ -140,33 +163,10 @@ namespace Sapientia.Collections
 			if (_useIndexPool)
 				ArrayPool<int>.Shared.Return(_valueIndexes, clearArray);
 			if (_useValuePool)
-				ArrayPool<T>.Shared.Return(_values, clearArray);
+				ArrayPool<Value>.Shared.Return(_values, clearArray);
 
 			_valueIndexes = null;
 			_values = null;
-		}
-
-		public void SweepValues(bool clearRentedArray = false)
-		{
-			SweepValues(clearRentedArray, _useValuePool);
-		}
-
-		public void SweepValues(bool clearRentedArray, bool useValuePool)
-		{
-			var newValues = useValuePool ? ArrayPool<T>.Shared.Rent(_values.Length) : new T[_values.Length];
-
-			for (var i = 0; i < _count; i++)
-			{
-				ref var index = ref _valueIndexes[i];
-				newValues[i] = _values[index];
-				index = i;
-			}
-
-			if (_useValuePool)
-				ArrayPool<T>.Shared.Return(_values, clearRentedArray);
-
-			_values = newValues;
-			_useValuePool = useValuePool;
 		}
 	}
 }

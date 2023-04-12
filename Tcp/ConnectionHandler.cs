@@ -113,7 +113,7 @@ namespace Sapientia.Tcp
 				return;
 			}
 
-			var index = _connections.AllocateValueIndex();
+			var index = _connections.AllocateValueIndex_NoExpand();
 			var connection = _connections.GetValue(index);
 			var connectionReference = new ConnectionReference(index, _nextConnectionId, customId);
 
