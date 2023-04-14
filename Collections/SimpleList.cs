@@ -85,6 +85,16 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange<T1>(SimpleList<T1> values) where T1: T
+		{
+			Expand(_count + values.Count);
+			for (var i = 0; i < values.Count; i++)
+			{
+				_array[_count++] = values[i];
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Allocate()
 		{
 			return _count++;
