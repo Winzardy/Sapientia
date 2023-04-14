@@ -7,19 +7,19 @@ namespace Sapientia.Collections
 {
 	public class OrderedSparseSet<T> : IDisposable
 	{
-		public struct Value
+		public struct IndexData
 		{
-			public int indexId;
-			public T value;
+			public int indexToId;
+			public int idToIndex;
+			public int id;
 		}
 
 		public delegate void ResetAction(ref T item);
 
 		public readonly int expandStep;
 
-		private Value[] _values;
-		private int[] _valueIndexes;
-		private int[] _indexIds;
+		private T[] _values;
+		private IndexData[] _indexData;
 
 		private readonly bool _useIndexPool;
 		private bool _useValuePool;
@@ -33,6 +33,7 @@ namespace Sapientia.Collections
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _count;
 		}
+
 		public int Capacity
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,30 +60,31 @@ namespace Sapientia.Collections
 			if (_useValuePool)
 				_resetValue = resetValue;
 
-			_indexIds = _useIndexPool ? ArrayPool<int>.Shared.Rent(capacity) : new int[capacity];
-			_valueIndexes = _useIndexPool ? ArrayPool<int>.Shared.Rent(capacity) : new int[capacity];
-			_values = _useValuePool ? ArrayPool<Value>.Shared.Rent(capacity) : new Value[capacity];
+			_indexData = _useIndexPool ? ArrayPool<IndexData>.Shared.Rent(capacity) : new IndexData[capacity];
+			_values = _useValuePool ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
 
 			FillIndexes(0, capacity);
 		}
 
-		public Value[] GetValueArray()
+		public ref readonly T[] GetValueArray()
 		{
-			return _values;
+			return ref _values;
 		}
 
 		public int AllocateIndexId_NoExpand()
 		{
-			var indexId = _indexIds[_count];
-			_valueIndexes[indexId] = _count;
-			_values[_count++].indexId = indexId;
-			return indexId;
+			var index = _count++;
+			var id = _indexData[index].id;
+
+			_indexData[id].idToIndex = index;
+			_indexData[index].indexToId = id;
+			return id;
 		}
 
-		public ref T GetValue(int indexId)
+		public ref T GetValue(int id)
 		{
-			var valueIndex = _valueIndexes[indexId];
-			return ref _values[valueIndex].value;
+			var valueIndex = _indexData[id].idToIndex;
+			return ref _values[valueIndex];
 		}
 
 		public int AllocateIndexId()
@@ -92,14 +94,17 @@ namespace Sapientia.Collections
 			return AllocateIndexId_NoExpand();
 		}
 
-		public void ReleaseIndexId(int indexId)
+		public void ReleaseIndexId(int id)
 		{
-			var valueIndex = _valueIndexes[indexId];
+			var index = _indexData[id].idToIndex;
 
-			_values[valueIndex] = _values[_count - 1];
-			_valueIndexes[_values[valueIndex].indexId] = valueIndex;
+			var indexB = --_count;
+			var idB = _indexData[indexB].indexToId;
 
-			_indexIds[--_count] = indexId;
+			 _values[index] = _values[indexB];
+			_indexData[index].indexToId = idB;
+			_indexData[idB].idToIndex = index;
+			_indexData[indexB].id = id;
 		}
 
 		private void ExpandIfNeeded(int newCapacity)
@@ -115,15 +120,9 @@ namespace Sapientia.Collections
 		private void Expand(int newCapacity)
 		{
 			if (_useIndexPool)
-			{
-				ArrayExtensions.Expand_WithPool(ref _valueIndexes, newCapacity);
-				ArrayExtensions.Expand_WithPool(ref _indexIds, newCapacity);
-			}
+				ArrayExtensions.Expand_WithPool(ref _indexData, newCapacity);
 			else
-			{
-				ArrayExtensions.Expand(ref _valueIndexes, newCapacity);
-				ArrayExtensions.Expand(ref _indexIds, newCapacity);
-			}
+				ArrayExtensions.Expand(ref _indexData, newCapacity);
 			if (_useValuePool)
 				ArrayExtensions.Expand_WithPool(ref _values, newCapacity);
 			else
@@ -143,13 +142,13 @@ namespace Sapientia.Collections
 		{
 			for (var i = from; i < to; i++)
 			{
-				_indexIds[i] = i;
+				_indexData[i].id = i;
 			}
 			if (_resetValue == null)
 				return;
 			for (var i = from; i < to; i++)
 			{
-				_resetValue.Invoke(ref _values[i].value);
+				_resetValue.Invoke(ref _values[i]);
 			}
 		}
 
@@ -161,12 +160,17 @@ namespace Sapientia.Collections
 		public void Dispose(bool clearArray)
 		{
 			if (_useIndexPool)
-				ArrayPool<int>.Shared.Return(_valueIndexes, clearArray);
+				ArrayPool<IndexData>.Shared.Return(_indexData, clearArray);
 			if (_useValuePool)
-				ArrayPool<Value>.Shared.Return(_values, clearArray);
+				ArrayPool<T>.Shared.Return(_values, clearArray);
 
-			_valueIndexes = null;
+			_indexData = null;
 			_values = null;
+		}
+
+		public void ClearFast()
+		{
+			_count = 0;
 		}
 	}
 }
