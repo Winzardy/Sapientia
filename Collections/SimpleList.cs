@@ -150,12 +150,13 @@ namespace Sapientia.Collections
 
 		public void Fill(int lenght, T value)
 		{
-			var targetLenght = _count + lenght;
-			Expand(targetLenght);
-			for (var i = _count; i < targetLenght; i++)
+			var targetCount = _count + lenght;
+			Expand(targetCount);
+			for (var i = _count; i < targetCount; i++)
 			{
 				_array[i] = value;
 			}
+			_count = targetCount;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
