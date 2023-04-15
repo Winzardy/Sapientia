@@ -148,6 +148,16 @@ namespace Sapientia.Collections
 			_count++;
 		}
 
+		public void Fill(int lenght, T value)
+		{
+			var targetLenght = _count + lenght;
+			Expand(targetLenght);
+			for (var i = _count; i < targetLenght; i++)
+			{
+				_array[i] = value;
+			}
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Expand(int newCapacity)
 		{
