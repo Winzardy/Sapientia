@@ -98,13 +98,15 @@ namespace Sapientia.Collections
 		{
 			var index = _indexData[id].idToIndex;
 
-			var indexB = --_count;
-			var idB = _indexData[indexB].indexToId;
+			var lastIndex = --_count;
+			var lastId = _indexData[lastIndex].indexToId;
 
-			 _values[index] = _values[indexB];
-			_indexData[index].indexToId = idB;
-			_indexData[idB].idToIndex = index;
-			_indexData[indexB].id = id;
+			 _values[index] = _values[lastIndex];
+			_indexData[index].indexToId = lastId;
+			_indexData[lastId].idToIndex = index;
+
+			_indexData[index].id = lastId;
+			_indexData[lastIndex].id = id;
 		}
 
 		private void ExpandIfNeeded(int newCapacity)
