@@ -129,6 +129,14 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveAtSwapBack_Clean(int index)
+		{
+			_count--;
+			_array[index] = _array[_count];
+			_array[_count] = default;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveAt(int index)
 		{
 			_count--;
