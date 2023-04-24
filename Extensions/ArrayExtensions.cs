@@ -7,6 +7,26 @@ namespace Sapientia.Extensions
 	public static class ArrayExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsArrayEqual<T>(this T[] a, T[] b)
+		{
+			if (a.Equals(b))
+				return true;
+			if (b == null || a.Length != b.Length)
+				return false;
+			for (var i = 0; i < a.Length; i++)
+			{
+				if (a[i] is IEquatable<T> equatable)
+				{
+					if (!equatable.Equals(b[i]))
+						return false;
+				}
+				else if (!a[i].Equals(b[i]))
+					return false;
+			}
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Move<T>(this T[] array, int from, int to)
 		{
 			var value = array[from];
