@@ -10,6 +10,7 @@ namespace Sapientia.Extensions
 	{
 		Cut,
 		Auto,
+		AutoIndented,
 		Full,
 	}
 
@@ -25,6 +26,12 @@ namespace Sapientia.Extensions
 			TypeNameHandling = TypeNameHandling.Auto,
 		};
 
+		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED_INDENTED = new()
+		{
+			TypeNameHandling = TypeNameHandling.Auto,
+			Formatting = Formatting.Indented,
+		};
+
 		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED = new()
 		{
 			TypeNameHandling = TypeNameHandling.All,
@@ -36,6 +43,7 @@ namespace Sapientia.Extensions
 			{
 				SerializationType.Cut => JSON_SETTINGS_NONE_TYPED,
 				SerializationType.Auto => JSON_SETTINGS_AUTO_TYPED,
+				SerializationType.AutoIndented => JSON_SETTINGS_AUTO_TYPED_INDENTED,
 				SerializationType.Full => JSON_SETTINGS_FULL_TYPED,
 				_ => JSON_SETTINGS_NONE_TYPED
 			};
