@@ -8,7 +8,6 @@ namespace Sapientia.Extensions
 		public static string ReadEnvironment(this string environment)
 		{
 			var value = Environment.GetEnvironmentVariable(environment);
-			Console.WriteLine($"test: {value}");
 			if (value == null)
 				throw new Exception($"{environment} doesn't exist!");
 			return value;
