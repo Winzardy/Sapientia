@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
-	public class SimpleList<T> : IDisposable
+	public class SimpleList<T> : IDisposable, IEnumerable<T>
 	{
 		private const int DEFAULT_CAPACITY = 8;
 
@@ -231,6 +232,21 @@ namespace Sapientia.Collections
 			_array = null;
 		}
 
+		public Enumerator GetEnumerator()
+		{
+			return new Enumerator(this);
+		}
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
 		~SimpleList()
 		{
 			Dispose();
@@ -246,6 +262,35 @@ namespace Sapientia.Collections
 		public T[] GetInnerArray()
 		{
 			return _array;
+		}
+
+		public struct Enumerator : IEnumerator<T>
+		{
+			private SimpleList<T> _list;
+			private int _index;
+
+			public T Current => _list[_index];
+
+			object IEnumerator.Current => Current;
+
+			internal Enumerator(SimpleList<T> list)
+			{
+				_list = list;
+				_index = -1;
+			}
+
+			public bool MoveNext()
+			{
+				_index++;
+				return _index < _list._count;
+			}
+
+			public void Reset()
+			{
+				_index = -1;
+			}
+
+			public void Dispose() {}
 		}
 	}
 
