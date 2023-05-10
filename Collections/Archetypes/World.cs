@@ -64,11 +64,11 @@ namespace Sapientia.Collections.Archetypes
 			IsInitialized = true;
 		}
 
-		protected void GameStart()
+		private void GameStart()
 		{
-			for (var i = 0; i < _elements.Count; i++)
+			foreach (var element in _elements)
 			{
-				_elements[i].OnGameStart();
+				element.OnGameStart();
 			}
 			IsStarted = true;
 
@@ -78,9 +78,9 @@ namespace Sapientia.Collections.Archetypes
 		public virtual void DeInitialize()
 		{
 			this.UnRegisterAsService();
-			for (var i = 0; i < _unRegisterElementsActions.Count; i++)
+			foreach (var action in _unRegisterElementsActions)
 			{
-				_unRegisterElementsActions[i]?.Invoke();
+				action?.Invoke();
 			}
 			OnGameEndEvent?.Invoke();
 		}

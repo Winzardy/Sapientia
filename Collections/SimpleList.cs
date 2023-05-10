@@ -201,14 +201,14 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void FullClear()
+		public void Clear()
 		{
 			Array.Fill(_array, default);
 			_count = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear()
+		public void ClearPartial()
 		{
 			if (_count == 0)
 				return;

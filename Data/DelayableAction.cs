@@ -87,7 +87,7 @@ namespace Sapientia.Data
 
 			if (ActionEvent == null)
 			{
-				_invocationContextList.Clear();
+				_invocationContextList.ClearPartial();
 				return;
 			}
 
@@ -96,7 +96,7 @@ namespace Sapientia.Data
 				var context = _invocationContextList[i];
 				ActionEvent.Invoke(context);
 			}
-			_invocationContextList.Clear();
+			_invocationContextList.ClearPartial();
 		}
 
 		public void Subscribe(Action<TContext> action)
