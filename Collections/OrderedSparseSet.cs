@@ -46,7 +46,9 @@ namespace Sapientia.Collections
 			get => _count >= _capacity;
 		}
 
-		public OrderedSparseSet(int capacity, ResetAction resetValue = null) : this(capacity, capacity, true, true, resetValue) {}
+		public OrderedSparseSet(int capacity = 8) : this(capacity, null){}
+
+		public OrderedSparseSet(int capacity, ResetAction resetValue) : this(capacity, capacity, true, true, resetValue) {}
 
 		public OrderedSparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
 		{
@@ -71,6 +73,25 @@ namespace Sapientia.Collections
 			return ref _values;
 		}
 
+		public ref T GetValue(int id)
+		{
+			var valueIndex = _indexData[id].idToIndex;
+			return ref _values[valueIndex];
+		}
+
+		public bool HasIndexId(int id)
+		{
+			var index = _indexData[id].idToIndex;
+			return index < _count;
+		}
+
+		public int AllocateIndexId()
+		{
+			ExpandIfNeeded(_count + 1);
+
+			return AllocateIndexId_NoExpand();
+		}
+
 		public int AllocateIndexId_NoExpand()
 		{
 			var index = _count++;
@@ -81,17 +102,11 @@ namespace Sapientia.Collections
 			return id;
 		}
 
-		public ref T GetValue(int id)
+		public void ReleaseIndexId(int id, bool clear)
 		{
-			var valueIndex = _indexData[id].idToIndex;
-			return ref _values[valueIndex];
-		}
-
-		public int AllocateIndexId()
-		{
-			ExpandIfNeeded(_count + 1);
-
-			return AllocateIndexId_NoExpand();
+			if (clear)
+				GetValue(id) = default;
+			ReleaseIndexId(id);
 		}
 
 		public void ReleaseIndexId(int id)
@@ -172,6 +187,13 @@ namespace Sapientia.Collections
 
 		public void ClearFast()
 		{
+			_count = 0;
+		}
+
+		public void Clear()
+		{
+			Array.Clear(_indexData, 0, _indexData.Length);
+			Array.Clear(_values, 0, _values.Length);
 			_count = 0;
 		}
 	}
