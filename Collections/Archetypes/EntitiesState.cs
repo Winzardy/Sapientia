@@ -1,0 +1,124 @@
+using System;
+using System.Diagnostics;
+using Sapientia.Extensions;
+
+namespace Sapientia.Collections.Archetypes
+{
+	public static class EntitiesStateExt
+	{
+		public static bool IsAlive(this in Entity entity)
+		{
+			return ServiceLocator<EntitiesState>.Instance.IsEntityAlive(entity);
+		}
+
+		public static void Destroy(this in Entity entity)
+		{
+			ServiceLocator<EntitiesState>.Instance.DestroyEntity(entity);
+		}
+	}
+
+	public class EntitiesState : GameStatePart
+	{
+		public static EntitiesState Instance => ServiceLocator<EntitiesState>.Instance;
+
+		public Entity SharedEntity { get; private set; }
+
+		public event Action<Entity> EntityDestroyEvent;
+
+		private readonly SimpleList<int> _entitiesIds;
+		private readonly SimpleList<ushort> _generations;
+#if UNITY_EDITOR
+		public readonly SimpleList<string> entitiesNames;
+#endif
+
+		public int EntitiesCount { get; private set; }
+		public int EntitiesCapacity { get; private set; }
+		public int ExpandStep { get; private set; }
+
+#if STORE_ENTITIES
+		private readonly Archetype _entities;
+		public ref readonly ArchetypeElement<EmptyValue>[] Entities => ref _entities.Elements;
+#endif
+
+		public EntitiesState(int entitiesCapacity, int expandStep = 512)
+		{
+			EntitiesCount = 0;
+			EntitiesCapacity = entitiesCapacity;
+			ExpandStep = expandStep;
+
+#if STORE_ENTITIES
+			_entities = new (entitiesCapacity, entitiesCapacity);
+#endif
+			_entitiesIds = new (entitiesCapacity);
+			_generations = new(entitiesCapacity, 0);
+#if UNITY_EDITOR
+			entitiesNames = new (entitiesCapacity);
+#endif
+
+			for (var i = 0; i < entitiesCapacity; i++)
+			{
+				_entitiesIds[i] = i;
+			}
+
+#if UNITY_EDITOR
+			SharedEntity = CreateEntity("SHARED");
+#else
+			SharedEntity = CreateEntity();
+#endif
+		}
+
+#if UNITY_EDITOR
+		public Entity CreateEntity(string name = null)
+#else
+		public Entity CreateEntity()
+
+#endif
+		{
+			EnsureCapacity(EntitiesCount);
+
+			var id = _entitiesIds[EntitiesCount++];
+			var generation = ++_generations[id];
+
+			var entity = new Entity(id, generation);
+#if UNITY_EDITOR
+			entitiesNames[id] = name;
+#endif
+#if STORE_ENTITIES
+			_entities.GetElement(entity);
+#endif
+
+			return entity;
+		}
+
+		public bool IsEntityAlive(in Entity entity)
+		{
+			return _generations[entity.id] == entity.generation;
+		}
+
+		public void DestroyEntity(in Entity entity)
+		{
+			Debug.Assert(IsEntityAlive(entity));
+
+			EntityDestroyEvent?.Invoke(entity);
+
+			_generations[entity.id]++;
+			_entitiesIds[--EntitiesCount] = entity.id;
+		}
+
+		private void EnsureCapacity(int index)
+		{
+			if (index < EntitiesCapacity)
+				return;
+
+			do
+				EntitiesCapacity += ExpandStep;
+			while (index >= EntitiesCapacity);
+
+			_entitiesIds.Expand(EntitiesCapacity);
+			_generations.Expand(EntitiesCapacity);
+#if UNITY_EDITOR
+			entitiesNames.Expand(EntitiesCapacity);
+#endif
+		}
+	}
+}
