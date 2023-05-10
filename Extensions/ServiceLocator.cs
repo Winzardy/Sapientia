@@ -8,6 +8,7 @@ namespace Sapientia.Extensions
 	{
 		private static readonly OrderedSparseSet<(TContext context, TService service)> SERVICES = new ();
 
+		// ReSharper disable once StaticMemberInGenericType
 		private static int _currentContextId = -1;
 
 		public static ref TContext Context => ref SERVICES.GetValue(_currentContextId).context;
