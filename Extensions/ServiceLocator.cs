@@ -28,7 +28,7 @@ namespace Sapientia.Extensions
 		{
 			if (!SERVICES.HasIndexId(newContext.ContextId) || !SERVICES.GetValue(newContext.ContextId).context.Equals(newContext))
 			{
-				newContext.ContextId = SERVICES.AllocateIndexId();
+				newContext.ContextId = SERVICES.AllocateIndexId(true);
 				SERVICES.GetValue(newContext.ContextId).context = newContext;
 			}
 

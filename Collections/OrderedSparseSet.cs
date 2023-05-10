@@ -85,6 +85,14 @@ namespace Sapientia.Collections
 			return index < _count;
 		}
 
+		public int AllocateIndexId(bool clear)
+		{
+			var indexId = AllocateIndexId();
+			if (clear)
+				GetValue(indexId) = default;
+			return indexId;
+		}
+
 		public int AllocateIndexId()
 		{
 			ExpandIfNeeded(_count + 1);
@@ -171,7 +179,7 @@ namespace Sapientia.Collections
 
 		public void Dispose()
 		{
-			Dispose(false);
+			Dispose(true);
 		}
 
 		public void Dispose(bool clearArray)
