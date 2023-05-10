@@ -266,7 +266,7 @@ namespace Sapientia.Collections
 
 		public struct Enumerator : IEnumerator<T>
 		{
-			private SimpleList<T> _list;
+			private readonly SimpleList<T> _list;
 			private int _index;
 
 			public T Current => _list[_index];
