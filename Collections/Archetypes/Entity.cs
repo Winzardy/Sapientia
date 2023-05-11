@@ -7,8 +7,7 @@ namespace Sapientia.Collections.Archetypes
 	{
 		public const ushort GENERATION_ZERO = 0;
 
-		public static readonly Entity Empty = new (0, GENERATION_ZERO);
-		public static readonly Entity Null = new (0, GENERATION_ZERO);
+		public static readonly Entity EMPTY = new (0, GENERATION_ZERO);
 
 		public readonly int id;
 		public readonly ushort generation;
