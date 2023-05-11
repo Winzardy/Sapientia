@@ -17,7 +17,7 @@ namespace Sapientia.Collections.Archetypes
 		}
 	}
 
-	public class EntitiesState : GameStatePart
+	public class EntitiesState : WorldStatePart
 	{
 		public static EntitiesState Instance => ServiceLocator<EntitiesState>.Instance;
 

@@ -25,17 +25,18 @@ namespace Sapientia.Collections.Archetypes
 
 		public static World Instance => ServiceLocator<World>.Instance;
 
-		private readonly SimpleList<GameWorldElement> _elements = new ();
-		private readonly SimpleList<Action> _unRegisterElementsActions = new ();
-		private readonly SimpleList<GameSystem> _systems = new ();
-
 		public uint Tick { get; private set; }
 		public float Time { get; private set; }
 
 		public bool IsInitialized { get; private set; }
 		public bool IsStarted { get; private set; }
 
+		private readonly SimpleList<WorldElement> _elements = new ();
+		private readonly SimpleList<Action> _unRegisterElementsActions = new ();
+		private readonly SimpleList<WorldSystem> _systems = new ();
+
 		private bool _stateInitialization;
+		private bool _doLateGameUpdate;
 
 		protected World()
 		{
@@ -56,9 +57,9 @@ namespace Sapientia.Collections.Archetypes
 
 			AddElements();
 
-			for (var i = 0; i < _elements.Count; i++)
+			foreach (var element in _elements)
 			{
-				_elements[i].LateInitialize();
+				element.LateInitialize();
 			}
 
 			IsInitialized = true;
@@ -75,6 +76,31 @@ namespace Sapientia.Collections.Archetypes
 			OnGameStartEvent?.Invoke();
 		}
 
+		public void Update(float deltaTime)
+		{
+			if (!IsStarted)
+				GameStart();
+
+			Tick++;
+			Time += deltaTime;
+
+			foreach (var system in _systems)
+			{
+				system.Update(deltaTime);
+			}
+
+			_doLateGameUpdate = true;
+		}
+
+		public void LateUpdate()
+		{
+			if (!_doLateGameUpdate)
+				return;
+			_doLateGameUpdate = false;
+
+			LateGameUpdateEvent?.Invoke();
+		}
+
 		public virtual void DeInitialize()
 		{
 			this.UnRegisterAsService();
@@ -89,37 +115,37 @@ namespace Sapientia.Collections.Archetypes
 
 		protected virtual void AddElements() {}
 
-		public TStatePart AddStatePart<TStatePart>() where TStatePart : GameStatePart, new()
+		public TStatePart AddStatePart<TStatePart>() where TStatePart : WorldStatePart, new()
 		{
 			return AddStatePart(new TStatePart());
 		}
 
-		public TStatePart AddStatePart<TStatePart>(TStatePart feature) where TStatePart : GameStatePart
+		public TStatePart AddStatePart<TStatePart>(TStatePart systemGroup) where TStatePart : WorldStatePart
 		{
 			Debug.Assert(_stateInitialization);
-			var statePart = AddGameWorldElement(feature);
+			var statePart = AddGameWorldElement(systemGroup);
 			statePart.AddStateParts();
 
 			return statePart;
 		}
 
-		public TFeature AddFeature<TFeature>() where TFeature : GameFeature, new()
+		public TSystemGroup AddSystemGroup<TSystemGroup>() where TSystemGroup : WorldSystemGroup, new()
 		{
-			return AddFeature(new TFeature());
+			return AddSystemGroup(new TSystemGroup());
 		}
 
-		public TFeature AddFeature<TFeature>(TFeature feature) where TFeature : GameFeature
+		public TSystemGroup AddSystemGroup<TSystemGroup>(TSystemGroup systemGroup) where TSystemGroup : WorldSystemGroup
 		{
 			Debug.Assert(!_stateInitialization);
-			return AddGameWorldElement(feature);
+			return AddGameWorldElement(systemGroup);
 		}
 
-		public TSystem AddSystem<TSystem>() where TSystem : GameSystem, new()
+		public TSystem AddSystem<TSystem>() where TSystem : WorldSystem, new()
 		{
 			return AddSystem(new TSystem());
 		}
 
-		public TSystem AddSystem<TSystem>(TSystem system) where TSystem : GameSystem
+		public TSystem AddSystem<TSystem>(TSystem system) where TSystem : WorldSystem
 		{
 			Debug.Assert(!_stateInitialization);
 
@@ -128,7 +154,7 @@ namespace Sapientia.Collections.Archetypes
 			return system;
 		}
 
-		private TElement AddGameWorldElement<TElement>(TElement element) where TElement : GameWorldElement
+		private TElement AddGameWorldElement<TElement>(TElement element) where TElement : WorldElement
 		{
 			Debug.Assert(!IsInitialized);
 
@@ -146,28 +172,9 @@ namespace Sapientia.Collections.Archetypes
 
 			return element;
 		}
-
-		public void Update(float deltaTime)
-		{
-			if (!IsStarted)
-				GameStart();
-
-			Tick++;
-			Time += deltaTime;
-
-			for (var i = 0; i < _systems.Count; i++)
-			{
-				_systems[i].Update(deltaTime);
-			}
-		}
-
-		public void LateUpdate()
-		{
-			LateGameUpdateEvent?.Invoke();
-		}
 	}
 
-	public abstract class GameWorldElement : IService
+	public abstract class WorldElement : IService
 	{
 		public World World { get; internal set; }
 
@@ -190,45 +197,45 @@ namespace Sapientia.Collections.Archetypes
 		}
 	}
 
-	public abstract class GameStatePart : GameWorldElement
+	public abstract class WorldStatePart : WorldElement
 	{
 		public virtual void AddStateParts() {}
 
-		protected TStatePart AddStatePart<TStatePart>() where TStatePart : GameStatePart, new()
+		protected TStatePart AddStatePart<TStatePart>() where TStatePart : WorldStatePart, new()
 		{
 			return World.AddStatePart<TStatePart>();
 		}
 
-		protected TStatePart AddStatePart<TStatePart>(TStatePart feature) where TStatePart : GameStatePart
+		protected TStatePart AddStatePart<TStatePart>(TStatePart systemGroup) where TStatePart : WorldStatePart
 		{
-			return World.AddStatePart(feature);
+			return World.AddStatePart(systemGroup);
 		}
 	}
 
-	public abstract class GameFeature : GameWorldElement
+	public abstract class WorldSystemGroup : WorldElement
 	{
-		protected TFeature AddFeature<TFeature>() where TFeature : GameFeature, new()
+		protected TSystemGroup AddSystemGroup<TSystemGroup>() where TSystemGroup : WorldSystemGroup, new()
 		{
-			return World.AddFeature<TFeature>();
+			return World.AddSystemGroup<TSystemGroup>();
 		}
 
-		protected TFeature AddFeature<TFeature>(TFeature feature) where TFeature : GameFeature
+		protected TSystemGroup AddSystemGroup<TSystemGroup>(TSystemGroup systemGroup) where TSystemGroup : WorldSystemGroup
 		{
-			return World.AddFeature(feature);
+			return World.AddSystemGroup(systemGroup);
 		}
 
-		protected TSystem AddSystem<TSystem>() where TSystem : GameSystem, new()
+		protected TSystem AddSystem<TSystem>() where TSystem : WorldSystem, new()
 		{
 			return World.AddSystem<TSystem>();
 		}
 
-		protected TSystem AddSystem<TSystem>(TSystem system) where TSystem : GameSystem
+		protected TSystem AddSystem<TSystem>(TSystem system) where TSystem : WorldSystem
 		{
 			return World.AddSystem(system);
 		}
 	}
 
-	public abstract class GameSystem : GameWorldElement
+	public abstract class WorldSystem : WorldElement
 	{
 		public virtual void Update(float deltaTime) {}
 	}
