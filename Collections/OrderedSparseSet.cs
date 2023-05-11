@@ -22,7 +22,7 @@ namespace Sapientia.Collections
 		private IndexData[] _indexData;
 
 		private readonly bool _useIndexPool;
-		private bool _useValuePool;
+		private readonly bool _useValuePool;
 		private readonly ResetAction _resetValue;
 
 		private int _count;
