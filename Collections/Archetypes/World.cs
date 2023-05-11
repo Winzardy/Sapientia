@@ -8,13 +8,10 @@ namespace Sapientia.Collections.Archetypes
 	{
 		public int EntitiesCapacity { get; protected set; }
 
-		protected sealed override void AddState()
+		protected override void AddStateParts()
 		{
 			AddStatePart(new EntitiesState(EntitiesCapacity));
-			AddStateParts();
 		}
-
-		protected virtual void AddStateParts() {}
 	}
 
 	public abstract class World : IService
@@ -52,10 +49,10 @@ namespace Sapientia.Collections.Archetypes
 		public void Initialize()
 		{
 			_stateInitialization = true;
-			AddState();
+			AddStateParts();
 			_stateInitialization = false;
 
-			AddElements();
+			AddSystems();
 
 			foreach (var element in _elements)
 			{
@@ -111,9 +108,9 @@ namespace Sapientia.Collections.Archetypes
 			OnGameEndEvent?.Invoke();
 		}
 
-		protected virtual void AddState() {}
+		protected virtual void AddStateParts() {}
 
-		protected virtual void AddElements() {}
+		protected virtual void AddSystems() {}
 
 		public TStatePart AddStatePart<TStatePart>() where TStatePart : WorldStatePart, new()
 		{
