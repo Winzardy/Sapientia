@@ -13,10 +13,10 @@ namespace Sapientia.Collections
 		public int DictionaryId { get; set; }
 	}
 
-	public struct KeyContainer<TValue> : IKey
+	public struct KeyContainer<T> : IKey
 	{
 		public int DictionaryId { get; set; }
-		public TValue key;
+		public T key;
 	}
 
 	public struct KeyValuePair<TKey, TValue> where TKey : IKey
