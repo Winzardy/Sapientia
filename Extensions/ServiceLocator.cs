@@ -1,23 +1,23 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Sapientia.Collections;
 
 namespace Sapientia.Extensions
 {
-	public static class ServiceLocator<TContext, TService> where TContext : IServiceContext where TService : IService
+	public static class ServiceLocator<TContext, TService> where TService : IService
 	{
-		private static readonly OrderedSparseSet<(TContext context, TService service)> SERVICES = new ();
+		private static readonly Dictionary<TContext, TService> SERVICES = new ();
 
 		// ReSharper disable once StaticMemberInGenericType
-		private static int _currentContextId = -1;
+		private static TContext _context;
 
-		public static ref TContext Context => ref SERVICES.GetValue(_currentContextId).context;
+		public static TContext Context => _context;
 
-		public static ref TService Instance => ref SERVICES.GetValue(_currentContextId).service;
+		public static TService Instance => SERVICES[_context];
 
 		public static bool HasContext()
 		{
-			return _currentContextId >= 0 && Context != null;
+			return Context != null;
 		}
 
 		public static bool HasInstance()
@@ -25,33 +25,25 @@ namespace Sapientia.Extensions
 			return Instance != null;
 		}
 
-		public static void SetContext<T>(ref T newContext) where T: TContext
+		public static void SetContext(TContext newContext)
 		{
-			if (!SERVICES.HasIndexId(newContext.ContextId) || !SERVICES.GetValue(newContext.ContextId).context.Equals(newContext))
-			{
-				newContext.ContextId = SERVICES.AllocateIndexId(true);
-				SERVICES.GetValue(newContext.ContextId).context = newContext;
-			}
-
-			_currentContextId = newContext.ContextId;
+			SERVICES.TryAdd(newContext, default);
+			_context = newContext;
 		}
 
-		public static void RemoveContext<T>(T context) where T: TContext
+		public static void RemoveContext(TContext context)
 		{
-			if (Context != null && Context.ContextId == context.ContextId)
+			if (context != null && SERVICES.Remove(context))
 			{
-				if (!Context.Equals(context))
+				if (!_context.Equals(context))
 					return;
-				_currentContextId = -1;
+				_context = default;
 			}
-
-			SERVICES.ReleaseIndexId(context.ContextId, true);
 		}
 
 		public static void ResetContext()
 		{
-			Context = default;
-			Instance = default;
+			_context = default;
 
 			SERVICES.Clear();
 		}
@@ -88,7 +80,7 @@ namespace Sapientia.Extensions
 			Debug.Assert(HasContext());
 			if (Instance != null)
 				return false;
-			Instance = service;
+			SERVICES[_context] = service;
 			return true;
 		}
 
@@ -96,7 +88,7 @@ namespace Sapientia.Extensions
 		public static TService Register(TService service)
 		{
 			Debug.Assert(HasContext());
-			Instance = service;
+			SERVICES[_context] = service;
 
 			return Instance;
 		}
@@ -108,7 +100,7 @@ namespace Sapientia.Extensions
 			Debug.Assert(Instance == null);
 			if (Instance == null || !Instance.Equals(service))
 				return false;
-			Instance = default;
+			SERVICES[_context] = default;
 			return true;
 		}
 
@@ -117,7 +109,7 @@ namespace Sapientia.Extensions
 		{
 			Debug.Assert(HasContext());
 			var result = Instance;
-			Instance = service;
+			SERVICES[_context] = service;
 			return result;
 		}
 
@@ -125,7 +117,7 @@ namespace Sapientia.Extensions
 		public static void UnRegister()
 		{
 			Debug.Assert(HasContext());
-			Instance = default;
+			SERVICES[_context] = default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,7 +126,7 @@ namespace Sapientia.Extensions
 			Debug.Assert(HasContext());
 			if (Instance == null || !Instance.Equals(service))
 				return;
-			Instance = default;
+			SERVICES[_context] = default;
 		}
 	}
 
