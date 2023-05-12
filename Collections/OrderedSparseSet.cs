@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
-	public class OrderedSparseSet<T> : IDisposable
+	public class OrderedSparseSet<T> : IDisposable, IEnumerable<T>
 	{
 		public struct IndexData
 		{
@@ -203,6 +205,50 @@ namespace Sapientia.Collections
 			Array.Clear(_indexData, 0, _indexData.Length);
 			Array.Clear(_values, 0, _values.Length);
 			_count = 0;
+		}
+
+		public Enumerator GetEnumerator()
+		{
+			return new Enumerator(this);
+		}
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		public struct Enumerator : IEnumerator<T>
+		{
+			private readonly OrderedSparseSet<T> _sparseSet;
+			private int _index;
+
+			public T Current => _sparseSet._values[_index];
+
+			object IEnumerator.Current => Current;
+
+			internal Enumerator(OrderedSparseSet<T> sparseSet)
+			{
+				_sparseSet = sparseSet;
+				_index = -1;
+			}
+
+			public bool MoveNext()
+			{
+				_index++;
+				return _index < _sparseSet._count;
+			}
+
+			public void Reset()
+			{
+				_index = -1;
+			}
+
+			public void Dispose() {}
 		}
 	}
 }

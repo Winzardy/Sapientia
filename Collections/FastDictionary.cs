@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Sapientia.Collections
@@ -25,7 +27,7 @@ namespace Sapientia.Collections
 		public TValue value;
 	}
 
-	public class FastDictionary<TKey, TValue> : IDisposable where TKey : IKey
+	public class FastDictionary<TKey, TValue> : IDisposable, IEnumerable<KeyValuePair<TKey, TValue>> where TKey : IKey
 	{
 		private readonly OrderedSparseSet<KeyValuePair<TKey, TValue>> _sparseSet;
 
@@ -205,6 +207,21 @@ namespace Sapientia.Collections
 		public void Dispose(bool clearArray)
 		{
 			_sparseSet.Dispose(clearArray);
+		}
+
+		public OrderedSparseSet<KeyValuePair<TKey, TValue>>.Enumerator GetEnumerator()
+		{
+			return _sparseSet.GetEnumerator();
+		}
+
+		IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 }
