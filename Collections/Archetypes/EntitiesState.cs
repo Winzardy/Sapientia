@@ -6,7 +6,7 @@ namespace Sapientia.Collections.Archetypes
 {
 	public static class EntitiesStateExt
 	{
-		public static bool IsAlive(this in Entity entity)
+		public static bool IsExist(this in Entity entity)
 		{
 			return ServiceLocator<EntitiesState>.Instance.IsEntityAlive(entity);
 		}

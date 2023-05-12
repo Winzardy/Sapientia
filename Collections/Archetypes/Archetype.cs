@@ -120,9 +120,7 @@ namespace Sapientia.Collections.Archetypes
 		private readonly SimpleList<int> _elementIndexes;
 
 		public ref readonly ArchetypeElement<TValue>[] Elements => ref _elements.GetValueArray();
-
 		public int Count => _elements.Count;
-		public int IndexesCapacity => _elementIndexes.Capacity;
 
 		public Archetype(OrderedSparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
 			EntityDestroyAction entityDestroyEvent = null) : this(ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, entityDestroyEvent)
@@ -162,12 +160,10 @@ namespace Sapientia.Collections.Archetypes
 				return ref DEFAULT;
 			return ref _elements.GetValue(indexId).value;
 		}
-
 		public bool HasElement(Entity entity)
 		{
 			return GetIndexId(entity) >= 0;
 		}
-
 		public void RemoveElement(Entity entity)
 		{
 			ref var indexId = ref GetIndexId(entity);
@@ -176,21 +172,6 @@ namespace Sapientia.Collections.Archetypes
 			_elements.ReleaseIndexId(indexId);
 			indexId = -1;
 		}
-
-		private void OnEntityDestroy(Entity entity)
-		{
-			ref var indexId = ref GetIndexId(entity);
-			if (indexId < 0)
-				return;
-
-			OnEntityDestroyEvent?.Invoke(ref _elements.GetValue(indexId));
-
-			if (indexId < 0)
-				return;
-			_elements.ReleaseIndexId(indexId);
-			indexId = -1;
-		}
-
 		public ref TValue GetElement(Entity entity)
 		{
 			ref var indexId = ref GetIndexId(entity);
@@ -212,7 +193,6 @@ namespace Sapientia.Collections.Archetypes
 				return ref element.value;
 			}
 		}
-
 		public void Clear()
 		{
 			var valueArray = _elements.GetValueArray();
@@ -235,6 +215,20 @@ namespace Sapientia.Collections.Archetypes
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= RemoveElement;
 			else
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= OnEntityDestroy;
+		}
+
+		private void OnEntityDestroy(Entity entity)
+		{
+			ref var indexId = ref GetIndexId(entity);
+			if (indexId < 0)
+				return;
+
+			OnEntityDestroyEvent?.Invoke(ref _elements.GetValue(indexId));
+
+			if (indexId < 0)
+				return;
+			_elements.ReleaseIndexId(indexId);
+			indexId = -1;
 		}
 	}
 }
