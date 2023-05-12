@@ -128,10 +128,10 @@ namespace Sapientia.Collections
 
 			 _values[index] = _values[lastIndex];
 			_indexData[index].indexToId = lastId;
-			_indexData[lastId].idToIndex = index;
-
 			_indexData[index].id = lastId;
+
 			_indexData[lastIndex].id = id;
+			_indexData[lastId].idToIndex = index;
 		}
 
 		private void ExpandIfNeeded(int newCapacity)

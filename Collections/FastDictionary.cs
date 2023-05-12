@@ -27,7 +27,7 @@ namespace Sapientia.Collections
 		public TValue value;
 	}
 
-	public class FastDictionary<TKey, TValue> : IDisposable, IEnumerable<KeyValuePair<TKey, TValue>> where TKey : IKey
+	public class FastDictionary<TKey, TValue> : IDisposable, IEnumerable<KeyValuePair<TKey, TValue>> where TKey : IKey, IEquatable<TKey>
 	{
 		private readonly OrderedSparseSet<KeyValuePair<TKey, TValue>> _sparseSet;
 
