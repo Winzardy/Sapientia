@@ -124,20 +124,6 @@ namespace Sapientia.Collections.Archetypes
 		public int Count => _elements.Count;
 		public int IndexesCapacity => _elementIndexes.Capacity;
 
-		public void Clear()
-		{
-			var valueArray = _elements.GetValueArray();
-			var count = _elements.Count;
-
-			for (var i = 0; i < count; i++)
-			{
-				_elementIndexes[valueArray[i].entity.id] = -1;
-			}
-
-			_elements.ClearFast();
-		}
-
-
 		public Archetype(OrderedSparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
 			EntityDestroyAction entityDestroyEvent = null) : this(ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, entityDestroyEvent)
 		{
@@ -161,17 +147,6 @@ namespace Sapientia.Collections.Archetypes
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += RemoveElement;
 			else
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += OnEntityDestroy;
-		}
-
-		~Archetype()
-		{
-			if (ServiceLocator<EntitiesState>.Instance == null)
-				return;
-
-			if (OnEntityDestroyEvent == null)
-				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= RemoveElement;
-			else
-				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= OnEntityDestroy;
 		}
 
 		private ref int GetIndexId(Entity entity)
@@ -236,6 +211,30 @@ namespace Sapientia.Collections.Archetypes
 				}
 				return ref element.value;
 			}
+		}
+
+		public void Clear()
+		{
+			var valueArray = _elements.GetValueArray();
+			var count = _elements.Count;
+
+			for (var i = 0; i < count; i++)
+			{
+				_elementIndexes[valueArray[i].entity.id] = -1;
+			}
+
+			_elements.ClearFast();
+		}
+
+		~Archetype()
+		{
+			if (ServiceLocator<EntitiesState>.Instance == null)
+				return;
+
+			if (OnEntityDestroyEvent == null)
+				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= RemoveElement;
+			else
+				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= OnEntityDestroy;
 		}
 	}
 }
