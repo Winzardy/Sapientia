@@ -7,8 +7,30 @@ namespace Sapientia.Extensions
 {
 	public static unsafe class UnsafeExtensions
 	{
+		private const int INT_SIZE = sizeof(int);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void* AsRefAsPointer<T>(in T value)
+		{
+#if UNITY_5_3_OR_NEWER
+			return UnsafeUtility.AsPointer(ref UnsafeUtility.AsRef(value));
+#else
+			return Unsafe.AsPointer(ref Unsafe.AsRef(value));
+#endif
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe T1 As<T, T1>(this ref T value) where T : struct where T1 : struct
+		{
+#if UNITY_5_3_OR_NEWER
+			return UnsafeUtility.As<T, T1>(ref value);
+#else
+			return Unsafe.As<T, T1>(ref value);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe T1 As<T, T1>(this T value)
 		{
 #if UNITY_5_3_OR_NEWER
 			return UnsafeUtility.As<T, T1>(ref value);
@@ -27,15 +49,29 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		public static bool IsEquals<T>(this ref T a, ref T b) where T : unmanaged
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void* AsPointer<T>(this T value)
 		{
-			var size = sizeof(T);
+#if UNITY_5_3_OR_NEWER
+			return UnsafeUtility.AddressOf(ref value);
+#else
+			return Unsafe.AsPointer(ref value);
+#endif
+		}
 
-			var bytes = size % sizeof(int);
-			var ints = (size - bytes) / sizeof(int);
+		public static bool IsEquals<T>(this T a, in T b)
+		{
+#if UNITY_5_3_OR_NEWER
+			var size = UnsafeUtility.SizeOf<T>();
+#else
+			var size = Unsafe.SizeOf<T>();
+#endif
 
-			var intPtrA = (int*)AsPointer(ref a);
-			var intPtrB = (int*)AsPointer(ref b);
+			var intPtrA = (int*)AsRefAsPointer(a);
+			var intPtrB = (int*)AsRefAsPointer(b);
+
+			var bytes = size % INT_SIZE;
+			var ints = (size - bytes) / INT_SIZE;
 			for (var i = 0; i < ints; i++)
 			{
 				if (intPtrA[i] != intPtrB[i])
