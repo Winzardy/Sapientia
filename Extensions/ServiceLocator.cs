@@ -216,22 +216,17 @@ namespace Sapientia.Extensions
 	{
 		#region Context
 
-		public static void SetContext<TContext, TService>(this ref TContext context) where TContext : struct, IServiceContext where TService: IService
+		public static void SetContext<TContext, TService>(this TContext context) where TService: IService
 		{
-			ServiceLocator<TContext, TService>.SetContext(ref context);
+			ServiceLocator<TContext, TService>.SetContext(context);
 		}
 
-		public static void SetContext<TContext, TService>(this TContext context) where TContext : class, IServiceContext where TService: IService
-		{
-			ServiceLocator<TContext, TService>.SetContext(ref context);
-		}
-
-		public static void RemoveContext<TContext, TService>(this TContext context) where TContext : IServiceContext where TService: IService
+		public static void RemoveContext<TContext, TService>(this TContext context) where TService: IService
 		{
 			ServiceLocator<TContext, TService>.RemoveContext(context);
 		}
 
-		public static void ResetContext<TContext, TService>() where TContext : IServiceContext where TService: IService
+		public static void ResetContext<TContext, TService>() where TService: IService
 		{
 			ServiceLocator<TContext, TService>.ResetContext();
 		}
@@ -241,7 +236,7 @@ namespace Sapientia.Extensions
 		#region Get
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService ContextGet<TContext, TService>() where TContext : IServiceContext where TService: IService, new()
+		public static TService ContextGet<TContext, TService>() where TService: IService, new()
 		{
 			return ServiceLocator<TContext, TService>.Get<TService>();
 		}
@@ -253,7 +248,7 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService ContextGet<TContext, TService, TConcrete>() where TContext : IServiceContext where TService: IService where TConcrete : TService, new()
+		public static TService ContextGet<TContext, TService, TConcrete>() where TService: IService where TConcrete : TService, new()
 		{
 			return ServiceLocator<TContext, TService>.Get<TConcrete>();
 		}
@@ -269,7 +264,7 @@ namespace Sapientia.Extensions
 		#region Create
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService ContextCreate<TContext, TService>() where TContext : IServiceContext where TService: IService, new()
+		public static TService ContextCreate<TContext, TService>() where TService: IService, new()
 		{
 			return ServiceLocator<TContext, TService>.Create<TService>();
 		}
@@ -281,7 +276,7 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService ContextCreate<TContext, TService, TConcrete>() where TContext : IServiceContext where TService: IService where TConcrete : TService, new()
+		public static TService ContextCreate<TContext, TService, TConcrete>() where TService: IService where TConcrete : TService, new()
 		{
 			return ServiceLocator<TContext, TService>.Create<TConcrete>();
 		}
@@ -297,7 +292,7 @@ namespace Sapientia.Extensions
 		#region Register
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool ContextTryRegisterAsService<TContext, TService>(this TService service) where TContext : IServiceContext where TService: IService
+		public static bool ContextTryRegisterAsService<TContext, TService>(this TService service) where TService: IService
 		{
 			return ServiceLocator<TContext, TService>.TryRegister(service);
 		}
@@ -309,7 +304,7 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService ContextRegisterAsService<TContext, TService>(this TService service) where TContext : IServiceContext where TService: IService
+		public static TService ContextRegisterAsService<TContext, TService>(this TService service) where TService: IService
 		{
 			return ServiceLocator<TContext, TService>.Register(service);
 		}
@@ -325,7 +320,7 @@ namespace Sapientia.Extensions
 		#region Unregister
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool ContextTryUnRegisterAsService<TContext, TService>(this TService service) where TContext : IServiceContext where TService: IService
+		public static bool ContextTryUnRegisterAsService<TContext, TService>(this TService service) where TService: IService
 		{
 			return ServiceLocator<TContext, TService>.TryUnRegister(service);
 		}
@@ -337,7 +332,7 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ContextUnRegisterAsService<TContext, TService>(this TService service) where TContext : IServiceContext where TService: IService
+		public static void ContextUnRegisterAsService<TContext, TService>(this TService service) where TService: IService
 		{
 			ServiceLocator<TContext, TService>.UnRegister(service);
 		}
@@ -353,7 +348,7 @@ namespace Sapientia.Extensions
 		#region Replace
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService ContextReplaceService<TContext, TService>(this TService service) where TContext : IServiceContext where TService: IService
+		public static TService ContextReplaceService<TContext, TService>(this TService service) where TService: IService
 		{
 			return ServiceLocator<TContext, TService>.ReplaceService(service);
 		}
@@ -368,9 +363,4 @@ namespace Sapientia.Extensions
 	}
 
 	public interface IService {}
-
-	public interface IServiceContext
-	{
-		internal int ContextId { get; set; }
-	}
 }
