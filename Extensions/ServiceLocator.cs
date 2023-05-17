@@ -1,19 +1,42 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Sapientia.Extensions
 {
+	public struct ContextScope<TContext, TService> : IDisposable where TService : IService
+	{
+		private TContext _context;
+
+		public ContextScope(TContext context)
+		{
+			_context = context;
+			ServiceLocator<TContext, TService>.SetContext(_context);
+		}
+
+		public void Dispose()
+		{
+			ServiceLocator<TContext, TService>.SetPreviousContext(_context);
+		}
+	}
+
 	public static class ServiceLocator<TContext, TService> where TService : IService
 	{
 		private static readonly Dictionary<TContext, TService> SERVICES = new ();
 
 		// ReSharper disable once StaticMemberInGenericType
 		private static TContext _context;
+		private static TContext _previousContext;
 
 		public static TContext Context => _context;
 
 		public static TService Instance => SERVICES[_context];
+
+		public static Dictionary<TContext, TService>.Enumerator GetServicesEnumerator()
+		{
+			return SERVICES.GetEnumerator();
+		}
 
 		public static bool HasContext()
 		{
@@ -28,17 +51,32 @@ namespace Sapientia.Extensions
 		public static void SetContext(TContext newContext)
 		{
 			SERVICES.TryAdd(newContext, default);
+			_previousContext = _context;
 			_context = newContext;
 		}
 
-		public static void RemoveContext(TContext context)
+		public static void SetPreviousContext(TContext currentContext)
 		{
-			if (context != null && SERVICES.Remove(context))
+			if (!currentContext.Equals(_context))
+				return;
+			(_previousContext, _context) = (_context, _previousContext);
+		}
+
+		public static void SetPreviousContext()
+		{
+			(_previousContext, _context) = (_context, _previousContext);
+		}
+
+		public static TService RemoveContext(TContext context)
+		{
+			if (context != null && SERVICES.Remove(context, out var service))
 			{
-				if (!_context.Equals(context))
-					return;
-				_context = default;
+				if (_context != null && _context.Equals(context))
+					_context = default;
+				return service;
 			}
+
+			return default;
 		}
 
 		public static void ResetContext()
@@ -216,14 +254,24 @@ namespace Sapientia.Extensions
 	{
 		#region Context
 
+		public static ContextScope<TContext, TService> GetContextScope<TContext, TService>(this TContext context) where TService: IService
+		{
+			return new ContextScope<TContext, TService>(context);
+		}
+
 		public static void SetContext<TContext, TService>(this TContext context) where TService: IService
 		{
 			ServiceLocator<TContext, TService>.SetContext(context);
 		}
 
-		public static void RemoveContext<TContext, TService>(this TContext context) where TService: IService
+		public static void RetrievePreviousContext<TContext, TService>(this TContext context) where TService: IService
 		{
-			ServiceLocator<TContext, TService>.RemoveContext(context);
+			ServiceLocator<TContext, TService>.SetPreviousContext(context);
+		}
+
+		public static TService RemoveContext<TContext, TService>(this TContext context) where TService: IService
+		{
+			return ServiceLocator<TContext, TService>.RemoveContext(context);
 		}
 
 		public static void ResetContext<TContext, TService>() where TService: IService
