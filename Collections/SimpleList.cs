@@ -147,6 +147,32 @@ namespace Sapientia.Collections
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Remove(T value)
+		{
+			for (var i = 0; i < _count; i++)
+			{
+				if (value.Equals(_array[i]))
+				{
+					RemoveAt(i);
+					break;
+				}
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Remove<T1>(T1 value) where T1 : T, IEquatable<T>
+		{
+			for (var i = 0; i < _count; i++)
+			{
+				if (value.Equals(_array[i]))
+				{
+					RemoveAt(i);
+					break;
+				}
+			}
+		}
+
 		public void InsertAt(int index, in T value)
 		{
 			Expand(_count + 1);
