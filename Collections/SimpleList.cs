@@ -161,6 +161,32 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBack(T value)
+		{
+			for (var i = 0; i < _count; i++)
+			{
+				if (value.Equals(_array[i]))
+				{
+					RemoveAtSwapBack(i);
+					break;
+				}
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBack_Clean(T value)
+		{
+			for (var i = 0; i < _count; i++)
+			{
+				if (value.Equals(_array[i]))
+				{
+					RemoveAtSwapBack_Clean(i);
+					break;
+				}
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Remove<T1>(T1 value) where T1 : T, IEquatable<T>
 		{
 			for (var i = 0; i < _count; i++)
