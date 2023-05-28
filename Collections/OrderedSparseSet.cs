@@ -61,8 +61,7 @@ namespace Sapientia.Collections
 
 			_useIndexPool = useIndexPool;
 			_useValuePool = useValuePool;
-			if (_useValuePool)
-				_resetValue = resetValue;
+			_resetValue = resetValue;
 
 			_indexData = _useIndexPool ? ArrayPool<IndexData>.Shared.Rent(capacity) : new IndexData[capacity];
 			_values = _useValuePool ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
@@ -85,14 +84,6 @@ namespace Sapientia.Collections
 		{
 			var index = _indexData[id].idToIndex;
 			return index < _count;
-		}
-
-		public int AllocateIndexId(bool clear)
-		{
-			var indexId = AllocateIndexId();
-			if (clear)
-				GetValue(indexId) = default;
-			return indexId;
 		}
 
 		public int AllocateIndexId()
@@ -126,12 +117,19 @@ namespace Sapientia.Collections
 			var lastIndex = --_count;
 			var lastId = _indexData[lastIndex].indexToId;
 
-			 _values[index] = _values[lastIndex];
 			_indexData[index].indexToId = lastId;
 			_indexData[index].id = lastId;
 
 			_indexData[lastIndex].id = id;
 			_indexData[lastId].idToIndex = index;
+
+			_values[index] = _values[lastIndex];
+			_values[lastIndex] = default;
+		}
+
+		public void ReleaseIndex(int index)
+		{
+			ReleaseIndexId(_indexData[index].indexToId);
 		}
 
 		private void ExpandIfNeeded(int newCapacity)
