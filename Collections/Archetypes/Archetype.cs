@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using Sapientia.Extensions;
 
 namespace Sapientia.Collections.Archetypes
@@ -108,7 +110,7 @@ namespace Sapientia.Collections.Archetypes
 		}
 	}
 
-	public class Archetype<TValue>
+	public class Archetype<TValue> : IEnumerable<ArchetypeElement<TValue>>
 	{
 		public delegate void EntityDestroyAction(ref ArchetypeElement<TValue> element);
 
@@ -206,6 +208,19 @@ namespace Sapientia.Collections.Archetypes
 			_elements.ClearFast();
 		}
 
+
+		private void OnEntityDestroy(Entity entity)
+		{
+			if (!_elements.Has(entity.id))
+				return;
+
+			OnEntityDestroyEvent?.Invoke(ref _elements.Get(entity.id));
+
+			if (!_elements.Has(entity.id))
+				return;
+			_elements.Remove(entity.id);
+		}
+
 		~Archetype()
 		{
 			if (ServiceLocator<EntitiesState>.Instance == null)
@@ -217,18 +232,14 @@ namespace Sapientia.Collections.Archetypes
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= OnEntityDestroy;
 		}
 
-		private void OnEntityDestroy(Entity entity)
+		public IEnumerator<ArchetypeElement<TValue>> GetEnumerator()
 		{
-			ref var indexId = ref GetIndexId(entity);
-			if (indexId < 0)
-				return;
+			return _elements.GetEnumerator();
+		}
 
-			OnEntityDestroyEvent?.Invoke(ref _elements.GetValue(indexId));
-
-			if (indexId < 0)
-				return;
-			_elements.ReleaseIndexId(indexId);
-			indexId = -1;
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 }
