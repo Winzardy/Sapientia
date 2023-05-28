@@ -5,7 +5,8 @@ using System.Runtime.CompilerServices;
 
 namespace Sapientia.Collections
 {
-	public interface IKey
+	// WIP
+	/*public interface IKey
 	{
 		public int DictionaryId { get; set; }
 	}
@@ -29,7 +30,7 @@ namespace Sapientia.Collections
 
 	public class FastDictionary<TKey, TValue> : IDisposable, IEnumerable<KeyValuePair<TKey, TValue>> where TKey : IKey, IEquatable<TKey>
 	{
-		private readonly OrderedSparseSet<KeyValuePair<TKey, TValue>> _sparseSet;
+		private readonly IndexAllocSparseSet<KeyValuePair<TKey, TValue>> _sparseSet;
 
 		public int Count
 		{
@@ -45,11 +46,11 @@ namespace Sapientia.Collections
 
 		public ref readonly KeyValuePair<TKey, TValue>[] GetKeyValueArray() => ref _sparseSet.GetValueArray();
 
-		public ref readonly OrderedSparseSet<KeyValuePair<TKey, TValue>> GetSparseSet() => ref _sparseSet;
+		public ref readonly IndexAllocSparseSet<KeyValuePair<TKey, TValue>> GetSparseSet() => ref _sparseSet;
 
 		public FastDictionary(int capacity = 8)
 		{
-			_sparseSet = new OrderedSparseSet<KeyValuePair<TKey, TValue>>(capacity);
+			_sparseSet = new IndexAllocSparseSet<KeyValuePair<TKey, TValue>>(capacity);
 		}
 
 		public TValue this[in TKey key]
@@ -209,7 +210,7 @@ namespace Sapientia.Collections
 			_sparseSet.Dispose(clearArray);
 		}
 
-		public OrderedSparseSet<KeyValuePair<TKey, TValue>>.Enumerator GetEnumerator()
+		public IndexAllocSparseSet<KeyValuePair<TKey, TValue>>.Enumerator GetEnumerator()
 		{
 			return _sparseSet.GetEnumerator();
 		}
@@ -223,5 +224,5 @@ namespace Sapientia.Collections
 		{
 			return GetEnumerator();
 		}
-	}
+	}*/
 }
