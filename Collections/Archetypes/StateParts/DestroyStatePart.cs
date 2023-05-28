@@ -55,16 +55,19 @@ namespace Sapientia.Collections.Archetypes.StateParts
 
 		private void DestroyEntities()
 		{
-			var entitiesToDestroy = destroyRequestArchetype.Elements;
 			var count = destroyRequestArchetype.Count;
+			if (count < 1)
+				return;
+
+			Span<ArchetypeElement<EmptyValue>> elementsToDestroy = stackalloc ArchetypeElement<EmptyValue>[count];
+			destroyRequestArchetype.Elements.AsSpan(0, count).CopyTo(elementsToDestroy);
+			destroyRequestArchetype.ClearFast();
 
 			for (var i = 0; i < count; i++)
 			{
-				var entity = entitiesToDestroy[i].entity;
+				var entity = elementsToDestroy[i].entity;
 				entity.Destroy();
 			}
-
-			destroyRequestArchetype.Clear();
 		}
 
 		private void KillEntities(float deltaTime)
