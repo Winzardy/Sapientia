@@ -101,11 +101,11 @@ namespace Sapientia.Collections.Archetypes
 
 	public class Archetype : Archetype<EmptyValue>
 	{
-		public Archetype(OrderedSparseSet<ArchetypeElement<EmptyValue>>.ResetAction resetAction = null) : base(resetAction)
+		public Archetype(SparseSet<ArchetypeElement<EmptyValue>>.ResetAction resetAction = null) : base(resetAction)
 		{
 		}
 
-		public Archetype(int elementsCount, OrderedSparseSet<ArchetypeElement<EmptyValue>>.ResetAction resetAction = null) : base(elementsCount, resetAction)
+		public Archetype(int elementsCount, SparseSet<ArchetypeElement<EmptyValue>>.ResetAction resetAction = null) : base(elementsCount, resetAction)
 		{
 		}
 	}
@@ -118,29 +118,27 @@ namespace Sapientia.Collections.Archetypes
 
 		private static readonly TValue DEFAULT = default;
 
-		private readonly OrderedSparseSet<ArchetypeElement<TValue>> _elements;
-		private readonly SimpleList<int> _elementIndexes;
+		private readonly SparseSet<ArchetypeElement<TValue>> _elements;
 
 		public ref readonly ArchetypeElement<TValue>[] Elements => ref _elements.GetValueArray();
 		public int Count => _elements.Count;
 
-		public Archetype(OrderedSparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
+		public Archetype(SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
 			EntityDestroyAction entityDestroyEvent = null) : this(ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, entityDestroyEvent)
 		{
 
 		}
 
 
-		public Archetype(int elementsCount, OrderedSparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
+		public Archetype(int elementsCount, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
 			EntityDestroyAction entityDestroyEvent = null) : this(elementsCount, ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, entityDestroyEvent)
 		{
 
 		}
 
-		private Archetype(int elementsCount, int entitiesCapacity, OrderedSparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null, EntityDestroyAction entityDestroyEvent = null)
+		private Archetype(int elementsCount, int entitiesCapacity, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null, EntityDestroyAction entityDestroyEvent = null)
 		{
-			_elements = new OrderedSparseSet<ArchetypeElement<TValue>>(elementsCount, resetAction);
-			_elementIndexes = new SimpleList<int>(entitiesCapacity, -1);
+			_elements = new SparseSet<ArchetypeElement<TValue>>(elementsCount, entitiesCapacity, resetAction);
 
 			OnEntityDestroyEvent = entityDestroyEvent;
 			if (OnEntityDestroyEvent == null)
@@ -149,65 +147,72 @@ namespace Sapientia.Collections.Archetypes
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += OnEntityDestroy;
 		}
 
-		private ref int GetIndexId(Entity entity)
-		{
-			_elementIndexes.Expand(entity.id + 1, -1);
-			return ref _elementIndexes[entity.id];
-		}
-
 		public ref readonly TValue ReadElement(Entity entity)
 		{
-			var indexId = GetIndexId(entity);
-			if (indexId < 0)
+			if (!_elements.Has(entity.id))
 				return ref DEFAULT;
-			return ref _elements.GetValue(indexId).value;
+			return ref _elements.Get(entity.id).value;
 		}
 		public bool HasElement(Entity entity)
 		{
-			return GetIndexId(entity) >= 0;
+			return _elements.Has(entity.id);
 		}
-		public void RemoveElement(Entity entity)
-		{
-			ref var indexId = ref GetIndexId(entity);
-			if (indexId < 0)
-				return;
-			_elements.ReleaseIndexId(indexId);
-			indexId = -1;
-		}
+
 		public ref TValue GetElement(Entity entity)
 		{
-			ref var indexId = ref GetIndexId(entity);
-			if (indexId < 0)
+			if (_elements.Has(entity.id))
 			{
-				indexId = _elements.AllocateIndexId();
-				ref var element = ref _elements.GetValue(indexId);
-
-				element = new ArchetypeElement<TValue>(entity, default);
+				ref var element = ref _elements.Get(entity.id);
+				System.Diagnostics.Debug.Assert(element.entity == entity);
+				/*if (element.entity != entity)
+					element = new ArchetypeElement<TValue>(entity, default);*/
 				return ref element.value;
 			}
 			else
 			{
-				ref var element = ref _elements.GetValue(indexId);
-				if (element.entity != entity)
-				{
-					element = new ArchetypeElement<TValue>(entity, default);
-				}
+				ref var element = ref _elements.EnsureGet(entity.id);
+				element = new ArchetypeElement<TValue>(entity, default);
 				return ref element.value;
 			}
 		}
+
 		public void Clear()
 		{
-			var valueArray = _elements.GetValueArray();
-			var count = _elements.Count;
+			ref readonly var valueArray = ref _elements.GetValueArray();
 
-			for (var i = 0; i < count; i++)
+			if (OnEntityDestroyEvent != null)
 			{
-				_elementIndexes[valueArray[i].entity.id] = -1;
+				for (var i = 0; i < _elements.Count; i++)
+				{
+					OnEntityDestroyEvent.Invoke(ref _elements.Get(valueArray[i].entity.id));
+				}
+			}
+			for (var i = 0; i < _elements.Count; i++)
+			{
+				_elements.Get(valueArray[i].entity.id) = default;
 			}
 
 			_elements.ClearFast();
 		}
 
+		public void ClearFast()
+		{
+			if (OnEntityDestroyEvent != null)
+			{
+				ref readonly var valueArray = ref _elements.GetValueArray();
+				for (var i = 0; i < _elements.Count; i++)
+				{
+					OnEntityDestroyEvent.Invoke(ref _elements.Get(valueArray[i].entity.id));
+				}
+			}
+
+			_elements.ClearFast();
+		}
+
+		public void RemoveElement(Entity entity)
+		{
+			_elements.Remove(entity.id);
+		}
 
 		private void OnEntityDestroy(Entity entity)
 		{
