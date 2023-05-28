@@ -7,7 +7,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
-	public class OrderedSparseSet<T> : IDisposable, IEnumerable<T>
+	public class IndexAllocSparseSet<T> : IDisposable, IEnumerable<T>
 	{
 		public struct IndexData
 		{
@@ -48,11 +48,11 @@ namespace Sapientia.Collections
 			get => _count >= _capacity;
 		}
 
-		public OrderedSparseSet(int capacity = 8) : this(capacity, null){}
+		public IndexAllocSparseSet(int capacity = 8) : this(capacity, null){}
 
-		public OrderedSparseSet(int capacity, ResetAction resetValue) : this(capacity, capacity, true, true, resetValue) {}
+		public IndexAllocSparseSet(int capacity, ResetAction resetValue) : this(capacity, capacity, true, true, resetValue) {}
 
-		public OrderedSparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
+		public IndexAllocSparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
 		{
 			this.expandStep = expandStep;
 
@@ -222,14 +222,14 @@ namespace Sapientia.Collections
 
 		public struct Enumerator : IEnumerator<T>
 		{
-			private readonly OrderedSparseSet<T> _sparseSet;
+			private readonly IndexAllocSparseSet<T> _sparseSet;
 			private int _index;
 
 			public T Current => _sparseSet._values[_index];
 
 			object IEnumerator.Current => Current;
 
-			internal Enumerator(OrderedSparseSet<T> sparseSet)
+			internal Enumerator(IndexAllocSparseSet<T> sparseSet)
 			{
 				_sparseSet = sparseSet;
 				_index = -1;
