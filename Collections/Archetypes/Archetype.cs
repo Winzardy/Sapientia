@@ -164,8 +164,6 @@ namespace Sapientia.Collections.Archetypes
 			{
 				ref var element = ref _elements.Get(entity.id);
 				System.Diagnostics.Debug.Assert(element.entity == entity);
-				/*if (element.entity != entity)
-					element = new ArchetypeElement<TValue>(entity, default);*/
 				return ref element.value;
 			}
 			else
