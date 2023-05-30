@@ -7,7 +7,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
-	public class OrderedSparseSet<T> : IDisposable, IEnumerable<T>
+	public class IndexAllocSparseSet<T> : IDisposable, IEnumerable<T>
 	{
 		public struct IndexData
 		{
@@ -48,11 +48,11 @@ namespace Sapientia.Collections
 			get => _count >= _capacity;
 		}
 
-		public OrderedSparseSet(int capacity = 8) : this(capacity, null){}
+		public IndexAllocSparseSet(int capacity = 8) : this(capacity, null){}
 
-		public OrderedSparseSet(int capacity, ResetAction resetValue) : this(capacity, capacity, true, true, resetValue) {}
+		public IndexAllocSparseSet(int capacity, ResetAction resetValue) : this(capacity, capacity, true, true, resetValue) {}
 
-		public OrderedSparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
+		public IndexAllocSparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
 		{
 			this.expandStep = expandStep;
 
@@ -61,8 +61,7 @@ namespace Sapientia.Collections
 
 			_useIndexPool = useIndexPool;
 			_useValuePool = useValuePool;
-			if (_useValuePool)
-				_resetValue = resetValue;
+			_resetValue = resetValue;
 
 			_indexData = _useIndexPool ? ArrayPool<IndexData>.Shared.Rent(capacity) : new IndexData[capacity];
 			_values = _useValuePool ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
@@ -85,14 +84,6 @@ namespace Sapientia.Collections
 		{
 			var index = _indexData[id].idToIndex;
 			return index < _count;
-		}
-
-		public int AllocateIndexId(bool clear)
-		{
-			var indexId = AllocateIndexId();
-			if (clear)
-				GetValue(indexId) = default;
-			return indexId;
 		}
 
 		public int AllocateIndexId()
@@ -126,12 +117,19 @@ namespace Sapientia.Collections
 			var lastIndex = --_count;
 			var lastId = _indexData[lastIndex].indexToId;
 
-			 _values[index] = _values[lastIndex];
 			_indexData[index].indexToId = lastId;
 			_indexData[index].id = lastId;
 
 			_indexData[lastIndex].id = id;
 			_indexData[lastId].idToIndex = index;
+
+			_values[index] = _values[lastIndex];
+			_values[lastIndex] = default;
+		}
+
+		public void ReleaseIndex(int index)
+		{
+			ReleaseIndexId(_indexData[index].indexToId);
 		}
 
 		private void ExpandIfNeeded(int newCapacity)
@@ -224,14 +222,14 @@ namespace Sapientia.Collections
 
 		public struct Enumerator : IEnumerator<T>
 		{
-			private readonly OrderedSparseSet<T> _sparseSet;
+			private readonly IndexAllocSparseSet<T> _sparseSet;
 			private int _index;
 
 			public T Current => _sparseSet._values[_index];
 
 			object IEnumerator.Current => Current;
 
-			internal Enumerator(OrderedSparseSet<T> sparseSet)
+			internal Enumerator(IndexAllocSparseSet<T> sparseSet)
 			{
 				_sparseSet = sparseSet;
 				_index = -1;

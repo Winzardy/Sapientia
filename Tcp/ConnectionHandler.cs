@@ -15,7 +15,7 @@ namespace Sapientia.Tcp
 		public event Action<Socket, int> ConnectionDeclinedEvent;
 		public event Action<int> ConnectionDisconnectedEvent;
 
-		private readonly SparseSet<Connection_Tcp> _connections;
+		private readonly IndexAllocSparseSet<Connection_Tcp> _connections;
 		private readonly SimpleList<Connection_Tcp> _existingConnections;
 		public readonly ReadOnlySimpleList<Connection_Tcp> existingConnections;
 
@@ -32,7 +32,7 @@ namespace Sapientia.Tcp
 
 		internal ConnectionHandler(int connectionsCapacity, int messageCapacity) : base()
 		{
-			_connections = new SparseSet<Connection_Tcp>(connectionsCapacity);
+			_connections = new IndexAllocSparseSet<Connection_Tcp>(connectionsCapacity);
 			_existingConnections = new SimpleList<Connection_Tcp>(connectionsCapacity);
 			existingConnections = new ReadOnlySimpleList<Connection_Tcp>(_existingConnections);
 			_nextConnectionId = 0;
@@ -113,7 +113,7 @@ namespace Sapientia.Tcp
 				return;
 			}
 
-			var index = _connections.AllocateValueIndex_NoExpand();
+			var index = _connections.AllocateIndexId_NoExpand();
 			var connection = _connections.GetValue(index);
 			var connectionReference = new ConnectionReference(index, _nextConnectionId, customId);
 
@@ -147,7 +147,7 @@ namespace Sapientia.Tcp
 
 					connection.Disconnect();
 					_existingConnections.RemoveAtSwapBack(i);
-					_connections.ReleaseValueIndex(connectionReference.index);
+					_connections.ReleaseIndexId(connectionReference.index);
 
 					ConnectionDisconnectedEvent?.Invoke(connectionReference.customId);
 				}

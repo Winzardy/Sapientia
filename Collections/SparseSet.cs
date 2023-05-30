@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
-	public class SparseSet<T> : IDisposable
+	public class SparseSet<T> : IDisposable, IEnumerable<T>
 	{
 		public delegate void ResetAction(ref T item);
 
 		public readonly int expandStep;
 
 		private T[] _values;
-		private int[] _valueIndexes;
+		private int[] _dense;
+		private int[] _sparse;
 
 		private readonly bool _useIndexPool;
 		private bool _useValuePool;
@@ -20,16 +23,24 @@ namespace Sapientia.Collections
 
 		private int _count;
 		private int _capacity;
+		private int _sparseCapacity;
 
 		public int Count
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _count;
 		}
+
 		public int Capacity
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _capacity;
+		}
+
+		public int FreeIndexesCapacity
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _sparseCapacity;
 		}
 
 		public bool IsFull
@@ -38,51 +49,92 @@ namespace Sapientia.Collections
 			get => _count >= _capacity;
 		}
 
-		public SparseSet(int capacity, ResetAction resetValue = null) : this(capacity, capacity, true, true, resetValue) {}
+		public SparseSet(int capacity, int sparseCapacity, ResetAction resetValue = null) : this(capacity, capacity, sparseCapacity, true, true, resetValue) {}
 
-		public SparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
+		public SparseSet(int capacity, int expandStep, int sparseCapacity, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
 		{
 			this.expandStep = expandStep;
 
 			_count = 0;
-			_capacity = capacity;
 
 			_useIndexPool = useIndexPool;
 			_useValuePool = useValuePool;
-			if (_useValuePool)
-				_resetValue = resetValue;
+			_resetValue = resetValue;
 
-			_valueIndexes = _useIndexPool ? ArrayPool<int>.Shared.Rent(capacity) : new int[capacity];
 			_values = _useValuePool ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
+			_dense = _useIndexPool ? ArrayPool<int>.Shared.Rent(capacity) : new int[capacity];
+			_sparse = _useIndexPool ? ArrayPool<int>.Shared.Rent(sparseCapacity) : new int[sparseCapacity];
+
+			_capacity = Math.Min(_dense.Length, _values.Length);
+			_sparseCapacity = _sparse.Length;
 
 			Fill(0, capacity);
 		}
 
-		public T[] GetValueArray()
+		public ref readonly T[] GetValueArray()
 		{
-			return _values;
+			return ref _values;
 		}
 
-		public int AllocateValueIndex_NoExpand()
+		public ref T Get(int id)
 		{
-			return _valueIndexes[_count++];
+			return ref _values[_sparse[id]];
 		}
 
-		public ref T GetValue(int valueIndex)
+		public bool Has(int id)
 		{
-			return ref _values[valueIndex];
+			var denseId = _sparse[id];
+			return denseId < _count && _dense[denseId] == id;
 		}
 
-		public int AllocateValueIndex()
+		public ref T EnsureGet(int id)
 		{
-			ExpandIfNeeded(_count + 1);
-
-			return AllocateValueIndex_NoExpand();
+			ExpandSparseIfNeeded(id);
+			ref var denseId = ref _sparse[id];
+			if (denseId >= _count || _dense[denseId] != id)
+			{
+				ExpandIfNeeded(_count + 1);
+				_dense[_count] = id;
+				denseId = _count++;
+			}
+			return ref _values[denseId];
 		}
 
-		public void ReleaseValueIndex(int valueIndex)
+		public void Remove(int id)
 		{
-			_valueIndexes[--_count] = valueIndex;
+			if (id >= _sparseCapacity)
+				return;
+			var denseId = _sparse[id];
+			if (denseId >= _count || _dense[denseId] != id)
+				return;
+
+			var sparseId = _dense[denseId] = _dense[--_count];
+			_sparse[sparseId] = denseId;
+
+			_values[denseId] = _values[_count];
+			_values[_count] = default;
+		}
+
+		private void ExpandSparseIfNeeded(int newCapacity)
+		{
+			if (_sparseCapacity >= newCapacity)
+				return;
+
+			newCapacity = SnapCeilCapacity(newCapacity);
+
+			ExpandSparse(newCapacity);
+		}
+
+		private void ExpandSparse(int newCapacity)
+		{
+			if (_useIndexPool)
+				ArrayExtensions.Expand_WithPool(ref _sparse, newCapacity);
+			else
+				ArrayExtensions.Expand(ref _sparse, newCapacity);
+
+			FillSparse(_sparseCapacity, newCapacity);
+
+			_sparseCapacity = _sparse.Length;
 		}
 
 		private void ExpandIfNeeded(int newCapacity)
@@ -98,9 +150,9 @@ namespace Sapientia.Collections
 		private void Expand(int newCapacity)
 		{
 			if (_useIndexPool)
-				ArrayExtensions.Expand_WithPool(ref _valueIndexes, newCapacity);
+				ArrayExtensions.Expand_WithPool(ref _dense, newCapacity);
 			else
-				ArrayExtensions.Expand(ref _valueIndexes, newCapacity);
+				ArrayExtensions.Expand(ref _dense, newCapacity);
 			if (_useValuePool)
 				ArrayExtensions.Expand_WithPool(ref _values, newCapacity);
 			else
@@ -108,7 +160,7 @@ namespace Sapientia.Collections
 
 			Fill(_capacity, newCapacity);
 
-			_capacity = newCapacity;
+			_capacity = Math.Min(_dense.Length, _values.Length);
 		}
 
 		private int SnapCeilCapacity(int newCapacity)
@@ -116,12 +168,15 @@ namespace Sapientia.Collections
 			return ((newCapacity + expandStep - 1) / expandStep) * expandStep;
 		}
 
+		private void FillSparse(int from, int to)
+		{
+			Array.Fill(_sparse, 0, from, to - from);
+		}
+
 		private void Fill(int from, int to)
 		{
-			for (var i = from; i < to; i++)
-			{
-				_valueIndexes[i] = i;
-			}
+			Array.Fill(_dense, 0, from, to - from);
+
 			if (_resetValue == null)
 				return;
 			for (var i = from; i < to; i++)
@@ -138,35 +193,65 @@ namespace Sapientia.Collections
 		public void Dispose(bool clearArray)
 		{
 			if (_useIndexPool)
-				ArrayPool<int>.Shared.Return(_valueIndexes, clearArray);
+			{
+				ArrayPool<int>.Shared.Return(_sparse, clearArray);
+				ArrayPool<int>.Shared.Return(_dense, clearArray);
+			}
 			if (_useValuePool)
 				ArrayPool<T>.Shared.Return(_values, clearArray);
 
-			_valueIndexes = null;
+			_sparse = null;
+			_dense = null;
 			_values = null;
 		}
 
-		public void SweepValues(bool clearRentedArray = false)
+		public void ClearFast()
 		{
-			SweepValues(clearRentedArray, _useValuePool);
+			_count = 0;
 		}
 
-		public void SweepValues(bool clearRentedArray, bool useValuePool)
+		public Enumerator GetEnumerator()
 		{
-			var newValues = useValuePool ? ArrayPool<T>.Shared.Rent(_values.Length) : new T[_values.Length];
+			return new Enumerator(this);
+		}
 
-			for (var i = 0; i < _count; i++)
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		public struct Enumerator : IEnumerator<T>
+		{
+			private readonly SparseSet<T> _sparseSet;
+			private int _index;
+
+			public T Current => _sparseSet._values[_index];
+
+			object IEnumerator.Current => Current;
+
+			internal Enumerator(SparseSet<T> sparseSet)
 			{
-				ref var index = ref _valueIndexes[i];
-				newValues[i] = _values[index];
-				index = i;
+				_sparseSet = sparseSet;
+				_index = -1;
 			}
 
-			if (_useValuePool)
-				ArrayPool<T>.Shared.Return(_values, clearRentedArray);
+			public bool MoveNext()
+			{
+				_index++;
+				return _index < _sparseSet._count;
+			}
 
-			_values = newValues;
-			_useValuePool = useValuePool;
+			public void Reset()
+			{
+				_index = -1;
+			}
+
+			public void Dispose() {}
 		}
 	}
 }
