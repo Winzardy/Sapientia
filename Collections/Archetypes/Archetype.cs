@@ -113,38 +113,49 @@ namespace Sapientia.Collections.Archetypes
 	public class Archetype<TValue> : IEnumerable<ArchetypeElement<TValue>>
 	{
 		public delegate void EntityDestroyAction(ref ArchetypeElement<TValue> element);
+		public delegate void EntityArrayDestroyAction(in ArchetypeElement<TValue>[] elements, int count);
 
-		private event EntityDestroyAction OnEntityDestroyEvent;
+		public struct DestroyEvents
+		{
+			public EntityDestroyAction OnEntityDestroyEvent;
+			public EntityArrayDestroyAction OnEntityArrayDestroyEvent;
+		}
 
 		private static readonly TValue DEFAULT = default;
 
 		private readonly SparseSet<ArchetypeElement<TValue>> _elements;
+		private event EntityDestroyAction OnEntityDestroyEvent;
+		private event EntityArrayDestroyAction OnEntityArrayDestroyEvent;
 
 		public ref readonly ArchetypeElement<TValue>[] Elements => ref _elements.GetValueArray();
 		public int Count => _elements.Count;
 
 		public Archetype(SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
-			EntityDestroyAction entityDestroyEvent = null) : this(ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, entityDestroyEvent)
+			DestroyEvents? destroyEvents = null) : this(ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, destroyEvents)
 		{
 
 		}
 
 
 		public Archetype(int elementsCount, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
-			EntityDestroyAction entityDestroyEvent = null) : this(elementsCount, ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, entityDestroyEvent)
+			DestroyEvents? destroyEvents = null) : this(elementsCount, ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, destroyEvents)
 		{
 
 		}
 
-		private Archetype(int elementsCount, int entitiesCapacity, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null, EntityDestroyAction entityDestroyEvent = null)
+		private Archetype(int elementsCount, int entitiesCapacity, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null, DestroyEvents? destroyEvents = null)
 		{
 			_elements = new SparseSet<ArchetypeElement<TValue>>(elementsCount, entitiesCapacity, resetAction);
 
-			OnEntityDestroyEvent = entityDestroyEvent;
-			if (OnEntityDestroyEvent == null)
+			if (destroyEvents == null)
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += RemoveElement;
 			else
+			{
+				OnEntityDestroyEvent = destroyEvents.Value.OnEntityDestroyEvent;
+				OnEntityArrayDestroyEvent = destroyEvents.Value.OnEntityArrayDestroyEvent;
+
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += OnEntityDestroy;
+			}
 		}
 
 		public ref readonly TValue ReadElement(Entity entity)
@@ -197,11 +208,7 @@ namespace Sapientia.Collections.Archetypes
 		{
 			if (OnEntityDestroyEvent != null)
 			{
-				ref readonly var valueArray = ref _elements.GetValueArray();
-				for (var i = 0; i < _elements.Count; i++)
-				{
-					OnEntityDestroyEvent.Invoke(ref _elements.Get(valueArray[i].entity.id));
-				}
+				OnEntityArrayDestroyEvent!.Invoke(_elements.GetValueArray(), _elements.Count);
 			}
 
 			_elements.ClearFast();
@@ -217,7 +224,7 @@ namespace Sapientia.Collections.Archetypes
 			if (!_elements.Has(entity.id))
 				return;
 
-			OnEntityDestroyEvent?.Invoke(ref _elements.Get(entity.id));
+			OnEntityDestroyEvent!.Invoke(ref _elements.Get(entity.id));
 
 			if (!_elements.Has(entity.id))
 				return;
