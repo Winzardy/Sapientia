@@ -37,7 +37,7 @@ namespace Sapientia.Extensions
 			var length = array.Length;
 			for (var i = 0; i < length; i++)
 			{
-#if UNITY_EDITOR
+#if UNITY_5_3_OR_NEWER
 				var indexToSwap = UnityEngine.Random.Range(i, length);
 #else
 				var indexToSwap = System.Random.Shared.Next(i, length);
@@ -51,7 +51,7 @@ namespace Sapientia.Extensions
 			var length = list.Count;
 			for (var i = 0; i < length; i++)
 			{
-#if UNITY_EDITOR
+#if UNITY_5_3_OR_NEWER
 				var indexToSwap = UnityEngine.Random.Range(i, length);
 #else
 				var indexToSwap = System.Random.Shared.Next(i, length);
@@ -65,7 +65,7 @@ namespace Sapientia.Extensions
 			var length = list.Count;
 			for (var i = 0; i < length; i++)
 			{
-#if UNITY_EDITOR
+#if UNITY_5_3_OR_NEWER
 				var indexToSwap = UnityEngine.Random.Range(i, length);
 #else
 				var indexToSwap = System.Random.Shared.Next(i, length);
