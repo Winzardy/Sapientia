@@ -64,6 +64,12 @@ namespace Sapientia.Extensions
 			streamWriter.WriteLine(json);
 		}
 
+		public static async Task AppendToJsonFileAsync<T>(this T from, StreamWriter streamWriter, SerializationType serializationType = SerializationType.Cut)
+		{
+			var json = from.ToJson(serializationType);
+			await streamWriter.WriteLineAsync(json);
+		}
+
 		public static bool TryFromJson<T>(this string json, out T value)
 		{
 			try
