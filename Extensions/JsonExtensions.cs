@@ -140,6 +140,12 @@ namespace Sapientia.Extensions
 			return changeItemEvents;
 		}
 
+		public static async Task<SimpleList<T>?> ListFromJsonAsync<T>(this Stream stream)
+		{
+			using var streamReader = new StreamReader(stream);
+			return await ListFromJsonAsync<T>(streamReader);
+		}
+
 		public static async Task<SimpleList<T>?> ListFromJsonAsync<T>(this TextReader textReader)
 		{
 			if (textReader.Peek() == 0)
@@ -147,14 +153,41 @@ namespace Sapientia.Extensions
 
 			var result = new SimpleList<T>();
 
-			do
+			try
 			{
-				var json = (await textReader.ReadLineAsync())!;
-				var changeItemEvent = json.FromJson<T>();
-				result.Add(changeItemEvent);
-			} while (textReader.Peek() > 0);
+				do
+				{
+					var json = (await textReader.ReadLineAsync())!;
+					var value = json.FromJson<T>();
+					result.Add(value);
+				} while (textReader.Peek() > 0);
 
-			return result;
+				return result;
+			}
+			catch (Exception e)
+			{
+				return default;
+			}
+		}
+
+		public static SimpleList<T>? ListFromJsonLines<T>(this SimpleList<string> lines)
+		{
+			var result = new SimpleList<T>();
+
+			try
+			{
+				for (var i = 0; i < lines.Count; i++)
+				{
+					var value = lines[i].FromJson<T>();
+					result.Add(value);
+				}
+
+				return result;
+			}
+			catch (Exception e)
+			{
+				return default;
+			}
 		}
 	}
 }
