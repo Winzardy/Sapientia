@@ -55,6 +55,19 @@ namespace Sapientia.Extensions
 			return encryptedBytes;
 		}
 
+		public static string EncryptStringToString(this Aes aes, string data)
+		{
+			var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+			using var msEncrypt = new MemoryStream();
+			using var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write);
+			using var swEncrypt = new StreamWriter(csEncrypt);
+			swEncrypt.Write(data);
+
+			var encryptedBytes = msEncrypt.GetBuffer();
+			return Convert.ToBase64String(encryptedBytes, 0, (int)msEncrypt.Length);
+		}
+
 		public static string AesDecryptString(this Stream encryptedBytes, AesParameters parameters)
 		{
 			return AesDecryptString(encryptedBytes, parameters.KeyBytes, parameters.IvBytes);
@@ -63,6 +76,18 @@ namespace Sapientia.Extensions
 		public static string AesDecryptString(this Stream encryptedBytes, byte[] key, byte[] iv)
 		{
 			using var csDecrypt = GetCryptoStream(encryptedBytes, key, iv);
+			using var sr = new StreamReader(csDecrypt);
+
+			return sr.ReadToEnd();
+		}
+
+		public static string DecryptString(this Aes aes, string encryptedString)
+		{
+			using var stream = new MemoryStream();
+			using var writer = new StreamWriter(stream);
+			writer.Write(encryptedString);
+
+			using var csDecrypt = GetCryptoStream(aes, stream);
 			using var sr = new StreamReader(csDecrypt);
 
 			return sr.ReadToEnd();
@@ -105,10 +130,7 @@ namespace Sapientia.Extensions
 			aes.Key = key;
 			aes.IV = iv;
 
-			using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-			using var msDecrypt = new MemoryStream();
-			encryptedBytes.CopyTo(msDecrypt);
-			return new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
+			return GetCryptoStream(aes, encryptedBytes);
 		}
 
 		private static CryptoStream GetCryptoStream(byte[] encryptedBytes, byte[] key, byte[] iv)
@@ -116,7 +138,19 @@ namespace Sapientia.Extensions
 			using var aes = Aes.Create();
 			aes.Key = key;
 			aes.IV = iv;
+			return GetCryptoStream(aes, encryptedBytes);
+		}
 
+		private static CryptoStream GetCryptoStream(Aes aes, Stream encryptedBytes)
+		{
+			using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+			using var msDecrypt = new MemoryStream();
+			encryptedBytes.CopyTo(msDecrypt);
+			return new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
+		}
+
+		private static CryptoStream GetCryptoStream(Aes aes, byte[] encryptedBytes)
+		{
 			using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 			using var msDecrypt = new MemoryStream(encryptedBytes);
 			return new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
