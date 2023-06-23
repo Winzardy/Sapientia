@@ -28,6 +28,21 @@ namespace Sapientia.Data
 			SetFree();
 		}
 
+		public T ReadValue()
+		{
+			SetBusy();
+			var result = value;
+			SetFree();
+			return result;
+		}
+
+		public void SetValue(in T newValue)
+		{
+			SetBusy();
+			value = newValue;
+			SetFree();
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TrySetBusy()
 		{
