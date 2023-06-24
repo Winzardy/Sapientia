@@ -62,7 +62,10 @@ namespace Sapientia.Extensions
 			using var msEncrypt = new MemoryStream();
 			using var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write);
 			using var swEncrypt = new StreamWriter(csEncrypt);
+
 			swEncrypt.Write(data);
+			swEncrypt.Flush();
+			csEncrypt.FlushFinalBlock();
 
 			var encryptedBytes = msEncrypt.GetBuffer();
 			return Convert.ToBase64String(encryptedBytes, 0, (int)msEncrypt.Length);
@@ -85,7 +88,9 @@ namespace Sapientia.Extensions
 		{
 			using var stream = new MemoryStream();
 			using var writer = new StreamWriter(stream);
+
 			writer.Write(encryptedString);
+			writer.Flush();
 
 			using var csDecrypt = GetCryptoStream(aes, stream);
 			using var sr = new StreamReader(csDecrypt);
