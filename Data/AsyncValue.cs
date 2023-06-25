@@ -46,7 +46,7 @@ namespace Sapientia.Data
 		}
 	}
 
-	public struct AsyncValue<T> where T: unmanaged
+	public struct AsyncValue<T>
 	{
 		public T value;
 

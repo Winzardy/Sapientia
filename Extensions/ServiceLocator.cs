@@ -2,9 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 
 namespace Sapientia.Extensions
 {
+	public enum ServiceAccessType
+	{
+		Default,
+		Interlocked,
+	}
+
 	public struct ContextScope<TContext, TService> : IDisposable where TService : IService
 	{
 		private TContext _context;
@@ -25,7 +32,6 @@ namespace Sapientia.Extensions
 	{
 		private static readonly Dictionary<TContext, TService> SERVICES = new ();
 
-		// ReSharper disable once StaticMemberInGenericType
 		private static TContext _context;
 		private static TContext _previousContext;
 
@@ -170,11 +176,69 @@ namespace Sapientia.Extensions
 
 	public static class ServiceLocator<TService> where TService: IService
 	{
-		public static TService Instance { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; [MethodImpl(MethodImplOptions.AggressiveInlining)] private set; }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static TService InterlockedGet()
+		{
+			return _instance.ReadValue();
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void InterlockedSet(TService service)
+		{
+			_instance.SetValue(service);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static TService DefaultGet()
+		{
+			return _instance.value;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void DefaultSet(TService service)
+		{
+			_instance.value = service;
+		}
+
+		private static event Func<TService> GetInstance = DefaultGet;
+		private static event Action<TService> SetInstance = DefaultSet;
+
+		private static AsyncValue<TService> _instance = new (default);
+
+		public static TService Instance
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => GetInstance();
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] private set => SetInstance(value);
+		}
+
+		public static ServiceAccessType AccessType
+		{
+			set
+			{
+				switch (value)
+				{
+					case ServiceAccessType.Interlocked:
+					{
+						GetInstance = InterlockedGet;
+						SetInstance = InterlockedSet;
+						break;
+					}
+					default:
+					{
+						GetInstance = DefaultGet;
+						SetInstance = DefaultSet;
+						break;
+					}
+				}
+			}
+		}
 
 		public static bool HasInstance()
 		{
 			return Instance != null;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsRegistered(TService service)
+		{
+			return Instance != null && Instance.Equals(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -404,6 +468,13 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService ReplaceService<TService>(this TService service) where TService: IService
 		{
+			return ServiceLocator<TService>.ReplaceService(service);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TService ReplaceService<TService>(this TService service, ServiceAccessType accessType) where TService: IService
+		{
+			ServiceLocator<TService>.AccessType = accessType;
 			return ServiceLocator<TService>.ReplaceService(service);
 		}
 
