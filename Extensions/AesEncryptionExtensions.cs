@@ -11,8 +11,8 @@ namespace Sapientia.Extensions
 		public string Key { get; set; }
 		public string Iv { get; set; }
 
-		public byte[] KeyBytes => Convert.FromBase64String(Key);
-		public byte[] IvBytes => Convert.FromBase64String(Iv);
+		public byte[] GetKeyBytes() => Convert.FromBase64String(Key);
+		public byte[] GetIvBytes() => Convert.FromBase64String(Iv);
 
 		public AesParameters(Aes aes)
 		{
@@ -32,8 +32,8 @@ namespace Sapientia.Extensions
 		public Aes CreateAes()
 		{
 			var aes = Aes.Create();
-			aes.Key = KeyBytes;
-			aes.IV = IvBytes;
+			aes.Key = GetKeyBytes();
+			aes.IV = GetIvBytes();
 
 			return aes;
 		}
@@ -73,7 +73,7 @@ namespace Sapientia.Extensions
 
 		public static string AesDecryptString(this Stream encryptedBytes, AesParameters parameters)
 		{
-			return AesDecryptString(encryptedBytes, parameters.KeyBytes, parameters.IvBytes);
+			return AesDecryptString(encryptedBytes, parameters.GetKeyBytes(), parameters.GetIvBytes());
 		}
 
 		public static string AesDecryptString(this Stream encryptedBytes, byte[] key, byte[] iv)
@@ -108,7 +108,7 @@ namespace Sapientia.Extensions
 
 		public static byte[] AesDecryptData(this Stream encryptedBytes, AesParameters parameters)
 		{
-			return AesDecryptData(encryptedBytes, parameters.KeyBytes, parameters.IvBytes);
+			return AesDecryptData(encryptedBytes, parameters.GetKeyBytes(), parameters.GetIvBytes());
 		}
 
 		public static byte[] AesDecryptData(this Stream encryptedBytes, byte[] key, byte[] iv)
@@ -165,11 +165,11 @@ namespace Sapientia.Extensions
 		{
 			var aes = parameters.CreateAes();
 
-			using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 			for (var i = 0; i < encryptedStrings.Count; i++)
 			{
 				var data = Convert.FromBase64String(encryptedStrings[i]);
 
+				using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 				using var msDecrypt = new MemoryStream(data);
 				using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
 				using var srDecrypt = new StreamReader(csDecrypt);
