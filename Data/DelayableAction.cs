@@ -52,7 +52,11 @@ namespace Sapientia.Data
 		public bool InvokeDelayedOnceInterlocked()
 		{
 			using var scope = GetBusyScope();
+			return InvokeDelayedOnce();
+		}
 
+		public bool InvokeDelayedOnce()
+		{
 			if (ActionEvent == null || _invocationCount < 1)
 			{
 				_invocationCount = 0;
