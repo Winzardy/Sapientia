@@ -12,6 +12,7 @@ namespace Sapientia.Extensions
 		Auto,
 		AutoIndented,
 		Full,
+		FullIndented,
 	}
 
 	public static class JsonExtensions
@@ -37,6 +38,12 @@ namespace Sapientia.Extensions
 			TypeNameHandling = TypeNameHandling.All,
 		};
 
+		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED_INDENTED = new()
+		{
+			TypeNameHandling = TypeNameHandling.All,
+			Formatting = Formatting.Indented,
+		};
+
 		public static string ToJson<T>(this T from, SerializationType serializationType = SerializationType.Cut)
 		{
 			var settings = serializationType switch
@@ -45,6 +52,7 @@ namespace Sapientia.Extensions
 				SerializationType.Auto => JSON_SETTINGS_AUTO_TYPED,
 				SerializationType.AutoIndented => JSON_SETTINGS_AUTO_TYPED_INDENTED,
 				SerializationType.Full => JSON_SETTINGS_FULL_TYPED,
+				SerializationType.FullIndented => JSON_SETTINGS_FULL_TYPED_INDENTED,
 				_ => JSON_SETTINGS_NONE_TYPED
 			};
 			return JsonConvert.SerializeObject(from, typeof(T), settings);
