@@ -11,30 +11,76 @@ namespace Sapientia.Data
 
 		public void ImmediatelyInvoke()
 		{
+			using var scope = GetBusyScope();
 			ActionEvent?.Invoke();
 		}
 
 		public void DelayInvoke()
 		{
+			_invocationCount++;
+		}
+
+		public void DelayInvokeInterlocked()
+		{
 			using var scope = GetBusyScope();
 			_invocationCount++;
 		}
 
-		public void InvokeDelayed()
+		public bool InvokeDelayedInterlocked()
 		{
 			using var scope = GetBusyScope();
+			return InvokeDelayed();
+		}
 
-			if (ActionEvent == null)
+		public bool InvokeDelayed()
+		{
+			if (ActionEvent == null || _invocationCount < 1)
 			{
 				_invocationCount = 0;
-				return;
+				return false;
 			}
 
-			while (_invocationCount > 0)
+			do
 			{
 				ActionEvent.Invoke();
 				_invocationCount--;
+			} while (_invocationCount > 0);
+
+			return true;
+		}
+
+		public bool InvokeDelayedOnceInterlocked()
+		{
+			using var scope = GetBusyScope();
+
+			if (ActionEvent == null || _invocationCount < 1)
+			{
+				_invocationCount = 0;
+				return false;
 			}
+
+			ActionEvent.Invoke();
+			_invocationCount = 0;
+
+			return true;
+		}
+
+		public void ResetInterlocked()
+		{
+			using var scope = GetBusyScope();
+			ActionEvent = null;
+		}
+
+		public void SubscribeInterlocked(Action action)
+		{
+			using var scope = GetBusyScope();
+			ActionEvent += action;
+		}
+
+		public void UnSubscribeInterlocked(Action action)
+		{
+			using var scope = GetBusyScope();
+			ActionEvent -= action;
 		}
 
 		public void Subscribe(Action action)
@@ -47,20 +93,28 @@ namespace Sapientia.Data
 			ActionEvent -= action;
 		}
 
-		public static DelayableAction operator +(DelayableAction delayableAction, Action action)
+		public void SubscribeInterlocked(DelayableAction action)
 		{
-			using var scope = delayableAction.GetBusyScope();
-
-			delayableAction.ActionEvent += action;
-			return delayableAction;
+			using var scopeA = GetBusyScope();
+			using var scopeB = action.GetBusyScope();
+			ActionEvent += action.ActionEvent;
 		}
 
-		public static DelayableAction operator -(DelayableAction delayableAction, Action action)
+		public void UnSubscribeInterlocked(DelayableAction action)
 		{
-			using var scope = delayableAction.GetBusyScope();
+			using var scopeA = GetBusyScope();
+			using var scopeB = action.GetBusyScope();
+			ActionEvent -= action.ActionEvent;
+		}
 
-			delayableAction.ActionEvent -= action;
-			return delayableAction;
+		public void Subscribe(DelayableAction action)
+		{
+			ActionEvent += action.ActionEvent;
+		}
+
+		public void UnSubscribe(DelayableAction action)
+		{
+			ActionEvent -= action.ActionEvent;
 		}
 	}
 
@@ -75,13 +129,13 @@ namespace Sapientia.Data
 			ActionEvent?.Invoke(context);
 		}
 
-		public void DelayInvoke(TContext context)
+		public void DelayInvokeInterlocked(TContext context)
 		{
 			using var scope = GetBusyScope();
 			_invocationContextList.AddWithoutExpand(context);
 		}
 
-		public void InvokeDelayed()
+		public void InvokeDelayedInterlocked()
 		{
 			using var scope = GetBusyScope();
 
@@ -99,6 +153,18 @@ namespace Sapientia.Data
 			_invocationContextList.ClearPartial();
 		}
 
+		public void SubscribeInterlocked(Action<TContext> action)
+		{
+			using var scope = GetBusyScope();
+			ActionEvent += action;
+		}
+
+		public void UnSubscribeInterlocked(Action<TContext> action)
+		{
+			using var scope = GetBusyScope();
+			ActionEvent -= action;
+		}
+
 		public void Subscribe(Action<TContext> action)
 		{
 			ActionEvent += action;
@@ -109,20 +175,28 @@ namespace Sapientia.Data
 			ActionEvent -= action;
 		}
 
-		public static DelayableAction<TContext> operator +(DelayableAction<TContext> delayableAction, Action<TContext> action)
+		public void SubscribeInterlocked(DelayableAction<TContext> action)
 		{
-			using var scope = delayableAction.GetBusyScope();
-
-			delayableAction.ActionEvent += action;
-			return delayableAction;
+			using var scopeA = GetBusyScope();
+			using var scopeB = action.GetBusyScope();
+			ActionEvent += action.ActionEvent;
 		}
 
-		public static DelayableAction<TContext> operator -(DelayableAction<TContext> delayableAction, Action<TContext> action)
+		public void UnSubscribeInterlocked(DelayableAction<TContext> action)
 		{
-			using var scope = delayableAction.GetBusyScope();
+			using var scopeA = GetBusyScope();
+			using var scopeB = action.GetBusyScope();
+			ActionEvent -= action.ActionEvent;
+		}
 
-			delayableAction.ActionEvent -= action;
-			return delayableAction;
+		public void Subscribe(DelayableAction<TContext> action)
+		{
+			ActionEvent += action.ActionEvent;
+		}
+
+		public void UnSubscribe(DelayableAction<TContext> action)
+		{
+			ActionEvent -= action.ActionEvent;
 		}
 	}
 }

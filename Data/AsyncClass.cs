@@ -50,13 +50,39 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public AsyncClassBusyScope GetBusyScope()
 		{
+			SetBusy();
 			return new AsyncClassBusyScope(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public AsyncClassBusyScopeAsync GetBusyScopeAsync()
 		{
+			SetBusy();
 			return new AsyncClassBusyScopeAsync(this);
+		}
+
+		public bool TryGetBusyScope(out AsyncClassBusyScope result)
+		{
+			if (TrySetBusy())
+			{
+				result = new AsyncClassBusyScope(this);
+				return true;
+			}
+
+			result = default!;
+			return false;
+		}
+
+		public bool TryGetBusyScopeAsync(out AsyncClassBusyScopeAsync result)
+		{
+			if (TrySetBusy())
+			{
+				result = new AsyncClassBusyScopeAsync(this);
+				return true;
+			}
+
+			result = default!;
+			return false;
 		}
 	}
 
@@ -66,7 +92,6 @@ namespace Sapientia.Data
 
 		public AsyncClassBusyScope(AsyncClass asyncClass)
 		{
-			asyncClass.SetBusy();
 			_asyncClass = asyncClass;
 		}
 
@@ -82,7 +107,6 @@ namespace Sapientia.Data
 
 		public AsyncClassBusyScopeAsync(AsyncClass asyncClass)
 		{
-			asyncClass.SetBusy();
 			_asyncClass = asyncClass;
 		}
 
