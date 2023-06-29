@@ -17,6 +17,11 @@ namespace Sapientia.Extensions
 		public static async Task<SimpleList<string>?> ReadLinesAsync(this Stream stream)
 		{
 			using var reader = new StreamReader(stream);
+			return await reader.ReadLinesAsync();
+		}
+
+		public static async Task<SimpleList<string>?> ReadLinesAsync(this StreamReader reader)
+		{
 			if (reader.Peek() == 0)
 				return default;
 
