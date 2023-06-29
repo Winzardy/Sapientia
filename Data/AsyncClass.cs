@@ -97,7 +97,7 @@ namespace Sapientia.Data
 
 		public void Dispose()
 		{
-			_asyncClass.SetFree();
+			_asyncClass?.SetFree();
 		}
 	}
 
@@ -112,7 +112,7 @@ namespace Sapientia.Data
 
 		public void Dispose()
 		{
-			_asyncClass.SetFree();
+			_asyncClass?.SetFree();
 		}
 	}
 }
