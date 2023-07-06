@@ -65,24 +65,22 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassBusyScope<T> GetBusyScope()
+		public AsyncValueClassBusyScope<T> GetBusyScope(bool isFree = false)
 		{
-			SetBusy();
-			return new AsyncValueClassBusyScope<T>(this);
+			return new AsyncValueClassBusyScope<T>(this, isFree);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassBusyScopeAsync<T> GetBusyScopeAsync()
+		public AsyncValueClassBusyScopeAsync<T> GetBusyScopeAsync(bool isFree = false)
 		{
-			SetBusy();
-			return new AsyncValueClassBusyScopeAsync<T>(this);
+			return new AsyncValueClassBusyScopeAsync<T>(this, isFree);
 		}
 
-		public bool TryGetBusyScope(out AsyncValueClassBusyScope<T> result)
+		public bool TryGetBusyScope(out AsyncValueClassBusyScope<T> result, bool isFree = false)
 		{
 			if (TrySetBusy())
 			{
-				result = new AsyncValueClassBusyScope<T>(this);
+				result = new AsyncValueClassBusyScope<T>(this, isFree);
 				return true;
 			}
 
@@ -90,11 +88,11 @@ namespace Sapientia.Data
 			return false;
 		}
 
-		public bool TryGetBusyScopeAsync(out AsyncValueClassBusyScopeAsync<T> result)
+		public bool TryGetBusyScopeAsync(out AsyncValueClassBusyScopeAsync<T> result, bool isFree = false)
 		{
 			if (TrySetBusy())
 			{
-				result = new AsyncValueClassBusyScopeAsync<T>(this);
+				result = new AsyncValueClassBusyScopeAsync<T>(this, isFree);
 				return true;
 			}
 
@@ -103,33 +101,53 @@ namespace Sapientia.Data
 		}
 	}
 
-	public readonly ref struct AsyncValueClassBusyScope<T>
+	public ref struct AsyncValueClassBusyScope<T>
 	{
+		private bool _isDisposed;
 		private readonly AsyncValueClass<T> _asyncValue;
 
-		public AsyncValueClassBusyScope(AsyncValueClass<T> asyncValue)
+		public T Value => _asyncValue.value;
+
+		public AsyncValueClassBusyScope(AsyncValueClass<T> asyncValue, bool isDisposed = false)
 		{
+			if (!isDisposed)
+				asyncValue.SetBusy();
 			_asyncValue = asyncValue;
+			_isDisposed = isDisposed;
 		}
 
 		public void Dispose()
 		{
-			_asyncValue.SetFree();
+			if (!_isDisposed)
+			{
+				_asyncValue.SetFree();
+				_isDisposed = true;
+			}
 		}
 	}
 
-	public readonly struct AsyncValueClassBusyScopeAsync<T> : IDisposable
+	public struct AsyncValueClassBusyScopeAsync<T> : IDisposable
 	{
+		private bool _isDisposed;
 		private readonly AsyncValueClass<T> _asyncValue;
 
-		public AsyncValueClassBusyScopeAsync(AsyncValueClass<T> asyncValue)
+		public T Value => _asyncValue.value;
+
+		public AsyncValueClassBusyScopeAsync(AsyncValueClass<T> asyncValue, bool isDisposed = false)
 		{
+			if (!isDisposed)
+				asyncValue.SetBusy();
 			_asyncValue = asyncValue;
+			_isDisposed = isDisposed;
 		}
 
 		public void Dispose()
 		{
-			_asyncValue.SetFree();
+			if (!_isDisposed)
+			{
+				_asyncValue.SetFree();
+				_isDisposed = true;
+			}
 		}
 	}
 }
