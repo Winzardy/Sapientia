@@ -136,7 +136,27 @@ namespace Sapientia.Data
 		public void DelayInvokeInterlocked(TContext context)
 		{
 			using var scope = GetBusyScope();
-			_invocationContextList.AddWithoutExpand(context);
+			_invocationContextList.Add(context);
+		}
+
+		public bool InvokeDelayedOnceInterlocked()
+		{
+			using var scope = GetBusyScope();
+			return InvokeDelayedOnce();
+		}
+
+		public bool InvokeDelayedOnce()
+		{
+			if (ActionEvent == null || _invocationContextList.Count < 1)
+			{
+				_invocationContextList.ClearPartial();
+				return false;
+			}
+
+			ActionEvent.Invoke(_invocationContextList[^1]);
+			_invocationContextList.ClearPartial();
+
+			return true;
 		}
 
 		public void InvokeDelayedInterlocked()
