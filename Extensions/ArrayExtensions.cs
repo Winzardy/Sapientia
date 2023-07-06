@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using Sapientia.Collections;
 
 namespace Sapientia.Extensions
 {
 	public static class ArrayExtensions
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsArrayEqual<T>(this T[] a, T[] b)
 		{
 			if (a.Equals(b))
@@ -26,7 +26,6 @@ namespace Sapientia.Extensions
 			return true;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Move<T>(this T[] array, int from, int to)
 		{
 			var value = array[from];
@@ -43,7 +42,6 @@ namespace Sapientia.Extensions
 			array[to] = value;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MoveToEnd<T>(this T[] array, int index)
 		{
 			var value = array[index];
@@ -52,7 +50,14 @@ namespace Sapientia.Extensions
 			array[^1] = value;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Expand_WithPool_DontReturn<T>(ref T[] array, int newCapacity)
+		{
+			var newArray = ArrayPool<T>.Shared.Rent(newCapacity);
+			Array.Copy(array, newArray, array.Length);
+
+			array = newArray;
+		}
+
 		public static void Expand_WithPool<T>(ref T[] array, int newCapacity)
 		{
 			var newArray = ArrayPool<T>.Shared.Rent(newCapacity);
@@ -62,7 +67,6 @@ namespace Sapientia.Extensions
 			array = newArray;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Expand<T>(ref T[] array, int newCapacity)
 		{
 			var newArray = new T[newCapacity];
@@ -71,7 +75,6 @@ namespace Sapientia.Extensions
 			array = newArray;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T[] Copy_WithPool<T>(this T[] array)
 		{
 			var newArray = ArrayPool<T>.Shared.Rent(array.Length);
@@ -80,8 +83,6 @@ namespace Sapientia.Extensions
 			ArrayPool<T>.Shared.Return(array);
 			return newArray;
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T[] Copy<T>(this T[] array)
 		{
 			var newArray = new T[array.Length];
@@ -102,7 +103,6 @@ namespace Sapientia.Extensions
 			Array.Sort(array);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void ShiftRight<T>(this T[] array, int index, int shiftLenght)
 		{
 			var destinationIndex = index + shiftLenght;
@@ -110,6 +110,12 @@ namespace Sapientia.Extensions
 
 			if (count > 0)
 				Array.Copy(array, index, array, destinationIndex, count);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SimpleList<T> ToSimpleList<T>(this T[] array)
+		{
+			return new SimpleList<T>(array);
 		}
 	}
 }
