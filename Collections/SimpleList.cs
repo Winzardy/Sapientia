@@ -14,6 +14,7 @@ namespace Sapientia.Collections
 		private T[] _array;
 		private int _count;
 		private int _capacity;
+		private bool _isRented;
 
 		public int Count
 		{
@@ -56,12 +57,15 @@ namespace Sapientia.Collections
 			_count = 0;
 			_capacity = capacity;
 			_array = ArrayPool<T>.Shared.Rent(_capacity);
+			_isRented = true;
 		}
 
-		public SimpleList(T[] array) : this(array.Length)
+		public SimpleList(T[] array)
 		{
-			array.CopyTo(_array, 0);
+			_array = array;
 			_count = array.Length;
+			_capacity = array.Length;
+			_isRented = false;
 		}
 
 		public SimpleList(int capacity, T defaultValue)
@@ -69,6 +73,7 @@ namespace Sapientia.Collections
 			_count = 0;
 			_capacity = capacity;
 			_array = ArrayPool<T>.Shared.Rent(capacity);
+			_isRented = true;
 			Array.Fill(_array, defaultValue);
 		}
 
@@ -88,11 +93,17 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddRange<T1>(SimpleList<T1> values) where T1: T
 		{
-			Expand(_count + values.Count);
-			for (var i = 0; i < values.Count; i++)
-			{
-				_array[_count++] = values[i];
-			}
+			Expand(_count + values._count);
+			Array.Copy(values._array, 0, _array, _count, values._count);
+			_count += values._count;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange<T1>(T1[] values) where T1: T
+		{
+			Expand(_count + values.Length);
+			Array.Copy(values, 0, _array, _count, values.Length);
+			_count += values.Length;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -231,7 +242,13 @@ namespace Sapientia.Collections
 				return;
 			}
 
-			ArrayExtensions.Expand_WithPool(ref _array, newCapacity);
+			if (_isRented)
+				ArrayExtensions.Expand_WithPool(ref _array, newCapacity);
+			else
+			{
+				ArrayExtensions.Expand_WithPool_DontReturn(ref _array, newCapacity);
+				_isRented = true;
+			}
 			_capacity = newCapacity;
 		}
 
@@ -247,7 +264,13 @@ namespace Sapientia.Collections
 			}
 
 			var previousLenght = _array.Length;
-			ArrayExtensions.Expand_WithPool(ref _array, newCapacity);
+			if (_isRented)
+				ArrayExtensions.Expand_WithPool(ref _array, newCapacity);
+			else
+			{
+				ArrayExtensions.Expand_WithPool_DontReturn(ref _array, newCapacity);
+				_isRented = true;
+			}
 			Array.Fill(_array, defaultValue, previousLenght, _array.Length - previousLenght);
 			_capacity = newCapacity;
 		}
@@ -280,7 +303,8 @@ namespace Sapientia.Collections
 			if (_array == null)
 				return;
 
-			ArrayPool<T>.Shared.Return(_array);
+			if (_isRented)
+				ArrayPool<T>.Shared.Return(_array);
 			_array = null;
 		}
 
