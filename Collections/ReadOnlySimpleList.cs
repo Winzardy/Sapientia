@@ -1,8 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Sapientia.Collections
 {
-	public readonly struct ReadOnlySimpleList<T>
+	public readonly struct ReadOnlySimpleList<T> : IEnumerable<T>
 	{
 		private readonly SimpleList<T> _simpleList;
 
@@ -36,9 +38,29 @@ namespace Sapientia.Collections
 			get => _simpleList[index];
 		}
 
-		public ReadOnlySimpleList(in SimpleList<T> simpleList)
+		public ReadOnlySimpleList(T[] array)
+		{
+			_simpleList = new SimpleList<T>(array);
+		}
+
+		public ReadOnlySimpleList(SimpleList<T> simpleList)
 		{
 			_simpleList = simpleList;
+		}
+
+		public T[] ToArray()
+		{
+			return _simpleList.ToArray();
+		}
+
+		public IEnumerator<T> GetEnumerator()
+		{
+			return _simpleList.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 }
