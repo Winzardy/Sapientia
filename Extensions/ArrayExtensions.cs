@@ -113,9 +113,9 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SimpleList<T> ToSimpleList<T>(this T[] array)
+		public static ReadOnlySimpleList<T> ToReadOnlySimpleList<T>(this T[] array)
 		{
-			return new SimpleList<T>(array);
+			return new ReadOnlySimpleList<T>(array);
 		}
 	}
 }

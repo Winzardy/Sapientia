@@ -340,6 +340,11 @@ namespace Sapientia.Collections
 			return _array;
 		}
 
+		public ReadOnlySimpleList<T> ToReadOnly()
+		{
+			return new ReadOnlySimpleList<T>(this);
+		}
+
 		public struct Enumerator : IEnumerator<T>
 		{
 			private readonly SimpleList<T> _list;
