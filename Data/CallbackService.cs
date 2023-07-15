@@ -20,7 +20,7 @@ namespace Sapientia.Data
 			scope.Value._callbackEvent.InvokeDelayedInterlocked();
 		}
 
-		public static  void InvokeDelayedOnce<TServiceContext>(TServiceContext serviceContext)
+		public static void InvokeDelayedOnce<TServiceContext>(TServiceContext serviceContext)
 		{
 			using var scope = GetServiceScope(serviceContext);
 			scope.Value._callbackContextEvent.InvokeDelayedOnceInterlocked();
@@ -39,14 +39,12 @@ namespace Sapientia.Data
 			try
 #endif
 			{
-				if (!ServiceLocator<TServiceContext, CallbackService<TContext>>.TryReadServiceBusyScope(serviceContext, out var scope))
-					return;
-				using (scope)
-				{
-					var service = scope.Value;
-					service._callbackContextEvent?.DelayInvokeInterlocked(context);
-					service._callbackEvent?.DelayInvokeInterlocked();
-				}
+				using var scope = GetServiceScope(serviceContext);
+				var service = scope.Value;
+				if (service._callbackContextEvent.HasSubscribers())
+					service._callbackContextEvent.DelayInvokeInterlocked(context);
+				if (service._callbackEvent.HasSubscribers())
+					service._callbackEvent.DelayInvokeInterlocked();
 			}
 #if !DEBUG
 			catch
