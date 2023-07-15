@@ -67,6 +67,31 @@ namespace Sapientia.Extensions
 			array = newArray;
 		}
 
+		public static void SetLength<T>(ref T[] array, int targetLength, in T defaultValue)
+		{
+			if (array.Length > targetLength)
+				Reduce(ref array, targetLength);
+			else if (array.Length < targetLength)
+				Expand(ref array, targetLength, defaultValue);
+		}
+
+		public static void Reduce<T>(ref T[] array, int newCapacity)
+		{
+			var newArray = new T[newCapacity];
+			Array.Copy(array, newArray, newCapacity);
+
+			array = newArray;
+		}
+
+		public static void Expand<T>(ref T[] array, int newCapacity, T defaultValue)
+		{
+			var newArray = new T[newCapacity];
+			Array.Copy(array, newArray, array.Length);
+			Array.Fill(newArray, defaultValue, array.Length, newCapacity - array.Length);
+
+			array = newArray;
+		}
+
 		public static void Expand<T>(ref T[] array, int newCapacity)
 		{
 			var newArray = new T[newCapacity];
@@ -83,6 +108,7 @@ namespace Sapientia.Extensions
 			ArrayPool<T>.Shared.Return(array);
 			return newArray;
 		}
+
 		public static T[] Copy<T>(this T[] array)
 		{
 			var newArray = new T[array.Length];
