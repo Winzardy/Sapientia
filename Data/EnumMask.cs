@@ -1,18 +1,24 @@
 ﻿using System;
 using Sapientia.Extensions;
 
-namespace Generic.Data
+namespace Sapientia.Data
 {
-	internal interface IEnumMask {}
+#if UNITY_EDITOR
+	public interface IEnumMask {}
+#endif
 
 	[Serializable]
-	public struct EnumMask<T> : IEnumMask where T : unmanaged, Enum
+	public struct EnumMask<T>
+#if UNITY_EDITOR
+		: IEnumMask
+#endif
+		where T : unmanaged, Enum
 	{
 		public static readonly EnumMask<T> All = new() { mask = ~0 };
 
 		public int mask;
 
-		public bool IsNothing()
+		public bool HasNothing()
 		{
 			return mask == 0;
 		}
