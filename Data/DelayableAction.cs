@@ -9,6 +9,11 @@ namespace Sapientia.Data
 
 		private int _invocationCount = 0;
 
+		public bool HasSubscribers()
+		{
+			return ActionEvent != null;
+		}
+
 		public void ImmediatelyInvoke()
 		{
 			using var scope = GetBusyScope();
@@ -127,6 +132,11 @@ namespace Sapientia.Data
 		private event Action<TContext> ActionEvent = null;
 
 		private readonly SimpleList<TContext> _invocationContextList = new ();
+
+		public bool HasSubscribers()
+		{
+			return ActionEvent != null;
+		}
 
 		public void ImmediatelyInvoke(TContext context)
 		{
