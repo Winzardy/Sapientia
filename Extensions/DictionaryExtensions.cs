@@ -6,7 +6,6 @@ namespace Sapientia.Extensions
 {
 	public static class DictionaryExtensions
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsDictionaryEqual<TKey, TValue>(this Dictionary<TKey, TValue> a, Dictionary<TKey, TValue> b)
 		{
 			if (a.Equals(b))
