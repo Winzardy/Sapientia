@@ -9,9 +9,9 @@ namespace Sapientia.Extensions
 	{
 		public static bool IsArrayEqual<T>(this T[] a, T[] b)
 		{
-			if (a.Equals(b))
+			if (Equals(a, b))
 				return true;
-			if (b == null || a.Length != b.Length)
+			if (a == null || b == null || a.Length != b.Length)
 				return false;
 			for (var i = 0; i < a.Length; i++)
 			{

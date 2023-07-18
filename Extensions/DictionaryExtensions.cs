@@ -10,7 +10,7 @@ namespace Sapientia.Extensions
 		{
 			if (a.Equals(b))
 				return true;
-			if (b == null || a.Count != b.Count)
+			if (b == null || a.Count != b.Count || a.GetType() != b.GetType())
 				return false;
 			using var aEnumerator = a.GetEnumerator();
 			using var bEnumerator = b.GetEnumerator();
