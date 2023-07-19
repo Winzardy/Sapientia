@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Collections.Archetypes;
@@ -6,6 +7,19 @@ namespace Sapientia.Extensions
 {
 	public static class CollectionsExtensions
 	{
+		public static void SetCount<T>(this List<T> list, int targetCount, in Func<T> defaultValueCreator)
+		{
+			if (list.Count > targetCount)
+				list.RemoveRange(targetCount, list.Count - targetCount);
+			else
+			{
+				for (var i = list.Count; i < targetCount; i++)
+				{
+					list.Add(defaultValueCreator.Invoke());
+				}
+			}
+		}
+
 		public static void SetCount<T>(this List<T> list, int targetCount, in T defaultValue)
 		{
 			if (list.Count > targetCount)
