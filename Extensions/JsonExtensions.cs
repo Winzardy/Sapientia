@@ -98,6 +98,18 @@ namespace Sapientia.Extensions
 			return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
 		}
 
+		public static T? FromJsonOrDefault<T>(this string json)
+		{
+			try
+			{
+				return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
+			}
+			catch (Exception e)
+			{
+				return default(T);
+			}
+		}
+
 		public static T FromJsonFile<T>(this string path)
 		{
 			var json = File.ReadAllText(path);
