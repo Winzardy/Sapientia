@@ -113,6 +113,12 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetCount(int count)
+		{
+			_count = count;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Swap(int indexA, int indexB)
 		{
 			(_array[indexA], _array[indexB]) = (_array[indexB], _array[indexA]);
