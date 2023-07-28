@@ -140,6 +140,13 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T ExtractLast()
+		{
+			_count--;
+			return _array[_count];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveAtSwapBack(int index)
 		{
 			_count--;
