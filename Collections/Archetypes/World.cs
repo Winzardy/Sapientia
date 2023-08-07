@@ -17,6 +17,7 @@ namespace Sapientia.Collections.Archetypes
 	public abstract class World : IService
 	{
 		public static event Action OnGameStartEvent;
+		public static event Action OnBeforeGameEndEvent;
 		public static event Action OnGameEndEvent;
 		public static event Action LateGameUpdateEvent;
 
@@ -100,12 +101,15 @@ namespace Sapientia.Collections.Archetypes
 
 		public virtual void DeInitialize()
 		{
-			this.UnRegisterAsService();
+			OnBeforeGameEndEvent?.Invoke();
+
 			foreach (var action in _unRegisterElementsActions)
 			{
 				action?.Invoke();
 			}
+
 			OnGameEndEvent?.Invoke();
+			this.UnRegisterAsService();
 		}
 
 		protected virtual void AddStateParts() {}
