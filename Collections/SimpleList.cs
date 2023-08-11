@@ -52,28 +52,26 @@ namespace Sapientia.Collections
 			get => ref _array[index];
 		}
 
-		public SimpleList(int capacity = DEFAULT_CAPACITY)
+		public SimpleList(bool isRented) : this(DEFAULT_CAPACITY, isRented) {}
+
+		public SimpleList(int capacity = DEFAULT_CAPACITY, bool isRented = true)
 		{
 			_count = 0;
 			_capacity = capacity;
-			_array = ArrayPool<T>.Shared.Rent(_capacity);
-			_isRented = true;
+			_array = isRented ? ArrayPool<T>.Shared.Rent(_capacity) : new T[_capacity];
+			_isRented = isRented;
 		}
 
 		public SimpleList(T[] array)
 		{
-			_array = array;
 			_count = array.Length;
 			_capacity = array.Length;
+			_array = array;
 			_isRented = false;
 		}
 
-		public SimpleList(int capacity, T defaultValue)
+		public SimpleList(int capacity, T defaultValue, bool isRented = true) : this(capacity, isRented)
 		{
-			_count = 0;
-			_capacity = capacity;
-			_array = ArrayPool<T>.Shared.Rent(capacity);
-			_isRented = true;
 			Array.Fill(_array, defaultValue);
 		}
 
@@ -144,6 +142,12 @@ namespace Sapientia.Collections
 		{
 			_count--;
 			return _array[_count];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveLast()
+		{
+			_count--;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -421,6 +425,61 @@ namespace Sapientia.Collections
 		{
 			var array = list.GetInnerArray();
 			Array.Sort(array, index, count, comparer);
+		}
+
+		public static void BinaryRemove<T>(this SimpleList<T> list, T value) where T: IComparable<T>
+		{
+			BinaryRemove(list, value, new DefaultComparer<T>());
+		}
+
+		public static void BinaryRemove<T, TComparer>(this SimpleList<T> list, T value, TComparer comparer)
+			where TComparer : IComparer<T>
+		{
+			var index = BinarySearch(list, list.Count, value, comparer);
+			if (index < 0)
+				return;
+
+			if (list[index].Equals(value))
+			{
+				list.RemoveAt(index);
+				return;
+			}
+
+			var indexToBottom = index - 1;
+			while (indexToBottom >= 0 && comparer.Compare(list[indexToBottom], value) == 0)
+			{
+				if (list[indexToBottom].Equals(value))
+				{
+					list.RemoveAt(index);
+					return;
+				}
+				indexToBottom--;
+			}
+
+			var indexToTop = index + 1;
+			while (indexToTop < list.Count && comparer.Compare(list[indexToTop], value) == 0)
+			{
+				if (list[indexToTop].Equals(value))
+				{
+					list.RemoveAt(index);
+					return;
+				}
+				indexToTop++;
+			}
+		}
+
+		public static void BinaryInsert<T>(this SimpleList<T> list, T value) where T: IComparable<T>
+		{
+			BinaryInsert(list, value, new DefaultComparer<T>());
+		}
+
+		public static void BinaryInsert<T, TComparer>(this SimpleList<T> list, T value, TComparer comparer)
+			where TComparer : IComparer<T>
+		{
+			var index = BinarySearch(list, list.Count, value, comparer);
+			if (index < 0)
+				index = ~index;
+			list.InsertAt(index, value);
 		}
 
 		public static int BinarySearch<T>(this SimpleList<T> list, T value) where T: IComparable<T>

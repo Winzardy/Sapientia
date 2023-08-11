@@ -80,10 +80,19 @@ namespace Sapientia.Collections
 			return ref _values[valueIndex];
 		}
 
+		public int IndexToIndexId(int index)
+		{
+			return _indexData[index].indexToId;
+		}
+
+		public int IndexIdToIndex(int id)
+		{
+			return _indexData[id].idToIndex;
+		}
+
 		public bool HasIndexId(int id)
 		{
-			var index = _indexData[id].idToIndex;
-			return index < _count;
+			return _indexData[id].idToIndex < _count;
 		}
 
 		public int AllocateIndexId()
