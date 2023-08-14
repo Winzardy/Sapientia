@@ -6,7 +6,7 @@ using Sapientia.Data;
 
 namespace Sapientia.Extensions
 {
-	public static class ServiceLocator<TContext, TService> where TService : IService
+	public static class ServiceLocator<TContext, TService>
 	{
 		private delegate AsyncValueClassBusyScopeAsync<TService> GetScope(AsyncValueClass<TService> instance);
 		private delegate TService GetInstance(AsyncValueClass<TService> instance);
@@ -137,6 +137,11 @@ namespace Sapientia.Extensions
 				value = (DefaultGetScope, DefaultGet, DefaultSet, new AsyncValueClass<TService>(service));
 				SERVICES[context] = value;
 			}
+		}
+
+		public static bool HasService(TContext context)
+		{
+			return SERVICES.ContainsKey(context);
 		}
 
 		public static bool TryReadService(TContext context, out TService service)
