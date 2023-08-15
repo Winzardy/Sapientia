@@ -89,6 +89,13 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Add<T1>(IEnumerable<T1> values) where T1: T
+		{
+			foreach (var value in values)
+				Add(value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddRange<T1>(SimpleList<T1> values) where T1: T
 		{
 			Expand(_count + values._count);
