@@ -20,6 +20,7 @@ namespace Sapientia.Collections.Archetypes
 		public static event Action OnBeforeGameEndEvent;
 		public static event Action OnGameEndEvent;
 		public static event Action LateGameUpdateEvent;
+		public static event Action LateGameUpdateOneShowEvent;
 
 		public static World Instance => ServiceLocator<World>.Instance;
 
@@ -97,6 +98,8 @@ namespace Sapientia.Collections.Archetypes
 			_doLateGameUpdate = false;
 
 			LateGameUpdateEvent?.Invoke();
+			LateGameUpdateOneShowEvent?.Invoke();
+			LateGameUpdateOneShowEvent = null;
 		}
 
 		public virtual void DeInitialize()
