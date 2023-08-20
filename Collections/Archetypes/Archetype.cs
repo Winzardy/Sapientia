@@ -180,7 +180,7 @@ namespace Sapientia.Collections.Archetypes
 			}
 			else
 			{
-#if UNITY_EDITOR
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && ARCHETYPES_DEBUG)
 				var oldCapacity = _elements.Capacity;
 				ref var element = ref _elements.EnsureGet(entity.id);
 				if (oldCapacity != _elements.Capacity)
