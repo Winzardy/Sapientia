@@ -29,8 +29,9 @@ namespace Sapientia.Collections.Archetypes
 		private readonly SimpleList<ushort> _generations;
 #if UNITY_EDITOR
 		public readonly SimpleList<string> entitiesNames;
-#endif
 
+		public int MaxEntitiesCount { get; private set; }
+#endif
 		public int EntitiesCount { get; private set; }
 		public int EntitiesCapacity { get; private set; }
 		public int ExpandStep { get; private set; }
@@ -42,6 +43,9 @@ namespace Sapientia.Collections.Archetypes
 
 		public EntitiesState(int entitiesCapacity, int expandStep = 512)
 		{
+#if UNITY_EDITOR
+			MaxEntitiesCount = 0;
+#endif
 			EntitiesCount = 0;
 			EntitiesCapacity = entitiesCapacity;
 			ExpandStep = expandStep;
@@ -82,6 +86,8 @@ namespace Sapientia.Collections.Archetypes
 			var entity = new Entity(id, generation);
 #if UNITY_EDITOR
 			entitiesNames[id] = name;
+			if (MaxEntitiesCount < EntitiesCount)
+				MaxEntitiesCount = EntitiesCount;
 #endif
 #if STORE_ENTITIES
 			_entities.GetElement(entity);
@@ -118,6 +124,7 @@ namespace Sapientia.Collections.Archetypes
 			_generations.Expand(EntitiesCapacity);
 #if UNITY_EDITOR
 			entitiesNames.Expand(EntitiesCapacity);
+			UnityEngine.Debug.LogWarning($"Entities Capacity was expanded to {EntitiesCapacity}");
 #endif
 		}
 	}

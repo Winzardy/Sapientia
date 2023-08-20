@@ -164,6 +164,7 @@ namespace Sapientia.Collections.Archetypes
 				return ref DEFAULT;
 			return ref _elements.Get(entity.id).value;
 		}
+
 		public bool HasElement(Entity entity)
 		{
 			return _elements.Has(entity.id);
@@ -179,7 +180,14 @@ namespace Sapientia.Collections.Archetypes
 			}
 			else
 			{
+#if UNITY_EDITOR
+				var oldCapacity = _elements.Capacity;
 				ref var element = ref _elements.EnsureGet(entity.id);
+				if (oldCapacity != _elements.Capacity)
+					UnityEngine.Debug.LogWarning($"Archetype of {typeof(TValue).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+#else
+				ref var element = ref _elements.EnsureGet(entity.id);
+#endif
 				element = new ArchetypeElement<TValue>(entity, default);
 				return ref element.value;
 			}
