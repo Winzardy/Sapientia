@@ -21,15 +21,6 @@ namespace Sapientia.Extensions
 			Iv = Convert.ToBase64String(aes.IV);
 		}
 
-		public static AesParameters Create(string key)
-		{
-			var aes = Aes.Create();
-			aes.Key = Encoding.UTF8.GetBytes(key);
-			aes.IV = new byte[aes.BlockSize / 8];
-
-			return new AesParameters(aes);
-		}
-
 		public static AesParameters Create()
 		{
 			var aes = Aes.Create();
@@ -44,6 +35,15 @@ namespace Sapientia.Extensions
 			var aes = Aes.Create();
 			aes.Key = GetKeyBytes();
 			aes.IV = GetIvBytes();
+
+			return aes;
+		}
+
+		public static Aes CreateAes(string key)
+		{
+			var aes = Aes.Create();
+			aes.Key = Convert.FromBase64String(key);
+			aes.IV = new byte[aes.BlockSize / 8];
 
 			return aes;
 		}
