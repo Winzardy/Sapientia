@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using Sapientia.Collections;
 
 namespace Sapientia.Extensions
@@ -18,6 +19,15 @@ namespace Sapientia.Extensions
 		{
 			Key = Convert.ToBase64String(aes.Key);
 			Iv = Convert.ToBase64String(aes.IV);
+		}
+
+		public static AesParameters Create(string key)
+		{
+			var aes = Aes.Create();
+			aes.Key = Encoding.UTF8.GetBytes(key);
+			aes.IV = new byte[aes.BlockSize / 8];
+
+			return new AesParameters(aes);
 		}
 
 		public static AesParameters Create()
@@ -53,6 +63,11 @@ namespace Sapientia.Extensions
 			var encryptedBytes = encryptor.TransformFinalBlock(data, 0, data.Length);
 
 			return encryptedBytes;
+		}
+
+		public static string EncryptStringToString(this AesParameters aesParameters, string data)
+		{
+			return aesParameters.CreateAes().EncryptStringToString(data);
 		}
 
 		public static string EncryptStringToString(this Aes aes, string data)
