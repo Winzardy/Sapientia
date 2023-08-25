@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 #if UNITY_5_3_OR_NEWER
 using Unity.Collections.LowLevel.Unsafe;
@@ -33,7 +34,9 @@ namespace Sapientia.Extensions
 			var size = UnsafeUtility.SizeOf<T>();
 			return UnsafeUtility.MemCmp(a.AsPointer(), b.AsPointer(), size) == 0;
 #else
-			return Unsafe.AreSame(ref a, ref b);
+			var spanA = new ReadOnlySpan<T>(Unsafe.AsPointer(ref a), 1);
+			var spanB = new ReadOnlySpan<T>(Unsafe.AsPointer(ref b), 1);
+			return spanA.SequenceEqual(spanB);
 #endif
 		}
 
@@ -44,7 +47,9 @@ namespace Sapientia.Extensions
 			var size = UnsafeUtility.SizeOf<T>();
 			return UnsafeUtility.MemCmp(value.AsPointer(), defaultValue.AsPointer(), size) == 0;
 #else
-			return Unsafe.AreSame(ref value, ref defaultValue);
+			var spanA = new ReadOnlySpan<T>(Unsafe.AsPointer(ref value), 1);
+			var spanB = new ReadOnlySpan<T>(Unsafe.AsPointer(ref defaultValue), 1);
+			return spanA.SequenceEqual(spanB);
 #endif
 		}
 	}
