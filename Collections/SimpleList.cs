@@ -457,7 +457,7 @@ namespace Sapientia.Collections
 			{
 				if (list[indexToBottom].Equals(value))
 				{
-					list.RemoveAt(index);
+					list.RemoveAt(indexToBottom);
 					return;
 				}
 				indexToBottom--;
@@ -468,7 +468,7 @@ namespace Sapientia.Collections
 			{
 				if (list[indexToTop].Equals(value))
 				{
-					list.RemoveAt(index);
+					list.RemoveAt(indexToTop);
 					return;
 				}
 				indexToTop++;
