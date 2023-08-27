@@ -4,16 +4,29 @@ namespace Sapientia.Data.Events
 {
 	public class ActionContainer<TContext>
 	{
+		public bool ExecuteIfInvoked { get; private set; }
+		public bool IsInvoked { get; private set; }
+		public TContext PreviousContext { get; private set; }
+
 		private event Action<TContext> ActionEvent;
+
+		public ActionContainer(bool executeIfInvoked = false)
+		{
+			ExecuteIfInvoked = executeIfInvoked;
+		}
 
 		public void Invoke(TContext context)
 		{
 			ActionEvent?.Invoke(context);
+			IsInvoked = true;
+			PreviousContext = context;
 		}
 
 		public void Subscribe(Action<TContext> action)
 		{
 			ActionEvent += action;
+			if (ExecuteIfInvoked && IsInvoked)
+				action?.Invoke(PreviousContext);
 		}
 
 		public void UnSubscribe(Action<TContext> action)
@@ -38,6 +51,8 @@ namespace Sapientia.Data.Events
 		{
 			container ??= new();
 			container.ActionEvent += action;
+			if (container.ExecuteIfInvoked && container.IsInvoked)
+				action?.Invoke(container.PreviousContext);
 			return container;
 		}
 
