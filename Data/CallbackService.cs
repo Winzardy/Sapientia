@@ -8,7 +8,7 @@ namespace Sapientia.Data
 		private readonly DelayableAction<TContext> _callbackContextEvent = new ();
 		private readonly DelayableAction _callbackEvent = new ();
 
-		private static AsyncValueClassBusyScopeAsync<CallbackService<TContext>> GetServiceScope<TServiceContext>(TServiceContext serviceContext)
+		private static AsyncValueClassAsyncBusyScope<CallbackService<TContext>> GetServiceScope<TServiceContext>(TServiceContext serviceContext)
 		{
 			return ServiceLocator<TServiceContext, CallbackService<TContext>>.GetServiceBusyScope<CallbackService<TContext>>(serviceContext);
 		}

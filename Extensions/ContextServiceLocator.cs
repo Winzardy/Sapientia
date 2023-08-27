@@ -8,14 +8,14 @@ namespace Sapientia.Extensions
 {
 	public static class ServiceLocator<TContext, TService>
 	{
-		private delegate AsyncValueClassBusyScopeAsync<TService> GetScope(AsyncValueClass<TService> instance);
+		private delegate AsyncValueClassAsyncBusyScope<TService> GetScope(AsyncValueClass<TService> instance);
 		private delegate TService GetInstance(AsyncValueClass<TService> instance);
 		private delegate void SetInstance(AsyncValueClass<TService> instance, TService service);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static AsyncValueClassBusyScopeAsync<TService> InterlockedGetScope(AsyncValueClass<TService> instance)
+		private static AsyncValueClassAsyncBusyScope<TService> InterlockedGetScope(AsyncValueClass<TService> instance)
 		{
-			return instance.GetBusyScopeAsync();
+			return instance.GetAsyncBusyScope();
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static TService InterlockedGet(AsyncValueClass<TService> instance)
@@ -28,9 +28,9 @@ namespace Sapientia.Extensions
 			instance.SetValue(service);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static AsyncValueClassBusyScopeAsync<TService> DefaultGetScope(AsyncValueClass<TService> instance)
+		private static AsyncValueClassAsyncBusyScope<TService> DefaultGetScope(AsyncValueClass<TService> instance)
 		{
-			return instance.GetBusyScopeAsync(true);
+			return instance.GetAsyncBusyScope(true);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static TService DefaultGet(AsyncValueClass<TService> instance)
@@ -168,7 +168,7 @@ namespace Sapientia.Extensions
 			return value.getInstance.Invoke(value.instance);
 		}
 
-		public static bool TryReadServiceBusyScope(TContext context, out AsyncValueClassBusyScopeAsync<TService> scope)
+		public static bool TryReadServiceBusyScope(TContext context, out AsyncValueClassAsyncBusyScope<TService> scope)
 		{
 			if (SERVICES.TryGetValue(context, out var value))
 			{
@@ -179,14 +179,14 @@ namespace Sapientia.Extensions
 			return false;
 		}
 
-		public static AsyncValueClassBusyScopeAsync<TService> ReadServiceBusyScope(TContext context)
+		public static AsyncValueClassAsyncBusyScope<TService> ReadServiceBusyScope(TContext context)
 		{
 			if (SERVICES.TryGetValue(context, out var value))
 				return value.getScope.Invoke(value.instance);
 			return default;
 		}
 
-		public static AsyncValueClassBusyScopeAsync<TService> GetServiceBusyScope<T>(TContext context) where T: TService, new()
+		public static AsyncValueClassAsyncBusyScope<TService> GetServiceBusyScope<T>(TContext context) where T: TService, new()
 		{
 			var value = GetContextValue<T>(context);
 			return value.getScope.Invoke(value.instance);
