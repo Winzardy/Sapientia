@@ -33,7 +33,7 @@ namespace Sapientia.Data.Events
 
 		public void AddExecutors(params ActionContainer<object>[] executors)
 		{
-			using var scope = GetBusyScopeAsync();
+			using var scope = GetAsyncBusyScope();
 
 			if (_executorToExecutionState == null)
 				return;
@@ -54,7 +54,7 @@ namespace Sapientia.Data.Events
 
 		public void AddExecutor(ActionContainer<object> executor)
 		{
-			using var scope = GetBusyScopeAsync();
+			using var scope = GetAsyncBusyScope();
 
 			if (_executorToExecutionState == null)
 				return;
@@ -69,7 +69,7 @@ namespace Sapientia.Data.Events
 
 		public void RemoveExecutor(ActionContainer<object> executor)
 		{
-			using var scope = GetBusyScopeAsync();
+			using var scope = GetAsyncBusyScope();
 			if (_executorToExecutionState == null)
 				return;
 
@@ -93,7 +93,7 @@ namespace Sapientia.Data.Events
 
 		private void OnExecutorActed(object executorKey)
 		{
-			using var scope = GetBusyScopeAsync();
+			using var scope = GetAsyncBusyScope();
 			if (_executorToExecutionState == null)
 				return;
 			if (!_executorToExecutionState.TryGetValue(executorKey, out var executionState))
