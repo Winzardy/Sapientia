@@ -55,10 +55,10 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncClassBusyScopeAsync GetBusyScopeAsync()
+		public AsyncClassAsyncBusyScope GetAsyncBusyScope()
 		{
 			SetBusy();
-			return new AsyncClassBusyScopeAsync(this);
+			return new AsyncClassAsyncBusyScope(this);
 		}
 
 		public bool TryGetBusyScope(out AsyncClassBusyScope result)
@@ -73,11 +73,11 @@ namespace Sapientia.Data
 			return false;
 		}
 
-		public bool TryGetBusyScopeAsync(out AsyncClassBusyScopeAsync result)
+		public bool TryGetAsyncBusyScope(out AsyncClassAsyncBusyScope result)
 		{
 			if (TrySetBusy())
 			{
-				result = new AsyncClassBusyScopeAsync(this);
+				result = new AsyncClassAsyncBusyScope(this);
 				return true;
 			}
 
@@ -101,11 +101,11 @@ namespace Sapientia.Data
 		}
 	}
 
-	public readonly struct AsyncClassBusyScopeAsync : IDisposable
+	public readonly struct AsyncClassAsyncBusyScope : IDisposable
 	{
 		private readonly AsyncClass _asyncClass;
 
-		public AsyncClassBusyScopeAsync(AsyncClass asyncClass)
+		public AsyncClassAsyncBusyScope(AsyncClass asyncClass)
 		{
 			_asyncClass = asyncClass;
 		}
