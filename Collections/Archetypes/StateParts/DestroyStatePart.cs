@@ -33,9 +33,9 @@ namespace Sapientia.Collections.Archetypes.StateParts
 
 		public DestroyStatePart()
 		{
-			killElementsArchetype = new (512, InitializeDestroyElement);
+			killElementsArchetype = this.RegisterArchetype<KillElement>(512, InitializeDestroyElement);
 			killRequestArchetype = new (64);
-			delayKillRequestArchetype = new (64);
+			delayKillRequestArchetype = this.RegisterArchetype<KillRequest>(64);
 			destroyRequestArchetype = new (64);
 		}
 

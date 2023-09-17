@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
 namespace Sapientia.Collections.Archetypes
@@ -110,7 +111,7 @@ namespace Sapientia.Collections.Archetypes
 		}
 	}
 
-	public class Archetype<TValue> : IEnumerable<ArchetypeElement<TValue>>
+	public class Archetype<TValue> : BaseArchetype, IEnumerable<ArchetypeElement<TValue>>
 	{
 		public delegate void EntityDestroyAction(ref ArchetypeElement<TValue> element);
 		public delegate void EntityArrayDestroyAction(in ArchetypeElement<TValue>[] elements, int count);
@@ -119,6 +120,12 @@ namespace Sapientia.Collections.Archetypes
 		{
 			public EntityDestroyAction OnEntityDestroyEvent;
 			public EntityArrayDestroyAction OnEntityArrayDestroyEvent;
+		}
+
+		public static Archetype<TValue> Instance
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ServiceLocator<Archetype<TValue>>.Instance;
 		}
 
 		private static readonly TValue DEFAULT = default;
@@ -136,14 +143,13 @@ namespace Sapientia.Collections.Archetypes
 
 		}
 
-
 		public Archetype(int elementsCount, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
 			DestroyEvents? destroyEvents = null) : this(elementsCount, ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, destroyEvents)
 		{
 
 		}
 
-		private Archetype(int elementsCount, int entitiesCapacity, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null, DestroyEvents? destroyEvents = null)
+		internal Archetype(int elementsCount, int entitiesCapacity, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null, DestroyEvents? destroyEvents = null)
 		{
 			_elements = new SparseSet<ArchetypeElement<TValue>>(elementsCount, entitiesCapacity, resetAction);
 
@@ -158,6 +164,7 @@ namespace Sapientia.Collections.Archetypes
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly TValue ReadElement(Entity entity)
 		{
 			if (!_elements.Has(entity.id))
@@ -165,6 +172,7 @@ namespace Sapientia.Collections.Archetypes
 			return ref _elements.Get(entity.id).value;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasElement(Entity entity)
 		{
 			return _elements.Has(entity.id);
@@ -222,6 +230,7 @@ namespace Sapientia.Collections.Archetypes
 			_elements.ClearFast();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveElement(Entity entity)
 		{
 			_elements.Remove(entity.id);
@@ -259,5 +268,10 @@ namespace Sapientia.Collections.Archetypes
 		{
 			return GetEnumerator();
 		}
+	}
+
+	public abstract class BaseArchetype
+	{
+
 	}
 }

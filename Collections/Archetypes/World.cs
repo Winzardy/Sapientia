@@ -10,6 +10,7 @@ namespace Sapientia.Collections.Archetypes
 
 		protected override void AddStateParts()
 		{
+			AddStatePart<ArchetypesState>();
 			AddStatePart(new EntitiesState(EntitiesCapacity));
 		}
 	}
