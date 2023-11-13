@@ -9,14 +9,14 @@ namespace Sapientia.Collections.Archetypes
 
 		public static readonly Entity EMPTY = new (0, GENERATION_ZERO);
 
-		public readonly int id;
+		public readonly ushort id;
 		public readonly ushort generation;
 
 #if UNITY_EDITOR
 		public string Name => id >= 0 ? ServiceLocator<EntitiesState>.Instance.entitiesNames[id] : string.Empty;
 #endif
 
-		internal Entity(int id, ushort generation)
+		internal Entity(ushort id, ushort generation)
 		{
 			this.id = id;
 			this.generation = generation;

@@ -25,7 +25,7 @@ namespace Sapientia.Collections.Archetypes
 
 		public event Action<Entity> EntityDestroyEvent;
 
-		private readonly SimpleList<int> _entitiesIds;
+		private readonly SimpleList<ushort> _entitiesIds;
 		private readonly SimpleList<ushort> _generations;
 #if UNITY_EDITOR
 		public readonly SimpleList<string> entitiesNames;
@@ -59,7 +59,7 @@ namespace Sapientia.Collections.Archetypes
 			entitiesNames = new (entitiesCapacity);
 #endif
 
-			for (var i = 0; i < entitiesCapacity; i++)
+			for (ushort i = 0; i < entitiesCapacity; i++)
 			{
 				_entitiesIds[i] = i;
 			}
