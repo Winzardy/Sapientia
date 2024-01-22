@@ -138,10 +138,46 @@ namespace Sapientia.Extensions
 				Array.Copy(array, index, array, destinationIndex, count);
 		}
 
+		// Test and remove "Obsolete" attribute
+		[Obsolete("Not Tested")]
+		public static void ShiftLeft<T>(this T[] array, int index, int shiftLenght)
+		{
+			var destinationIndex = index - shiftLenght;
+			if (destinationIndex < 0)
+			{
+				index += destinationIndex;
+				destinationIndex = 0;
+			}
+			var count = array.Length - index;
+
+			if (count > 0)
+				Array.Copy(array, index, array, destinationIndex, count);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ReadOnlySimpleList<T> ToReadOnlySimpleList<T>(this T[] array)
 		{
 			return new ReadOnlySimpleList<T>(array);
+		}
+
+		public static void RemoveAt<T>(ref T[] array, int index)
+		{
+			var newArray = new T[array.Length - 1];
+			if (index != newArray.Length)
+			{
+				Array.Copy(array, index + 1, newArray, index, newArray.Length - index);
+			}
+			if (index != 0)
+			{
+				Array.Copy(array, 0, newArray, 0, index);
+			}
+			array = newArray;
+		}
+
+		public static void Add<T>(ref T[] array, T value)
+		{
+			Expand(ref array, array.Length + 1);
+			array[^1] = value;
 		}
 	}
 }
