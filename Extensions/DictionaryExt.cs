@@ -3,7 +3,10 @@ using System.Collections.Generic;
 
 namespace Sapientia.Extensions
 {
-	public static class DictionaryExtensions
+	/// <summary>
+	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#efe20baff23f4f768efbfcb4e3282747
+	/// </summary>
+	public static class DictionaryExt
 	{
 		public static bool IsDictionaryEqual<TKey, TValue>(this Dictionary<TKey, TValue> a, Dictionary<TKey, TValue> b)
 		{

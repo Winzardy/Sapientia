@@ -154,13 +154,13 @@ namespace Sapientia.Collections
 		private void Expand(int newCapacity)
 		{
 			if (_useIndexPool)
-				ArrayExtensions.Expand_WithPool(ref _indexData, newCapacity);
+				ArrayExt.Expand_WithPool(ref _indexData, newCapacity);
 			else
-				ArrayExtensions.Expand(ref _indexData, newCapacity);
+				ArrayExt.Expand(ref _indexData, newCapacity);
 			if (_useValuePool)
-				ArrayExtensions.Expand_WithPool(ref _values, newCapacity);
+				ArrayExt.Expand_WithPool(ref _values, newCapacity);
 			else
-				ArrayExtensions.Expand(ref _values, newCapacity);
+				ArrayExt.Expand(ref _values, newCapacity);
 
 			FillIndexes(_capacity, newCapacity);
 

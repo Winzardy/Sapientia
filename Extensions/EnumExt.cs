@@ -4,14 +4,17 @@ using System.Threading;
 
 namespace Sapientia.Extensions
 {
-	public static class EnumExtensions<T> where T: unmanaged, Enum
+	public static class EnumExt<T> where T: unmanaged, Enum
 	{
 		public static readonly Array VALUES = Enum.GetValues(typeof(T));
 		public static readonly string[] NAMES = Enum.GetNames(typeof(T));
 		public static readonly int ENUM_LENGHT = VALUES.Length;
 	}
 
-	public static class EnumExtensions
+	/// <summary>
+	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#dd036a4692ab425cb8ff0fb407a38de7
+	/// </summary>
+	public static class EnumExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe T Min<T>(this T a, T b) where T : unmanaged, Enum

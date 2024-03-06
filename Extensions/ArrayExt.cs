@@ -5,7 +5,10 @@ using Sapientia.Collections;
 
 namespace Sapientia.Extensions
 {
-	public static class ArrayExtensions
+	/// <summary>
+	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#5dd46b19b2fa4e1c8d6ac4fabf6a19cd
+	/// </summary>
+	public static class ArrayExt
 	{
 		public static bool IsArrayEqual<T>(this T[] a, T[] b)
 		{

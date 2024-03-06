@@ -49,7 +49,10 @@ namespace Sapientia.Extensions
 		}
 	}
 
-	public static class AesEncryptionExtensions
+	/// <summary>
+	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#fc6b4f87fe634a828aebda3473b7b408
+	/// </summary>
+	public static class AesEncryptionExt
 	{
 		public static byte[] EncryptData(this AesParameters parameters, byte[] data)
 		{

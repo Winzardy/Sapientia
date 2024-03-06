@@ -3,7 +3,10 @@ using System.IO;
 
 namespace Sapientia.Extensions
 {
-	public static class EnvironmentExtensions
+	/// <summary>
+	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#7f2af48da39e420aaf236ede17efcf6a
+	/// </summary>
+	public static class EnvironmentExt
 	{
 		public static string ReadEnvironment(this string environment)
 		{

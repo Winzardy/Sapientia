@@ -2,7 +2,10 @@
 
 namespace Sapientia.Extensions
 {
-	public static class RsaEncryptionExtensions
+	/// <summary>
+	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#c6707f7b4d4441409a87132af891f8a8
+	/// </summary>
+	public static class RsaEncryptionExt
 	{
 		public static string GetPublicKey(this RSA rsa)
 		{

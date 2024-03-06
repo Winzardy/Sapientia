@@ -128,9 +128,9 @@ namespace Sapientia.Collections
 		private void ExpandSparse(int newCapacity)
 		{
 			if (_useIndexPool)
-				ArrayExtensions.Expand_WithPool(ref _sparse, newCapacity);
+				ArrayExt.Expand_WithPool(ref _sparse, newCapacity);
 			else
-				ArrayExtensions.Expand(ref _sparse, newCapacity);
+				ArrayExt.Expand(ref _sparse, newCapacity);
 
 			FillSparse(_sparseCapacity, newCapacity);
 
@@ -150,13 +150,13 @@ namespace Sapientia.Collections
 		private void Expand(int newCapacity)
 		{
 			if (_useIndexPool)
-				ArrayExtensions.Expand_WithPool(ref _dense, newCapacity);
+				ArrayExt.Expand_WithPool(ref _dense, newCapacity);
 			else
-				ArrayExtensions.Expand(ref _dense, newCapacity);
+				ArrayExt.Expand(ref _dense, newCapacity);
 			if (_useValuePool)
-				ArrayExtensions.Expand_WithPool(ref _values, newCapacity);
+				ArrayExt.Expand_WithPool(ref _values, newCapacity);
 			else
-				ArrayExtensions.Expand(ref _values, newCapacity);
+				ArrayExt.Expand(ref _values, newCapacity);
 
 			Fill(_capacity, newCapacity);
 

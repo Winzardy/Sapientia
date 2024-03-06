@@ -6,7 +6,10 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace Sapientia.Extensions
 {
-	public static unsafe class UnsafeExtensions
+	/// <summary>
+	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#cdd8c9f157a24ed3951f9de198b67b59
+	/// </summary>
+	public static unsafe class UnsafeExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe T1 As<T, T1>(this ref T value) where T : struct where T1 : struct

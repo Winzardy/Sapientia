@@ -267,10 +267,10 @@ namespace Sapientia.Collections
 			}
 
 			if (_isRented)
-				ArrayExtensions.Expand_WithPool(ref _array, newCapacity);
+				ArrayExt.Expand_WithPool(ref _array, newCapacity);
 			else
 			{
-				ArrayExtensions.Expand_WithPool_DontReturn(ref _array, newCapacity);
+				ArrayExt.Expand_WithPool_DontReturn(ref _array, newCapacity);
 				_isRented = true;
 			}
 			_capacity = newCapacity;
@@ -289,10 +289,10 @@ namespace Sapientia.Collections
 
 			var previousLenght = _array.Length;
 			if (_isRented)
-				ArrayExtensions.Expand_WithPool(ref _array, newCapacity);
+				ArrayExt.Expand_WithPool(ref _array, newCapacity);
 			else
 			{
-				ArrayExtensions.Expand_WithPool_DontReturn(ref _array, newCapacity);
+				ArrayExt.Expand_WithPool_DontReturn(ref _array, newCapacity);
 				_isRented = true;
 			}
 			Array.Fill(_array, defaultValue, previousLenght, _array.Length - previousLenght);
