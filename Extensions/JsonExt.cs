@@ -61,6 +61,11 @@ namespace Sapientia.Extensions
 			return JsonConvert.SerializeObject(from, typeof(T), settings);
 		}
 
+		public static void WriteToJsonFile<T>(this T from, string filePath, SerializationType serializationType = SerializationType.Cut, bool isCut = true)
+		{
+			File.WriteAllText(filePath, from.ToJson(serializationType));
+		}
+
 		public static void AppendToJsonFile<T>(this T from, string filePath, SerializationType serializationType = SerializationType.Cut, bool isCut = true)
 		{
 			using var streamWriter = File.AppendText(filePath);
