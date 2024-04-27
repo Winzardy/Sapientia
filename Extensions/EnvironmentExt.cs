@@ -10,17 +10,30 @@ namespace Sapientia.Extensions
 	{
 		public static string ReadEnvironment(this string environment)
 		{
-			var value = Environment.GetEnvironmentVariable(environment);
+			var value = ReadEnvironmentNullable(environment);
 			if (value == null)
 				throw new Exception($"{environment} doesn't exist!");
 			return value;
 		}
 
+		public static string? ReadEnvironmentNullable(this string environment)
+		{
+			return Environment.GetEnvironmentVariable(environment);
+		}
+
 		public static string ReadEnvironmentFile(this string environment)
+		{
+			var path = ReadEnvironmentFileNullable(environment);
+			if (!File.Exists(path))
+				throw new Exception($"{environment} contains incorrect path: {path}");
+			return File.ReadAllText(path);
+		}
+
+		public static string? ReadEnvironmentFileNullable(this string environment)
 		{
 			var path = ReadEnvironment(environment);
 			if (!File.Exists(path))
-				throw new Exception($"{environment} contains incorrect path: {path}");
+				return null;
 			return File.ReadAllText(path);
 		}
 	}
