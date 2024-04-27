@@ -23,7 +23,7 @@ namespace Sapientia.Extensions
 
 		public static string ReadEnvironmentFile(this string environment)
 		{
-			var path = ReadEnvironmentFileNullable(environment);
+			var path = ReadEnvironment(environment);
 			if (!File.Exists(path))
 				throw new Exception($"{environment} contains incorrect path: {path}");
 			return File.ReadAllText(path);
