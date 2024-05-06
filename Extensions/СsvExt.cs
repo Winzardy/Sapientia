@@ -33,6 +33,13 @@ namespace Sapientia.Extensions
 			using var reader = new StreamReader(filePath);
 			return FromCsv<T>(reader, hasHeader);
 		}
+
+		public static bool TryFromCsvFile<T>(this string filePath, out SimpleList<T> data, bool hasHeader = true)
+		{
+			using var reader = new StreamReader(filePath);
+			data = FromCsv<T>(reader, hasHeader);
+			return data.Count > 0;
+		}
 #endregion
 
 #region To
