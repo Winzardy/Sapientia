@@ -7,9 +7,9 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
-	public class SimpleList<T> : IDisposable, IEnumerable<T>
+	public class SimpleList<T> : IDisposable, IList<T>
 	{
-		private const int DEFAULT_CAPACITY = 8;
+		public const int DEFAULT_CAPACITY = 8;
 
 		private T[] _array;
 		private int _count;
@@ -21,6 +21,8 @@ namespace Sapientia.Collections
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _count;
 		}
+
+		bool ICollection<T>.IsReadOnly => false;
 
 		public int Capacity
 		{
@@ -52,6 +54,14 @@ namespace Sapientia.Collections
 			get => ref _array[index];
 		}
 
+		T IList<T>.this[int index]
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _array[index];
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			set => _array[index] = value;
+		}
+
 		public SimpleList(bool isRented) : this(DEFAULT_CAPACITY, isRented) {}
 
 		public SimpleList(int capacity = DEFAULT_CAPACITY, bool isRented = true)
@@ -62,12 +72,16 @@ namespace Sapientia.Collections
 			_isRented = isRented;
 		}
 
-		public SimpleList(T[] array)
+		public SimpleList(T[] array, int capacity = DEFAULT_CAPACITY, bool isRented = true)
 		{
 			_count = array.Length;
-			_capacity = array.Length;
-			_array = array;
-			_isRented = false;
+			_capacity = capacity;
+			if (_capacity < _count)
+				_capacity = _count;
+			_array = isRented ? ArrayPool<T>.Shared.Rent(_capacity) : new T[_capacity];
+			_isRented = isRented;
+
+			array.CopyTo(_array, 0);
 		}
 
 		public SimpleList(int capacity, T defaultValue, bool isRented = true) : this(capacity, isRented)
@@ -75,9 +89,27 @@ namespace Sapientia.Collections
 			Array.Fill(_array, defaultValue);
 		}
 
+		public static SimpleList<T> WrapArray(T[] array)
+		{
+			return new SimpleList<T>
+			{
+				_count = array.Length,
+				_capacity = array.Length,
+				_array = array,
+				_isRented = false,
+			};
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddWithoutExpand<T1>(T1 value) where T1: T
 		{
+			_array[_count++] = value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Add(T value)
+		{
+			Expand(_count + 1);
 			_array[_count++] = value;
 		}
 
@@ -183,58 +215,83 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Remove(T value)
+		public bool Remove(T value)
 		{
 			for (var i = 0; i < _count; i++)
 			{
 				if (value.Equals(_array[i]))
 				{
 					RemoveAt(i);
-					break;
+					return true;
 				}
 			}
+			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBack(T value)
+		public bool RemoveSwapBack(T value)
 		{
 			for (var i = 0; i < _count; i++)
 			{
 				if (value.Equals(_array[i]))
 				{
 					RemoveAtSwapBack(i);
-					break;
+					return true;
 				}
 			}
+			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBack_Clean(T value)
+		public bool RemoveSwapBack_Clean(T value)
 		{
 			for (var i = 0; i < _count; i++)
 			{
 				if (value.Equals(_array[i]))
 				{
 					RemoveAtSwapBack_Clean(i);
-					break;
+					return true;
 				}
 			}
+			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Remove<T1>(T1 value) where T1 : T, IEquatable<T>
+		public bool Remove<T1>(T1 value) where T1 : T, IEquatable<T>
 		{
 			for (var i = 0; i < _count; i++)
 			{
 				if (value.Equals(_array[i]))
 				{
 					RemoveAt(i);
-					break;
+					return true;
 				}
 			}
+			return false;
 		}
 
-		public void InsertAt(int index, in T value)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Contains(T value)
+		{
+			for (var i = 0; i < _count; i++)
+			{
+				if (value.Equals(_array[i]))
+					return true;
+			}
+			return false;
+		}
+
+		public int IndexOf(T value)
+		{
+			for (var i = 0; i < _count; i++)
+			{
+				if (value.Equals(_array[i]))
+					return i;
+			}
+			return -1;
+		}
+
+		public void Insert(int index, T value)
 		{
 			Expand(_count + 1);
 
@@ -357,6 +414,14 @@ namespace Sapientia.Collections
 			var result = new T[_count];
 			Array.Copy(_array, 0, result, 0, _count);
 			return result;
+		}
+
+		public void CopyTo(T[] array, int arrayIndex)
+		{
+			var count = array.Length - arrayIndex;
+			if (_count < count)
+				count = _count;
+			Array.Copy(_array, 0, array, arrayIndex, count);
 		}
 
 		public T[] GetInnerArray()
@@ -486,7 +551,7 @@ namespace Sapientia.Collections
 			var index = BinarySearch(list, list.Count, value, comparer);
 			if (index < 0)
 				index = ~index;
-			list.InsertAt(index, value);
+			list.Insert(index, value);
 		}
 
 		public static int BinarySearch<T>(this SimpleList<T> list, T value) where T: IComparable<T>
