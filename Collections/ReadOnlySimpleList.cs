@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Sapientia.Collections
 {
-	public readonly struct ReadOnlySimpleList<T> : IEnumerable<T>
+	public readonly struct ReadOnlySimpleList<T> : IReadOnlyList<T>
 	{
 		private readonly SimpleList<T> _simpleList;
 
@@ -38,14 +38,19 @@ namespace Sapientia.Collections
 			get => _simpleList[index];
 		}
 
-		public ReadOnlySimpleList(T[] array)
+		public ReadOnlySimpleList(T[] array, int capacity = SimpleList<T>.DEFAULT_CAPACITY, bool isRented = true)
 		{
-			_simpleList = new SimpleList<T>(array);
+			_simpleList = new SimpleList<T>(array, capacity, isRented);
 		}
 
 		public ReadOnlySimpleList(SimpleList<T> simpleList)
 		{
 			_simpleList = simpleList;
+		}
+
+		public static ReadOnlySimpleList<T> WrapArray(T[] array)
+		{
+			return new ReadOnlySimpleList<T>(SimpleList<T>.WrapArray(array));
 		}
 
 		public T[] ToArray()

@@ -158,9 +158,15 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ReadOnlySimpleList<T> ToReadOnlySimpleList<T>(this T[] array)
+		public static ReadOnlySimpleList<T> WrapToReadOnlySimpleList<T>(this T[] array)
 		{
-			return new ReadOnlySimpleList<T>(array);
+			return ReadOnlySimpleList<T>.WrapArray(array);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SimpleList<T> WrapToSimpleList<T>(this T[] array)
+		{
+			return SimpleList<T>.WrapArray(array);
 		}
 
 		public static void RemoveAt<T>(ref T[] array, int index)
