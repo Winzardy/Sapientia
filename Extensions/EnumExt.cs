@@ -1,14 +1,52 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Sapientia.Extensions
 {
-	public static class EnumExt<T> where T: unmanaged, Enum
+	public static class EnumValues<T> where T : unmanaged, Enum
 	{
-		public static readonly Array VALUES = Enum.GetValues(typeof(T));
-		public static readonly string[] NAMES = Enum.GetNames(typeof(T));
+		public static readonly T[] VALUES = (T[])Enum.GetValues(typeof(T));
 		public static readonly int ENUM_LENGHT = VALUES.Length;
+	}
+
+	public static class EnumNames<T> where T : unmanaged, Enum
+	{
+		public static readonly string[] NAMES = Enum.GetNames(typeof(T));
+		public static readonly int ENUM_LENGHT = NAMES.Length;
+	}
+
+	public static class EnumNameToValue<T> where T : unmanaged, Enum
+	{
+		private static readonly Dictionary<string, T> NAME_TO_VALUE;
+
+		public static bool TryGetValue(string name, out T value)
+		{
+			return NAME_TO_VALUE.TryGetValue(name, out value);
+		}
+
+		public static T GetValue(string name)
+		{
+			return NAME_TO_VALUE[name];
+		}
+
+		public static bool ContainsName(string name)
+		{
+			return NAME_TO_VALUE.ContainsKey(name);
+		}
+
+		static EnumNameToValue()
+		{
+			var values = EnumValues<T>.VALUES;
+			var names = EnumNames<T>.NAMES;
+
+			NAME_TO_VALUE = new Dictionary<string, T>(values.Length);
+			for (var i = 0; i < values.Length; i++)
+			{
+				NAME_TO_VALUE.Add(names[i], values[i]);
+			}
+		}
 	}
 
 	/// <summary>
