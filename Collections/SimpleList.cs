@@ -190,10 +190,10 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveAtSwapBack(int index)
+		public T RemoveAtSwapBack(int index)
 		{
 			_count--;
-			_array[index] = _array[_count];
+			return _array[index] = _array[_count];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
