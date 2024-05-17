@@ -55,19 +55,5 @@ namespace Sapientia.Extensions
 			return spanA.SequenceEqual(spanB);
 #endif
 		}
-
-		public static bool IsDefault<T>(this T? value) where T : class
-		{
-			return value == default;
-			var defaultValue = default(T);
-#if UNITY_5_3_OR_NEWER
-			var size = UnsafeUtility.SizeOf<T>();
-			return UnsafeUtility.MemCmp(value.AsPointer(), defaultValue.AsPointer(), size) == 0;
-#else
-			var spanA = new ReadOnlySpan<T>(Unsafe.AsPointer(ref value), 1);
-			var spanB = new ReadOnlySpan<T>(Unsafe.AsPointer(ref defaultValue), 1);
-			return spanA.SequenceEqual(spanB);
-#endif
-		}
 	}
 }
