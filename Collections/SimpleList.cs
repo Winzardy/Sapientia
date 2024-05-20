@@ -434,6 +434,11 @@ namespace Sapientia.Collections
 			return new ReadOnlySimpleList<T>(this);
 		}
 
+		public static implicit operator ReadOnlySimpleList<T>(SimpleList<T> list)
+		{
+			return list.ToReadOnly();
+		}
+
 		public struct Enumerator : IEnumerator<T>
 		{
 			private readonly SimpleList<T> _list;
