@@ -219,7 +219,7 @@ namespace Sapientia.Collections
 		{
 			for (var i = 0; i < _count; i++)
 			{
-				if (value.Equals(_array[i]))
+				if (value!.Equals(_array[i]))
 				{
 					RemoveAt(i);
 					return true;
@@ -471,6 +471,18 @@ namespace Sapientia.Collections
 
 	public static class SimpleListExt
 	{
+		public struct LambdaComparer<T> : IComparer<T>
+		{
+			private Comparison<T> _comparison;
+
+			public LambdaComparer(Comparison<T> comparison)
+			{
+				_comparison = comparison;
+			}
+
+			public int Compare(T x, T y) => _comparison.Invoke(x, y);
+		}
+
 		public struct DefaultComparer<T> : IComparer<T> where T : IComparable<T>
 		{
 			/// <summary>
@@ -481,6 +493,11 @@ namespace Sapientia.Collections
 			/// <returns>A signed integer that denotes the relative values of `x` and `y`:
 			/// 0 if they're equal, negative if `x &lt; y`, and positive if `x &gt; y`.</returns>
 			public int Compare(T x, T y) => x.CompareTo(y);
+		}
+
+		public static void Sort<T>(this SimpleList<T> list, Comparison<T> comparison)
+		{
+			list.Sort(new LambdaComparer<T>(comparison));
 		}
 
 		public static void Sort<T>(this SimpleList<T> list) where T: IComparable<T>
