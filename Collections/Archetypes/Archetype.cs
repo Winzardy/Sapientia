@@ -173,6 +173,18 @@ namespace Sapientia.Collections.Archetypes
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SimpleList<TValue> ReadElements(SimpleList<Entity> entities)
+		{
+			var result = new SimpleList<TValue>(entities.Count);
+			foreach (var entity in entities)
+			{
+				if (_elements.Has(entity.id))
+					result.Add(_elements.Get(entity.id).value);
+			}
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasElement(Entity entity)
 		{
 			return _elements.Has(entity.id);
