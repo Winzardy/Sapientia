@@ -180,7 +180,7 @@ namespace Sapientia.Collections.Archetypes
 		}
 	}
 
-	public abstract class WorldElement : IService
+	public abstract class WorldElement
 	{
 		public World World { get; internal set; }
 
@@ -192,12 +192,12 @@ namespace Sapientia.Collections.Archetypes
 
 		public virtual void DeInitialize() {}
 
-		protected TService GetService<TService>() where TService : IService
+		protected TService GetService<TService>()
 		{
 			return ServiceLocator<TService>.Instance;
 		}
 
-		protected void GetService<TService>(out TService service) where TService : IService
+		protected void GetService<TService>(out TService service)
 		{
 			service = ServiceLocator<TService>.Instance;
 		}
