@@ -93,7 +93,7 @@ namespace Sapientia.Collections.Archetypes.StateParts
 				KillChild(entity);
 				KillParent(entity);
 
-				delayKillRequestArchetype.RemoveElement(entity);
+				delayKillRequestArchetype.RemoveSwapBackElement(entity);
 				destroyRequestArchetype.GetElement(entity);
 			}
 

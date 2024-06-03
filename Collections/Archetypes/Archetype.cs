@@ -154,7 +154,7 @@ namespace Sapientia.Collections.Archetypes
 			_elements = new SparseSet<ArchetypeElement<TValue>>(elementsCount, entitiesCapacity, resetAction);
 
 			if (destroyEvents == null)
-				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += RemoveElement;
+				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += RemoveSwapBackElement;
 			else
 			{
 				OnEntityDestroyEvent = destroyEvents.Value.OnEntityDestroyEvent;
@@ -243,9 +243,9 @@ namespace Sapientia.Collections.Archetypes
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveElement(Entity entity)
+		public void RemoveSwapBackElement(Entity entity)
 		{
-			_elements.Remove(entity.id);
+			_elements.RemoveSwapBack(entity.id);
 		}
 
 		private void OnEntityDestroy(Entity entity)
@@ -257,7 +257,7 @@ namespace Sapientia.Collections.Archetypes
 
 			if (!_elements.Has(entity.id))
 				return;
-			_elements.Remove(entity.id);
+			_elements.RemoveSwapBack(entity.id);
 		}
 
 		~Archetype()
@@ -266,7 +266,7 @@ namespace Sapientia.Collections.Archetypes
 				return;
 
 			if (OnEntityDestroyEvent == null)
-				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= RemoveElement;
+				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= RemoveSwapBackElement;
 			else
 				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= OnEntityDestroy;
 		}

@@ -100,7 +100,7 @@ namespace Sapientia.Collections
 			return ref _values[denseId];
 		}
 
-		public void Remove(int id)
+		public void RemoveSwapBack(int id)
 		{
 			if (id >= _sparseCapacity)
 				return;

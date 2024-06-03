@@ -40,7 +40,7 @@ namespace Sapientia.Collections.Archetypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Remove<T>(this Entity entity)
 		{
-			ServiceLocator<Archetype<T>>.Instance.RemoveElement(entity);
+			ServiceLocator<Archetype<T>>.Instance.RemoveSwapBackElement(entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
