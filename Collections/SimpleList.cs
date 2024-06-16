@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
@@ -9,6 +10,8 @@ namespace Sapientia.Collections
 {
 	public class SimpleList<T> : IDisposable, IList<T>
 	{
+		public static SimpleList<T> CreateEmpty() => new SimpleList<T>();
+
 		public const int DEFAULT_CAPACITY = 8;
 
 		private T[] _array;
@@ -62,6 +65,14 @@ namespace Sapientia.Collections
 			set => _array[index] = value;
 		}
 
+		private SimpleList()
+		{
+			_count = 0;
+			_capacity = 0;
+			_array = Array.Empty<T>();
+			_isRented = false;
+		}
+
 		public SimpleList(bool isRented) : this(DEFAULT_CAPACITY, isRented) {}
 
 		public SimpleList(int capacity = DEFAULT_CAPACITY, bool isRented = true)
@@ -82,6 +93,11 @@ namespace Sapientia.Collections
 			_isRented = isRented;
 
 			array.CopyTo(_array, 0);
+		}
+
+		public SimpleList(IEnumerable<T> collection, int capacity = DEFAULT_CAPACITY, bool isRented = true) : this(capacity, isRented)
+		{
+			AddRange(collection);
 		}
 
 		public SimpleList(int capacity, T defaultValue, bool isRented = true) : this(capacity, isRented)
@@ -121,7 +137,7 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add<T1>(IEnumerable<T1> values) where T1: T
+		public void AddRange<T1>(IEnumerable<T1> values) where T1: T
 		{
 			foreach (var value in values)
 				Add(value);

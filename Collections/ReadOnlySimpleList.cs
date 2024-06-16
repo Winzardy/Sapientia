@@ -6,6 +6,13 @@ namespace Sapientia.Collections
 {
 	public readonly struct ReadOnlySimpleList<T> : IReadOnlyList<T>
 	{
+		// Copy of EmptyArray<T> logic
+		private static class EmptySimpleList
+		{
+			internal static readonly ReadOnlySimpleList<T> Value = SimpleList<T>.CreateEmpty();
+		}
+		public static ReadOnlySimpleList<T> Empty => EmptySimpleList.Value;
+
 		private readonly SimpleList<T> _simpleList;
 
 		public int Count
