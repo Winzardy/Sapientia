@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
@@ -16,7 +15,6 @@ namespace Sapientia.Collections
 
 		private T[] _array;
 		private int _count;
-		private int _capacity;
 		private bool _isRented;
 
 		public int Count
@@ -30,7 +28,7 @@ namespace Sapientia.Collections
 		public int Capacity
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _capacity;
+			get => _array.Length;
 		}
 
 		public ref T Last
@@ -48,7 +46,7 @@ namespace Sapientia.Collections
 		public bool IsFull
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _count >= _capacity;
+			get => _count >= _array.Length;
 		}
 
 		public ref T this[int index]
@@ -68,7 +66,6 @@ namespace Sapientia.Collections
 		private SimpleList()
 		{
 			_count = 0;
-			_capacity = 0;
 			_array = Array.Empty<T>();
 			_isRented = false;
 		}
@@ -78,18 +75,16 @@ namespace Sapientia.Collections
 		public SimpleList(int capacity = DEFAULT_CAPACITY, bool isRented = true)
 		{
 			_count = 0;
-			_capacity = capacity;
-			_array = isRented ? ArrayPool<T>.Shared.Rent(_capacity) : new T[_capacity];
+			_array = isRented ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
 			_isRented = isRented;
 		}
 
 		public SimpleList(T[] array, int capacity = DEFAULT_CAPACITY, bool isRented = true)
 		{
 			_count = array.Length;
-			_capacity = capacity;
-			if (_capacity < _count)
-				_capacity = _count;
-			_array = isRented ? ArrayPool<T>.Shared.Rent(_capacity) : new T[_capacity];
+			if (capacity < _count)
+				capacity = _count;
+			_array = isRented ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
 			_isRented = isRented;
 
 			array.CopyTo(_array, 0);
@@ -110,7 +105,6 @@ namespace Sapientia.Collections
 			return new SimpleList<T>
 			{
 				_count = array.Length,
-				_capacity = array.Length,
 				_array = array,
 				_isRented = false,
 			};
@@ -329,13 +323,8 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Expand(int newCapacity)
 		{
-			if (newCapacity < _capacity)
-				return;
 			if (newCapacity < _array.Length)
-			{
-				_capacity = newCapacity;
 				return;
-			}
 
 			if (_isRented)
 				ArrayExt.Expand_WithPool(ref _array, newCapacity);
@@ -344,21 +333,15 @@ namespace Sapientia.Collections
 				ArrayExt.Expand_WithPool_DontReturn(ref _array, newCapacity);
 				_isRented = true;
 			}
-			_capacity = newCapacity;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Expand(int newCapacity, T defaultValue)
 		{
-			if (newCapacity < _capacity)
-				return;
 			if (newCapacity < _array.Length)
-			{
-				_capacity = newCapacity;
 				return;
-			}
 
-			var previousLenght = _array.Length;
+			var previousLength = _array.Length;
 			if (_isRented)
 				ArrayExt.Expand_WithPool(ref _array, newCapacity);
 			else
@@ -366,8 +349,7 @@ namespace Sapientia.Collections
 				ArrayExt.Expand_WithPool_DontReturn(ref _array, newCapacity);
 				_isRented = true;
 			}
-			Array.Fill(_array, defaultValue, previousLenght, _array.Length - previousLenght);
-			_capacity = newCapacity;
+			Array.Fill(_array, defaultValue, previousLength, _array.Length - previousLength);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -395,12 +377,12 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			if (_array == null)
+			if (_array == null!)
 				return;
 
 			if (_isRented)
 				ArrayPool<T>.Shared.Return(_array);
-			_array = null;
+			_array = null!;
 		}
 
 		public Enumerator GetEnumerator()
@@ -460,7 +442,7 @@ namespace Sapientia.Collections
 
 			public T Current => _list[_index];
 
-			object IEnumerator.Current => Current;
+			object IEnumerator.Current => Current!;
 
 			internal Enumerator(SimpleList<T> list)
 			{
