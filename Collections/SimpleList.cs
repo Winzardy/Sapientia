@@ -286,6 +286,7 @@ namespace Sapientia.Collections
 					return true;
 				}
 			}
+			GC.SuppressFinalize(value);
 			return false;
 		}
 
@@ -383,6 +384,8 @@ namespace Sapientia.Collections
 			if (_isRented)
 				ArrayPool<T>.Shared.Return(_array);
 			_array = null!;
+
+			GC.SuppressFinalize(this);
 		}
 
 		public Enumerator GetEnumerator()
