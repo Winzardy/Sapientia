@@ -64,7 +64,8 @@ namespace Sapientia.Extensions
 			while (csvReader.Read())
 			{
 				var row = new SimpleList<T>();
-				while (csvReader.TryGetField(row.Count, out string? value))
+
+				while (row.Count < csvReader.Parser.Count && csvReader.TryGetField(row.Count, out string? value))
 				{
 					row.Add((value as T)!);
 				}
