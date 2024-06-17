@@ -33,19 +33,6 @@ namespace Sapientia.Extensions
 			return FromCsv<T>(reader, hasHeader);
 		}
 
-		public static SimpleList<string> FromCsvToCsvLines(this string csv)
-		{
-			var csvLines = new SimpleList<string>();
-			using var reader = new StringReader(csv);
-
-			string? line;
-			while ((line = reader.ReadLine()) != null)
-			{
-				csvLines.Add(line);
-			}
-			return csvLines;
-		}
-
 		public static SimpleList<T> FromCsvFile<T>(this string filePath, bool hasHeader = true)
 		{
 			using var reader = new StreamReader(filePath);
@@ -64,6 +51,61 @@ namespace Sapientia.Extensions
 			var csv = values.ObjectsToCsv();
 			return csv.FromCsv<T>();
 		}
+
+		private static IList<IList<T>> FromCsvToValues<T>(this TextReader reader) where T: class
+		{
+			var csvValues = new SimpleList<IList<T>>();
+			using var csvReader = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+				MissingFieldFound = null,
+			});
+
+			while (csvReader.Read())
+			{
+				var row = new SimpleList<T>();
+				while (csvReader.TryGetField(row.Count, out string? value))
+				{
+					row.Add((value as T)!);
+				}
+				csvValues.Add(row);
+			}
+
+			return csvValues;
+		}
+
+		public static IList<IList<object>> FromCsvToObjectValues(this string csv)
+		{
+			return csv.FromCsvToValues<object>();
+		}
+
+		public static IList<IList<string>> FromCsvToStringValues(this string csv)
+		{
+			return csv.FromCsvToValues<string>();
+		}
+
+		private static IList<IList<T>> FromCsvToValues<T>(this string csv) where T: class
+		{
+			using var reader = new StringReader(csv);
+			return reader.FromCsvToValues<T>();
+		}
+
+		public static IList<IList<object>> FromCsvFileToObjectValues(this string filePath)
+		{
+			return filePath.FromCsvFileToValues<object>();
+		}
+
+		public static IList<IList<string>> FromCsvFileToStringValues(this string filePath)
+		{
+			return filePath.FromCsvFileToValues<string>();
+		}
+
+		private static IList<IList<T>> FromCsvFileToValues<T>(this string filePath) where T: class
+		{
+			using var reader = new StreamReader(filePath);
+			return reader.FromCsvToValues<T>();
+		}
+
 #endregion
 
 #region To
