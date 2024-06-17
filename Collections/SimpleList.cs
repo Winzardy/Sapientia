@@ -159,6 +159,15 @@ namespace Sapientia.Collections
 			_count += values.Length;
 		}
 
+		public void AddRange(T value, int count)
+		{
+			var targetCount = _count + count;
+			Expand(targetCount);
+
+			Array.Fill(_array, value, _count, count);
+			_count = targetCount;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Allocate()
 		{
@@ -315,17 +324,6 @@ namespace Sapientia.Collections
 			_array[index] = value;
 
 			_count++;
-		}
-
-		public void Fill(int lenght, T value)
-		{
-			var targetCount = _count + lenght;
-			Expand(targetCount);
-			for (var i = _count; i < targetCount; i++)
-			{
-				_array[i] = value;
-			}
-			_count = targetCount;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
