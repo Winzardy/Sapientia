@@ -175,6 +175,25 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ExpandCount(int count)
+		{
+			if (_count < count)
+			{
+				Expand(count);
+				_count = count;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ExpandCount(int count, T defaultValue)
+		{
+			if (_count < count)
+			{
+				AddRange(defaultValue, count - _count);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Swap(int indexA, int indexB)
 		{
 			(_array[indexA], _array[indexB]) = (_array[indexB], _array[indexA]);
