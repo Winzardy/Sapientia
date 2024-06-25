@@ -1,50 +1,62 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Sapientia.Extensions;
 
 namespace Sapientia.Data
 {
 	public class AsyncClass
 	{
 		private int _millisecondsTimeout;
-		private int _state;
 
-		public State State => _state.ToEnum<State>();
+		private volatile int _threadId;
+		private volatile int _count;
 
 		public AsyncClass(int millisecondsTimeout = 1)
 		{
 			_millisecondsTimeout = millisecondsTimeout;
-			_state = (int)State.Free;
+			_threadId = -1;
+			_count = 0;
 		}
 
 		public void SetMillisecondsTimeout(int millisecondsTimeout)
 		{
-			using (GetBusyScope())
-			{
-				_millisecondsTimeout = millisecondsTimeout;
-			}
+			SetBusy();
+			_millisecondsTimeout = millisecondsTimeout;
+			SetBusy();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TrySetBusy()
 		{
-			return _state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Free;
+			var currentThreadId = Environment.CurrentManagedThreadId;
+			if (_count == 0 || _threadId == currentThreadId)
+			{
+				Interlocked.Increment(ref _count);
+				Interlocked.Exchange(ref _threadId, currentThreadId);
+				return true;
+			}
+			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBusy()
 		{
-			while (_state.Interlocked_CompareExchangeIntEnum(State.Busy, State.Free) == State.Busy)
+			var currentThreadId = Environment.CurrentManagedThreadId;
+			while (_count > 0 && _threadId != currentThreadId)
 			{
 				Thread.Sleep(_millisecondsTimeout);
 			}
+			Interlocked.Increment(ref _count);
+			Interlocked.Exchange(ref _threadId, currentThreadId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetFree()
 		{
-			Interlocked.Exchange(ref _state, (int)State.Free);
+			Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
+			Debug.Assert(_count > 0);
+			Interlocked.Decrement(ref _count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
