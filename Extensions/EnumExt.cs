@@ -79,6 +79,18 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T ToEnum<T>(this string value) where T : unmanaged, Enum
+		{
+			return Enum.Parse<T>(value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryToEnum<T>(this string value, out T result) where T : unmanaged, Enum
+		{
+			return Enum.TryParse<T>(value, out result);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe T ToEnum<T>(this int value) where T : unmanaged, Enum
 		{
 			return *(T*)(&value);
