@@ -229,8 +229,9 @@ namespace Sapientia.Collections.Archetypes.StateParts
 			var service = ServiceLocator<DestroyStatePart>.Instance;
 			if (service.killRequestArchetype.HasElement(entity))
 				return;
+			var hasRequest = service.delayKillRequestArchetype.HasElement(entity);
 			ref var request = ref service.delayKillRequestArchetype.GetElement(entity);
-			if (request.delay > delay)
+			if (!hasRequest || request.delay > delay)
 				request.delay = delay;
 		}
 
