@@ -80,22 +80,22 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassBusyScope<T> GetBusyScope(bool isFree = false)
+		public AsyncValueClassBusyScope<T> GetBusyScope(bool isDisposed = false)
 		{
-			return new AsyncValueClassBusyScope<T>(this, isFree);
+			return new AsyncValueClassBusyScope<T>(this, isDisposed);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassAsyncBusyScope<T> GetAsyncBusyScope(bool isFree = false)
+		public AsyncValueClassAsyncBusyScope<T> GetAsyncBusyScope(bool isDisposed = false)
 		{
-			return new AsyncValueClassAsyncBusyScope<T>(this, isFree);
+			return new AsyncValueClassAsyncBusyScope<T>(this, isDisposed);
 		}
 
-		public bool TryGetBusyScope(out AsyncValueClassBusyScope<T> result, bool isFree = false)
+		public bool TryGetBusyScope(out AsyncValueClassBusyScope<T> result, bool isDisposed = false)
 		{
 			if (TrySetBusy())
 			{
-				result = new AsyncValueClassBusyScope<T>(this, isFree);
+				result = new AsyncValueClassBusyScope<T>(this, isDisposed);
 				return true;
 			}
 
@@ -103,11 +103,11 @@ namespace Sapientia.Data
 			return false;
 		}
 
-		public bool TryGetBusyScopeAsync(out AsyncValueClassAsyncBusyScope<T> result, bool isFree = false)
+		public bool TryGetBusyScopeAsync(out AsyncValueClassAsyncBusyScope<T> result, bool isDisposed = false)
 		{
 			if (TrySetBusy())
 			{
-				result = new AsyncValueClassAsyncBusyScope<T>(this, isFree);
+				result = new AsyncValueClassAsyncBusyScope<T>(this, isDisposed);
 				return true;
 			}
 

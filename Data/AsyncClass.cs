@@ -27,28 +27,55 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TrySetBusy()
+		public bool TrySetBusy(bool ignoreThreadId = false)
 		{
-			var currentThreadId = Environment.CurrentManagedThreadId;
-			if (_count == 0 || _threadId == currentThreadId)
+			if (_count > 0)
 			{
-				Interlocked.Increment(ref _count);
-				Interlocked.Exchange(ref _threadId, currentThreadId);
-				return true;
+				if (ignoreThreadId)
+					return false;
+				var currentThreadId = Environment.CurrentManagedThreadId;
+				if (_threadId != currentThreadId)
+					return false;
 			}
-			return false;
+			else
+			{
+				var currentThreadId = Environment.CurrentManagedThreadId;
+				if (Interlocked.Exchange(ref _threadId, currentThreadId) != currentThreadId)
+					return false;
+			}
+
+			Interlocked.Increment(ref _count);
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetBusy()
+		public void SetBusy(bool ignoreThreadId = false)
 		{
 			var currentThreadId = Environment.CurrentManagedThreadId;
-			while (_count > 0 && _threadId != currentThreadId)
+			if (ignoreThreadId)
 			{
-				Thread.Sleep(_millisecondsTimeout);
+				while (_count > 0 || Interlocked.Exchange(ref _threadId, currentThreadId) != currentThreadId)
+				{
+					Thread.Sleep(_millisecondsTimeout);
+				}
 			}
+			else
+			{
+				while (true)
+				{
+					if (_count == 0)
+					{
+						if (Interlocked.Exchange(ref _threadId, currentThreadId) == currentThreadId)
+							break;
+					}
+					else if (_threadId == currentThreadId)
+						break;
+
+					Thread.Sleep(_millisecondsTimeout);
+				}
+			}
+
 			Interlocked.Increment(ref _count);
-			Interlocked.Exchange(ref _threadId, currentThreadId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,22 +87,22 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncClassBusyScope GetBusyScope()
+		public AsyncClassBusyScope GetBusyScope(bool ignoreThreadId = false)
 		{
-			SetBusy();
+			SetBusy(ignoreThreadId);
 			return new AsyncClassBusyScope(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncClassAsyncBusyScope GetAsyncBusyScope()
+		public AsyncClassAsyncBusyScope GetAsyncBusyScope(bool ignoreThreadId = false)
 		{
-			SetBusy();
+			SetBusy(ignoreThreadId);
 			return new AsyncClassAsyncBusyScope(this);
 		}
 
-		public bool TryGetBusyScope(out AsyncClassBusyScope result)
+		public bool TryGetBusyScope(out AsyncClassBusyScope result, bool ignoreThreadId = false)
 		{
-			if (TrySetBusy())
+			if (TrySetBusy(ignoreThreadId))
 			{
 				result = new AsyncClassBusyScope(this);
 				return true;
@@ -85,9 +112,9 @@ namespace Sapientia.Data
 			return false;
 		}
 
-		public bool TryGetAsyncBusyScope(out AsyncClassAsyncBusyScope result)
+		public bool TryGetAsyncBusyScope(out AsyncClassAsyncBusyScope result, bool ignoreThreadId = false)
 		{
-			if (TrySetBusy())
+			if (TrySetBusy(ignoreThreadId))
 			{
 				result = new AsyncClassAsyncBusyScope(this);
 				return true;
