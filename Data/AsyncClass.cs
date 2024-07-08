@@ -40,7 +40,8 @@ namespace Sapientia.Data
 			else
 			{
 				var currentThreadId = Environment.CurrentManagedThreadId;
-				if (Interlocked.Exchange(ref _threadId, currentThreadId) != currentThreadId)
+				var threadId = _threadId;
+				if (Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) != threadId)
 					return false;
 			}
 
@@ -54,9 +55,11 @@ namespace Sapientia.Data
 			var currentThreadId = Environment.CurrentManagedThreadId;
 			if (ignoreThreadId)
 			{
-				while (_count > 0 || Interlocked.Exchange(ref _threadId, currentThreadId) != currentThreadId)
+				var threadId = _threadId;
+				while (_count > 0 || Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) != threadId)
 				{
 					Thread.Sleep(_millisecondsTimeout);
+					threadId = _threadId;
 				}
 			}
 			else
@@ -65,7 +68,8 @@ namespace Sapientia.Data
 				{
 					if (_count == 0)
 					{
-						if (Interlocked.Exchange(ref _threadId, currentThreadId) == currentThreadId)
+						var threadId = _threadId;
+						if (Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) == threadId)
 							break;
 					}
 					else if (_threadId == currentThreadId)

@@ -31,7 +31,7 @@ namespace Sapientia.Extensions
 
 		public static string? ReadEnvironmentFileNullable(this string environment)
 		{
-			var path = ReadEnvironment(environment);
+			var path = ReadEnvironmentNullable(environment);
 			if (!File.Exists(path))
 				return null;
 			return File.ReadAllText(path);
