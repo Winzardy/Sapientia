@@ -186,9 +186,9 @@ namespace Sapientia.Extensions
 		public static int AddIntFlag_Interlocked_ReturnInt<T>(this ref int valueInt, T flag) where T : unmanaged, Enum
 		{
 			var flagInt = flag.ToInt();
-#if NET7_0_OR_GREATER
+#if NET5_0_OR_GREATER
 			return Interlocked.Or(ref valueInt, flagInt);
-# else
+#else
 			return Or(ref valueInt, flagInt);
 #endif
 		}
@@ -197,9 +197,9 @@ namespace Sapientia.Extensions
 		public static T AddIntFlag_Interlocked<T>(this ref int valueInt, T flag) where T : unmanaged, Enum
 		{
 			var flagInt = flag.ToInt();
-#if NET7_0_OR_GREATER
+#if NET5_0_OR_GREATER
 			return Interlocked.Or(ref valueInt, flagInt).ToEnum<T>();
-# else
+#else
 			return Or(ref valueInt, flagInt).ToEnum<T>();
 #endif
 		}
@@ -209,9 +209,9 @@ namespace Sapientia.Extensions
 			where T : unmanaged, Enum
 		{
 			var flagInt = flag.ToInt();
-#if NET7_0_OR_GREATER
+#if NET5_0_OR_GREATER
 			return Interlocked.And(ref valueInt, ~flagInt);
-# else
+#else
 			return And(ref valueInt, ~flagInt);
 #endif
 		}
@@ -220,28 +220,28 @@ namespace Sapientia.Extensions
 		public static T Interlocked_RemoveIntFlag<T>(this ref int valueInt, T flag) where T : unmanaged, Enum
 		{
 			var flagInt = flag.ToInt();
-#if NET7_0_OR_GREATER
+#if NET5_0_OR_GREATER
 			return Interlocked.And(ref valueInt, ~flagInt).ToEnum<T>();
-# else
+#else
 			return And(ref valueInt, ~flagInt).ToEnum<T>();
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T Interlocked_CompareExchangeIntEnum<T>(this ref int location1, T value, T comparend)
+		public static T Interlocked_CompareExchangeIntEnum<T>(this ref int location1, T value, T comparand)
 			where T : unmanaged, Enum
 		{
-			return Interlocked.CompareExchange(ref location1, value.ToInt(), comparend.ToInt()).ToEnum<T>();
+			return Interlocked.CompareExchange(ref location1, value.ToInt(), comparand.ToInt()).ToEnum<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Interlocked_CompareExchangeIntEnum_ReturnInt<T>(this ref int location1, T value, T comparend)
+		public static int Interlocked_CompareExchangeIntEnum_ReturnInt<T>(this ref int location1, T value, T comparand)
 			where T : unmanaged, Enum
 		{
-			return Interlocked.CompareExchange(ref location1, value.ToInt(), comparend.ToInt());
+			return Interlocked.CompareExchange(ref location1, value.ToInt(), comparand.ToInt());
 		}
 
-#if !NET7_0_OR_GREATER
+#if !NET5_0_OR_GREATER
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int And(ref int location1, int value)
 		{
