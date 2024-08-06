@@ -188,5 +188,8 @@ namespace Sapientia.Extensions
 			Expand(ref array, array.Length + 1);
 			array[^1] = value;
 		}
+
+
+		public static int IndexOf<T>(this T[] array, T element) => Array.IndexOf(array, element);
 	}
 }

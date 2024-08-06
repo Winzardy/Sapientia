@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Sapientia.Collections;
 using Sapientia.Collections.Archetypes;
 
@@ -103,6 +104,17 @@ namespace Sapientia.Extensions
 #endif
 				(list[i], list[indexToSwap]) = (list[indexToSwap], list[i]);
 			}
+		}
+
+		public static bool IsNullOrEmpty<T>(this ICollection<T> collection)
+		{
+			return collection == null || collection.Count == 0;
+		}
+
+		public static List<T> AddRangeRepeated<T>(this List<T> list, T repeatedItem, int count)
+		{
+			list.AddRange(Enumerable.Repeat(repeatedItem, count));
+			return list;
 		}
 	}
 }
