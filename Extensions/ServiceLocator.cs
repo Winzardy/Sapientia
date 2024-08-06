@@ -167,6 +167,17 @@ namespace Sapientia.Extensions
 		{
 			return ServiceLocator<TService>.Get<TConcrete>();
 		}
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Get<TService>(out TService service)
+		{
+			var result = ServiceLocator<TService>.TryGet(out service);
+
+			if (!result)
+				throw new Exception($"Not have target service [ {typeof(TService)} ]");
+
+			return result;
+		}
 
 		#endregion
 
