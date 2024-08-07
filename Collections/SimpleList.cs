@@ -401,7 +401,7 @@ namespace Sapientia.Collections
 				return;
 
 			if (_isRented)
-				ArrayPool<T>.Shared.Return(_array);
+				ArrayPool<T>.Shared.Return(_array, true);
 			_array = null!;
 
 			GC.SuppressFinalize(this);
