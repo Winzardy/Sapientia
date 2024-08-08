@@ -1,8 +1,8 @@
 namespace Sapientia.Pooling
 {
-    public interface IObjectPool<T>
-    {
-        T Get();
-        void Release(T obj);
-    }
+	public interface IObjectPool<T>
+	{
+		T Get();
+		void Release(T obj);
+	}
 }
