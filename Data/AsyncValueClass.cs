@@ -86,9 +86,25 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public AsyncValueClassBusyScope<T> GetBusyScope(out T value, bool isDisposed = false)
+		{
+			var scope = new AsyncValueClassBusyScope<T>(this, isDisposed);
+			value = this.value;
+			return scope;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public AsyncValueClassAsyncBusyScope<T> GetAsyncBusyScope(bool isDisposed = false)
 		{
 			return new AsyncValueClassAsyncBusyScope<T>(this, isDisposed);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public AsyncValueClassAsyncBusyScope<T> GetAsyncBusyScope(out T value, bool isDisposed = false)
+		{
+			var scope = new AsyncValueClassAsyncBusyScope<T>(this, isDisposed);
+			value = this.value;
+			return scope;
 		}
 
 		public bool TryGetBusyScope(out AsyncValueClassBusyScope<T> result, bool isDisposed = false)
