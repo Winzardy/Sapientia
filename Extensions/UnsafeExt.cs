@@ -12,12 +12,12 @@ namespace Sapientia.Extensions
 	public static unsafe class UnsafeExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe T1 As<T, T1>(this ref T value) where T : struct where T1 : struct
+		public static unsafe ref T1 As<T, T1>(this ref T value) where T : struct where T1 : struct
 		{
 #if UNITY_5_3_OR_NEWER
-			return UnsafeUtility.As<T, T1>(ref value);
+			return ref UnsafeUtility.As<T, T1>(ref value);
 #else
-			return Unsafe.As<T, T1>(ref value);
+			return ref Unsafe.As<T, T1>(ref value);
 #endif
 		}
 
