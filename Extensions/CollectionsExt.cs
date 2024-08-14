@@ -116,5 +116,16 @@ namespace Sapientia.Extensions
 			list.AddRange(Enumerable.Repeat(repeatedItem, count));
 			return list;
 		}
+
+		public static IEnumerable<(T, int)> WithIndex<T>(this IEnumerable<T> enumerable)
+		{
+			int index = 0;
+
+			foreach (var value in enumerable)
+			{
+				yield return (value, index);
+				index++;
+			}
+		}
 	}
 }
