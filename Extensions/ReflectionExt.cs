@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
 namespace GameLogic.Extensions
 {
@@ -25,6 +27,28 @@ namespace GameLogic.Extensions
 
 		private static readonly Dictionary<(Type baseType, bool insertNull, bool includeInterfaces, bool interfacesOnly), Type[]> TYPES = new ();
 		private static readonly Dictionary<Type[], Dictionary<string, Type>> NAMES_TO_TYPES = new ();
+
+		public static bool IsBlittable(this Type type)
+		{
+			if (!type.IsValueType)
+				return false;
+			try
+			{
+				var instance = FormatterServices.GetUninitializedObject(type);
+				GCHandle.Alloc(instance, GCHandleType.Pinned).Free();
+
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		public static bool IsVoid(this Type type)
+		{
+			return type == typeof(void);
+		}
 
 		public static bool IsList(this Type type)
 		{
