@@ -189,6 +189,12 @@ namespace Sapientia.Extensions
 			array[^1] = value;
 		}
 
+		public static void AddRange<T>(ref T[] array, T[] values)
+		{
+			var destinationIndex = array.Length;
+			Expand(ref array, array.Length + values.Length);
+			Array.Copy(values, 0, array, destinationIndex, array.Length);
+		}
 
 		public static int IndexOf<T>(this T[] array, T element) => Array.IndexOf(array, element);
 	}
