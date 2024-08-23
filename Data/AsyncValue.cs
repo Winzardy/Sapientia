@@ -40,6 +40,17 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TrySetBusyIgnoreThread()
+		{
+			if (_count == 0)
+			{
+				Interlocked.Increment(ref _count);
+				return true;
+			}
+			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBusy()
 		{
 			var currentThreadId = Environment.CurrentManagedThreadId;
@@ -52,9 +63,26 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetBusyIgnoreThread()
+		{
+			while (_count > 0)
+			{
+				Thread.Sleep(_millisecondsTimeout);
+			}
+			Interlocked.Increment(ref _count);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetFree()
 		{
 			Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
+			Debug.Assert(_count > 0);
+			Interlocked.Decrement(ref _count);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetFreeIgnoreThread()
+		{
 			Debug.Assert(_count > 0);
 			Interlocked.Decrement(ref _count);
 		}
