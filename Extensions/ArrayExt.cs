@@ -193,7 +193,7 @@ namespace Sapientia.Extensions
 		{
 			var destinationIndex = array.Length;
 			Expand(ref array, array.Length + values.Length);
-			Array.Copy(values, 0, array, destinationIndex, array.Length);
+			Array.Copy(values, 0, array, destinationIndex, values.Length);
 		}
 
 		public static int IndexOf<T>(this T[] array, T element) => Array.IndexOf(array, element);

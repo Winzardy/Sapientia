@@ -113,31 +113,31 @@ namespace Sapientia.TypeIndexer
 
 			foreach (var (baseType, children) in proxyTypes)
 			{
-				var methods = baseType.GetMethods();
-				foreach (var methodInfo in methods)
-				{
-					var genericArguments = methodInfo.GetGenericArguments();
-					if (genericArguments.Length > 0) // We don't support generic methods now
-						continue;
-					var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
+				var methods = baseType.GetAllInstanceMethods();
 
-					foreach (var child in children)
+				foreach (var child in children)
+				{
+					foreach (var methodInfo in methods)
 					{
-						sourceBuilder.AppendLine($"			{baseType.Name}<{child.FullName}>.Compile{methodInfo.Name}{genericParametersString}(),");
+						var genericArguments = methodInfo.GetGenericArguments();
+						if (genericArguments.Length > 0) // We don't support generic methods now
+							continue;
+						var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
+
+						sourceBuilder.AppendLine($"				{baseType.Name}Proxy<{child.FullName}>.Compile{methodInfo.Name}{genericParametersString}(),");
 					}
 				}
 			}
 
-			sourceBuilder.AppendLine("				");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			var typeToDelegateIndex = new Dictionary<({nameof(TypeIndex)}, {nameof(ProxyIndex)}), {nameof(DelegateIndex)}>");
 			sourceBuilder.AppendLine("			{");
 
 			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");
-			sourceBuilder.AppendLine(GenerateTypeToDelegateIndexBody(proxyTypes, true));
+			sourceBuilder.Append(GenerateTypeToDelegateIndexBody(proxyTypes, true));
 			sourceBuilder.AppendLine("#else");
-			sourceBuilder.AppendLine(GenerateTypeToDelegateIndexBody(proxyTypes, false));
+			sourceBuilder.Append(GenerateTypeToDelegateIndexBody(proxyTypes, false));
 			sourceBuilder.AppendLine("#endif");
 
 			sourceBuilder.AppendLine("			};");
@@ -157,7 +157,7 @@ namespace Sapientia.TypeIndexer
 			{
 				var (baseType, children) = proxyTypes[i];
 
-				var methods = baseType.GetMethods();
+				var methods = baseType.GetAllInstanceMethods();
 				var methodsCount = 0;
 				foreach (var methodInfo in methods)
 				{
@@ -170,9 +170,9 @@ namespace Sapientia.TypeIndexer
 				foreach (var child in children)
 				{
 					if (isDebug)
-						sourceBuilder.AppendLine($"			{{ (typeToIndex[Type.GetType(\"{child.FullName}\")], {i}), {delegateIndex}}},");
+						sourceBuilder.AppendLine($"				{{ (typeToIndex[Type.GetType(\"{child.FullName}\")], {i}), {delegateIndex}}},");
 					else
-						sourceBuilder.AppendLine($"			{{ (typeToIndex[typeof({child.FullName})], {i}), {delegateIndex}}},");
+						sourceBuilder.AppendLine($"				{{ (typeToIndex[typeof({child.FullName})], {i}), {delegateIndex}}},");
 					delegateIndex += methodsCount;
 				}
 			}

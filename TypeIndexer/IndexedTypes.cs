@@ -8,7 +8,7 @@ namespace Sapientia.TypeIndexer
 	{
 		ProxyIndex ProxyIndex { get; }
 
-		DelegateIndex DelegateIndex { set; }
+		DelegateIndex FirstDelegateIndex { set; }
 	}
 
 	public static unsafe class IndexedTypes
@@ -43,7 +43,7 @@ namespace Sapientia.TypeIndexer
 		public static T GetDelegate<T>(TypeIndex executorType) where T: unmanaged, IInterfaceProxy
 		{
 			var result = default(T);
-			result.DelegateIndex = _typeToDelegateIndex[(executorType, result.ProxyIndex)];
+			result.FirstDelegateIndex = _typeToDelegateIndex[(executorType, result.ProxyIndex)];
 			return result;
 		}
 

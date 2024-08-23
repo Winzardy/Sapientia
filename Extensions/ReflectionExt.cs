@@ -232,24 +232,15 @@ namespace GameLogic.Extensions
 				var types = assembly.GetTypes();
 				foreach (var type in types)
 				{
-					if (type.GetInterface(targetInterface.Name) == null)
-						continue;
 					if (type == targetInterface)
 						continue;
-
-					foreach (var typeInterface in type.GetInterfaces())
-					{
-						if (typeInterface == targetInterface)
-							continue;
-						if (typeInterface.GetInterface(targetInterface.Name) != null)
-							goto skip;
-					}
+					if (!type.InheritsFrom(targetInterface))
+						continue;
 
 					if (type.IsInterface)
 						interfaceList.Add(type);
 					else
 						typeList.Add(type);
-					skip: ;
 				}
 			}
 		}
@@ -451,6 +442,22 @@ namespace GameLogic.Extensions
 				return sourcePath;
 
 			return sourcePath + PATH_SPLIT_CHAR + additionalPath;
+		}
+
+		public static HashSet<MethodInfo> GetAllInstanceMethods(this Type type)
+		{
+			var allMethods = new HashSet<MethodInfo>(type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy));
+
+			var interfaces = type.GetInterfaces();
+			foreach (var interfaceType in interfaces)
+			{
+				foreach (var methodInfo in interfaceType.GetMethods())
+				{
+					allMethods.Add(methodInfo);
+				}
+			}
+
+			return allMethods;
 		}
 	}
 }

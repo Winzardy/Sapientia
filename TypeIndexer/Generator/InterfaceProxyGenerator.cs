@@ -16,18 +16,25 @@ namespace Sapientia.TypeIndexer
 		{
 		}
 
-		public static void GenerateProxies(string folderPath)
+		public static void GenerateProxies(string folderPath, string internalLibraryFolderPath)
 		{
 			if (Directory.Exists(folderPath))
 				Directory.Delete(folderPath, true);
 			Directory.CreateDirectory(folderPath);
+			if (Directory.Exists(internalLibraryFolderPath))
+				Directory.Delete(internalLibraryFolderPath, true);
+			Directory.CreateDirectory(internalLibraryFolderPath);
 
 			var proxyTypes = GetProxyTypes();
 			for (var i = 0; i < proxyTypes.Count; i++)
 			{
+				var path = folderPath;
+				var fullName = proxyTypes[i].baseType.FullName;
+				if (!string.IsNullOrEmpty(fullName) && fullName.StartsWith(nameof(Sapientia)))
+					path = internalLibraryFolderPath;
+
 				var proxyCode = CreateProxy(proxyTypes[i].baseType, i);
-				File.WriteAllText(Path.Combine(folderPath, $"{proxyTypes[i].baseType.Name}Proxy.generated.cs"),
-					proxyCode);
+				File.WriteAllText(Path.Combine(path, $"{proxyTypes[i].baseType.Name}Proxy.generated.cs"), proxyCode);
 			}
 		}
 
@@ -66,11 +73,10 @@ namespace Sapientia.TypeIndexer
 		private static string CreateProxy(Type baseType, int proxyIndex)
 		{
 			var methImplAttribute = $"[{typeof(System.Runtime.CompilerServices.MethodImplAttribute).FullName}(256)]";
-			var burstAttribute =
-				"[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]";
-			var executorPtrParameter =
-				typeof(InterfaceProxyGenerator).GetMethod(nameof(ParameterSource))!.GetParameters();
-			var methods = baseType.GetMethods();
+			var burstAttribute = "[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]";
+
+			var executorPtrParameter = typeof(InterfaceProxyGenerator).GetMethod(nameof(ParameterSource), BindingFlags.NonPublic | BindingFlags.Static)!.GetParameters();
+			var methods = baseType.GetAllInstanceMethods();
 
 			var sourceBuilder = new StringBuilder();
 			sourceBuilder.AppendLine("using System;");
@@ -81,16 +87,14 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine($"	public unsafe struct {baseType.Name}Proxy : {nameof(IInterfaceProxy)}");
 			sourceBuilder.AppendLine("	{");
 			sourceBuilder.AppendLine($"		public static readonly {nameof(ProxyIndex)} ProxyIndex = {proxyIndex};");
-			sourceBuilder.AppendLine(
-				$"		{nameof(ProxyIndex)} {nameof(IInterfaceProxy)}.{nameof(IInterfaceProxy.ProxyIndex)}");
+			sourceBuilder.AppendLine($"		{nameof(ProxyIndex)} {nameof(IInterfaceProxy)}.{nameof(IInterfaceProxy.ProxyIndex)}");
 			sourceBuilder.AppendLine($"		{{");
 			sourceBuilder.AppendLine($"			{methImplAttribute}");
 			sourceBuilder.AppendLine($"			get => ProxyIndex;");
 			sourceBuilder.AppendLine($"		}}");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"		private {nameof(DelegateIndex)} _firstDelegateIndex;");
-			sourceBuilder.AppendLine(
-				$"		{nameof(DelegateIndex)} {nameof(IInterfaceProxy)}.{nameof(IInterfaceProxy.DelegateIndex)}");
+			sourceBuilder.AppendLine($"		{nameof(DelegateIndex)} {nameof(IInterfaceProxy)}.{nameof(IInterfaceProxy.FirstDelegateIndex)}");
 			sourceBuilder.AppendLine($"		{{");
 			sourceBuilder.AppendLine($"			{methImplAttribute}");
 			sourceBuilder.AppendLine($"			set => _firstDelegateIndex = value;");
@@ -117,7 +121,7 @@ namespace Sapientia.TypeIndexer
 				sourceBuilder.AppendLine($"		public {returnTypeString} {methodInfo.Name}{genericParametersString}{parametersString}");
 				sourceBuilder.AppendLine($"		{{");
 				sourceBuilder.AppendLine($"			var compiledMethod = {nameof(IndexedTypes)}.{nameof(IndexedTypes.GetCompiledMethod)}(_firstDelegateIndex + {delegateIndex});");
-				sourceBuilder.AppendLine($"			var method = {typeof(Marshal).FullName}.{nameof(Marshal.GetDelegateForFunctionPointer)}<{methodInfo.Name}Delegate{genericParametersString}>(compiledMethod.functionPointer)");
+				sourceBuilder.AppendLine($"			var method = {typeof(Marshal).FullName}.{nameof(Marshal.GetDelegateForFunctionPointer)}<{methodInfo.Name}Delegate{genericParametersString}>(compiledMethod.functionPointer);");
 				if (returnType.IsVoid())
 					sourceBuilder.AppendLine($"			method.Invoke{genericParametersString}{parametersWithoutTypeString};");
 				else
@@ -129,8 +133,7 @@ namespace Sapientia.TypeIndexer
 
 			sourceBuilder.AppendLine("	}");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine(
-				$"	public unsafe struct {baseType.Name}Proxy<TSource> where TSource: struct, {baseType.FullName}");
+			sourceBuilder.AppendLine($"	public unsafe struct {baseType.Name}Proxy<TSource> where TSource: struct, {baseType.FullName}");
 			sourceBuilder.AppendLine("	{");
 
 			foreach (var methodInfo in methods)
@@ -140,12 +143,13 @@ namespace Sapientia.TypeIndexer
 				if (genericArguments.Length > 0) // We don't support generic methods now
 					continue;
 				var parameters = executorPtrParameter;
-				ArrayExt.AddRange(ref parameters, methodInfo.GetParameters());
+				var methodParameters = methodInfo.GetParameters();
+				ArrayExt.AddRange(ref parameters, methodParameters);
 
 				var returnTypeString = CodeGenExt.GetTypeString(returnType);
 				var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
 				var parametersString = CodeGenExt.GetParametersString(parameters, false);
-				var parametersWithoutTypeString = CodeGenExt.GetParametersString(parameters, true);
+				var methodParametersWithoutTypeString = CodeGenExt.GetParametersString(methodParameters, true);
 
 				sourceBuilder.AppendLine("#if UNITY_5_3_OR_NEWER");
 				sourceBuilder.AppendLine("		[UnityEngine.Scripting.Preserve]");
@@ -158,22 +162,23 @@ namespace Sapientia.TypeIndexer
 				sourceBuilder.AppendLine("		{");
 				sourceBuilder.AppendLine($"			ref var value = ref {typeof(UnsafeExt).FullName}.AsRef<TSource>(executorPtr);");
 				if (returnType.IsVoid())
-					sourceBuilder.AppendLine($"			value.{methodInfo.Name}{genericParametersString}{parametersWithoutTypeString};");
+					sourceBuilder.AppendLine($"			value.{methodInfo.Name}{genericParametersString}{methodParametersWithoutTypeString};");
 				else
-					sourceBuilder.AppendLine($"			return value.{methodInfo.Name}{genericParametersString}{parametersWithoutTypeString};");
+					sourceBuilder.AppendLine($"			return value.{methodInfo.Name}{genericParametersString}{methodParametersWithoutTypeString};");
 				sourceBuilder.AppendLine("		}");
 				sourceBuilder.AppendLine();
 				sourceBuilder.AppendLine("#if UNITY_5_3_OR_NEWER");
 				sourceBuilder.AppendLine("		[UnityEngine.Scripting.Preserve]");
 				sourceBuilder.AppendLine("#endif");
 				sourceBuilder.AppendLine($"		{methImplAttribute}");
-				sourceBuilder.AppendLine($"		internal static {nameof(CompiledMethod)} Compile{methodInfo.Name}{genericParametersString}()");
+				sourceBuilder.AppendLine($"		public static {nameof(CompiledMethod)} Compile{methodInfo.Name}{genericParametersString}()");
 				sourceBuilder.AppendLine($"		{{");
 				sourceBuilder.AppendLine($"			return {nameof(CompiledMethod)}.Create<{baseType.Name}Proxy.{methodInfo.Name}Delegate>({methodInfo.Name}{genericParametersString});");
 				sourceBuilder.AppendLine($"		}}");
 			}
 
 			sourceBuilder.AppendLine("	}");
+			sourceBuilder.AppendLine("}");
 
 			return sourceBuilder.ToString();
 		}

@@ -2,12 +2,13 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Sirenix.Utilities;
 
 namespace Sapientia.Extensions
 {
 	public static class CodeGenExt
 	{
+		private const string VoidFullName = "System.Void";
+
 		public static string GetMethodString(MethodInfo methodInfo)
 		{
 			var returnType = methodInfo.ReturnType;
@@ -97,11 +98,12 @@ namespace Sapientia.Extensions
 			}
 			else
 			{
-				if (type == typeof(void))
-					return "void";
-				if (type.FullName == null)
+				var fullName = type.FullName;
+				if (fullName == null)
 					return type.Name;
-				return type.FullName.Replace('+', '.');
+				if (fullName.StartsWith(VoidFullName))
+					fullName = fullName.Replace(VoidFullName, "void");
+				return fullName.Replace('+', '.');
 			}
 		}
 	}
