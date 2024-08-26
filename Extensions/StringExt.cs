@@ -33,7 +33,8 @@ namespace Sapientia.Extensions
 			bool numerate = true,
 			string separator = "")
 		{
-			if (collection == null) return string.Empty;
+			if (collection == null)
+				return string.Empty;
 
 			return GetCompositeString(new List<T>(collection), vertical, getter, numerate, separator);
 		}
@@ -42,8 +43,10 @@ namespace Sapientia.Extensions
 			bool numerate = true,
 			string separator = "")
 		{
-			if (items == null) return NULL;
-			if (items.Count == 0) return EMPTY;
+			if (items == null)
+				return NULL;
+			if (items.Count == 0)
+				return EMPTY;
 
 			using (StringBuilderPool.Get(out var sb))
 			{

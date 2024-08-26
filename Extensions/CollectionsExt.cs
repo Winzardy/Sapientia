@@ -111,6 +111,11 @@ namespace Sapientia.Extensions
 			return collection == null || collection.Count == 0;
 		}
 
+		public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
+		{
+			return enumerable == null || !enumerable.Any();
+		}
+
 		public static List<T> AddRangeRepeated<T>(this List<T> list, T repeatedItem, int count)
 		{
 			list.AddRange(Enumerable.Repeat(repeatedItem, count));

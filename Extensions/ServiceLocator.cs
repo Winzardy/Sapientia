@@ -178,6 +178,12 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void GetOrCreate<TService>(out TService service) where TService : new()
+		{
+			service = ServiceLocator<TService>.Get<TService>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGet<TService>(out TService service)
 		{
 			return ServiceLocator<TService>.TryGet(out service);

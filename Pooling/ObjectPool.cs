@@ -5,7 +5,7 @@ namespace Sapientia.Pooling
 {
 	public class ObjectPool<T> : IObjectPool<T>, IDisposable
 	{
-		private readonly Stack<T> _items;
+		private readonly Queue<T> _items;
 		private readonly IObjectPoolPolicy<T> _policy;
 
 		private readonly bool _collectionCheck;
@@ -17,7 +17,7 @@ namespace Sapientia.Pooling
 			int capacity = 0,
 			int maxSize = 0)
 		{
-			_items = capacity > 0 ? new Stack<T>(capacity) : new Stack<T>();
+			_items = capacity > 0 ? new Queue<T>(capacity) : new Queue<T>();
 			_policy = policy;
 			_collectionCheck = collectionCheck;
 			_maxSize = maxSize;
@@ -34,7 +34,7 @@ namespace Sapientia.Pooling
 		{
 			while (_items.Count > 0)
 			{
-				_policy.OnDispose(_items.Pop());
+				_policy.OnDispose(_items.Dequeue());
 			}
 		}
 
@@ -44,7 +44,7 @@ namespace Sapientia.Pooling
 
 			if (_items.Count > 0)
 			{
-				item = _items.Pop();
+				item = _items.Dequeue();
 			}
 			else
 			{
@@ -77,6 +77,6 @@ namespace Sapientia.Pooling
 			}
 		}
 
-		private void Push(T obj) => _items.Push(obj);
+		private void Push(T obj) => _items.Enqueue(obj);
 	}
 }
