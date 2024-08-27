@@ -2,21 +2,20 @@ using System.Collections.Generic;
 
 namespace Sapientia.Pooling
 {
-	public class ListPool<T> : StaticObjectPool<List<T>>
+	public static class ListPool<T>
 	{
-		static ListPool() => Initialize(new(new Policy(), true));
-
-		public static PooledObject<List<T>> GetCopy(IEnumerable<T> source, out List<T> result)
+		static ListPool()
 		{
-			var disposable = instance.Get(out result);
-
-			if (source != null)
-			{
-				result.AddRange(source);
-			}
-
-			return disposable;
+			if (!StaticObjectPool<List<T>>.IsInitialized)
+				StaticObjectPool<List<T>>.Initialize(new(new Policy(), true));
 		}
+
+		public static List<T> Get() => StaticObjectPool<List<T>>.Get();
+
+		public static PooledObject<List<T>> Get(out List<T> result) =>
+			StaticObjectPool<List<T>>.Get(out result);
+
+		public static void Release(List<T> obj) => StaticObjectPool<List<T>>.Release(obj);
 
 		private class Policy : DefaultObjectPoolPolicy<List<T>>
 		{

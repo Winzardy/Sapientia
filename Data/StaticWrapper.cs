@@ -18,7 +18,7 @@ public abstract class StaticWrapper<T> where T : class
 		get
 		{
 			if (_instance == null)
-				throw new Exception($"Trying to access [ {typeof(T).Name} ]functions while its not initialized!");
+				throw new Exception($"Trying to access [ {typeof(T).Name} ] functions while its not initialized!");
 
 			return _instance;
 		}

@@ -8,9 +8,4 @@ namespace Sapientia.Pooling
 
 		public static void Release(T obj) => instance.Release(obj);
 	}
-
-	public class Pooling
-	{
-		public static void Get<T>(out T obj) => obj = StaticObjectPool<T>.Get();
-	}
 }
