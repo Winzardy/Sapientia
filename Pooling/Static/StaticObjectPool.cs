@@ -1,3 +1,5 @@
+using Sapientia.Extensions;
+
 namespace Sapientia.Pooling
 {
 	public sealed class StaticObjectPool<T> : StaticWrapper<ObjectPool<T>>

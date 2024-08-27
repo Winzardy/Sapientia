@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Sapientia.Extensions;
 
-namespace Messaging
+namespace Sapientia.Messaging
 {
 	/// <summary>
 	/// Messenger hub responsible for taking subscriptions/publications and delivering of messages.

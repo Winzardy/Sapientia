@@ -1,4 +1,4 @@
-﻿namespace Messaging
+﻿namespace Sapientia.Messaging
 {
 	public static class MessengerExt
 	{

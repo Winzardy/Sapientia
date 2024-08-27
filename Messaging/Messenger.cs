@@ -1,6 +1,7 @@
 ﻿using System;
+using Sapientia.Extensions;
 
-namespace Messaging
+namespace Sapientia.Messaging
 {
 	public class Messenger : StaticWrapper<MessengerHub>
 	{

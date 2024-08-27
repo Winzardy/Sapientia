@@ -1,6 +1,6 @@
 using System;
 
-namespace Messaging
+namespace Sapientia.Messaging
 {
 	public interface IMessageSubscriptionToken : IDisposable
 	{
