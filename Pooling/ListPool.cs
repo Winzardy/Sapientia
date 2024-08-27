@@ -2,19 +2,13 @@ using System.Collections.Generic;
 
 namespace Sapientia.Pooling
 {
-	public static class ListPool<T>
+	public class ListPool<T> : StaticObjectPool<List<T>>
 	{
-		private static readonly ObjectPool<List<T>> _instance = new(new ListPoolPolicy<T>(), true);
-
-		public static List<T> Get() => _instance.Get();
-
-		public static PooledObject<List<T>> Get(out List<T> result) => _instance.Get(out result);
-
-		public static void Release(List<T> list) => _instance.Release(list);
+		static ListPool() => Initialize(new(new Policy(), true));
 
 		public static PooledObject<List<T>> GetCopy(IEnumerable<T> source, out List<T> result)
 		{
-			var disposable = _instance.Get(out result);
+			var disposable = instance.Get(out result);
 
 			if (source != null)
 			{
@@ -23,13 +17,10 @@ namespace Sapientia.Pooling
 
 			return disposable;
 		}
-	}
 
-	public class ListPoolPolicy<T> : DefaultObjectPoolPolicy<List<T>>
-	{
-		public override void OnRelease(List<T> list)
+		private class Policy : DefaultObjectPoolPolicy<List<T>>
 		{
-			list.Clear();
+			public override void OnRelease(List<T> list) => list.Clear();
 		}
 	}
 }

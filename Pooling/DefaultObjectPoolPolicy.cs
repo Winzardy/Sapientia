@@ -3,11 +3,9 @@ using System;
 namespace Sapientia.Pooling
 {
 	public class DefaultObjectPoolPolicy<T> : IObjectPoolPolicy<T>
+		where T : new()
 	{
-		public virtual T Create()
-		{
-			return Activator.CreateInstance<T>();
-		}
+		public virtual T Create() => new();
 
 		public virtual void OnGet(T obj)
 		{
