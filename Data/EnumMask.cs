@@ -80,4 +80,18 @@ namespace Sapientia.Data
 			return value.mask.As<int, uint>();
 		}
 	}
+
+	public class EnumMask
+	{
+		public static EnumMask<T> From<T>(params T[] values)
+			where T : unmanaged, Enum
+		{
+			var mask = new EnumMask<T>();
+
+			for (int i = 0; i < values.Length; i++)
+				mask.Add(values[i]);
+
+			return mask;
+		}
+	}
 }
