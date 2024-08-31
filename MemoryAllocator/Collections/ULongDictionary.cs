@@ -88,18 +88,14 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly MemPtr GetMemPtr()
 		{
-			E.IS_CREATED(this);
-
-			return buckets.cachedPtr.memPtr;
+			return buckets.innerArray.ptr.memPtr;
 		}
 
 		[INLINE(256)]
 		public void ReplaceWith(ref Allocator allocator, in ULongDictionary<TValue> other)
 		{
-			E.IS_CREATED(this);
-			E.IS_CREATED(other);
-
-			if (GetMemPtr() == other.GetMemPtr()) return;
+			if (GetMemPtr() == other.GetMemPtr())
+				return;
 
 			Dispose(ref allocator);
 			this = other;
@@ -108,42 +104,26 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void CopyFrom(ref Allocator allocator, in ULongDictionary<TValue> other)
 		{
-			E.IS_CREATED(this);
-			E.IS_CREATED(other);
-
-			if (GetMemPtr() == other.GetMemPtr()) return;
-			if (GetMemPtr().IsValid() == false && other.GetMemPtr().IsValid() == false) return;
-			if (GetMemPtr().IsValid() == true && other.GetMemPtr().IsValid() == false)
+			if (GetMemPtr() == other.GetMemPtr())
+				return;
+			if (!GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
+				return;
+			if (GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
 			{
 				Dispose(ref allocator);
 				return;
 			}
 
-			if (GetMemPtr().IsValid() == false) this = new ULongDictionary<TValue>(ref allocator, other.Count);
+			if (!GetMemPtr().IsValid())
+				this = new ULongDictionary<TValue>(ref allocator, other.Count);
 
-			NativeArrayUtils.CopyExact(ref allocator, other.buckets, ref buckets);
-			NativeArrayUtils.CopyExact(ref allocator, other.entries, ref entries);
+			MemArrayExt.CopyExact(ref allocator, other.buckets, ref buckets);
+			MemArrayExt.CopyExact(ref allocator, other.entries, ref entries);
 			count = other.count;
 			version = other.version;
 			freeCount = other.freeCount;
 			freeList = other.freeList;
 		}
-
-		/*[INLINE(256)]
-		public readonly Enumerator GetEnumerator(World world)
-		{
-			E.IS_CREATED(this);
-
-			return new Enumerator(in this, world.state);
-		}
-
-		[INLINE(256)]
-		public readonly Enumerator GetEnumerator(State* state)
-		{
-			E.IS_CREATED(this);
-
-			return new Enumerator(in this, state);
-		}*/
 
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
 		/// <param name="allocator"></param>
@@ -153,8 +133,6 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)]
 			get
 			{
-				E.IS_CREATED(this);
-
 				var entry = FindEntry(in allocator, key);
 				if (entry >= 0)
 				{
@@ -168,8 +146,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public ref TValue GetValue(ref Allocator allocator, ulong key)
 		{
-			E.IS_CREATED(this);
-
 			var entry = FindEntry(in allocator, key);
 			if (entry >= 0)
 			{
@@ -182,8 +158,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public ref TValue GetValue(ref Allocator allocator, ulong key, out bool exist)
 		{
-			E.IS_CREATED(this);
-
 			var entry = FindEntry(in allocator, key);
 			if (entry >= 0)
 			{
@@ -198,7 +172,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public TValue GetValueAndRemove(in Allocator allocator, ulong key)
 		{
-			E.IS_CREATED(this);
 
 			Remove(in allocator, key, out var value);
 			return value;
@@ -211,25 +184,21 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Add(ref Allocator allocator, ulong key, TValue value)
 		{
-			E.IS_CREATED(this);
-
 			TryInsert(ref allocator, key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
 		[INLINE(256)]
-		public void Clear(ref Allocator allocator)
+		public void Clear(in Allocator allocator)
 		{
-			E.IS_CREATED(this);
-
-			var count = this.count;
-			if (count > 0)
+			var newCount = count;
+			if (newCount > 0)
 			{
-				buckets.Clear(ref allocator);
-				this.count = 0;
+				buckets.Clear(allocator);
+				count = 0;
 				freeList = -1;
 				freeCount = 0;
-				entries.Clear(ref allocator, 0, count);
+				entries.Clear(allocator, 0, newCount);
 			}
 
 			++version;
@@ -239,10 +208,8 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="allocator"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
 		[INLINE(256)]
-		public readonly bool ContainsKey(in Allocator allocator, ulong key)
+		public bool ContainsKey(in Allocator allocator, ulong key)
 		{
-			E.IS_CREATED(this);
-
 			return FindEntry(in allocator, key) >= 0;
 		}
 
@@ -252,8 +219,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly bool ContainsValue(in Allocator allocator, TValue value)
 		{
-			E.IS_CREATED(this);
-
 			for (var index = 0; index < count; ++index)
 			{
 				if (entries[in allocator, index].hashCode >= 0 &&
@@ -268,7 +233,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		private readonly int FindEntry(in Allocator allocator, ulong key)
+		private int FindEntry(in Allocator allocator, ulong key)
 		{
 			var index = -1;
 			var num1 = 0;
@@ -276,12 +241,12 @@ namespace Sapientia.MemoryAllocator
 			{
 				var num2 = key.GetHashCode() & int.MaxValue;
 				index = (int)buckets[in allocator, (uint)(num2 % buckets.Length)] - 1;
-				var entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
-				while ((uint)index < this.entries.Length &&
-				       (entries[index].hashCode != num2 || !entries[index].key.Equals(key)))
+				var entriesPtr = (Entry*)entries.GetPtr(in allocator);
+				while ((uint)index < entries.Length &&
+				       (entriesPtr[index].hashCode != num2 || !entriesPtr[index].key.Equals(key)))
 				{
-					index = entries[index].next;
-					if (num1 >= this.entries.Length)
+					index = entriesPtr[index].next;
+					if (num1 >= entries.Length)
 					{
 						E.OUT_OF_RANGE();
 					}
@@ -312,21 +277,21 @@ namespace Sapientia.MemoryAllocator
 				Initialize(ref allocator, 0);
 			}
 
-			var entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+			var entriesPtr = (Entry*)entries.GetPtr(in allocator);
 			var num1 = key.GetHashCode() & int.MaxValue;
 			var num2 = 0u;
 			ref var local1 = ref buckets[in allocator, (uint)(num1 % buckets.Length)];
 			var index1 = (int)local1 - 1;
 			{
-				while ((uint)index1 < this.entries.Length)
+				while ((uint)index1 < entries.Length)
 				{
-					if (entries[index1].hashCode == num1 &&
-					    entries[index1].key.Equals(key))
+					if (entriesPtr[index1].hashCode == num1 &&
+					    entriesPtr[index1].key.Equals(key))
 					{
 						switch (behavior)
 						{
 							case InsertionBehavior.OverwriteExisting:
-								entries[index1].value = value;
+								entriesPtr[index1].value = value;
 								return true;
 
 							case InsertionBehavior.ThrowOnExisting:
@@ -337,8 +302,8 @@ namespace Sapientia.MemoryAllocator
 						return false;
 					}
 
-					index1 = entries[index1].next;
-					if (num2 >= this.entries.Length)
+					index1 = entriesPtr[index1].next;
+					if (num2 >= entries.Length)
 					{
 						E.OUT_OF_RANGE();
 					}
@@ -358,7 +323,7 @@ namespace Sapientia.MemoryAllocator
 			else
 			{
 				var count = this.count;
-				if (count == this.entries.Length)
+				if (count == entries.Length)
 				{
 					Resize(ref allocator);
 					flag1 = true;
@@ -366,11 +331,11 @@ namespace Sapientia.MemoryAllocator
 
 				index2 = count;
 				this.count = count + 1;
-				entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+				entriesPtr = (Entry*)entries.GetPtr(in allocator);
 			}
 
 			ref var local2 = ref (flag1 ? ref buckets[in allocator, (uint)(num1 % buckets.Length)] : ref local1);
-			ref var local3 = ref entries[index2];
+			ref var local3 = ref entriesPtr[index2];
 			if (flag2)
 			{
 				freeList = local3.next;
@@ -393,7 +358,7 @@ namespace Sapientia.MemoryAllocator
 				Initialize(ref allocator, 0);
 			}
 
-			var entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+			var entriesPtr = (Entry*)entries.GetPtr(in allocator);
 			var num1 = key.GetHashCode() & int.MaxValue;
 			ref var local1 = ref buckets[in allocator, (uint)(num1 % buckets.Length)];
 			var flag1 = false;
@@ -407,20 +372,20 @@ namespace Sapientia.MemoryAllocator
 			}
 			else
 			{
-				var count = this.count;
-				if (count == this.entries.Length)
+				var oldCount = count;
+				if (oldCount == entries.Length)
 				{
 					Resize(ref allocator);
 					flag1 = true;
 				}
 
-				index2 = count;
-				this.count = count + 1;
-				entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+				index2 = oldCount;
+				count = oldCount + 1;
+				entriesPtr = (Entry*)entries.GetPtr(in allocator);
 			}
 
 			ref var local2 = ref (flag1 ? ref buckets[in allocator, (uint)(num1 % buckets.Length)] : ref local1);
-			ref var local3 = ref entries[index2];
+			ref var local3 = ref entriesPtr[index2];
 			if (flag2)
 			{
 				freeList = local3.next;
@@ -445,8 +410,8 @@ namespace Sapientia.MemoryAllocator
 		{
 			var numArray = new MemArray<uint>(ref allocator, newSize);
 			var entryArray = new MemArray<Entry>(ref allocator, newSize);
-			var count = this.count;
-			NativeArrayUtils.CopyNoChecks(ref allocator, entries, 0, ref entryArray, 0, count);
+
+			MemArrayExt.CopyNoChecks(ref allocator, entries, 0, ref entryArray, 0, count);
 			for (var index1 = 0u; index1 < count; ++index1)
 			{
 				if (entryArray[in allocator, index1].hashCode >= 0)
@@ -477,7 +442,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Remove(in Allocator allocator, ulong key)
 		{
-			E.IS_CREATED(this);
 
 			if (buckets.Length > 0u)
 			{
@@ -527,7 +491,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Remove(in Allocator allocator, ulong key, out TValue value)
 		{
-			E.IS_CREATED(this);
 
 			if (buckets.Length > 0u)
 			{
@@ -579,7 +542,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly bool TryGetValue(in Allocator allocator, ulong key, out TValue value)
 		{
-			E.IS_CREATED(this);
 
 			var entry = FindEntry(in allocator, key);
 			if (entry >= 0)
@@ -595,7 +557,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool TryAdd(ref Allocator allocator, ulong key, TValue value)
 		{
-			E.IS_CREATED(this);
 
 			return TryInsert(ref allocator, key, value, InsertionBehavior.None);
 		}
@@ -603,7 +564,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public uint EnsureCapacity(ref Allocator allocator, uint capacity)
 		{
-			E.IS_CREATED(this);
 
 			var num = entries.Length;
 			if (num >= capacity)

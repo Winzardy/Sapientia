@@ -25,6 +25,31 @@ namespace Sapientia.MemoryAllocator
 		}*/
 	}
 
+	public unsafe class MemArrayProxy
+	{
+		private MemArray arr;
+
+		public MemArrayProxy(MemArray arr)
+		{
+			this.arr = arr;
+		}
+
+		/*public T[] Items
+		{
+			get
+			{
+				var world = Context.world;
+				var arr = new T[this.arr.Length];
+				for (var i = 0; i < this.arr.Length; ++i)
+				{
+					arr[i] = this.arr[world.state->allocator, i];
+				}
+
+				return arr;
+			}
+		}*/
+	}
+
 	public unsafe class MemArrayThreadCacheLineProxy<T> where T : unmanaged
 	{
 		private MemArrayThreadCacheLine<T> arr;
@@ -66,7 +91,7 @@ namespace Sapientia.MemoryAllocator
 
 		public uint Count
 		{
-			get { return this.arr.Count; }
+			get { return this.arr.count; }
 		}
 
 		/*public T[] items
@@ -154,9 +179,9 @@ namespace Sapientia.MemoryAllocator
 
 	public class EquatableDictionaryProxy<K, V> where K : unmanaged, System.IEquatable<K> where V : unmanaged
 	{
-		private EquatableDictionary<K, V> arr;
+		private Dictionary<K, V> arr;
 
-		public EquatableDictionaryProxy(EquatableDictionary<K, V> arr)
+		public EquatableDictionaryProxy(Dictionary<K, V> arr)
 		{
 			this.arr = arr;
 		}
@@ -167,7 +192,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		public MemArray<uint> buckets => this.arr.buckets;
-		public MemArray<EquatableDictionary<K, V>.Entry> entries => this.arr.entries;
+		public MemArray<Dictionary<K, V>.Entry> entries => this.arr.entries;
 		public uint count => this.arr.count;
 		public uint version => this.arr.version;
 		public int freeList => this.arr.freeList;

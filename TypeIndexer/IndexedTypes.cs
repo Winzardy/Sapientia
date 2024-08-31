@@ -4,12 +4,15 @@ using System.Runtime.CompilerServices;
 
 namespace Sapientia.TypeIndexer
 {
-	public interface IInterfaceProxy
+	public interface IProxy
 	{
 		ProxyIndex ProxyIndex { get; }
 
-		DelegateIndex FirstDelegateIndex { set; }
+		DelegateIndex FirstDelegateIndex { get; set; }
 	}
+
+	[IndexedType]
+	public interface IIndexedType {}
 
 	public static unsafe class IndexedTypes
 	{
@@ -40,10 +43,18 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T GetDelegate<T>(TypeIndex executorType) where T: unmanaged, IInterfaceProxy
+		public static TProxy GetProxy<TProxy>(TypeIndex executorType) where TProxy: unmanaged, IProxy
 		{
-			var result = default(T);
+			var result = default(TProxy);
 			result.FirstDelegateIndex = _typeToDelegateIndex[(executorType, result.ProxyIndex)];
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TProxy GetProxy<T, TProxy>() where TProxy: unmanaged, IProxy
+		{
+			var result = default(TProxy);
+			result.FirstDelegateIndex = _typeToDelegateIndex[(TypeIndex<T>.typeIndex, result.ProxyIndex)];
 			return result;
 		}
 
@@ -67,13 +78,7 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int GetIndex<T>()
-		{
-			return _typeToIndex[typeof(T)];
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int GetIndex(Type type)
+		public static TypeIndex GetTypeIndex(Type type)
 		{
 			return _typeToIndex[type];
 		}

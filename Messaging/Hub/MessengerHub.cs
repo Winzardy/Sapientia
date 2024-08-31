@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Sapientia.Collections;
 using Sapientia.Data;
 
 namespace Sapientia.Messaging
@@ -21,6 +23,7 @@ namespace Sapientia.Messaging
 		/// <typeparam name="TMessage">Type of message</typeparam>
 		/// <param name="receiver">Action to invoke when message is delivered</param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Action<TMessage> receiver) where TMessage : struct
 		{
 			return AddSubscriptionInternal(receiver, null, true);
@@ -37,6 +40,7 @@ namespace Sapientia.Messaging
 		/// <param name="useStrongReferences">Use strong references to destination and receiver </param>
 		/// <param name="proxy">Proxy to use when delivering the messages</param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Action<TMessage> receiver, bool useStrongReferences)
 			where TMessage : struct
 		{
@@ -53,6 +57,7 @@ namespace Sapientia.Messaging
 		/// <typeparam name="TMessage">Type of message</typeparam>
 		/// <param name="receiver">Action to invoke when message is delivered</param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Action<TMessage> receiver, [CanBeNull] Func<TMessage, bool> filter)
 			where TMessage : struct
 		{
@@ -69,6 +74,7 @@ namespace Sapientia.Messaging
 		/// <param name="receiver">Action to invoke when message is delivered</param>
 		/// <param name="useStrongReferences">Use strong references to destination and receiver </param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Action<TMessage> receiver, [CanBeNull] Func<TMessage, bool> filter,
 			bool useStrongReferences)
 			where TMessage : struct
@@ -82,9 +88,20 @@ namespace Sapientia.Messaging
 		/// Does not throw an exception if the subscription is not found.
 		/// </summary>
 		/// <param name="subscriptionToken">Subscription token received from Subscribe</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Unsubscribe<TMessage>(MessageSubscriptionToken<TMessage> subscriptionToken) where TMessage: struct
 		{
 			RemoveSubscriptionInternal(subscriptionToken);
+		}
+
+		/// <summary>
+		/// Unsubscribe all subscribers from a particular message type.
+		/// </summary>
+		/// <param name="subscriptionToken">Subscription token received from Subscribe</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void UnsubscribeAll<TMessage>() where TMessage: struct
+		{
+			RemoveAllSubscriptionInternal<TMessage>();
 		}
 
 		/// <summary>
@@ -92,10 +109,23 @@ namespace Sapientia.Messaging
 		/// </summary>
 		/// <typeparam name="TMessage">Type of message</typeparam>
 		/// <param name="msg">Message to deliver</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Send<TMessage>(ref TMessage msg)
 			where TMessage : struct
 		{
 			SendInternal(ref msg);
+		}
+
+		/// <summary>
+		/// Publish a message to any subscribers
+		/// </summary>
+		/// <typeparam name="TMessage">Type of message</typeparam>
+		/// <param name="msg">Message to deliver</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SendAndUnsubscribeAll<TMessage>(ref TMessage msg)
+			where TMessage : struct
+		{
+			SendAndUnsubscribeAllInternal(ref msg);
 		}
 
 		private MessageSubscriptionToken<TMessage> AddSubscriptionInternal<TMessage>(Action<TMessage> receiver,
@@ -142,6 +172,16 @@ namespace Sapientia.Messaging
 			subscriptionGroup.tokenToSubscription.Remove(subscriptionToken);
 		}
 
+		private void RemoveAllSubscriptionInternal<TMessage>() where TMessage: struct
+		{
+			using var scope = GetBusyScope();
+
+			if (!_typeToSubscriptionGroup.TryGetValue(typeof(TMessage), out var subscriptionGroup))
+				return;
+
+			subscriptionGroup.tokenToSubscription.Clear();
+		}
+
 		private void SendInternal<TMessage>(ref TMessage msg)
 			where TMessage : struct
 		{
@@ -150,7 +190,33 @@ namespace Sapientia.Messaging
 			if (!_typeToSubscriptionGroup.TryGetValue(typeof(TMessage), out var subscriptionGroup))
 				return;
 
-			foreach (var (_, subscription) in subscriptionGroup.tokenToSubscription)
+			// Создаётся буфер, т.к. при вызове Deliver получатель может изменить список подписок.
+			// Сейчас GetBusyScope не блокирует поток если вызов происходит в текущем потоке.
+			// Если жёстко запретить изменять список во время Deliver, то можно поймать deadlock.
+			// SimpleList внутри использует пуллинг, так что лишняя память утекать не будет.
+			var subscriptions = new SimpleList<IMessageSubscription>(subscriptionGroup.tokenToSubscription.Values);
+			foreach (var subscription in subscriptions)
+			{
+				subscription.Deliver(ref msg);
+			}
+		}
+
+		private void SendAndUnsubscribeAllInternal<TMessage>(ref TMessage msg)
+			where TMessage : struct
+		{
+			using var scope = GetBusyScope();
+
+			if (!_typeToSubscriptionGroup.TryGetValue(typeof(TMessage), out var subscriptionGroup))
+				return;
+
+			// Создаётся буфер, т.к. при вызове Deliver получатель может изменить список подписок.
+			// Сейчас GetBusyScope не блокирует поток если вызов происходит в текущем потоке.
+			// Если жёстко запретить изменять список во время Deliver, то можно поймать deadlock.
+			// SimpleList внутри использует пуллинг, так что лишняя память утекать не будет.
+			var subscriptions = new SimpleList<IMessageSubscription>(subscriptionGroup.tokenToSubscription.Values);
+			subscriptionGroup.tokenToSubscription.Clear();
+
+			foreach (var subscription in subscriptions)
 			{
 				subscription.Deliver(ref msg);
 			}

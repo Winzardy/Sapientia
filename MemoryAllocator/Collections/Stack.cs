@@ -104,7 +104,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void* GetUnsafePtr(in Allocator allocator)
 		{
-			return array.GetUnsafePtr(in allocator);
+			return array.GetPtr(in allocator);
 		}
 
 		[INLINE(256)]

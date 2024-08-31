@@ -53,10 +53,10 @@ namespace Sapientia.Extensions
 				var param = parameters[i];
 				if (param.IsOut)
 					delegateBuilder.Append("out ");
+				if (param.IsIn)
+					delegateBuilder.Append("in ");
 				else if (param.ParameterType.IsByRef)
 					delegateBuilder.Append("ref ");
-				else if (param.GetCustomAttribute(typeof(System.Runtime.InteropServices.InAttribute)) != null)
-					delegateBuilder.Append("in ");
 
 				if (!withoutType)
 				{

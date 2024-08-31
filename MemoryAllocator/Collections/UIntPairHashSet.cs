@@ -44,8 +44,8 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public UIntPairHashSetRead(in Allocator allocator, in UIntPairHashSet set)
 		{
-			bucketsPtr = (int*)set.buckets.GetUnsafePtr(in allocator);
-			slotsPtr = (UIntPairHashSet.Slot*)set.slots.GetUnsafePtr(in allocator);
+			bucketsPtr = (int*)set.buckets.GetPtr(in allocator);
+			slotsPtr = (UIntPairHashSet.Slot*)set.slots.GetPtr(in allocator);
 			lastIndex = set.lastIndex;
 			hash = set.hash;
 			bucketsLength = set.buckets.Length;
@@ -190,16 +190,15 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Equals(in Allocator allocator, in UIntPairHashSet other)
 		{
-			E.IS_CREATED(this);
 			E.IS_CREATED(other);
 
 			if (count != other.count) return false;
 			if (hash != other.hash) return false;
 			if (count == 0u && other.count == 0u) return true;
 
-			var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
-			var otherSlotsPtr = (Slot*)other.slots.GetUnsafePtr(in allocator);
-			var otherBucketsPtr = (int*)other.buckets.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)slots.GetPtr(in allocator);
+			var otherSlotsPtr = (Slot*)other.slots.GetPtr(in allocator);
+			var otherBucketsPtr = (int*)other.buckets.GetPtr(in allocator);
 			var idx = 0u;
 			while (idx < lastIndex)
 			{
@@ -244,8 +243,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly MemPtr GetMemPtr()
 		{
-			E.IS_CREATED(this);
-			return buckets.cachedPtr.memPtr;
+			return buckets.innerArray.ptr.memPtr;
 		}
 
 		[INLINE(256)]
@@ -284,14 +282,14 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="allocator"></param>
 		[INLINE(256)]
-		public void Clear(ref Allocator allocator)
+		public void Clear(in Allocator allocator)
 		{
 			if (lastIndex > 0)
 			{
 				// clear the elements so that the gc can reclaim the references.
 				// clear only up to m_lastIndex for m_slots
-				slots.Clear(ref allocator, 0, lastIndex);
-				buckets.Clear(ref allocator, 0, buckets.Length);
+				slots.Clear(allocator, 0, lastIndex);
+				buckets.Clear(allocator, 0, buckets.Length);
 				lastIndex = 0u;
 				count = 0u;
 				freeList = -1;
@@ -310,10 +308,9 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly bool Contains(in Allocator allocator, UIntPair item)
 		{
-			E.IS_CREATED(this);
 			var hashCode = item.GetHash() & LOWER31_BIT_MASK;
 			// see note at "HashSet" level describing why "- 1" appears in for loop
-			var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)slots.GetPtr(in allocator);
 			for (var i = (int)buckets[in allocator, hashCode % buckets.Length] - 1; i >= 0; i = (slotsPtr + i)->next)
 			{
 				if ((slotsPtr + i)->hashCode == hashCode &&
@@ -361,7 +358,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void RemoveExcept(ref Allocator allocator, in UIntPairHashSet other)
 		{
-			var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)slots.GetPtr(in allocator);
 			for (var i = 0; i < lastIndex; i++)
 			{
 				var slot = (slotsPtr + i);
@@ -380,7 +377,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Remove(ref Allocator allocator, in UIntPairHashSet other)
 		{
-			var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)slots.GetPtr(in allocator);
 			for (var i = 0; i < lastIndex; i++)
 			{
 				var slot = (slotsPtr + i);
@@ -399,7 +396,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Add(ref Allocator allocator, in UIntPairHashSet other)
 		{
-			var slotsPtr = (Slot*)other.slots.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)other.slots.GetPtr(in allocator);
 			for (var i = 0; i < other.lastIndex; i++)
 			{
 				var slot = (slotsPtr + i);
@@ -424,8 +421,8 @@ namespace Sapientia.MemoryAllocator
 				var hashCode = item.GetHash() & LOWER31_BIT_MASK;
 				var bucket = hashCode % buckets.Length;
 				var last = -1;
-				var bucketsPtr = (int*)buckets.GetUnsafePtr(in allocator);
-				var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+				var bucketsPtr = (int*)buckets.GetPtr(in allocator);
+				var slotsPtr = (Slot*)slots.GetPtr(in allocator);
 				for (var i = *(bucketsPtr + bucket) - 1; i >= 0; last = i, i = (slotsPtr + i)->next)
 				{
 					var slot = slotsPtr + i;
@@ -481,7 +478,7 @@ namespace Sapientia.MemoryAllocator
 			var size = HashHelpers.GetPrime(capacity);
 			buckets = new MemArray<uint>(ref allocator, size);
 			this.slots = new MemArray<Slot>(ref allocator, size);
-			var slots = (Slot*)this.slots.GetUnsafePtr(in allocator);
+			var slots = (Slot*)this.slots.GetPtr(in allocator);
 			for (var i = 0; i < this.slots.Length; ++i)
 			{
 				(*(slots + i)).hashCode = -1;
@@ -521,7 +518,7 @@ namespace Sapientia.MemoryAllocator
 			var newSlots = new MemArray<Slot>(ref allocator, newSize);
 			if (slots.IsCreated)
 			{
-				NativeArrayUtils.CopyNoChecks(ref allocator, in slots, 0, ref newSlots, 0, lastIndex);
+				MemArrayExt.CopyNoChecks(ref allocator, slots, 0, ref newSlots, 0, lastIndex);
 			}
 
 			if (forceNewHashCodes)
@@ -564,8 +561,8 @@ namespace Sapientia.MemoryAllocator
 				Initialize(ref allocator, 0);
 			}
 
-			var bucketsPtr = (int*)buckets.GetUnsafePtr(in allocator);
-			var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+			var bucketsPtr = (int*)buckets.GetPtr(in allocator);
+			var slotsPtr = (Slot*)slots.GetPtr(in allocator);
 
 			var hashCode = value.GetHash() & UIntHashSet.LOWER31_BIT_MASK;
 			var bucket = hashCode % buckets.Length;
@@ -593,8 +590,8 @@ namespace Sapientia.MemoryAllocator
 				{
 					IncreaseCapacity(ref allocator);
 					// this will change during resize
-					bucketsPtr = (int*)buckets.GetUnsafePtr(in allocator);
-					slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+					bucketsPtr = (int*)buckets.GetPtr(in allocator);
+					slotsPtr = (Slot*)slots.GetPtr(in allocator);
 					bucket = hashCode % buckets.Length;
 				}
 
@@ -649,8 +646,8 @@ namespace Sapientia.MemoryAllocator
 				{
 					IncreaseCapacity(ref allocator);
 					// this will change during resize
-					bucketsPtr = (int*)buckets.GetUnsafePtr(in allocator);
-					slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+					bucketsPtr = (int*)buckets.GetPtr(in allocator);
+					slotsPtr = (Slot*)slots.GetPtr(in allocator);
 					bucket = hashCode % buckets.Length;
 				}
 

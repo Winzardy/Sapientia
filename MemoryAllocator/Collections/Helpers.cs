@@ -150,14 +150,16 @@ namespace Sapientia.MemoryAllocator
 			for (var i = 0; i < primes.Length; i++)
 			{
 				var prime = primes[i];
-				if (prime >= min) return prime;
+				if (prime >= min)
+					return prime;
 			}
 
 			//outside of our predefined table.
 			//compute the hard way.
 			for (var i = (min | 1); i < int.MaxValue; i += 2)
 			{
-				if (IsPrime(i) && ((i - 1) % HashPrime != 0)) return i;
+				if (IsPrime(i) && ((i - 1) % HashPrime != 0))
+					return i;
 			}
 
 			return min;

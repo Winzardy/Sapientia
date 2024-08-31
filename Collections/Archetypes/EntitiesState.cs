@@ -25,8 +25,8 @@ namespace Sapientia.Collections.Archetypes
 
 		public event Action<Entity> EntityDestroyEvent;
 
-		private readonly SimpleList<ushort> _entitiesIds;
-		private readonly SimpleList<ushort> _generations;
+		private readonly SimpleList<ushort> _freeEntitiesIds;
+		private readonly SimpleList<ushort> _entityIdToGeneration;
 #if UNITY_EDITOR
 		public readonly SimpleList<string> entitiesNames;
 
@@ -53,15 +53,15 @@ namespace Sapientia.Collections.Archetypes
 #if STORE_ENTITIES
 			_entities = new (entitiesCapacity, entitiesCapacity);
 #endif
-			_entitiesIds = new (entitiesCapacity);
-			_generations = new(entitiesCapacity, 0);
+			_freeEntitiesIds = new (entitiesCapacity);
+			_entityIdToGeneration = new(entitiesCapacity, 0);
 #if UNITY_EDITOR
 			entitiesNames = new (entitiesCapacity);
 #endif
 
 			for (ushort i = 0; i < entitiesCapacity; i++)
 			{
-				_entitiesIds[i] = i;
+				_freeEntitiesIds[i] = i;
 			}
 
 #if UNITY_EDITOR
@@ -80,8 +80,8 @@ namespace Sapientia.Collections.Archetypes
 		{
 			EnsureCapacity(EntitiesCount);
 
-			var id = _entitiesIds[EntitiesCount++];
-			var generation = ++_generations[id];
+			var id = _freeEntitiesIds[EntitiesCount++];
+			var generation = ++_entityIdToGeneration[id];
 
 			var entity = new Entity(id, generation);
 #if UNITY_EDITOR
@@ -98,7 +98,7 @@ namespace Sapientia.Collections.Archetypes
 
 		public bool IsEntityAlive(in Entity entity)
 		{
-			return _generations[entity.id] == entity.generation;
+			return _entityIdToGeneration[entity.id] == entity.generation;
 		}
 
 		public void DestroyEntity(in Entity entity)
@@ -107,8 +107,8 @@ namespace Sapientia.Collections.Archetypes
 
 			EntityDestroyEvent?.Invoke(entity);
 
-			_generations[entity.id]++;
-			_entitiesIds[--EntitiesCount] = entity.id;
+			_entityIdToGeneration[entity.id]++;
+			_freeEntitiesIds[--EntitiesCount] = entity.id;
 		}
 
 		private void EnsureCapacity(int index)
@@ -120,8 +120,8 @@ namespace Sapientia.Collections.Archetypes
 				EntitiesCapacity += ExpandStep;
 			while (index >= EntitiesCapacity);
 
-			_entitiesIds.Expand(EntitiesCapacity);
-			_generations.Expand(EntitiesCapacity);
+			_freeEntitiesIds.Expand(EntitiesCapacity);
+			_entityIdToGeneration.Expand(EntitiesCapacity);
 #if UNITY_EDITOR
 			entitiesNames.Expand(EntitiesCapacity);
 #endif

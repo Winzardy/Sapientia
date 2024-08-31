@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
@@ -27,6 +29,16 @@ namespace GameLogic.Extensions
 
 		private static readonly Dictionary<(Type baseType, bool insertNull, bool includeInterfaces, bool interfacesOnly), Type[]> TYPES = new ();
 		private static readonly Dictionary<Type[], Dictionary<string, Type>> NAMES_TO_TYPES = new ();
+
+		public static bool HasAttribute<T>(this Type type) where T: Attribute
+		{
+			return type.GetCustomAttribute<T>(true) != null;
+		}
+
+		public static bool IsProperty(this MethodInfo methodInfo)
+		{
+			return methodInfo.IsSpecialName || methodInfo.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Length > 0;
+		}
 
 		public static bool IsBlittable(this Type type)
 		{
@@ -446,13 +458,23 @@ namespace GameLogic.Extensions
 
 		public static HashSet<MethodInfo> GetAllInstanceMethods(this Type type)
 		{
-			var allMethods = new HashSet<MethodInfo>(type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy));
+			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+			var allMethods = new HashSet<MethodInfo>();
+
+			foreach (var methodInfo in methods)
+			{
+				if (methodInfo.IsProperty())
+					continue;
+				allMethods.Add(methodInfo);
+			}
 
 			var interfaces = type.GetInterfaces();
 			foreach (var interfaceType in interfaces)
 			{
 				foreach (var methodInfo in interfaceType.GetMethods())
 				{
+					if (methodInfo.IsProperty())
+						continue;
 					allMethods.Add(methodInfo);
 				}
 			}

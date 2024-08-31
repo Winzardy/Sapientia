@@ -129,5 +129,19 @@ namespace Sapientia.Extensions
 		{
 			return (byte*)to.AsPointer() - (byte*)from.AsPointer();
 		}
+
+		public static unsafe uint Hash(void* ptr, int bytes)
+		{
+			// djb2 - Dan Bernstein hash function
+			// http://web.archive.org/web/20190508211657/http://www.cse.yorku.ca/~oz/hash.html
+			var str = (byte*)ptr;
+			var hash = 5381ul;
+			while (bytes > 0)
+			{
+				ulong c = str[--bytes];
+				hash = ((hash << 5) + hash) + c;
+			}
+			return (uint)hash;
+		}
 	}
 }

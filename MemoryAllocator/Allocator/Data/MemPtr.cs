@@ -1,22 +1,23 @@
 using System.Runtime.InteropServices;
-using Sapientia.Extensions;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
-namespace Sapientia.MemoryAllocator.Data
+namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct MemPtr : System.IEquatable<MemPtr>
+	public unsafe struct MemPtr : System.IEquatable<MemPtr>
 	{
-		public static readonly MemPtr Invalid = new (0u, 0u);
+		public static readonly MemPtr Invalid = new (0u, 0u, default);
 
 		public uint zoneId;
 		public uint offset;
+		public AllocatorId allocatorId;
 
 		[INLINE(256)]
-		public MemPtr(uint zoneId, uint offset)
+		public MemPtr(uint zoneId, uint offset, AllocatorId allocatorId)
 		{
 			this.zoneId = zoneId;
 			this.offset = offset;
+			this.allocatorId = allocatorId;
 		}
 
 		[INLINE(256)]
@@ -53,11 +54,24 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public long AsLong()
+		public ref Allocator GetAllocator()
 		{
-			return this.As<MemPtr, long>();
+			return ref *allocatorId.GetAllocatorPtr();
 		}
 
-		public override string ToString() => $"zoneId: {zoneId}, offset: {offset}";
+		[INLINE(256)]
+		public Allocator* GetAllocatorPtr()
+		{
+			return allocatorId.GetAllocatorPtr();
+		}
+
+		[INLINE(256)]
+		public void* GetPtr()
+		{
+			ref var allocator = ref GetAllocator();
+			return allocator.GetUnsafePtr(in this);
+		}
+
+		public override string ToString() => $"zoneId: {zoneId}, offset: {offset}, allocatorId: [{allocatorId}]";
 	}
 }

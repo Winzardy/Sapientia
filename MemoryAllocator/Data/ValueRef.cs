@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Sapientia.TypeIndexer;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
@@ -5,163 +6,118 @@ namespace Sapientia.MemoryAllocator.Data
 {
 	public unsafe struct ValueRef : IIsCreated
 	{
-		private CachedPtr _cachedPtr;
+		private Ptr _ptr;
 		public readonly TypeIndex typeIndex;
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => _cachedPtr.memPtr.IsValid();
+			[INLINE(256)] get => _ptr.memPtr.IsValid();
 		}
 
 		[INLINE(256)]
 		public ValueRef(MemPtr memPtr, TypeIndex typeIndex)
 		{
-			_cachedPtr = new (memPtr);
+			_ptr = new (memPtr);
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public ValueRef(CachedPtr cachedPtr, TypeIndex typeIndex)
+		public ValueRef(Ptr ptr, TypeIndex typeIndex)
 		{
-			_cachedPtr = cachedPtr;
+			_ptr = ptr;
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
 		public ValueRef(in Allocator allocator, void* cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
 		{
-			_cachedPtr = new CachedPtr(allocator, cachedPtr, memPtr);
+			_ptr = new Ptr(allocator, cachedPtr, memPtr);
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public static ValueRef Create<T>(CachedPtr cachedPtr) where T : unmanaged
+		public static ValueRef Create<T>(Ptr<T> ptr) where T : unmanaged
 		{
-			return new ValueRef(cachedPtr, IndexedTypes.GetIndex<T>());
+			return new ValueRef(ptr, TypeIndex<T>.typeIndex);
+		}
+
+		[INLINE(256)]
+		public static ValueRef Create<T>(Ptr ptr) where T : unmanaged
+		{
+			return new ValueRef(ptr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
 		public static ValueRef Create<T>(ref Allocator allocator) where T : unmanaged
 		{
 			var memPtr = allocator.Alloc<T>(out var rawPtr);
-			return new ValueRef(allocator, rawPtr, memPtr, IndexedTypes.GetIndex<T>());
+			return new ValueRef(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
 		public static ValueRef Create<T>(ref Allocator allocator, in T value) where T : unmanaged
 		{
 			var memPtr = allocator.Alloc<T>(value, out var rawPtr);
-			return new ValueRef(allocator, rawPtr, memPtr, IndexedTypes.GetIndex<T>());
+			return new ValueRef(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+		}
+
+		[INLINE(256)]
+		public ref T GetValue<T>() where T : unmanaged
+		{
+			Debug.Assert(IsCreated);
+			return ref _ptr.Get<T>();
 		}
 
 		[INLINE(256)]
 		public ref T GetValue<T>(in Allocator allocator) where T : unmanaged
 		{
-			E.IS_CREATED(this);
-			return ref _cachedPtr.Read<T>(allocator);
+			Debug.Assert(IsCreated);
+			return ref _ptr.Get<T>(allocator);
+		}
+
+		[INLINE(256)]
+		public void* GetPtr()
+		{
+			Debug.Assert(IsCreated);
+			return _ptr.GetPtr();
+		}
+
+		[INLINE(256)]
+		public void* GetPtr(in Allocator allocator)
+		{
+			Debug.Assert(IsCreated);
+			return _ptr.GetPtr(allocator);
 		}
 
 		[INLINE(256)]
 		public readonly MemPtr GetMemPtr()
 		{
-			E.IS_CREATED(this);
-			return _cachedPtr.memPtr;
+			Debug.Assert(IsCreated);
+			return _ptr.memPtr;
 		}
 
 		[INLINE(256)]
-		public readonly CachedPtr GetCachedPtr()
+		public readonly Ptr GetCachedPtr()
 		{
-			E.IS_CREATED(this);
-			return _cachedPtr;
-		}
-
-		[INLINE(256)]
-		public void Dispose(ref Allocator allocator)
-		{
-			allocator.Free(_cachedPtr.memPtr);
-			_cachedPtr = CachedPtr.Invalid;
-		}
-	}
-
-	public unsafe struct ValueRef<T> : IIsCreated where T: unmanaged
-	{
-		private CachedPtr<T> _cachedPtr;
-
-		public readonly bool IsCreated
-		{
-			[INLINE(256)] get => _cachedPtr.memPtr.IsValid();
-		}
-
-		[INLINE(256)]
-		public ValueRef(CachedPtr cachedPtr)
-		{
-			_cachedPtr = cachedPtr;
-		}
-
-		[INLINE(256)]
-		public ValueRef(in Allocator allocator, T* cachedPtr, MemPtr memPtr)
-		{
-			_cachedPtr = new CachedPtr(allocator, cachedPtr, memPtr);
-		}
-
-		[INLINE(256)]
-		public static ValueRef<T> Create(CachedPtr cachedPtr)
-		{
-			return new ValueRef<T>(cachedPtr);
-		}
-
-		[INLINE(256)]
-		public static ValueRef<T> Create(ref Allocator allocator)
-		{
-			var memPtr = allocator.Alloc<T>(out var rawPtr);
-			return new ValueRef<T>(allocator, rawPtr, memPtr);
-		}
-
-		[INLINE(256)]
-		public static ValueRef<T> Create(ref Allocator allocator, in T value)
-		{
-			var memPtr = allocator.Alloc<T>(value, out var rawPtr);
-			return new ValueRef<T>(allocator, rawPtr, memPtr);
-		}
-
-		[INLINE(256)]
-		public ref T GetValue(in Allocator allocator)
-		{
-			E.IS_CREATED(this);
-			return ref _cachedPtr.Read(allocator);
-		}
-
-		[INLINE(256)]
-		public readonly MemPtr GetMemPtr()
-		{
-			E.IS_CREATED(this);
-			return _cachedPtr.memPtr;
-		}
-
-		[INLINE(256)]
-		public readonly CachedPtr GetCachedPtr()
-		{
-			E.IS_CREATED(this);
-			return _cachedPtr;
+			Debug.Assert(IsCreated);
+			return _ptr;
 		}
 
 		[INLINE(256)]
 		public void Dispose(ref Allocator allocator)
 		{
-			allocator.Free(_cachedPtr.memPtr);
-			_cachedPtr = CachedPtr.Invalid;
+			allocator.Free(_ptr.memPtr);
+			_ptr = Ptr.Invalid;
 		}
 
-		[INLINE(256)]
-		public static implicit operator ValueRef(ValueRef<T> value)
+		public static bool operator ==(ValueRef a, ValueRef b)
 		{
-			return ValueRef.Create<T>(value._cachedPtr);
+			return a.typeIndex == b.typeIndex && a._ptr == b._ptr;
 		}
 
-		[INLINE(256)]
-		public static implicit operator ValueRef<T>(ValueRef value)
+		public static bool operator !=(ValueRef a, ValueRef b)
 		{
-			return Create(value.GetCachedPtr());
+			return a.typeIndex != b.typeIndex || a._ptr != b._ptr;
 		}
 	}
 }

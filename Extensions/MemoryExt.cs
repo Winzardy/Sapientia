@@ -1,19 +1,24 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Generic.Extensions;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.Extensions
 {
+	public enum ClearOptions
+	{
+		ClearMemory,
+		UninitializedMemory,
+	}
+
 	public static unsafe class MemoryExt
 	{
 		[INLINE(256)]
 		public static void* MemAlloc(long size)
 		{
 #if UNITY_5_3_OR_NEWER
-			return UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<byte>(), Allocator.Persistent);
+			return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<byte>(), Unity.Collections.Allocator.Persistent);
 #else
 			return (void*)Marshal.AllocHGlobal(size);
 #endif
@@ -23,7 +28,7 @@ namespace Sapientia.Extensions
 		public static void* MemAlloc(long size, int align)
 		{
 #if UNITY_5_3_OR_NEWER
-			return UnsafeUtility.Malloc(size, align, Allocator.Persistent);
+			return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, Unity.Collections.Allocator.Persistent);
 #else
 			return (void*)Marshal.AllocHGlobal(size);
 #endif
@@ -33,26 +38,27 @@ namespace Sapientia.Extensions
 		public static T* MemAlloc<T>(long size) where T : unmanaged
 		{
 #if UNITY_5_3_OR_NEWER
-			return (T*)UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<T>(), Allocator.Persistent);
+			return (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
 #else
 			return (T*)Marshal.AllocHGlobal(size);
 #endif
 		}
 
 		[INLINE(256)]
-		public static T* MemAllocAndSet<T>(in T obj) where T : unmanaged
+		public static T* MemAlloc<T>() where T : unmanaged
 		{
-			var ptr = MemAlloc<T>(TSize<T>.size);
-			*ptr = obj;
-
-			return ptr;
+#if UNITY_5_3_OR_NEWER
+			return (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(TSize<T>.size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
+#else
+			return (T*)Marshal.AllocHGlobal(TSize<T>.size);
+#endif
 		}
 
 		[INLINE(256)]
 		public static void MemFree(void* memory)
 		{
 #if UNITY_5_3_OR_NEWER
-			UnsafeUtility.Free(memory, Allocator.Persistent);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory, Unity.Collections.Allocator.Persistent);
 #else
 			Marshal.FreeHGlobal((IntPtr)memory);
 #endif
@@ -62,7 +68,7 @@ namespace Sapientia.Extensions
 		public static void MemSet(void* destination, byte value, long size)
 		{
 #if UNITY_5_3_OR_NEWER
-			UnsafeUtility.MemSet(destination, value, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSet(destination, value, size);
 #else
 			var span = new Span<byte>(destination, (int)size);
 			span.Fill(value);
@@ -70,10 +76,21 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
+		public static void MemFill<T>(T* source, void* destination, int count) where T: unmanaged
+		{
+#if UNITY_5_3_OR_NEWER
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(source, destination, TSize<T>.size, count);
+#else
+			var span = new Span<T>(destination, count);
+			span.Fill(*source);
+#endif
+		}
+
+		[INLINE(256)]
 		public static void MemClear(void* destination, long size)
 		{
 #if UNITY_5_3_OR_NEWER
-			UnsafeUtility.MemSet(destination, 0, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSet(destination, 0, size);
 #else
 			var span = new Span<byte>(destination, (int)size);
 			span.Clear();
@@ -84,9 +101,25 @@ namespace Sapientia.Extensions
 		public static void MemCopy(void* source, void* destination, long size)
 		{
 #if UNITY_5_3_OR_NEWER
-			UnsafeUtility.MemCpy(destination, source, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination, source, size);
 #else
 			Buffer.MemoryCopy(source, destination, size, size);
+#endif
+		}
+
+		[INLINE(256)]
+		public static void MemSwap(void* a, void* b, long size)
+		{
+#if UNITY_5_3_OR_NEWER
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSwap(a, b, size);
+#else
+			Span<byte> spanA = new Span<byte>(a, (int)size);
+			Span<byte> spanB = new Span<byte>(b, (int)size);
+			Span<byte> temp = stackalloc byte[(int)size];
+
+			spanA.CopyTo(temp);
+			spanB.CopyTo(spanA);
+			temp.CopyTo(spanB);
 #endif
 		}
 
@@ -94,7 +127,7 @@ namespace Sapientia.Extensions
 		public static void MemMove(void* source, void* destination, long size)
 		{
 #if UNITY_5_3_OR_NEWER
-			UnsafeUtility.MemMove(destination, source, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemMove(destination, source, size);
 #else
 			var intSize = (int)size;
 			var sourceSpan = new Span<byte>(source, intSize);
@@ -126,7 +159,7 @@ namespace Sapientia.Extensions
 			var size = TSize<T>.size * length;
 			var ptr = MemAlloc(size, TAlign<T>.align);
 			if (clearMemory)
-				UnsafeUtility.MemClear(ptr, size);
+				Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemClear(ptr, size);
 
 			return (T*)ptr;
 		}

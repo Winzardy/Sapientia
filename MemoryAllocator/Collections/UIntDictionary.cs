@@ -87,18 +87,14 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly MemPtr GetMemPtr()
 		{
-			E.IS_CREATED(this);
-
-			return buckets.cachedPtr.memPtr;
+			return buckets.innerArray.ptr.memPtr;
 		}
 
 		[INLINE(256)]
 		public void ReplaceWith(ref Allocator allocator, in UIntDictionary<TValue> other)
 		{
-			E.IS_CREATED(this);
-			E.IS_CREATED(other);
-
-			if (GetMemPtr() == other.GetMemPtr()) return;
+			if (GetMemPtr() == other.GetMemPtr())
+				return;
 
 			Dispose(ref allocator);
 			this = other;
@@ -107,12 +103,11 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void CopyFrom(ref Allocator allocator, in UIntDictionary<TValue> other)
 		{
-			E.IS_CREATED(this);
-			E.IS_CREATED(other);
-
-			if (GetMemPtr() == other.GetMemPtr()) return;
-			if (GetMemPtr().IsValid() == false && other.GetMemPtr().IsValid() == false) return;
-			if (GetMemPtr().IsValid() == true && other.GetMemPtr().IsValid() == false)
+			if (GetMemPtr() == other.GetMemPtr())
+				return;
+			if (!GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
+				return;
+			if (GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
 			{
 				Dispose(ref allocator);
 				return;
@@ -120,29 +115,13 @@ namespace Sapientia.MemoryAllocator
 
 			if (GetMemPtr().IsValid() == false) this = new UIntDictionary<TValue>(ref allocator, other.Count);
 
-			NativeArrayUtils.CopyExact(ref allocator, other.buckets, ref buckets);
-			NativeArrayUtils.CopyExact(ref allocator, other.entries, ref entries);
+			MemArrayExt.CopyExact(ref allocator, other.buckets, ref buckets);
+			MemArrayExt.CopyExact(ref allocator, other.entries, ref entries);
 			count = other.count;
 			version = other.version;
 			freeCount = other.freeCount;
 			freeList = other.freeList;
 		}
-
-		/*[INLINE(256)]
-		public readonly Enumerator GetEnumerator(World world)
-		{
-			E.IS_CREATED(this);
-
-			return new Enumerator(in this, world.state);
-		}
-
-		[INLINE(256)]
-		public readonly Enumerator GetEnumerator(State* state)
-		{
-			E.IS_CREATED(this);
-
-			return new Enumerator(in this, state);
-		}*/
 
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
 		/// <param name="allocator"></param>
@@ -152,8 +131,6 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)]
 			get
 			{
-				E.IS_CREATED(this);
-
 				var entry = FindEntry(in allocator, key);
 				if (entry >= 0)
 				{
@@ -163,20 +140,6 @@ namespace Sapientia.MemoryAllocator
 				throw new System.Collections.Generic.KeyNotFoundException();
 			}
 		}
-
-		/*[INLINE(256)]
-		public ref TValue ReadValue(State* state, uint key)
-		{
-			E.IS_CREATED(this);
-
-			var entry = this.FindEntry(in state->allocator, key);
-			if (entry >= 0)
-			{
-				return ref entries[state, entry].value;
-			}
-
-			throw new System.Collections.Generic.KeyNotFoundException();
-		}*/
 
 		[INLINE(256)]
 		public ref TValue ReadValue(in Allocator allocator, uint key)
@@ -259,18 +222,16 @@ namespace Sapientia.MemoryAllocator
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
 		[INLINE(256)]
-		public void Clear(ref Allocator allocator)
+		public void Clear(in Allocator allocator)
 		{
-			E.IS_CREATED(this);
-
-			var count = this.count;
-			if (count > 0)
+			var oldCount = count;
+			if (oldCount > 0)
 			{
-				buckets.Clear(ref allocator);
-				this.count = 0;
+				buckets.Clear(allocator);
+				count = 0;
 				freeList = -1;
 				freeCount = 0;
-				entries.Clear(ref allocator, 0, count);
+				entries.Clear(allocator, 0, oldCount);
 			}
 
 			++version;
@@ -282,8 +243,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly bool ContainsKey(in Allocator allocator, uint key)
 		{
-			E.IS_CREATED(this);
-
 			return FindEntry(in allocator, key) >= 0;
 		}
 
@@ -293,8 +252,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly bool ContainsValue(in Allocator allocator, TValue value)
 		{
-			E.IS_CREATED(this);
-
 			for (var index = 0; index < count; ++index)
 			{
 				if (entries[in allocator, index].hashCode >= 0 &&
@@ -317,7 +274,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				var num2 = key.GetHashCode() & int.MaxValue;
 				index = (int)buckets[in allocator, (uint)(num2 % buckets.Length)] - 1;
-				var entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+				var entries = (Entry*)this.entries.GetPtr(in allocator);
 				while ((uint)index < this.entries.Length &&
 				       (entries[index].hashCode != num2 || !entries[index].key.Equals(key)))
 				{
@@ -353,7 +310,7 @@ namespace Sapientia.MemoryAllocator
 				Initialize(ref allocator, 0);
 			}
 
-			var entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+			var entries = (Entry*)this.entries.GetPtr(in allocator);
 			var num1 = key.GetHashCode() & int.MaxValue;
 			var num2 = 0u;
 			ref var local1 = ref buckets[in allocator, (uint)(num1 % buckets.Length)];
@@ -407,7 +364,7 @@ namespace Sapientia.MemoryAllocator
 
 				index2 = count;
 				this.count = count + 1;
-				entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+				entries = (Entry*)this.entries.GetPtr(in allocator);
 			}
 
 			ref var local2 = ref (flag1 ? ref buckets[in allocator, (uint)(num1 % buckets.Length)] : ref local1);
@@ -434,7 +391,7 @@ namespace Sapientia.MemoryAllocator
 				Initialize(ref allocator, 0);
 			}
 
-			var entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+			var entries = (Entry*)this.entries.GetPtr(in allocator);
 			var num1 = key.GetHashCode() & int.MaxValue;
 			ref var local1 = ref buckets[in allocator, (uint)(num1 % buckets.Length)];
 			var flag1 = false;
@@ -457,7 +414,7 @@ namespace Sapientia.MemoryAllocator
 
 				index2 = count;
 				this.count = count + 1;
-				entries = (Entry*)this.entries.GetUnsafePtr(in allocator);
+				entries = (Entry*)this.entries.GetPtr(in allocator);
 			}
 
 			ref var local2 = ref (flag1 ? ref buckets[in allocator, (uint)(num1 % buckets.Length)] : ref local1);
@@ -487,7 +444,7 @@ namespace Sapientia.MemoryAllocator
 			var numArray = new MemArray<uint>(ref allocator, newSize);
 			var entryArray = new MemArray<Entry>(ref allocator, newSize);
 			var count = this.count;
-			NativeArrayUtils.CopyNoChecks(ref allocator, entries, 0, ref entryArray, 0, count);
+			MemArrayExt.CopyNoChecks(ref allocator, entries, 0, ref entryArray, 0, count);
 			for (var index1 = 0u; index1 < count; ++index1)
 			{
 				if (entryArray[in allocator, index1].hashCode >= 0)

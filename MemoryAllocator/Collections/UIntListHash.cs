@@ -30,7 +30,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (capacity <= 0u) capacity = 1u;
 			this = default;
-			arr.growFactor = growFactor;
+			arr.innerArray.growFactor = growFactor;
 			EnsureCapacity(ref allocator, capacity);
 		}
 
@@ -43,21 +43,18 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly MemPtr GetMemPtr()
 		{
-			E.IS_CREATED(this);
-			return arr.cachedPtr.memPtr;
+			return arr.innerArray.ptr.memPtr;
 		}
 
 		[INLINE(256)]
-		public readonly void* GetUnsafePtr(in Allocator allocator)
+		public void* GetUnsafePtr(in Allocator allocator)
 		{
-			E.IS_CREATED(this);
-			return arr.GetUnsafePtr(in allocator);
+			return arr.GetPtr(in allocator);
 		}
 
 		[INLINE(256)]
 		public void Dispose(ref Allocator allocator)
 		{
-			E.IS_CREATED(this);
 			arr.Dispose(ref allocator);
 			this = default;
 		}
@@ -65,7 +62,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Clear()
 		{
-			E.IS_CREATED(this);
 			Count = 0u;
 			hash = 0u;
 		}
@@ -73,25 +69,21 @@ namespace Sapientia.MemoryAllocator
 		public ref uint this[in Allocator allocator, uint index]
 		{
 			[INLINE(256)]
-			get
-			{
-				E.RANGE(index, 0, Count);
-				return ref arr[in allocator, index];
-			}
+			get => ref arr[in allocator, index];
 		}
 
 		[INLINE(256)]
 		public bool EnsureCapacity(ref Allocator allocator, uint capacity)
 		{
 			capacity = Helpers.NextPot(capacity);
-			if (arr.IsCreated == false) arr.growFactor = 1;
+			if (!arr.IsCreated)
+				arr.innerArray.growFactor = 1;
 			return arr.Resize(ref allocator, capacity, ClearOptions.UninitializedMemory);
 		}
 
 		[INLINE(256)]
 		public uint Add(ref Allocator allocator, uint obj)
 		{
-			E.IS_CREATED(this);
 			++Count;
 			EnsureCapacity(ref allocator, Count);
 
@@ -111,7 +103,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool RemoveFast(in Allocator allocator, uint obj)
 		{
-			E.IS_CREATED(this);
 			for (uint i = 0, cnt = Count; i < cnt; ++i)
 			{
 				if (obj.Equals(arr[in allocator, i]))
@@ -127,7 +118,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool RemoveAtFast(in Allocator allocator, uint index)
 		{
-			E.IS_CREATED(this);
 			if (index >= Count) return false;
 
 			hash ^= arr[in allocator, index];
@@ -141,10 +131,8 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly void CopyTo(ref Allocator allocator, in MemPtr arrPtr, uint srcOffset, uint index, uint count)
 		{
-			E.IS_CREATED(this);
-
 			const int size = sizeof(uint);
-			allocator.MemCopy(arrPtr, index * size, arr.cachedPtr.memPtr, srcOffset * size, count * size);
+			allocator.MemCopy(arrPtr, index * size, arr.innerArray.ptr.memPtr, srcOffset * size, count * size);
 		}
 
 		[INLINE(256)]
@@ -168,9 +156,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void AddRange(ref Allocator allocator, in UIntListHash collection, uint fromIdx, uint toIdx)
 		{
-			E.IS_CREATED(this);
-			E.IS_CREATED(collection);
-
 			var index = Count;
 
 			var srcOffset = fromIdx;
@@ -181,19 +166,19 @@ namespace Sapientia.MemoryAllocator
 				var size = TSize<uint>.size;
 				if (index < Count)
 				{
-					allocator.MemMove(arr.cachedPtr.memPtr, (index + count) * size, arr.cachedPtr.memPtr, index * size,
+					allocator.MemMove(arr.innerArray.ptr.memPtr, (index + count) * size, arr.innerArray.ptr.memPtr, index * size,
 						(Count - index) * size);
 				}
 
-				if (arr.cachedPtr.memPtr == collection.arr.cachedPtr.memPtr)
+				if (arr.innerArray.ptr.memPtr == collection.arr.innerArray.ptr.memPtr)
 				{
-					allocator.MemMove(arr.cachedPtr.memPtr, index * size, arr.cachedPtr.memPtr, 0, index * size);
-					allocator.MemMove(arr.cachedPtr.memPtr, (index * 2) * size, arr.cachedPtr.memPtr, (index + count) * size,
+					allocator.MemMove(arr.innerArray.ptr.memPtr, index * size, arr.innerArray.ptr.memPtr, 0, index * size);
+					allocator.MemMove(arr.innerArray.ptr.memPtr, (index * 2) * size, arr.innerArray.ptr.memPtr, (index + count) * size,
 						(Count - index) * size);
 				}
 				else
 				{
-					collection.CopyTo(ref allocator, arr.cachedPtr.memPtr, srcOffset, index, count);
+					collection.CopyTo(ref allocator, arr.innerArray.ptr.memPtr, srcOffset, index, count);
 				}
 
 				Count += count;
@@ -202,7 +187,6 @@ namespace Sapientia.MemoryAllocator
 
 		public uint[] ToManagedArray(in Allocator allocator)
 		{
-			E.IS_CREATED(this);
 			var dst = new uint[Count];
 
 			CopySafe(in allocator, this, 0, dst, 0, Count);

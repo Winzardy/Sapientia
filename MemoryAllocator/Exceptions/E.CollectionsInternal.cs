@@ -60,7 +60,8 @@ namespace Sapientia.MemoryAllocator
 		[HIDE_CALLSTACK]
 		public static void IS_EMPTY(uint size)
 		{
-			if (size == 0u) CollectionInternalException.Throw("Collection is empty");
+			if (size == 0u)
+				CollectionInternalException.Throw("Collection is empty");
 		}
 	}
 }

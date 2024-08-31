@@ -1,0 +1,252 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Sapientia.Collections;
+using Sapientia.Extensions;
+using Sapientia.MemoryAllocator.Collections;
+using Sapientia.MemoryAllocator.Data;
+using Sapientia.TypeIndexer;
+
+namespace Sapientia.MemoryAllocator.State.NewWorld
+{
+	public interface IComponent : IIndexedType
+	{
+	}
+
+	public struct ArchetypeElement<TValue>
+	{
+		public readonly Entity entity;
+		public TValue value;
+
+		public ArchetypeElement(Entity entity, TValue value)
+		{
+			this.entity = entity;
+			this.value = value;
+		}
+	}
+
+	public unsafe interface IElementDestroyHandler<T> : IElementDestroyHandler where T: unmanaged
+	{
+		public void EntityDestroyed(ref ArchetypeElement<T> element);
+		public void EntityArrayDestroyed(ArchetypeElement<T>* element, uint count);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void IElementDestroyHandler.EntityDestroyed(void* element)
+		{
+			EntityDestroyed(ref UnsafeExt.AsRef<ArchetypeElement<T>>(element));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void IElementDestroyHandler.EntityArrayDestroyed(void* element, uint count)
+		{
+			EntityArrayDestroyed((ArchetypeElement<T>*)element, count);
+		}
+	}
+
+	[InterfaceProxy]
+	public unsafe interface IElementDestroyHandler
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void EntityDestroyed(void* element);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void EntityArrayDestroyed(void* element, uint count);
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public unsafe struct Archetype : IEntityDestroySubscriber, IEnumerable<IntPtr>
+	{
+		public static class DefaultValue<TValue>
+		{
+			public static readonly TValue DEFAULT = default;
+		}
+
+		internal SparseSet _elements;
+
+		private bool _hasDestroyHandler;
+		private IElementDestroyHandlerProxy _destroyHandlerProxy;
+
+		public uint Count
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _elements.Count;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref Archetype RegisterArchetype<T>(AllocatorId allocatorId, uint elementsCount) where T: unmanaged, IComponent
+		{
+			return ref RegisterArchetype<T>(ref allocatorId.GetAllocator(), elementsCount);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref Archetype RegisterArchetype<T>(ref Allocator allocator, uint elementsCount) where T: unmanaged, IComponent
+		{
+			return ref RegisterArchetype<T>(ref allocator, elementsCount, allocator.serviceLocator.GetService<EntitiesStatePart>().EntitiesCapacity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref Archetype RegisterArchetype<T>(ref Allocator allocator, uint elementsCount, uint entitiesCapacity) where T: unmanaged, IComponent
+		{
+			var archetypePtr = RegisterArchetype(ref allocator, TSize<ArchetypeElement<T>>.uSize, elementsCount, entitiesCapacity);
+			allocator.serviceLocator.RegisterServiceAs<Archetype, T>(archetypePtr);
+
+			return ref archetypePtr.GetValue();
+		}
+
+		private static Ptr<Archetype> RegisterArchetype(ref Allocator allocator, uint size, uint elementsCount, uint entitiesCapacity)
+		{
+			var archetypePtr = Ptr<Archetype>.Create(ref allocator);
+			ref var archetype = ref archetypePtr.GetValue(allocator);
+
+			archetype._elements  = new SparseSet(ref allocator, size, elementsCount, entitiesCapacity);
+			archetype._hasDestroyHandler = false;
+			archetype._destroyHandlerProxy = default;
+
+			allocator.serviceLocator.GetService<EntitiesStatePart>().AddSubscriber((ValueRef)archetypePtr);
+
+			return archetypePtr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetDestroyHandler<THandler>() where THandler : unmanaged, IElementDestroyHandler
+		{
+			_destroyHandlerProxy = IndexedTypes.GetProxy<THandler, IElementDestroyHandlerProxy>();
+			_hasDestroyHandler = true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ArchetypeElement<T>* GetRawElements<T>() where T: unmanaged, IComponent
+		{
+			return _elements.GetValuePtr<ArchetypeElement<T>>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref readonly T ReadElement<T>(Entity entity) where T : unmanaged, IComponent
+		{
+			if (!_elements.Has(entity.id))
+				return ref DefaultValue<T>.DEFAULT;
+			return ref _elements.Get<ArchetypeElement<T>>(entity.id).value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SimpleList<T> ReadElements<T>(IEnumerable<Entity> entities) where T : unmanaged, IComponent
+		{
+			return ReadElements<T, IEnumerable<Entity>>(entities);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SimpleList<T> ReadElements<T, TEnumerable>(TEnumerable entities) where T : unmanaged, IComponent where TEnumerable: IEnumerable<Entity>
+		{
+			var result = new SimpleList<T>();
+			foreach (var entity in entities)
+			{
+				if (_elements.Has(entity.id))
+					result.Add(_elements.Get<ArchetypeElement<T>>(entity.id).value);
+			}
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasElement(Entity entity)
+		{
+			return _elements.Has(entity.id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetElement<T>(Entity entity) where T : unmanaged, IComponent
+		{
+			if (_elements.Has(entity.id))
+			{
+				ref var element = ref _elements.Get<ArchetypeElement<T>>(entity.id);
+				Debug.Assert(element.entity == entity);
+				return ref element.value;
+			}
+			else
+			{
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
+				var oldCapacity = _elements.Capacity;
+				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(entity.id);
+				if (oldCapacity != _elements.Capacity)
+					UnityEngine.Debug.LogWarning($"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+#else
+				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(entity.id);
+#endif
+				element = new ArchetypeElement<T>(entity, default);
+				return ref element.value;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Clear<T>() where T: unmanaged, IComponent
+		{
+			ref var allocator = ref _elements.GetAllocator();
+			if (_hasDestroyHandler)
+			{
+				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
+				_destroyHandlerProxy.EntityArrayDestroyed(default, valueArray, _elements.Count);
+			}
+			_elements.Clear(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ClearFast<T>() where T: unmanaged, IComponent
+		{
+			if (_hasDestroyHandler)
+			{
+				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>();
+				_destroyHandlerProxy.EntityArrayDestroyed(default, valueArray, _elements.Count);
+			}
+
+			_elements.ClearFast();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBackElement(Entity entity)
+		{
+			_elements.RemoveSwapBack(entity.id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void EntityDestroyed(in Entity entity)
+		{
+			if (!_elements.Has(entity.id))
+				return;
+
+			if (_hasDestroyHandler)
+			{
+				var value = _elements.GetValuePtr(entity.id);
+				_destroyHandlerProxy.EntityDestroyed(default, value);
+			}
+
+			if (!_elements.Has(entity.id))
+				return;
+			_elements.RemoveSwapBack(entity.id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			_elements.Dispose();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SparseSet.Enumerable<T> GetEnumerable<T>() where T: unmanaged, IComponent
+		{
+			return _elements.GetEnumerable<T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerator<IntPtr> GetEnumerator()
+		{
+			return new SparseSet.IntPtrEnumerator(_elements.GetAllocator(), ref _elements);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+	}
+}

@@ -53,7 +53,7 @@ namespace Sapientia.MemoryAllocator
 	{
 		[Conditional(COND.EXCEPTIONS)]
 		[HIDE_CALLSTACK]
-		public static void IS_CREATED<K, V>(EquatableDictionary<K, V> dic)
+		public static void IS_CREATED<K, V>(Dictionary<K, V> dic)
 			where K : unmanaged, System.IEquatable<K> where V : unmanaged
 		{
 			if (dic.isCreated == true) return;

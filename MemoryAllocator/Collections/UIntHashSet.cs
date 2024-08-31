@@ -111,16 +111,15 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Equals(in Allocator allocator, in UIntHashSet other)
 		{
-			E.IS_CREATED(this);
 			E.IS_CREATED(other);
 
 			if (count != other.count) return false;
 			if (hash != other.hash) return false;
 			if (count == 0u && other.count == 0u) return true;
 
-			var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
-			var otherSlotsPtr = (Slot*)other.slots.GetUnsafePtr(in allocator);
-			var otherBucketsPtr = (int*)other.buckets.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)slots.GetPtr(in allocator);
+			var otherSlotsPtr = (Slot*)other.slots.GetPtr(in allocator);
+			var otherBucketsPtr = (int*)other.buckets.GetPtr(in allocator);
 			var idx = 0u;
 			while (idx < lastIndex)
 			{
@@ -165,8 +164,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly MemPtr GetMemPtr()
 		{
-			E.IS_CREATED(this);
-			return buckets.cachedPtr.memPtr;
+			return buckets.innerArray.ptr.memPtr;
 		}
 
 		[INLINE(256)]
@@ -205,14 +203,14 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="allocator"></param>
 		[INLINE(256)]
-		public void Clear(ref Allocator allocator)
+		public void Clear(in Allocator allocator)
 		{
 			if (lastIndex > 0)
 			{
 				// clear the elements so that the gc can reclaim the references.
 				// clear only up to m_lastIndex for m_slots
-				slots.Clear(ref allocator, 0, (uint)lastIndex);
-				buckets.Clear(ref allocator, 0, buckets.Length);
+				slots.Clear(allocator, 0, (uint)lastIndex);
+				buckets.Clear(allocator, 0, buckets.Length);
 				lastIndex = 0;
 				count = 0;
 				freeList = -1;
@@ -234,8 +232,8 @@ namespace Sapientia.MemoryAllocator
 			if (buckets.IsCreated)
 			{
 				var hashCode = item.GetHashCode() & LOWER31_BIT_MASK;
-				var bucketsPtr = (int*)buckets.GetUnsafePtr(in allocator);
-				var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+				var bucketsPtr = (int*)buckets.GetPtr(in allocator);
+				var slotsPtr = (Slot*)slots.GetPtr(in allocator);
 				// see note at "HashSet" level describing why "- 1" appears in for loop
 				for (var i = bucketsPtr[hashCode % buckets.Length] - 1; i >= 0; i = slotsPtr[i].next)
 				{
@@ -284,7 +282,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void RemoveExcept(ref Allocator allocator, in UIntHashSet other)
 		{
-			var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)slots.GetPtr(in allocator);
 			for (var i = 0; i < lastIndex; i++)
 			{
 				var slot = (slotsPtr + i);
@@ -303,7 +301,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Remove(ref Allocator allocator, in UIntHashSet other)
 		{
-			var slotsPtr = (Slot*)slots.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)slots.GetPtr(in allocator);
 			for (var i = 0; i < lastIndex; i++)
 			{
 				var slot = (slotsPtr + i);
@@ -322,7 +320,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Add(ref Allocator allocator, in UIntHashSet other)
 		{
-			var slotsPtr = (Slot*)other.slots.GetUnsafePtr(in allocator);
+			var slotsPtr = (Slot*)other.slots.GetPtr(in allocator);
 			for (var i = 0; i < other.lastIndex; i++)
 			{
 				var slot = (slotsPtr + i);
@@ -347,8 +345,8 @@ namespace Sapientia.MemoryAllocator
 				var hashCode = item.GetHashCode() & LOWER31_BIT_MASK;
 				var bucket = hashCode % (int)this.buckets.Length;
 				var last = -1;
-				var buckets = (int*)this.buckets.GetUnsafePtr(in allocator);
-				var slots = (Slot*)this.slots.GetUnsafePtr(in allocator);
+				var buckets = (int*)this.buckets.GetPtr(in allocator);
+				var slots = (Slot*)this.slots.GetPtr(in allocator);
 				for (var i = buckets[bucket] - 1; i >= 0; last = i, i = slots[i].next)
 				{
 					if (slots[i].hashCode == hashCode && slots[i].value == item)
@@ -436,7 +434,7 @@ namespace Sapientia.MemoryAllocator
 			var newSlots = new MemArray<Slot>(ref allocator, newSize);
 			if (slots.IsCreated)
 			{
-				NativeArrayUtils.CopyNoChecks(ref allocator, in slots, 0, ref newSlots, 0, (uint)lastIndex);
+				MemArrayExt.CopyNoChecks(ref allocator, slots, 0, ref newSlots, 0, (uint)lastIndex);
 			}
 
 			if (forceNewHashCodes)
@@ -475,8 +473,8 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Add(ref Allocator allocator, uint value)
 		{
-			var buckets = (int*)this.buckets.GetUnsafePtr(in allocator);
-			var slots = (Slot*)this.slots.GetUnsafePtr(in allocator);
+			var buckets = (int*)this.buckets.GetPtr(in allocator);
+			var slots = (Slot*)this.slots.GetPtr(in allocator);
 			return Add(ref allocator, value, ref buckets, ref slots);
 		}
 
@@ -513,8 +511,8 @@ namespace Sapientia.MemoryAllocator
 					IncreaseCapacity(ref allocator);
 					// this will change during resize
 					bucket = hashCode % (int)this.buckets.Length;
-					buckets = (int*)this.buckets.GetUnsafePtr(in allocator);
-					slots = (Slot*)this.slots.GetUnsafePtr(in allocator);
+					buckets = (int*)this.buckets.GetPtr(in allocator);
+					slots = (Slot*)this.slots.GetPtr(in allocator);
 				}
 
 				index = lastIndex;
@@ -534,7 +532,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void CopyFrom(ref Allocator allocator, in UIntHashSet other)
 		{
-			NativeArrayUtils.CopyExact(ref allocator, in other.buckets, ref buckets);
+			MemArrayExt.CopyExact(ref allocator, in other.buckets, ref buckets);
 			slots.CopyFrom(ref allocator, other.slots);
 			var thisBuckets = buckets;
 			var thisSlots = slots;

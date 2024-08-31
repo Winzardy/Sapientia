@@ -1,9 +1,8 @@
-#define MEMORY_ALLOCATOR_BOUNDS_CHECK
+//#define MEMORY_ALLOCATOR_BOUNDS_CHECK
 //#define BURST
 
 using System;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
-using System.Runtime.InteropServices;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
@@ -20,73 +19,6 @@ namespace Sapientia.MemoryAllocator
 
 		public const byte BLOCK_STATE_FREE = 0;
 		public const byte BLOCK_STATE_USED = 1;
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct MemZone
-		{
-			public int size; // total bytes malloced, including header
-			public MemBlock blocklist; // start / end cap for linked list
-			public MemBlockOffset rover;
-		}
-
-		[StructLayout(LayoutKind.Sequential)]
-		public struct MemBlock
-		{
-			public int size; // including the header and possibly tiny fragments
-
-			public byte state;
-
-			// to align block
-			public byte b1;
-			public byte b2;
-			public byte b3;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK
-			public int id; // should be ZONE_ID
-#endif
-			public MemBlockOffset next;
-			public MemBlockOffset prev;
-		};
-
-		public readonly struct MemBlockOffset
-		{
-			public readonly long value;
-
-			[INLINE(256)]
-			public MemBlockOffset(void* block, MemZone* zone)
-			{
-				value = (byte*)block - (byte*)zone;
-			}
-
-			[INLINE(256)]
-			public MemBlock* Ptr(void* zone)
-			{
-				return (MemBlock*)((byte*)zone + value);
-			}
-
-			[INLINE(256)]
-			public static bool operator ==(MemBlockOffset a, MemBlockOffset b) => a.value == b.value;
-
-			[INLINE(256)]
-			public static bool operator !=(MemBlockOffset a, MemBlockOffset b) => a.value != b.value;
-
-			[INLINE(256)]
-			public bool Equals(MemBlockOffset other)
-			{
-				return value == other.value;
-			}
-
-			[INLINE(256)]
-			public override bool Equals(object obj)
-			{
-				return obj is MemBlockOffset other && Equals(other);
-			}
-
-			[INLINE(256)]
-			public override int GetHashCode()
-			{
-				return value.GetHashCode();
-			}
-		}
 
 #if BURST
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]

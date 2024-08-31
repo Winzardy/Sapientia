@@ -33,6 +33,18 @@ namespace Generic.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ushort Max(this ushort a, ushort b)
+		{
+			return a > b ? a : b;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ushort Max(this ushort a, int b)
+		{
+			return a > b ? a : (ushort)b;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static uint Max(this uint a, uint b)
 		{
 			return a > b ? a : b;
