@@ -23,9 +23,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref Allocator GetAllocator()
+		public Allocator* GetAllocatorPtr()
 		{
-			return ref ptr.GetAllocator();
+			return ptr.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
@@ -133,22 +133,27 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void BurstMode(in Allocator allocator, bool state)
+		public void Dispose(Allocator* allocator)
+		{
+			if (ptr.memPtr.IsValid())
+			{
+				allocator->Free(ptr.memPtr);
+			}
+
+			this = default;
+		}
+
+		[INLINE(256)]
+		public void BurstMode(Allocator* allocator, bool state)
 		{
 			if (state && IsCreated)
 			{
-				ptr = new Ptr(in allocator, GetPtr(in allocator), ptr.memPtr);
+				ptr = new Ptr(allocator, GetPtr(allocator), ptr.memPtr);
 			}
 			else
 			{
 				ptr = default;
 			}
-		}
-
-		[INLINE(256)]
-		public void* GetPtr(in Allocator allocator)
-		{
-			return ptr.GetPtr(in allocator);
 		}
 
 		[INLINE(256)]
@@ -179,15 +184,25 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public ref T GetValue<T>(in Allocator allocator, int index) where T: unmanaged
 		{
-			Debug.Assert(index >= 0 && index < Length);
 			return ref *((T*)GetPtr(in allocator) + index);
 		}
 
 		[INLINE(256)]
 		public ref T GetValue<T>(in Allocator allocator, uint index) where T: unmanaged
 		{
-			Debug.Assert(index < Length);
 			return ref *((T*)GetPtr(in allocator) + index);
+		}
+
+		[INLINE(256)]
+		public ref T GetValue<T>(Allocator* allocator, int index) where T: unmanaged
+		{
+			return ref *((T*)GetPtr(allocator) + index);
+		}
+
+		[INLINE(256)]
+		public ref T GetValue<T>(Allocator* allocator, uint index) where T: unmanaged
+		{
+			return ref *((T*)GetPtr(allocator) + index);
 		}
 
 		[INLINE(256)]
@@ -205,7 +220,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public T* GetValuePtr<T>() where T: unmanaged
 		{
-			return (T*)GetPtr(GetAllocator());
+			return (T*)GetPtr(GetAllocatorPtr());
 		}
 
 		[INLINE(256)]
@@ -215,9 +230,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public T* GetValuePtr<T>(Allocator* allocator) where T: unmanaged
+		{
+			return (T*)GetPtr(allocator);
+		}
+
+		[INLINE(256)]
 		public T* GetValuePtr<T>(uint index) where T: unmanaged
 		{
 			return (T*)GetPtr(GetAllocator()) + index;
+		}
+
+		[INLINE(256)]
+		public T* GetValuePtr<T>(Allocator* allocator, uint index) where T: unmanaged
+		{
+			return (T*)GetPtr(allocator) + index;
 		}
 
 		[INLINE(256)]
@@ -245,6 +272,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void* GetValuePtr(Allocator* allocator)
+		{
+			return GetPtr(allocator);
+		}
+
+		[INLINE(256)]
 		public void* GetValuePtr()
 		{
 			return GetPtr(GetAllocator());
@@ -260,6 +293,12 @@ namespace Sapientia.MemoryAllocator
 		public void* GetValuePtr(int index)
 		{
 			return (byte*)GetPtr(GetAllocator()) + (index * ElementSize);
+		}
+
+		[INLINE(256)]
+		public void* GetValuePtr(Allocator* allocator, uint index)
+		{
+			return (byte*)GetPtr(allocator) + (index * ElementSize);
 		}
 
 		[INLINE(256)]
@@ -319,6 +358,13 @@ namespace Sapientia.MemoryAllocator
 		public void Clear(in Allocator allocator)
 		{
 			Clear(allocator, 0u, Length);
+		}
+
+		[INLINE(256)]
+		public void Clear(Allocator* allocator, uint index, uint length)
+		{
+			var size = ElementSize;
+			allocator->MemClear(ptr.memPtr, index * size, length * size);
 		}
 
 		[INLINE(256)]

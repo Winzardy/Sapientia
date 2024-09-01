@@ -2,9 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Sapientia.Collections.Archetypes;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -18,6 +16,15 @@ namespace Sapientia.MemoryAllocator
 			public readonly uint index;
 			public readonly IntPtr current;
 			public readonly Slot* slotsPtr;
+
+			[INLINE(256)]
+			internal IntPtrEnumerable(Allocator* allocator, ref HashSet<T> set)
+			{
+				lastIndex = set.lastIndex;
+				index = 0;
+				current = default;
+				slotsPtr = (Slot*)set.slots.GetPtr(allocator);
+			}
 
 			[INLINE(256)]
 			internal IntPtrEnumerable(in Allocator allocator, ref HashSet<T> set)
@@ -279,6 +286,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void Dispose(Allocator* allocator)
+		{
+			buckets.Dispose(allocator);
+			slots.Dispose(allocator);
+			this = default;
+		}
+
+		[INLINE(256)]
 		public void Dispose()
 		{
 			Dispose(ref GetAllocator());
@@ -336,6 +351,12 @@ namespace Sapientia.MemoryAllocator
 		public IntPtrEnumerator GetIntPtrEnumerator()
 		{
 			return new IntPtrEnumerator(GetAllocator(), ref this);
+		}
+
+		[INLINE(256)]
+		public IntPtrEnumerable GetIntPtrEnumerable(Allocator* allocator)
+		{
+			return new IntPtrEnumerable(allocator, ref this);
 		}
 
 		[INLINE(256)]

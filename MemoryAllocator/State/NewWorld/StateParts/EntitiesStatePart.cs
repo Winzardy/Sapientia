@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Sapientia.Collections.Fixed;
 using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
@@ -6,9 +7,9 @@ using Sapientia.TypeIndexer;
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
 	[InterfaceProxy]
-	public interface IEntityDestroySubscriber
+	public unsafe interface IEntityDestroySubscriber
 	{
-		public void EntityDestroyed(in Entity entity);
+		public void EntityDestroyed(Allocator* allocator, in Entity entity);
 	}
 
 	public unsafe struct EntitiesStatePart : IWorldStatePart
@@ -107,19 +108,37 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			return entity;
 		}
 
+		public bool IsEntityAlive(Allocator* allocator, in Entity entity)
+		{
+			return _entityIdToGeneration[allocator, entity.id] == entity.generation;
+		}
+
 		public bool IsEntityAlive(in Entity entity)
 		{
 			return _entityIdToGeneration[entity.id] == entity.generation;
 		}
 
-		public void DestroyEntity(in Entity entity)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void DestroyEntity(Entity entity)
 		{
-			Debug.Assert(IsEntityAlive(entity));
+			var allocator = _allocatorId.GetAllocatorPtr();
+			Debug.Assert(IsEntityAlive(allocator, entity));
 
-			_entityDestroySubscribers.EntityDestroyed(entity);
+			//_entityDestroySubscribers.EntityDestroyed(allocator, entity);
 
-			_entityIdToGeneration[entity.id]++;
-			_freeEntitiesIds[--EntitiesCount] = entity.id;
+			_entityIdToGeneration[allocator, entity.id]++;
+			_freeEntitiesIds[allocator, --EntitiesCount] = entity.id;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void DestroyEntity(Allocator* allocator, Entity entity)
+		{
+			Debug.Assert(IsEntityAlive(allocator, entity));
+
+			//_entityDestroySubscribers.EntityDestroyed(allocator, entity);
+
+			_entityIdToGeneration[allocator, entity.id]++;
+			_freeEntitiesIds[allocator, --EntitiesCount] = entity.id;
 		}
 
 		private void EnsureCapacity(uint index)

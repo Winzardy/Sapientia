@@ -52,7 +52,7 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)]
 			public bool MoveNext()
 			{
-				return _index++ < _list->count;
+				return _index++ < _list->_count;
 			}
 
 			[INLINE(256)]
@@ -97,7 +97,7 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)]
 			public bool MoveNext()
 			{
-				return _index++ < _list->count;
+				return _index++ < _list->_count;
 			}
 
 			[INLINE(256)]
@@ -126,7 +126,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		private MemArray<T> _arr;
-		public uint count;
+		private uint _count;
+
+		public uint Count
+		{
+			[INLINE(256)] get => _count;
+		}
 
 		public readonly bool IsCreated
 		{
@@ -195,7 +200,7 @@ namespace Sapientia.MemoryAllocator
 				this = new List<T>(ref allocator, other.Capacity);
 
 			MemArrayExt.Copy(ref allocator, in other._arr.innerArray, ref _arr.innerArray);
-			count = other.count;
+			_count = other._count;
 		}
 
 		[INLINE(256)]
@@ -262,6 +267,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public IntPtrEnumerable GetIntPtrEnumerable(Allocator* allocator)
+		{
+			return new IntPtrEnumerable(allocator, (List<T>*)this.AsPointer());
+		}
+
+		[INLINE(256)]
 		public IntPtrEnumerable GetIntPtrEnumerable()
 		{
 			return new IntPtrEnumerable(_arr.innerArray.ptr.GetAllocatorPtr(), (List<T>*)this.AsPointer());
@@ -270,7 +281,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Clear()
 		{
-			count = 0;
+			_count = 0;
 		}
 
 		public ref T this[uint index]
@@ -290,7 +301,6 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)]
 			get
 			{
-				Debug.Assert(index < count);
 				return ref _arr[in allocator, index];
 			}
 		}
@@ -300,8 +310,25 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)]
 			get
 			{
-				Debug.Assert(index < count);
 				return ref _arr[in allocator, index];
+			}
+		}
+
+		public ref T this[Allocator* allocator, uint index]
+		{
+			[INLINE(256)]
+			get
+			{
+				return ref _arr[allocator, index];
+			}
+		}
+
+		public ref T this[Allocator* allocator, ushort index]
+		{
+			[INLINE(256)]
+			get
+			{
+				return ref _arr[allocator, index];
 			}
 		}
 
@@ -332,29 +359,29 @@ namespace Sapientia.MemoryAllocator
 			Debug.Assert(IsCreated);
 
 			ref var allocator = ref _arr.innerArray.ptr.GetAllocator();
-			++count;
-			EnsureCapacity(ref allocator, count);
+			++_count;
+			EnsureCapacity(ref allocator, _count);
 
-			_arr[in allocator, count - 1u] = obj;
-			return count - 1u;
+			_arr[in allocator, _count - 1u] = obj;
+			return _count - 1u;
 		}
 
 		[INLINE(256)]
 		public uint Add(ref Allocator allocator, T obj)
 		{
 			Debug.Assert(IsCreated);
-			++count;
-			EnsureCapacity(ref allocator, count);
+			++_count;
+			EnsureCapacity(ref allocator, _count);
 
-			_arr[in allocator, count - 1u] = obj;
-			return count - 1u;
+			_arr[in allocator, _count - 1u] = obj;
+			return _count - 1u;
 		}
 
 		[INLINE(256)]
 		public readonly bool Contains<TU>(in Allocator allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			Debug.Assert(IsCreated);
-			for (uint i = 0, cnt = count; i < cnt; ++i)
+			for (uint i = 0, cnt = _count; i < cnt; ++i)
 			{
 				if (obj.Equals(_arr[in allocator, i]))
 				{
@@ -369,7 +396,7 @@ namespace Sapientia.MemoryAllocator
 		public bool Remove<TU>(ref Allocator allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			Debug.Assert(IsCreated);
-			for (uint i = 0, cnt = count; i < cnt; ++i)
+			for (uint i = 0, cnt = _count; i < cnt; ++i)
 			{
 				if (obj.Equals(_arr[in allocator, i]))
 				{
@@ -384,11 +411,11 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool RemoveFast<TU>(in Allocator allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
-			for (uint i = 0, cnt = count; i < cnt; ++i)
+			for (uint i = 0, cnt = _count; i < cnt; ++i)
 			{
 				if (obj.Equals(_arr[in allocator, i]))
 				{
-					RemoveAtFast(in allocator, i);
+					RemoveAtSwapBack(in allocator, i);
 					return true;
 				}
 			}
@@ -399,34 +426,48 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool RemoveAt(ref Allocator allocator, uint index)
 		{
-			if (index >= count) return false;
+			if (index >= _count)
+				return false;
 
-			if (index == count - 1)
+			if (index == _count - 1)
 			{
-				--count;
-				_arr[in allocator, count] = default;
+				--_count;
+				_arr[in allocator, _count] = default;
 				return true;
 			}
 
 			var ptr = _arr.innerArray.ptr.memPtr;
 			var size = sizeof(T);
-			allocator.MemMove(ptr, size * index, ptr, size * (index + 1), (count - index - 1) * size);
+			allocator.MemMove(ptr, size * index, ptr, size * (index + 1), (_count - index - 1) * size);
 
-			--count;
-			_arr[in allocator, count] = default;
+			--_count;
+			_arr[in allocator, _count] = default;
 
 			return true;
 		}
 
 		[INLINE(256)]
-		public bool RemoveAtFast(in Allocator allocator, uint index)
+		public bool RemoveAtSwapBack(in Allocator allocator, uint index)
 		{
-			if (index >= count)
+			if (index >= _count)
 				return false;
 
-			--count;
-			var last = _arr[in allocator, count];
+			--_count;
+			var last = _arr[in allocator, _count];
 			_arr[in allocator, index] = last;
+
+			return true;
+		}
+
+		[INLINE(256)]
+		public bool RemoveAtSwapBack(Allocator* allocator, uint index)
+		{
+			if (index >= _count)
+				return false;
+
+			--_count;
+			var last = _arr[allocator, _count];
+			_arr[allocator, index] = last;
 
 			return true;
 		}
@@ -451,68 +492,68 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void AddRange(ref Allocator allocator, in List<T> collection)
 		{
-			AddRange(ref allocator, in collection, 0u, collection.count);
+			AddRange(ref allocator, in collection, 0u, collection._count);
 		}
 
 		[INLINE(256)]
 		public void AddRange(ref Allocator allocator, in List<T> collection, uint fromIdx, uint toIdx)
 		{
-			var index = count;
+			var index = _count;
 
 			var srcOffset = fromIdx;
 			var length = toIdx - fromIdx;
 			if (length > 0u)
 			{
-				EnsureCapacity(ref allocator, count + length);
+				EnsureCapacity(ref allocator, _count + length);
 				var size = sizeof(T);
-				if (index < count)
+				if (index < _count)
 				{
 					allocator.MemMove(_arr.innerArray.ptr.memPtr, (index + length) * size, _arr.innerArray.ptr.memPtr, index * size,
-						(count - index) * size);
+						(_count - index) * size);
 				}
 
 				if (_arr.innerArray.ptr.memPtr == collection._arr.innerArray.ptr.memPtr)
 				{
 					allocator.MemMove(_arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, 0, index * size);
 					allocator.MemMove(_arr.innerArray.ptr.memPtr, (index * 2) * size, _arr.innerArray.ptr.memPtr, (index + length) * size,
-						(count - index) * size);
+						(_count - index) * size);
 				}
 				else
 				{
 					collection.CopyTo(ref allocator, _arr, srcOffset, index, length);
 				}
 
-				count += length;
+				_count += length;
 			}
 		}
 
 		[INLINE(256)]
 		public void AddRange(ref Allocator allocator, MemArray<T> collection)
 		{
-			var index = count;
+			var index = _count;
 			var length = collection.Length;
 			if (length > 0u)
 			{
-				EnsureCapacity(ref allocator, count + length);
+				EnsureCapacity(ref allocator, _count + length);
 				var size = sizeof(T);
-				if (index < count)
+				if (index < _count)
 				{
 					allocator.MemMove(_arr.innerArray.ptr.memPtr, (index + length) * size, _arr.innerArray.ptr.memPtr, index * size,
-						(count - index) * size);
+						(_count - index) * size);
 				}
 
 				if (_arr.innerArray.ptr.memPtr == collection.innerArray.ptr.memPtr)
 				{
 					allocator.MemMove(_arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, 0, index * size);
 					allocator.MemMove(_arr.innerArray.ptr.memPtr, (index * 2) * size, _arr.innerArray.ptr.memPtr, (index + length) * size,
-						(count - index) * size);
+						(_count - index) * size);
 				}
 				else
 				{
 					CopyFrom(ref allocator, collection, index);
 				}
 
-				count += length;
+				_count += length;
 			}
 		}
 

@@ -162,6 +162,18 @@ namespace Sapientia.MemoryAllocator.Collections
 			return ref _values.GetAllocator();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Allocator* GetAllocatorPtr()
+		{
+			return _values.GetAllocatorPtr();
+		}
+
+		public uint ElementSize
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _values.ElementSize;
+		}
+
 		public SparseSet(uint valueSize, uint capacity, uint sparseCapacity, uint expandStep = 0) : this(ref AllocatorManager.CurrentAllocator, valueSize, capacity, sparseCapacity, expandStep) {}
 
 		public SparseSet(AllocatorId allocatorId, uint valueSize, uint capacity, uint sparseCapacity, uint expandStep = 0) : this(ref allocatorId.GetAllocator(), valueSize, capacity, sparseCapacity, expandStep) {}
@@ -178,6 +190,12 @@ namespace Sapientia.MemoryAllocator.Collections
 
 			_capacity = _dense.Length.Min(_values.Length);
 			_sparseCapacity = _sparse.Length;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetValuePtr<T>(Allocator* allocator) where T: unmanaged
+		{
+			return _values.GetValuePtr<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -199,9 +217,33 @@ namespace Sapientia.MemoryAllocator.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void* GetValuePtr(Allocator* allocator)
+		{
+			return _values.GetValuePtr(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void* GetValuePtr(uint id)
 		{
 			return _values.GetValuePtr(_sparse[id]);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void* GetValuePtr(Allocator* allocator, uint id)
+		{
+			return _values.GetValuePtr(allocator, _sparse[allocator, id]);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetValuePtr<T>(Allocator* allocator, uint id) where T: unmanaged
+		{
+			return _values.GetValuePtr<T>(allocator, _sparse[allocator, id]);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T Get<T>(Allocator* allocator, uint id) where T: unmanaged
+		{
+			return ref _values.GetValue<T>(allocator, _sparse[allocator, id]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -211,10 +253,31 @@ namespace Sapientia.MemoryAllocator.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Has(Allocator* allocator, uint id)
+		{
+			var denseId = _sparse[allocator, id];
+			return denseId < _count && _dense[allocator, denseId] == id;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(uint id)
 		{
 			var denseId = _sparse[id];
 			return denseId < _count && _dense[denseId] == id;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T EnsureGet<T>(Allocator* allocator, uint id) where T: unmanaged
+		{
+			ExpandSparseIfNeeded(id);
+			ref var denseId = ref _sparse[allocator, id];
+			if (denseId >= _count || _dense[allocator, denseId] != id)
+			{
+				ExpandIfNeeded(_count + 1);
+				_dense[allocator, _count] = id;
+				denseId = _count++;
+			}
+			return ref _values.GetValue<T>(allocator, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -237,6 +300,26 @@ namespace Sapientia.MemoryAllocator.Collections
 			if (id >= _sparseCapacity)
 				return;
 			ref var allocator = ref GetAllocator();
+			var denseId = _sparse[allocator, id];
+			if (denseId >= _count || _dense[allocator, denseId] != id)
+				return;
+
+			var sparseId = _dense[allocator, denseId] = _dense[allocator, --_count];
+			_sparse[allocator, sparseId] = denseId;
+
+			var valueA = _values.GetValuePtr(allocator, denseId);
+			var valueB = _values.GetValuePtr(allocator, _count);
+			var size = _values.ElementSize;
+
+			MemoryExt.MemCopy(valueB, valueA, size);
+			MemoryExt.MemClear(valueB, size);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBack(Allocator* allocator, uint id)
+		{
+			if (id >= _sparseCapacity)
+				return;
 			var denseId = _sparse[allocator, id];
 			if (denseId >= _count || _dense[allocator, denseId] != id)
 				return;
@@ -305,6 +388,13 @@ namespace Sapientia.MemoryAllocator.Collections
 			_sparse.Dispose(ref allocator);
 			_dense.Dispose(ref allocator);
 			_values.Dispose(ref allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Clear(Allocator* allocator)
+		{
+			_values.Clear(allocator, 0u, _count);
+			_count = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

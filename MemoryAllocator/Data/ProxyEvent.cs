@@ -6,9 +6,15 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.Data
 {
-	public struct ProxyEvent<T> : IEnumerable<IntPtr> where T: unmanaged, IProxy
+	public unsafe struct ProxyEvent<T> : IEnumerable<IntPtr> where T: unmanaged, IProxy
 	{
 		public HashSet<ProxyRef<T>> proxies;
+
+		public bool IsCreated
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => proxies.IsCreated;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref Allocator GetAllocator()
@@ -30,6 +36,12 @@ namespace Sapientia.MemoryAllocator.Data
 		public bool UnSubscribe(in ProxyRef<T> proxyRef)
 		{
 			return proxies.Remove(proxyRef);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public HashSet<ProxyRef<T>>.IntPtrEnumerable GetEnumerable(Allocator* allocator)
+		{
+			return proxies.GetIntPtrEnumerable(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,6 +77,11 @@ namespace Sapientia.MemoryAllocator.Data
 		public void Dispose()
 		{
 			proxies.Dispose();
+		}
+
+		public void Dispose(Allocator* allocator)
+		{
+			proxies.Dispose(allocator);
 		}
 	}
 }

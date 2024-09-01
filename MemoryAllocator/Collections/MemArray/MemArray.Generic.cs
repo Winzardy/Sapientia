@@ -96,6 +96,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void Dispose(Allocator* allocator)
+		{
+			innerArray.Dispose(allocator);
+		}
+
+		[INLINE(256)]
 		public void BurstMode(in Allocator allocator, bool state)
 		{
 			innerArray.BurstMode(allocator, state);
@@ -125,6 +131,18 @@ namespace Sapientia.MemoryAllocator
 			return innerArray.GetAllocPtr(allocator, index);
 		}
 
+		public ref T this[int index]
+		{
+			[INLINE(256)]
+			get => ref innerArray.GetValue<T>(index);
+		}
+
+		public ref T this[uint index]
+		{
+			[INLINE(256)]
+			get => ref innerArray.GetValue<T>(index);
+		}
+
 		[INLINE(256)]
 		public MemPtr GetAllocPtr(uint index)
 		{
@@ -143,16 +161,16 @@ namespace Sapientia.MemoryAllocator
 			get => ref innerArray.GetValue<T>(allocator, index);
 		}
 
-		public ref T this[int index]
+		public ref T this[Allocator* allocator, int index]
 		{
 			[INLINE(256)]
-			get => ref innerArray.GetValue<T>(index);
+			get => ref innerArray.GetValue<T>(allocator, index);
 		}
 
-		public ref T this[uint index]
+		public ref T this[Allocator* allocator, uint index]
 		{
 			[INLINE(256)]
-			get => ref innerArray.GetValue<T>(index);
+			get => ref innerArray.GetValue<T>(allocator, index);
 		}
 
 		[INLINE(256)]

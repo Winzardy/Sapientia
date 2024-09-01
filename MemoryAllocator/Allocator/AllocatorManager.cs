@@ -94,6 +94,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public static ref Allocator GetAllocator(AllocatorId allocatorId)
+		{
+			if (!allocatorId.IsValid())
+				throw new ArgumentException($"{nameof(AllocatorId)} with such Id [id: {allocatorId.id}] doesn't exist.");
+			return ref *_allocators[allocatorId.index];
+		}
+
+		[INLINE(256)]
 		public static ref Allocator GetAllocator(this ref AllocatorId allocatorId)
 		{
 			if (!allocatorId.IsValid())

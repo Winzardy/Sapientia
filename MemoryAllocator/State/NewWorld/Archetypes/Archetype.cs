@@ -30,19 +30,19 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 	public unsafe interface IElementDestroyHandler<T> : IElementDestroyHandler where T: unmanaged
 	{
-		public void EntityDestroyed(ref ArchetypeElement<T> element);
-		public void EntityArrayDestroyed(ArchetypeElement<T>* element, uint count);
+		public void EntityDestroyed(Allocator* allocator, ref ArchetypeElement<T> elementPtr);
+		public void EntityArrayDestroyed(Allocator* allocator, ArchetypeElement<T>* elementsPtr, uint count);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void IElementDestroyHandler.EntityDestroyed(void* element)
+		void IElementDestroyHandler.EntityDestroyed(Allocator* allocator, void* elementPtr)
 		{
-			EntityDestroyed(ref UnsafeExt.AsRef<ArchetypeElement<T>>(element));
+			EntityDestroyed(allocator, ref UnsafeExt.AsRef<ArchetypeElement<T>>(elementPtr));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void IElementDestroyHandler.EntityArrayDestroyed(void* element, uint count)
+		void IElementDestroyHandler.EntityArrayDestroyed(Allocator* allocator, void* elementsPtr, uint count)
 		{
-			EntityArrayDestroyed((ArchetypeElement<T>*)element, count);
+			EntityArrayDestroyed(allocator, (ArchetypeElement<T>*)elementsPtr, count);
 		}
 	}
 
@@ -50,9 +50,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	public unsafe interface IElementDestroyHandler
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityDestroyed(void* element);
+		public void EntityDestroyed(Allocator* allocator, void* element);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityArrayDestroyed(void* element, uint count);
+		public void EntityArrayDestroyed(Allocator* allocator, void* element, uint count);
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -72,12 +72,6 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _elements.Count;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(AllocatorId allocatorId, uint elementsCount) where T: unmanaged, IComponent
-		{
-			return ref RegisterArchetype<T>(ref allocatorId.GetAllocator(), elementsCount);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,6 +117,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ArchetypeElement<T>* GetRawElements<T>(Allocator* allocator) where T: unmanaged, IComponent
+		{
+			return _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement<T>(Entity entity) where T : unmanaged, IComponent
 		{
 			if (!_elements.Has(entity.id))
@@ -155,6 +155,30 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetElement<T>(Allocator* allocator, Entity entity) where T : unmanaged, IComponent
+		{
+			if (_elements.Has(allocator, entity.id))
+			{
+				ref var element = ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id);
+				Debug.Assert(element.entity == entity);
+				return ref element.value;
+			}
+			else
+			{
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
+				var oldCapacity = _elements.Capacity;
+				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
+				if (oldCapacity != _elements.Capacity)
+					UnityEngine.Debug.LogWarning($"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+#else
+				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
+#endif
+				element = new ArchetypeElement<T>(entity, default);
+				return ref element.value;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement<T>(Entity entity) where T : unmanaged, IComponent
 		{
 			if (_elements.Has(entity.id))
@@ -181,11 +205,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear<T>() where T: unmanaged, IComponent
 		{
-			ref var allocator = ref _elements.GetAllocator();
+			var allocator = _elements.GetAllocatorPtr();
 			if (_hasDestroyHandler)
 			{
 				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
-				_destroyHandlerProxy.EntityArrayDestroyed(default, valueArray, _elements.Count);
+				_destroyHandlerProxy.EntityArrayDestroyed(default, allocator, valueArray, _elements.Count);
 			}
 			_elements.Clear(allocator);
 		}
@@ -193,10 +217,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ClearFast<T>() where T: unmanaged, IComponent
 		{
+			var allocator = _elements.GetAllocatorPtr();
 			if (_hasDestroyHandler)
 			{
-				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>();
-				_destroyHandlerProxy.EntityArrayDestroyed(default, valueArray, _elements.Count);
+				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
+				_destroyHandlerProxy.EntityArrayDestroyed(default, allocator, valueArray, _elements.Count);
 			}
 
 			_elements.ClearFast();
@@ -209,20 +234,20 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityDestroyed(in Entity entity)
+		public void EntityDestroyed(Allocator* allocator, in Entity entity)
 		{
-			if (!_elements.Has(entity.id))
+			if (!_elements.Has(allocator, entity.id))
 				return;
 
 			if (_hasDestroyHandler)
 			{
-				var value = _elements.GetValuePtr(entity.id);
-				_destroyHandlerProxy.EntityDestroyed(default, value);
-			}
+				var value = _elements.GetValuePtr(allocator, entity.id);
+				_destroyHandlerProxy.EntityDestroyed(default, allocator, value);
 
-			if (!_elements.Has(entity.id))
-				return;
-			_elements.RemoveSwapBack(entity.id);
+				if (!_elements.Has(allocator, entity.id))
+					return;
+			}
+			_elements.RemoveSwapBack(allocator, entity.id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

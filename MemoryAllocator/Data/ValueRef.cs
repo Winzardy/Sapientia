@@ -90,6 +90,20 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
+		public T* GetPtr<T>() where T: unmanaged
+		{
+			Debug.Assert(IsCreated);
+			return (T*)_ptr.GetPtr();
+		}
+
+		[INLINE(256)]
+		public T* GetPtr<T>(in Allocator allocator) where T: unmanaged
+		{
+			Debug.Assert(IsCreated);
+			return (T*)_ptr.GetPtr(allocator);
+		}
+
+		[INLINE(256)]
 		public readonly MemPtr GetMemPtr()
 		{
 			Debug.Assert(IsCreated);

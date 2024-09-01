@@ -2,11 +2,11 @@ namespace Sapientia.MemoryAllocator
 {
 	public unsafe class MemArrayProxy<T> where T : unmanaged
 	{
-		private MemArray<T> arr;
+		private MemArray<T> _arr;
 
 		public MemArrayProxy(MemArray<T> arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
 		/*public T[] Items
@@ -27,11 +27,11 @@ namespace Sapientia.MemoryAllocator
 
 	public unsafe class MemArrayProxy
 	{
-		private MemArray arr;
+		private MemArray _arr;
 
 		public MemArrayProxy(MemArray arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
 		/*public T[] Items
@@ -52,11 +52,11 @@ namespace Sapientia.MemoryAllocator
 
 	public unsafe class MemArrayThreadCacheLineProxy<T> where T : unmanaged
 	{
-		private MemArrayThreadCacheLine<T> arr;
+		private MemArrayThreadCacheLine<T> _arr;
 
 		public MemArrayThreadCacheLineProxy(MemArrayThreadCacheLine<T> arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
 		/*public T[] items
@@ -77,52 +77,43 @@ namespace Sapientia.MemoryAllocator
 
 	public unsafe class ListProxy<T> where T : unmanaged
 	{
-		private List<T> arr;
+		private List<T> _arr;
 
 		public ListProxy(List<T> arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
-		public uint Capacity
-		{
-			get { return this.arr.Capacity; }
-		}
+		public uint Capacity => _arr.Capacity;
 
-		public uint Count
-		{
-			get { return this.arr.count; }
-		}
+		public uint Count => _arr.Count;
 
-		/*public T[] items
+		public T[] Items
 		{
 			get
 			{
-				var world = Context.world;
-				var arr = new T[this.arr.Count];
-				for (uint i = 0; i < this.arr.Count; ++i)
+				ref var allocator = ref AllocatorManager.CurrentAllocator;
+				var arr = new T[_arr.Count];
+				for (uint i = 0; i < _arr.Count; ++i)
 				{
-					arr[i] = this.arr[world.state->allocator, i];
+					arr[i] = _arr[allocator, i];
 				}
 
 				return arr;
 			}
-		}*/
+		}
 	}
 
 	public class QueueProxy<T> where T : unmanaged
 	{
-		private Queue<T> arr;
+		private Queue<T> _arr;
 
 		public QueueProxy(Queue<T> arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
-		public uint Count
-		{
-			get { return this.arr.Count; }
-		}
+		public uint Count => _arr.Count;
 
 		/*public T[] items
 		{
@@ -145,17 +136,14 @@ namespace Sapientia.MemoryAllocator
 
 	public class StackProxy<T> where T : unmanaged
 	{
-		private Stack<T> arr;
+		private Stack<T> _arr;
 
 		public StackProxy(Stack<T> arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
-		public uint Count
-		{
-			get { return this.arr.Count; }
-		}
+		public uint Count => _arr.Count;
 
 		/*public T[] items
 		{
@@ -177,26 +165,21 @@ namespace Sapientia.MemoryAllocator
 		}*/
 	}
 
-	public class EquatableDictionaryProxy<K, V> where K : unmanaged, System.IEquatable<K> where V : unmanaged
+	public class EquatableDictionaryProxy<TK, TV> where TK : unmanaged, System.IEquatable<TK> where TV : unmanaged
 	{
-		private Dictionary<K, V> arr;
+		private Dictionary<TK, TV> _arr;
 
-		public EquatableDictionaryProxy(Dictionary<K, V> arr)
+		public EquatableDictionaryProxy(Dictionary<TK, TV> arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
-		public uint Count
-		{
-			get { return this.arr.Count; }
-		}
-
-		public MemArray<uint> buckets => this.arr.buckets;
-		public MemArray<Dictionary<K, V>.Entry> entries => this.arr.entries;
-		public uint count => this.arr.count;
-		public uint version => this.arr.version;
-		public int freeList => this.arr.freeList;
-		public uint freeCount => this.arr.freeCount;
+		public MemArray<uint> Buckets => _arr.buckets;
+		public MemArray<Dictionary<TK, TV>.Entry> Entries => _arr.entries;
+		public uint Count => _arr.count;
+		public uint Version => _arr.version;
+		public int FreeList => _arr.freeList;
+		public uint FreeCount => _arr.freeCount;
 
 		/*public System.Collections.Generic.KeyValuePair<K, V>[] items
 		{
@@ -215,26 +198,21 @@ namespace Sapientia.MemoryAllocator
 		}*/
 	}
 
-	public class UIntDictionaryProxy<V> where V : unmanaged
+	public class UIntDictionaryProxy<TV> where TV : unmanaged
 	{
-		private UIntDictionary<V> arr;
+		private UIntDictionary<TV> _arr;
 
-		public UIntDictionaryProxy(UIntDictionary<V> arr)
+		public UIntDictionaryProxy(UIntDictionary<TV> arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
-		public uint Count
-		{
-			get { return this.arr.Count; }
-		}
-
-		public MemArray<uint> buckets => this.arr.buckets;
-		public MemArray<UIntDictionary<V>.Entry> entries => this.arr.entries;
-		public uint count => this.arr.count;
-		public uint version => this.arr.version;
-		public int freeList => this.arr.freeList;
-		public uint freeCount => this.arr.freeCount;
+		public MemArray<uint> Buckets => _arr.buckets;
+		public MemArray<UIntDictionary<TV>.Entry> Entries => _arr.entries;
+		public uint Count => _arr.count;
+		public uint Version => _arr.version;
+		public int FreeList => _arr.freeList;
+		public uint FreeCount => _arr.freeCount;
 
 		/*public System.Collections.Generic.KeyValuePair<uint, V>[] items
 		{
@@ -253,26 +231,21 @@ namespace Sapientia.MemoryAllocator
 		}*/
 	}
 
-	public class ULongDictionaryProxy<V> where V : unmanaged
+	public class ULongDictionaryProxy<TV> where TV : unmanaged
 	{
-		private ULongDictionary<V> arr;
+		private ULongDictionary<TV> _arr;
 
-		public ULongDictionaryProxy(ULongDictionary<V> arr)
+		public ULongDictionaryProxy(ULongDictionary<TV> arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
-		public uint Count
-		{
-			get { return this.arr.Count; }
-		}
-
-		public MemArray<uint> buckets => this.arr.buckets;
-		public MemArray<ULongDictionary<V>.Entry> entries => this.arr.entries;
-		public uint count => this.arr.count;
-		public uint version => this.arr.version;
-		public int freeList => this.arr.freeList;
-		public uint freeCount => this.arr.freeCount;
+		public MemArray<uint> Buckets => _arr.buckets;
+		public MemArray<ULongDictionary<TV>.Entry> Entries => _arr.entries;
+		public uint Count => _arr.count;
+		public uint Version => _arr.version;
+		public int FreeList => _arr.freeList;
+		public uint FreeCount => _arr.freeCount;
 
 		/*public System.Collections.Generic.KeyValuePair<ulong, V>[] items
 		{
@@ -336,25 +309,20 @@ namespace Sapientia.MemoryAllocator
 
 	public class UIntHashSetProxy
 	{
-		private UIntHashSet arr;
+		private UIntHashSet _arr;
 
 		public UIntHashSetProxy(UIntHashSet arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
-		public uint Count
-		{
-			get { return this.arr.Count; }
-		}
-
-		public MemArray<int> buckets => this.arr.buckets;
-		public MemArray<UIntHashSet.Slot> slots => this.arr.slots;
-		public uint hash => this.arr.hash;
-		public uint count => (uint)this.arr.count;
-		public uint version => (uint)this.arr.version;
-		public int freeList => this.arr.freeList;
-		public uint lastIndex => (uint)this.arr.lastIndex;
+		public MemArray<int> Buckets => _arr.buckets;
+		public MemArray<UIntHashSet.Slot> Slots => _arr.slots;
+		public uint Hash => _arr.hash;
+		public uint Count => (uint)_arr.count;
+		public uint Version => (uint)_arr.version;
+		public int FreeList => _arr.freeList;
+		public uint LastIndex => (uint)_arr.lastIndex;
 
 		/*public uint[] items
 		{
@@ -375,25 +343,20 @@ namespace Sapientia.MemoryAllocator
 
 	public class UIntPairHashSetProxy
 	{
-		private UIntPairHashSet arr;
+		private UIntPairHashSet _arr;
 
 		public UIntPairHashSetProxy(UIntPairHashSet arr)
 		{
-			this.arr = arr;
+			_arr = arr;
 		}
 
-		public uint Count
-		{
-			get { return this.arr.Count; }
-		}
-
-		public MemArray<uint> buckets => this.arr.buckets;
-		public MemArray<UIntPairHashSet.Slot> slots => this.arr.slots;
-		public uint hash => this.arr.hash;
-		public uint count => this.arr.count;
-		public uint version => this.arr.version;
-		public int freeList => this.arr.freeList;
-		public uint lastIndex => this.arr.lastIndex;
+		public MemArray<uint> Buckets => _arr.buckets;
+		public MemArray<UIntPairHashSet.Slot> Slots => _arr.slots;
+		public uint Hash => _arr.hash;
+		public uint Count => _arr.count;
+		public uint Version => _arr.version;
+		public int FreeList => _arr.freeList;
+		public uint LastIndex => _arr.lastIndex;
 
 		/*public UIntPair[] items
 		{

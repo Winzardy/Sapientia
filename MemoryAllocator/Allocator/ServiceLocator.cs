@@ -89,6 +89,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetServicePtr<T>() where T: unmanaged, IIndexedType
+		{
+			ref var allocator = ref _typeToPtr.GetAllocator();
+			var typeIndex = TypeIndex.Create<T>();
+
+			return _typeToPtr.GetValue(ref allocator, typeIndex).GetPtr<T>(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(ProxyRef<T> proxyRef) where T: unmanaged, IProxy
 		{
 			ref var allocator = ref _typeToPtr.GetAllocator();
@@ -108,12 +117,111 @@ namespace Sapientia.MemoryAllocator
 			ref var allocator = ref _typeToPtr.GetAllocator();
 			var typeIndex = TypeIndex.Create<TBase>();
 
-			return ref _typeToPtr.GetValue(ref allocator, typeIndex).GetValue<T>();
+			return ref _typeToPtr.GetValue(ref allocator, typeIndex).GetValue<T>(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetServiceAsPtr<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
+		{
+			ref var allocator = ref _typeToPtr.GetAllocator();
+			var typeIndex = TypeIndex.Create<TBase>();
+
+			return _typeToPtr.GetValue(ref allocator, typeIndex).GetPtr<T>();
 		}
 	}
 
-	public static class ServiceLocatorExt
+	public static unsafe class ServiceLocatorExt
 	{
+		#region Allocator
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService<T>(this ref Allocator allocator, MemPtr ptr) where T: unmanaged, IIndexedType
+		{
+			allocator.serviceLocator.RegisterService<T>(ptr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService<T>(this ref Allocator allocator, Ptr<T> ptr) where T: unmanaged, IIndexedType
+		{
+			allocator.serviceLocator.RegisterService(ptr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService<T>(this ref Allocator allocator, Ptr ptr) where T: unmanaged, IIndexedType
+		{
+			allocator.serviceLocator.RegisterService<T>(ptr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService(this ref Allocator allocator, ValueRef valueRef)
+		{
+			allocator.serviceLocator.RegisterService(valueRef);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RemoveService<T>(this ref Allocator allocator) where T: unmanaged, IIndexedType
+		{
+			allocator.serviceLocator.RemoveService<T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterServiceAs<T, TBase>(this ref Allocator allocator, Ptr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
+		{
+			allocator.serviceLocator.RegisterServiceAs<T, TBase>(ptr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RemoveService(this ref Allocator allocator, ValueRef valueRef)
+		{
+			allocator.serviceLocator.RemoveService(valueRef);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetService<T>(this ref Allocator allocator) where T: unmanaged, IIndexedType
+		{
+			return ref allocator.serviceLocator.GetService<T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T* GetServicePtr<T>(this ref Allocator allocator) where T: unmanaged, IIndexedType
+		{
+			return allocator.serviceLocator.GetServicePtr<T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetService<T>(this ref Allocator allocator, out bool exist) where T: unmanaged, IIndexedType
+		{
+			return ref allocator.serviceLocator.GetService<T>(out exist);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetService<T>(this ref Allocator allocator, ProxyRef<T> proxyRef) where T: unmanaged, IProxy
+		{
+			return ref allocator.serviceLocator.GetService(proxyRef);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetService<T>(this ref Allocator allocator, ProxyRef<T> proxyRef, out bool exist) where T: unmanaged, IProxy
+		{
+			return ref allocator.serviceLocator.GetService(proxyRef, out exist);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetServiceAs<TBase, T>(this ref Allocator allocator) where TBase: unmanaged, IIndexedType where T: unmanaged
+		{
+			return ref allocator.serviceLocator.GetServiceAs<TBase, T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T* GetServiceAsPtr<TBase, T>(this ref Allocator allocator) where TBase: unmanaged, IIndexedType where T: unmanaged
+		{
+			return allocator.serviceLocator.GetServiceAsPtr<TBase, T>();
+		}
+
+		#endregion
+
+		#region AllocatorId
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void RegisterService<T>(this ref AllocatorId allocatorId, MemPtr ptr) where T: unmanaged, IIndexedType
 		{
@@ -163,6 +271,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T* GetServicePtr<T>(this ref AllocatorId allocatorId) where T: unmanaged, IIndexedType
+		{
+			return allocatorId.GetAllocator().serviceLocator.GetServicePtr<T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this ref AllocatorId allocatorId, out bool exist) where T: unmanaged, IIndexedType
 		{
 			return ref allocatorId.GetAllocator().serviceLocator.GetService<T>(out exist);
@@ -185,5 +299,13 @@ namespace Sapientia.MemoryAllocator
 		{
 			return ref allocatorId.GetAllocator().serviceLocator.GetServiceAs<TBase, T>();
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T* GetServiceAsPtr<TBase, T>(this ref AllocatorId allocatorId) where TBase: unmanaged, IIndexedType where T: unmanaged
+		{
+			return allocatorId.GetAllocator().serviceLocator.GetServiceAsPtr<TBase, T>();
+		}
+
+		#endregion
 	}
 }
