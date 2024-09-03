@@ -12,9 +12,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		private readonly Archetype<DelayKillRequest>* _delayKillRequestArchetype;
 		private readonly Archetype<KillElement>* _killElementsArchetype;
 
-		public DestroyUpdater(AllocatorId allocatorId)
+		public DestroyUpdater(Allocator* allocator)
 		{
-			_allocator = allocatorId.GetAllocatorPtr();
+			_allocator = allocator;
 			_entitiesStatePart = _allocator->GetServicePtr<EntitiesStatePart>();
 			_destroyRequestArchetype = _allocator->GetArchetypePtr<DestroyRequest>();
 			_killRequestArchetype = _allocator->GetArchetypePtr<KillRequest>();
@@ -145,7 +145,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		/// <summary>
 		/// Убивает entity-ребёнка.
-		/// Т.е. удаляет из всех родителей информацию о entity.
+		/// Т.е. удаляет из всех родителей информацию о передаваемой entity.
 		/// </summary>
 		private void KillChild(in Entity entity)
 		{

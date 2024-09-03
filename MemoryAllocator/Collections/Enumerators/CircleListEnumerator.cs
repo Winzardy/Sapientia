@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface ICircleListEnumerable<T> : IEnumerable<T> where T: unmanaged
+	public unsafe interface ICircularBufferEnumerable<T> : IEnumerable<T> where T: unmanaged
 	{
 		public int HeadIndex { get; }
 		public int Count { get; }
@@ -15,49 +15,49 @@ namespace Sapientia.MemoryAllocator
 		public T* GetValuePtr(Allocator* allocator);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircleListEnumerator<T> GetEnumerator(Allocator* allocator)
+		public CircularBufferEnumerator<T> GetEnumerator(Allocator* allocator)
 		{
-			return new CircleListEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new CircleListEnumerator<T> GetEnumerator()
+		public new CircularBufferEnumerator<T> GetEnumerator()
 		{
-			return new CircleListEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircleListPtrEnumerator GetPtrEnumerator(Allocator* allocator)
+		public CircularBufferPtrEnumerator GetPtrEnumerator(Allocator* allocator)
 		{
-			return new CircleListPtrEnumerator((byte*)GetValuePtr(allocator), ElementSize, HeadIndex, Count, Capacity);
+			return new CircularBufferPtrEnumerator((byte*)GetValuePtr(allocator), ElementSize, HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircleListPtrEnumerator GetPtrEnumerator()
+		public CircularBufferPtrEnumerator GetPtrEnumerator()
 		{
-			return new CircleListPtrEnumerator((byte*)GetValuePtr(), ElementSize, HeadIndex, Count, Capacity);
+			return new CircularBufferPtrEnumerator((byte*)GetValuePtr(), ElementSize, HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircleListEnumerator<T>> GetEnumerable(Allocator* allocator)
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(Allocator* allocator)
 		{
 			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircleListEnumerator<T>> GetEnumerable()
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable()
 		{
 			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, CircleListPtrEnumerator> GetPtrEnumerable(Allocator* allocator)
+		public Enumerable<IntPtr, CircularBufferPtrEnumerator> GetPtrEnumerable(Allocator* allocator)
 		{
 			return new (new ((byte*)GetValuePtr(allocator), ElementSize, HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, CircleListPtrEnumerator> GetPtrEnumerable()
+		public Enumerable<IntPtr, CircularBufferPtrEnumerator> GetPtrEnumerable()
 		{
 			return new (new ((byte*)GetValuePtr(), ElementSize, HeadIndex, Count, Capacity));
 		}
@@ -75,7 +75,7 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe interface ICircleListEnumerable : IEnumerable<IntPtr>
+	public unsafe interface ICircularBufferEnumerable : IEnumerable<IntPtr>
 	{
 		public int HeadIndex { get; }
 		public int Count { get; }
@@ -87,49 +87,49 @@ namespace Sapientia.MemoryAllocator
 		public T* GetValuePtr<T>(Allocator* allocator) where T: unmanaged;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircleListEnumerator<T> GetEnumerator<T>(Allocator* allocator) where T: unmanaged
+		public CircularBufferEnumerator<T> GetEnumerator<T>(Allocator* allocator) where T: unmanaged
 		{
-			return new CircleListEnumerator<T>(GetValuePtr<T>(allocator), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr<T>(allocator), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircleListEnumerator<T> GetEnumerator<T>() where T: unmanaged
+		public CircularBufferEnumerator<T> GetEnumerator<T>() where T: unmanaged
 		{
-			return new CircleListEnumerator<T>(GetValuePtr<T>(), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr<T>(), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircleListPtrEnumerator GetPtrEnumerator(Allocator* allocator)
+		public CircularBufferPtrEnumerator GetPtrEnumerator(Allocator* allocator)
 		{
-			return new CircleListPtrEnumerator((byte*)GetValuePtr(allocator), ElementSize, HeadIndex, Count, Capacity);
+			return new CircularBufferPtrEnumerator((byte*)GetValuePtr(allocator), ElementSize, HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircleListPtrEnumerator GetPtrEnumerator()
+		public CircularBufferPtrEnumerator GetPtrEnumerator()
 		{
-			return new CircleListPtrEnumerator((byte*)GetValuePtr(), ElementSize, HeadIndex, Count, Capacity);
+			return new CircularBufferPtrEnumerator((byte*)GetValuePtr(), ElementSize, HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircleListEnumerator<T>> GetEnumerable<T>(Allocator* allocator) where T: unmanaged
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable<T>(Allocator* allocator) where T: unmanaged
 		{
 			return new (new (GetValuePtr<T>(allocator), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircleListEnumerator<T>> GetEnumerable<T>() where T: unmanaged
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable<T>() where T: unmanaged
 		{
 			return new (new (GetValuePtr<T>(), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, CircleListPtrEnumerator> GetPtrEnumerable(Allocator* allocator)
+		public Enumerable<IntPtr, CircularBufferPtrEnumerator> GetPtrEnumerable(Allocator* allocator)
 		{
 			return new (new ((byte*)GetValuePtr(allocator), ElementSize, HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, CircleListPtrEnumerator> GetPtrEnumerable()
+		public Enumerable<IntPtr, CircularBufferPtrEnumerator> GetPtrEnumerable()
 		{
 			return new (new ((byte*)GetValuePtr(), ElementSize, HeadIndex, Count, Capacity));
 		}
@@ -147,7 +147,7 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe struct CircleListPtrEnumerator : IEnumerator<IntPtr>
+	public unsafe struct CircularBufferPtrEnumerator : IEnumerator<IntPtr>
 	{
 		private readonly byte* _valuePtr;
 		private readonly int _elementSize;
@@ -171,7 +171,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircleListPtrEnumerator(byte* valuePtr, int elementSize, int headIndex, int count, int capacity)
+		public CircularBufferPtrEnumerator(byte* valuePtr, int elementSize, int headIndex, int count, int capacity)
 		{
 			_valuePtr = valuePtr;
 			_elementSize = elementSize;
@@ -207,7 +207,7 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe struct CircleListEnumerator<T> : IEnumerator<T> where T: unmanaged
+	public unsafe struct CircularBufferEnumerator<T> : IEnumerator<T> where T: unmanaged
 	{
 		private readonly T* _valuePtr;
 		private readonly int _headIndex;
@@ -218,7 +218,7 @@ namespace Sapientia.MemoryAllocator
 		private int _currentCount;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal CircleListEnumerator(T* valuePtr, int headIndex, int count, int capacity)
+		internal CircularBufferEnumerator(T* valuePtr, int headIndex, int count, int capacity)
 		{
 			_valuePtr = valuePtr;
 			_headIndex = headIndex;

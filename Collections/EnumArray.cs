@@ -25,7 +25,7 @@ namespace Sapientia.Collections
 			get => ref _values[GetIndexOf(enumValue)];
 		}
 
-		public int Lenght
+		public int Length
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _values.Length;

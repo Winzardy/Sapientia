@@ -119,23 +119,18 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DestroyEntity(Entity entity)
+		public void DestroyEntity(in Entity entity)
 		{
 			var allocator = _allocatorId.GetAllocatorPtr();
-			Debug.Assert(IsEntityAlive(allocator, entity));
-
-			//_entityDestroySubscribers.EntityDestroyed(allocator, entity);
-
-			_entityIdToGeneration[allocator, entity.id]++;
-			_freeEntitiesIds[allocator, --EntitiesCount] = entity.id;
+			DestroyEntity(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DestroyEntity(Allocator* allocator, Entity entity)
+		public void DestroyEntity(Allocator* allocator, in Entity entity)
 		{
 			Debug.Assert(IsEntityAlive(allocator, entity));
 
-			//_entityDestroySubscribers.EntityDestroyed(allocator, entity);
+			_entityDestroySubscribers.EntityDestroyed(allocator, allocator, entity);
 
 			_entityIdToGeneration[allocator, entity.id]++;
 			_freeEntitiesIds[allocator, --EntitiesCount] = entity.id;

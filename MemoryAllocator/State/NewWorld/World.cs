@@ -160,7 +160,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public virtual void Dispose() {}
 	}
 
-	public interface IWorldSystem : IWorldElement
+	public unsafe interface IWorldSystem : IWorldElement
 	{
 		public virtual IEnumerable<ProxyRef<IWorldSystemProxy>> GetSystems() => Array.Empty<ProxyRef<IWorldSystemProxy>>();
 		public virtual void Update(float deltaTime) {}
