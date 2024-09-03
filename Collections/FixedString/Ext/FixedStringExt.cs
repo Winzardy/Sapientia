@@ -1,5 +1,4 @@
 using System;
-using Generic.Extensions;
 using Sapientia.Extensions;
 
 namespace Sapientia.Collections.Fixed

@@ -2,7 +2,6 @@
 //#define BURST
 
 using System;
-using Generic.Extensions;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;

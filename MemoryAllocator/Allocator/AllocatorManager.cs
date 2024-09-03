@@ -1,5 +1,4 @@
 using System;
-using Generic.Extensions;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
