@@ -1,57 +1,57 @@
-using Sapientia.Extensions;
 #if NO_INLINE
 using INLINE = NoInlineAttribute;
 #else
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 #endif
+using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
 	public static unsafe class MemArrayExt
 	{
 		[INLINE(256)]
-		public static void Copy<T>(ref Allocator allocator,
+		public static void Copy<T>(Allocator* allocator,
 			MemArray<T> fromArr,
 			ref MemArray<T> arr) where T : unmanaged
 		{
-			Copy(ref allocator, fromArr.As<MemArray<T>, MemArray>(), 0, ref arr.As<MemArray<T>, MemArray>(), 0, fromArr.Length);
+			Copy(allocator, fromArr.As<MemArray<T>, MemArray>(), 0, ref arr.As<MemArray<T>, MemArray>(), 0, fromArr.Length);
 		}
 
 		[INLINE(256)]
-		public static void Copy(ref Allocator allocator,
+		public static void Copy(Allocator* allocator,
 			in MemArray fromArr,
 			ref MemArray arr)
 		{
-			Copy(ref allocator, fromArr, 0, ref arr, 0, fromArr.Length);
+			Copy(allocator, fromArr, 0, ref arr, 0, fromArr.Length);
 		}
 
 		[INLINE(256)]
-		public static void CopyExact<T>(ref Allocator allocator,
+		public static void CopyExact<T>(Allocator* allocator,
 			in MemArray<T> fromArr,
 			ref MemArray<T> arr) where T : unmanaged
 		{
-			Copy(ref allocator, fromArr, 0, ref arr, 0, fromArr.Length, true);
+			Copy(allocator, fromArr, 0, ref arr, 0, fromArr.Length, true);
 		}
 
 		[INLINE(256)]
-		public static void Copy<T>(ref Allocator allocator,
+		public static void Copy<T>(Allocator* allocator,
 			MemArray<T> fromArr,
-			uint sourceIndex,
+			int sourceIndex,
 			ref MemArray<T> arr,
-			uint destIndex,
-			uint length,
+			int destIndex,
+			int length,
 			bool copyExact = false) where T : unmanaged
 		{
-			Copy(ref allocator, fromArr.As<MemArray<T>, MemArray>(), sourceIndex, ref arr.As<MemArray<T>, MemArray>(), destIndex, length, copyExact);
+			Copy(allocator, fromArr.As<MemArray<T>, MemArray>(), sourceIndex, ref arr.As<MemArray<T>, MemArray>(), destIndex, length, copyExact);
 		}
 
 		[INLINE(256)]
-		public static void Copy(ref Allocator allocator,
+		public static void Copy(Allocator* allocator,
 			in MemArray fromArr,
-			uint sourceIndex,
+			int sourceIndex,
 			ref MemArray arr,
-			uint destIndex,
-			uint length,
+			int destIndex,
+			int length,
 			bool copyExact = false)
 		{
 			switch (fromArr.IsCreated)
@@ -60,7 +60,7 @@ namespace Sapientia.MemoryAllocator
 					return;
 
 				case false when arr.IsCreated:
-					arr.Dispose(ref allocator);
+					arr.Dispose(allocator);
 					arr = default;
 					return;
 			}
@@ -69,45 +69,45 @@ namespace Sapientia.MemoryAllocator
 			if (arr.IsCreated == false ||
 			    (copyExact == false ? arr.Length < fromArr.Length : arr.Length != fromArr.Length))
 			{
-				if (arr.IsCreated) arr.Dispose(ref allocator);
-				arr = new MemArray(ref allocator, size, fromArr.Length);
+				if (arr.IsCreated) arr.Dispose(allocator);
+				arr = new MemArray(allocator, size, fromArr.Length);
 			}
 
-			allocator.MemMove(arr.ptr.memPtr, destIndex * size, fromArr.ptr.memPtr, sourceIndex * size, length * size);
+			allocator->MemMove(arr.ptr.memPtr, destIndex * size, fromArr.ptr.memPtr, sourceIndex * size, length * size);
 		}
 
 		[INLINE(256)]
-		public static void CopyNoChecks<T>(ref Allocator allocator,
+		public static void CopyNoChecks<T>(Allocator* allocator,
 			MemArray<T> fromArr,
-			uint sourceIndex,
+			int sourceIndex,
 			ref MemArray<T> arr,
-			uint destIndex,
-			uint length) where T : unmanaged
+			int destIndex,
+			int length) where T : unmanaged
 		{
-			CopyNoChecks(ref allocator, fromArr.As<MemArray<T>, MemArray>(), sourceIndex, ref arr.As<MemArray<T>, MemArray>(), destIndex, length);
+			CopyNoChecks(allocator, fromArr.As<MemArray<T>, MemArray>(), sourceIndex, ref arr.As<MemArray<T>, MemArray>(), destIndex, length);
 		}
 
 		[INLINE(256)]
-		public static void CopyNoChecks(ref Allocator allocator,
+		public static void CopyNoChecks(Allocator* allocator,
 			in MemArray fromArr,
-			uint sourceIndex,
+			int sourceIndex,
 			ref MemArray arr,
-			uint destIndex,
-			uint length)
+			int destIndex,
+			int length)
 		{
 			var size = fromArr.ElementSize;
-			allocator.MemCopy(arr.ptr.memPtr, destIndex * size, fromArr.ptr.memPtr, sourceIndex * size, length * size);
+			allocator->MemCopy(arr.ptr.memPtr, destIndex * size, fromArr.ptr.memPtr, sourceIndex * size, length * size);
 		}
 
 		[INLINE(256)]
-		public static void SwapElements(in Allocator allocator,
+		public static void SwapElements(Allocator* allocator,
 			in MemArray aArr,
-			uint aIndex,
+			int aIndex,
 			in MemArray bArr,
-			uint bIndex)
+			int bIndex)
 		{
 			var size = aArr.ElementSize;
-			allocator.MemSwap(aArr.ptr.memPtr, aIndex * size, bArr.ptr.memPtr, bIndex * size, size);
+			allocator->MemSwap(aArr.ptr.memPtr, aIndex * size, bArr.ptr.memPtr, bIndex * size, size);
 		}
 	}
 }

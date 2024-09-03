@@ -7,130 +7,20 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-	[DebuggerTypeProxyAttribute(typeof(ListProxy<>))]
-	public unsafe struct List<T> : IIsCreated, IEnumerable<T> where T : unmanaged
+	[DebuggerTypeProxy(typeof(ListProxy<>))]
+	public unsafe struct List<T> : IIsCreated, IListEnumerable<T> where T : unmanaged
 	{
-		public struct IntPtrEnumerable : IEnumerable<IntPtr>
-		{
-			private readonly List<T>* _list;
-			private readonly Allocator* _allocator;
-
-			[INLINE(256)]
-			internal IntPtrEnumerable(Allocator* allocator, List<T>* list)
-			{
-				_list = list;
-				_allocator = allocator;
-			}
-
-			[INLINE(256)]
-			public IEnumerator<IntPtr> GetEnumerator()
-			{
-				return new IntPtrEnumerator(_allocator, _list);
-			}
-
-			[INLINE(256)]
-			IEnumerator IEnumerable.GetEnumerator()
-			{
-				return GetEnumerator();
-			}
-		}
-
-		public struct IntPtrEnumerator : IEnumerator<IntPtr>
-		{
-			private readonly List<T>* _list;
-			private readonly Allocator* _allocator;
-			private uint _index;
-
-			[INLINE(256)]
-			internal IntPtrEnumerator(Allocator* allocator, List<T>* list)
-			{
-				_list = list;
-				_allocator = allocator;
-				_index = 0u;
-			}
-
-			[INLINE(256)]
-			public bool MoveNext()
-			{
-				return _index++ < _list->_count;
-			}
-
-			[INLINE(256)]
-			public void Reset()
-			{
-				_index = 0u;
-			}
-
-			public IntPtr Current
-			{
-				[INLINE(256)]
-				get => (IntPtr)(*_list).GetValuePtr(in *_allocator, _index - 1u);
-			}
-
-			object IEnumerator.Current
-			{
-				[INLINE(256)]
-				get => (*_list)[in *_allocator, _index - 1u];
-			}
-
-			[INLINE(256)]
-			public void Dispose()
-			{
-				this = default;
-			}
-		}
-
-		public struct Enumerator : IEnumerator<T>
-		{
-			private readonly List<T>* _list;
-			private readonly Allocator* _allocator;
-			private uint _index;
-
-			[INLINE(256)]
-			internal Enumerator(Allocator* allocator, List<T>* list)
-			{
-				_list = list;
-				_allocator = allocator;
-				_index = 0u;
-			}
-
-			[INLINE(256)]
-			public bool MoveNext()
-			{
-				return _index++ < _list->_count;
-			}
-
-			[INLINE(256)]
-			public void Reset()
-			{
-				_index = 0u;
-			}
-
-			public T Current
-			{
-				[INLINE(256)]
-				get => (*_list)[in *_allocator, _index - 1u];
-			}
-
-			object IEnumerator.Current
-			{
-				[INLINE(256)]
-				get => (*_list)[in *_allocator, _index - 1u];
-			}
-
-			[INLINE(256)]
-			public void Dispose()
-			{
-				this = default;
-			}
-		}
-
 		private MemArray<T> _arr;
-		private uint _count;
+		private int _count;
 
-		public uint Count
+		public int Count
 		{
 			[INLINE(256)] get => _count;
+		}
+
+		public int ElementSize
+		{
+			[INLINE(256)] get => _arr.ElementSize;
 		}
 
 		public readonly bool IsCreated
@@ -138,53 +28,47 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)] get => _arr.IsCreated;
 		}
 
-		public uint Capacity
+		public int Capacity
 		{
 			[INLINE(256)]
 			get => _arr.Length;
 		}
 
 		[INLINE(256)]
-		public ref Allocator GetAllocator()
+		public Allocator* GetAllocatorPtr()
 		{
-			return ref _arr.GetAllocator();
+			return _arr.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
-		public List(uint capacity = 8) : this(ref AllocatorManager.CurrentAllocator, capacity)
+		public List(int capacity = 8) : this(AllocatorManager.CurrentAllocatorPtr, capacity)
 		{
 
 		}
 
 		[INLINE(256)]
-		public List(ref Allocator allocator, uint capacity = 8)
+		public List(Allocator* allocator, int capacity = 8)
 		{
 			Debug.Assert(capacity > 0u);
 
 			this = default;
-			EnsureCapacity(ref allocator, capacity);
+			EnsureCapacity(allocator, capacity);
 		}
 
 		[INLINE(256)]
-		public void BurstMode(in Allocator allocator, bool state)
-		{
-			_arr.BurstMode(in allocator, state);
-		}
-
-		[INLINE(256)]
-		public void ReplaceWith(ref Allocator allocator, in List<T> other)
+		public void ReplaceWith(Allocator* allocator, in List<T> other)
 		{
 			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
 			{
 				return;
 			}
 
-			Dispose(ref allocator);
+			Dispose(allocator);
 			this = other;
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(ref Allocator allocator, in List<T> other)
+		public void CopyFrom(Allocator* allocator, in List<T> other)
 		{
 			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
 				return;
@@ -192,14 +76,14 @@ namespace Sapientia.MemoryAllocator
 				return;
 			if (_arr.innerArray.ptr.memPtr.IsValid() && !other._arr.innerArray.ptr.memPtr.IsValid())
 			{
-				Dispose(ref allocator);
+				Dispose(allocator);
 				return;
 			}
 
 			if (!_arr.innerArray.ptr.memPtr.IsValid())
-				this = new List<T>(ref allocator, other.Capacity);
+				this = new List<T>(allocator, other.Capacity);
 
-			MemArrayExt.Copy(ref allocator, in other._arr.innerArray, ref _arr.innerArray);
+			MemArrayExt.Copy(allocator, in other._arr.innerArray, ref _arr.innerArray);
 			_count = other._count;
 		}
 
@@ -210,72 +94,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void* GetUnsafePtr(in Allocator allocator)
+		public T* GetValuePtr()
 		{
-			return _arr.innerArray.GetPtr(allocator);
+			return _arr.GetValuePtr();
 		}
 
 		[INLINE(256)]
-		public void Dispose(ref Allocator allocator)
+		public T* GetValuePtr(Allocator* allocator)
 		{
-			_arr.Dispose(ref allocator);
+			return _arr.GetValuePtr(allocator);
+		}
+
+		[INLINE(256)]
+		public void Dispose(Allocator* allocator)
+		{
+			_arr.Dispose(allocator);
 			this = default;
-		}
-
-		[INLINE(256)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[INLINE(256)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[INLINE(256)]
-		public Enumerator GetEnumerator()
-		{
-			Debug.Assert(IsCreated);
-			return new Enumerator(_arr.innerArray.ptr.GetAllocatorPtr(), (List<T>*)this.AsPointer());
-		}
-
-		[INLINE(256)]
-		public Enumerator GetEnumerator(ref Allocator allocator)
-		{
-			Debug.Assert(IsCreated);
-			return new Enumerator((Allocator*)allocator.AsPointer(), (List<T>*)this.AsPointer());
-		}
-
-		[INLINE(256)]
-		public IntPtrEnumerator GetIntPtrEnumerator()
-		{
-			return new IntPtrEnumerator(_arr.innerArray.ptr.GetAllocatorPtr(), (List<T>*)this.AsPointer());
-		}
-
-		[INLINE(256)]
-		public IntPtrEnumerator GetIntPtrEnumerator(ref Allocator allocator)
-		{
-			return new IntPtrEnumerator((Allocator*)allocator.AsPointer(), (List<T>*)this.AsPointer());
-		}
-
-		[INLINE(256)]
-		public IntPtrEnumerable GetIntPtrEnumerable(ref Allocator allocator)
-		{
-			return new IntPtrEnumerable((Allocator*)allocator.AsPointer(), (List<T>*)this.AsPointer());
-		}
-
-		[INLINE(256)]
-		public IntPtrEnumerable GetIntPtrEnumerable(Allocator* allocator)
-		{
-			return new IntPtrEnumerable(allocator, (List<T>*)this.AsPointer());
-		}
-
-		[INLINE(256)]
-		public IntPtrEnumerable GetIntPtrEnumerable()
-		{
-			return new IntPtrEnumerable(_arr.innerArray.ptr.GetAllocatorPtr(), (List<T>*)this.AsPointer());
 		}
 
 		[INLINE(256)]
@@ -284,106 +118,68 @@ namespace Sapientia.MemoryAllocator
 			_count = 0;
 		}
 
-		public ref T this[uint index]
+		public ref T this[int index]
 		{
 			[INLINE(256)]
-			get => ref _arr[GetAllocator(), index];
+			get => ref _arr[GetAllocatorPtr(), index];
 		}
 
-		public ref T this[ushort index]
+		public ref T this[Allocator* allocator, int index]
 		{
 			[INLINE(256)]
-			get => ref _arr[GetAllocator(), index];
-		}
-
-		public ref T this[in Allocator allocator, uint index]
-		{
-			[INLINE(256)]
-			get
-			{
-				return ref _arr[in allocator, index];
-			}
-		}
-
-		public ref T this[in Allocator allocator, ushort index]
-		{
-			[INLINE(256)]
-			get
-			{
-				return ref _arr[in allocator, index];
-			}
-		}
-
-		public ref T this[Allocator* allocator, uint index]
-		{
-			[INLINE(256)]
-			get
-			{
-				return ref _arr[allocator, index];
-			}
-		}
-
-		public ref T this[Allocator* allocator, ushort index]
-		{
-			[INLINE(256)]
-			get
-			{
-				return ref _arr[allocator, index];
-			}
+			get => ref _arr[allocator, index];
 		}
 
 		[INLINE(256)]
-		public T* GetValuePtr(in Allocator allocator, uint index)
+		public T* GetValuePtr(Allocator* allocator, int index)
 		{
 			return _arr.GetValuePtr(allocator, index);
 		}
 
 		[INLINE(256)]
-		public bool EnsureCapacity(uint capacity)
+		public bool EnsureCapacity(int capacity)
 		{
-			return EnsureCapacity(ref GetAllocator(), capacity);
+			return EnsureCapacity(GetAllocatorPtr(), capacity);
 		}
 
 		[INLINE(256)]
-		public bool EnsureCapacity(ref Allocator allocator, uint capacity)
+		public bool EnsureCapacity(Allocator* allocator, int capacity)
 		{
 			capacity = Helpers.NextPot(capacity);
 			if (_arr.IsCreated == false)
-				_arr.innerArray.growFactor = 1;
-			return _arr.Resize(ref allocator, capacity, ClearOptions.UninitializedMemory);
+				_arr.innerArray.GrowFactor = 1;
+			return _arr.Resize(allocator, capacity, ClearOptions.UninitializedMemory);
 		}
 
 		[INLINE(256)]
-		public uint Add(T obj)
+		public void Add(T obj)
 		{
 			Debug.Assert(IsCreated);
 
-			ref var allocator = ref _arr.innerArray.ptr.GetAllocator();
+			var allocator = GetAllocatorPtr();
 			++_count;
-			EnsureCapacity(ref allocator, _count);
+			EnsureCapacity(allocator, _count);
 
-			_arr[in allocator, _count - 1u] = obj;
-			return _count - 1u;
+			_arr[allocator, _count - 1] = obj;
 		}
 
 		[INLINE(256)]
-		public uint Add(ref Allocator allocator, T obj)
+		public void Add(Allocator* allocator, in T obj)
 		{
 			Debug.Assert(IsCreated);
 			++_count;
-			EnsureCapacity(ref allocator, _count);
+			EnsureCapacity(allocator, _count);
 
-			_arr[in allocator, _count - 1u] = obj;
-			return _count - 1u;
+			_arr[allocator, _count - 1] = obj;
 		}
 
 		[INLINE(256)]
-		public readonly bool Contains<TU>(in Allocator allocator, TU obj) where TU : unmanaged, IEquatable<T>
+		public readonly bool Contains<TU>(Allocator* allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			Debug.Assert(IsCreated);
-			for (uint i = 0, cnt = _count; i < cnt; ++i)
+			for (int i = 0, cnt = _count; i < cnt; ++i)
 			{
-				if (obj.Equals(_arr[in allocator, i]))
+				if (obj.Equals(_arr[allocator, i]))
 				{
 					return true;
 				}
@@ -393,14 +189,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Remove<TU>(ref Allocator allocator, TU obj) where TU : unmanaged, IEquatable<T>
+		public bool Remove<TU>(Allocator* allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			Debug.Assert(IsCreated);
-			for (uint i = 0, cnt = _count; i < cnt; ++i)
+			for (int i = 0, cnt = _count; i < cnt; ++i)
 			{
-				if (obj.Equals(_arr[in allocator, i]))
+				if (obj.Equals(_arr[allocator, i]))
 				{
-					RemoveAt(ref allocator, i);
+					RemoveAt(allocator, i);
 					return true;
 				}
 			}
@@ -409,13 +205,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool RemoveFast<TU>(in Allocator allocator, TU obj) where TU : unmanaged, IEquatable<T>
+		public bool RemoveFast<TU>(Allocator* allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
-			for (uint i = 0, cnt = _count; i < cnt; ++i)
+			for (int i = 0, cnt = _count; i < cnt; ++i)
 			{
-				if (obj.Equals(_arr[in allocator, i]))
+				if (obj.Equals(_arr[allocator, i]))
 				{
-					RemoveAtSwapBack(in allocator, i);
+					RemoveAtSwapBack(allocator, i);
 					return true;
 				}
 			}
@@ -424,7 +220,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool RemoveAt(ref Allocator allocator, uint index)
+		public bool RemoveAt(Allocator* allocator, int index)
 		{
 			if (index >= _count)
 				return false;
@@ -432,35 +228,22 @@ namespace Sapientia.MemoryAllocator
 			if (index == _count - 1)
 			{
 				--_count;
-				_arr[in allocator, _count] = default;
+				_arr[allocator, _count] = default;
 				return true;
 			}
 
 			var ptr = _arr.innerArray.ptr.memPtr;
 			var size = sizeof(T);
-			allocator.MemMove(ptr, size * index, ptr, size * (index + 1), (_count - index - 1) * size);
+			allocator->MemMove(ptr, size * index, ptr, size * (index + 1), (_count - index - 1) * size);
 
 			--_count;
-			_arr[in allocator, _count] = default;
+			_arr[allocator, _count] = default;
 
 			return true;
 		}
 
 		[INLINE(256)]
-		public bool RemoveAtSwapBack(in Allocator allocator, uint index)
-		{
-			if (index >= _count)
-				return false;
-
-			--_count;
-			var last = _arr[in allocator, _count];
-			_arr[in allocator, index] = last;
-
-			return true;
-		}
-
-		[INLINE(256)]
-		public bool RemoveAtSwapBack(Allocator* allocator, uint index)
+		public bool RemoveAtSwapBack(Allocator* allocator, int index)
 		{
 			if (index >= _count)
 				return false;
@@ -473,11 +256,11 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Resize(ref Allocator allocator, uint newLength)
+		public bool Resize(Allocator* allocator, int newLength)
 		{
 			if (!IsCreated)
 			{
-				this = new List<T>(ref allocator, newLength);
+				this = new List<T>(allocator, newLength);
 				return true;
 			}
 
@@ -486,17 +269,17 @@ namespace Sapientia.MemoryAllocator
 				return false;
 			}
 
-			return EnsureCapacity(ref allocator, newLength);
+			return EnsureCapacity(allocator, newLength);
 		}
 
 		[INLINE(256)]
-		public void AddRange(ref Allocator allocator, in List<T> collection)
+		public void AddRange(Allocator* allocator, in List<T> collection)
 		{
-			AddRange(ref allocator, in collection, 0u, collection._count);
+			AddRange(allocator, in collection, 0, collection._count);
 		}
 
 		[INLINE(256)]
-		public void AddRange(ref Allocator allocator, in List<T> collection, uint fromIdx, uint toIdx)
+		public void AddRange(Allocator* allocator, in List<T> collection, int fromIdx, int toIdx)
 		{
 			var index = _count;
 
@@ -504,23 +287,23 @@ namespace Sapientia.MemoryAllocator
 			var length = toIdx - fromIdx;
 			if (length > 0u)
 			{
-				EnsureCapacity(ref allocator, _count + length);
+				EnsureCapacity(allocator, _count + length);
 				var size = sizeof(T);
 				if (index < _count)
 				{
-					allocator.MemMove(_arr.innerArray.ptr.memPtr, (index + length) * size, _arr.innerArray.ptr.memPtr, index * size,
+					allocator->MemMove(_arr.innerArray.ptr.memPtr, (index + length) * size, _arr.innerArray.ptr.memPtr, index * size,
 						(_count - index) * size);
 				}
 
 				if (_arr.innerArray.ptr.memPtr == collection._arr.innerArray.ptr.memPtr)
 				{
-					allocator.MemMove(_arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, 0, index * size);
-					allocator.MemMove(_arr.innerArray.ptr.memPtr, (index * 2) * size, _arr.innerArray.ptr.memPtr, (index + length) * size,
+					allocator->MemMove(_arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, 0, index * size);
+					allocator->MemMove(_arr.innerArray.ptr.memPtr, (index * 2) * size, _arr.innerArray.ptr.memPtr, (index + length) * size,
 						(_count - index) * size);
 				}
 				else
 				{
-					collection.CopyTo(ref allocator, _arr, srcOffset, index, length);
+					collection.CopyTo(allocator, _arr, srcOffset, index, length);
 				}
 
 				_count += length;
@@ -528,29 +311,29 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void AddRange(ref Allocator allocator, MemArray<T> collection)
+		public void AddRange(Allocator* allocator, MemArray<T> collection)
 		{
 			var index = _count;
 			var length = collection.Length;
 			if (length > 0u)
 			{
-				EnsureCapacity(ref allocator, _count + length);
+				EnsureCapacity(allocator, _count + length);
 				var size = sizeof(T);
 				if (index < _count)
 				{
-					allocator.MemMove(_arr.innerArray.ptr.memPtr, (index + length) * size, _arr.innerArray.ptr.memPtr, index * size,
+					allocator->MemMove(_arr.innerArray.ptr.memPtr, (index + length) * size, _arr.innerArray.ptr.memPtr, index * size,
 						(_count - index) * size);
 				}
 
 				if (_arr.innerArray.ptr.memPtr == collection.innerArray.ptr.memPtr)
 				{
-					allocator.MemMove(_arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, 0, index * size);
-					allocator.MemMove(_arr.innerArray.ptr.memPtr, (index * 2) * size, _arr.innerArray.ptr.memPtr, (index + length) * size,
+					allocator->MemMove(_arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, 0, index * size);
+					allocator->MemMove(_arr.innerArray.ptr.memPtr, (index * 2) * size, _arr.innerArray.ptr.memPtr, (index + length) * size,
 						(_count - index) * size);
 				}
 				else
 				{
-					CopyFrom(ref allocator, collection, index);
+					CopyFrom(allocator, collection, index);
 				}
 
 				_count += length;
@@ -558,29 +341,89 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly void CopyTo(ref Allocator allocator, MemArray<T> arr, uint srcOffset, uint index, uint count)
+		public readonly void CopyTo(Allocator* allocator, MemArray<T> arr, int srcOffset, int index, int count)
 		{
 			var size = sizeof(T);
-			allocator.MemCopy(arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, srcOffset * size, count * size);
+			allocator->MemCopy(arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, srcOffset * size, count * size);
 		}
 
 		[INLINE(256)]
-		public readonly void CopyTo(ref Allocator allocator, in MemPtr arrPtr, uint srcOffset, uint index, uint count)
+		public readonly void CopyTo(Allocator* allocator, in MemPtr arrPtr, int srcOffset, int index, int count)
 		{
 			var size = sizeof(T);
-			allocator.MemCopy(arrPtr, index * size, _arr.innerArray.ptr.memPtr, srcOffset * size, count * size);
+			allocator->MemCopy(arrPtr, index * size, _arr.innerArray.ptr.memPtr, srcOffset * size, count * size);
 		}
 
 		[INLINE(256)]
-		public readonly void CopyFrom(ref Allocator allocator, MemArray<T> arr, uint index)
+		public readonly void CopyFrom(Allocator* allocator, MemArray<T> arr, int index)
 		{
 			var size = sizeof(T);
-			allocator.MemCopy(_arr.innerArray.ptr.memPtr, index * size, arr.innerArray.ptr.memPtr, 0, arr.Length * size);
+			allocator->MemCopy(_arr.innerArray.ptr.memPtr, index * size, arr.innerArray.ptr.memPtr, 0, arr.Length * size);
 		}
 
-		public uint GetReservedSizeInBytes()
+		public int GetReservedSizeInBytes()
 		{
 			return _arr.GetReservedSizeInBytes();
+		}
+
+		[INLINE(256)]
+		public ListEnumerator<T> GetEnumerator(Allocator* allocator)
+		{
+			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
+		}
+
+		[INLINE(256)]
+		public new ListEnumerator<T> GetEnumerator()
+		{
+			return new ListEnumerator<T>(GetValuePtr(), Count);
+		}
+
+		[INLINE(256)]
+		public ListPtrEnumerator GetPtrEnumerator(Allocator* allocator)
+		{
+			return new ListPtrEnumerator((byte*)GetValuePtr(allocator), ElementSize, Count);
+		}
+
+		[INLINE(256)]
+		public ListPtrEnumerator GetPtrEnumerator()
+		{
+			return new ListPtrEnumerator((byte*)GetValuePtr(), ElementSize, Count);
+		}
+
+		[INLINE(256)]
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator* allocator)
+		{
+			return new (new (GetValuePtr(allocator), Count));
+		}
+
+		[INLINE(256)]
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
+		{
+			return new (new (GetValuePtr(), Count));
+		}
+
+		[INLINE(256)]
+		public Enumerable<IntPtr, ListPtrEnumerator> GetPtrEnumerable(Allocator* allocator)
+		{
+			return new (new ((byte*)GetValuePtr(allocator), ElementSize, Count));
+		}
+
+		[INLINE(256)]
+		public Enumerable<IntPtr, ListPtrEnumerator> GetPtrEnumerable()
+		{
+			return new (new ((byte*)GetValuePtr(), ElementSize, Count));
+		}
+
+		[INLINE(256)]
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		[INLINE(256)]
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 }

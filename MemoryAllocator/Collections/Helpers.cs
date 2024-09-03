@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Generic.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -7,27 +8,16 @@ namespace Sapientia.MemoryAllocator
 		bool IsCreated { get; }
 	}
 
-	public interface IUnmanagedList : IIsCreated
-	{
-		object[] ToManagedArray();
-	}
-
-	public interface IEquatableAllocator<T>
-	{
-		bool Equals(in Allocator allocator, T obj);
-		int GetHash(in Allocator allocator);
-	}
-
 	public enum InsertionBehavior
 	{
-		None = 0,
-		OverwriteExisting,
-		ThrowOnExisting,
+		none = 0,
+		overwriteExisting,
+		throwOnExisting,
 	}
 
 	public static class Helpers
 	{
-		public static uint NextPot(uint n)
+		public static int NextPot(int n)
 		{
 			--n;
 			n |= n >> 1;
@@ -105,7 +95,7 @@ namespace Sapientia.MemoryAllocator
         public static bool s_UseRandomizedStringHashing = String.UseRandomizedHashing();
 #endif
 
-		internal const System.Int32 HashPrime = 101;
+		internal const System.Int32 hashPrime = 101;
 
 		// Table of prime numbers to use as hash table sizes.
 		// A typical resize algorithm would pick the smallest prime number in this array
@@ -118,7 +108,7 @@ namespace Sapientia.MemoryAllocator
 		// hashtable operations such as add.  Having a prime guarantees that double
 		// hashing does not lead to infinite loops.  IE, your hash function will be
 		// h1(key) + i*h2(key), 0 <= i < size.  h2 and the size must be relatively prime.
-		public static readonly uint[] primes =
+		public static readonly int[] primes =
 		{
 			3, 7, 11, 17, 23, 29, 37, 47, 59, 71, 89, 107, 131, 163, 197, 239, 293, 353, 431, 521, 631, 761, 919,
 			1103, 1327, 1597, 1931, 2333, 2801, 3371, 4049, 4861, 5839, 7013, 8419, 10103, 12143, 14591, 17519,
@@ -128,14 +118,15 @@ namespace Sapientia.MemoryAllocator
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsPrime(uint candidate)
+		public static bool IsPrime(int candidate)
 		{
 			if ((candidate & 1) != 0)
 			{
-				var limit = (int)System.Math.Sqrt(candidate);
+				var limit = (int)candidate.Sqrt();
 				for (var divisor = 3; divisor <= limit; divisor += 2)
 				{
-					if ((candidate % divisor) == 0) return false;
+					if ((candidate % divisor) == 0)
+						return false;
 				}
 
 				return true;
@@ -145,7 +136,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static uint GetPrime(uint min)
+		public static int GetPrime(int min)
 		{
 			for (var i = 0; i < primes.Length; i++)
 			{
@@ -158,7 +149,7 @@ namespace Sapientia.MemoryAllocator
 			//compute the hard way.
 			for (var i = (min | 1); i < int.MaxValue; i += 2)
 			{
-				if (IsPrime(i) && ((i - 1) % HashPrime != 0))
+				if (IsPrime(i) && ((i - 1) % hashPrime != 0))
 					return i;
 			}
 
@@ -166,23 +157,23 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static uint GetMinPrime()
+		public static int GetMinPrime()
 		{
 			return primes[0];
 		}
 
 		// Returns size of hashtable to grow to.
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static uint ExpandPrime(uint oldSize)
+		public static int ExpandPrime(int oldSize)
 		{
-			var newSize = 2u * oldSize;
+			var newSize = 2 * oldSize;
 
 			// Allow the hashtables to grow to maximum possible size (~2G elements) before encoutering capacity overflow.
 			// Note that this check works even when _items.Length overflowed thanks to the (TKey) cast
-			if ((uint)newSize > MaxPrimeArrayLength && MaxPrimeArrayLength > oldSize)
+			if (newSize > maxPrimeArrayLength && maxPrimeArrayLength > oldSize)
 			{
 				//System.Diagnostics.Contracts.Contract.Assert(HashHelpers.MaxPrimeArrayLength == HashHelpers.GetPrime(HashHelpers.MaxPrimeArrayLength), "Invalid MaxPrimeArrayLength");
-				return MaxPrimeArrayLength;
+				return maxPrimeArrayLength;
 			}
 
 			return GetPrime(newSize);
@@ -190,6 +181,6 @@ namespace Sapientia.MemoryAllocator
 
 
 		// This is the maximum prime smaller than Array.MaxArrayLength
-		public const uint MaxPrimeArrayLength = 0x7FEFFFFD;
+		public const int maxPrimeArrayLength = 2146435069;
 	}
 }

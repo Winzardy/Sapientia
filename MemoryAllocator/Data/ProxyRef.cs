@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void* GetPtr(in Allocator allocator)
+		public void* GetPtr(Allocator* allocator)
 		{
 			return valueRef.GetPtr(allocator);
 		}

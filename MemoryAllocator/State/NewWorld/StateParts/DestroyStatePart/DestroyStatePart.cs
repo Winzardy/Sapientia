@@ -12,7 +12,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			element.value.children.Clear();
 			element.value.parents.Clear();
 			element.value.killCallbackHolders.Clear();
-			foreach (KillCallback* component in element.value.killCallbacks.GetIntPtrEnumerable(allocator))
+			foreach (KillCallback* component in element.value.killCallbacks.GetPtrEnumerable(allocator))
 			{
 				component->callback.Dispose(allocator);
 			}
@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 				element[i].value.children.Clear();
 				element[i].value.parents.Clear();
 				element[i].value.killCallbackHolders.Clear();
-				foreach (KillCallback* component in element[i].value.killCallbacks.GetIntPtrEnumerable(allocator))
+				foreach (KillCallback* component in element[i].value.killCallbacks.GetPtrEnumerable(allocator))
 				{
 					component->callback.Dispose(allocator);
 				}
@@ -71,10 +71,10 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public void Initialize()
 		{
-			Archetype<KillElement>.RegisterArchetype(AllocatorId, 512u).SetDestroyHandler<KillElementDestroyHandler>();
-			Archetype<KillRequest>.RegisterArchetype(AllocatorId, 64u);
-			Archetype<DelayKillRequest>.RegisterArchetype(AllocatorId, 64u);
-			Archetype<DestroyRequest>.RegisterArchetype(AllocatorId, 64u);
+			Archetype<KillElement>.RegisterArchetype(AllocatorId, 512).SetDestroyHandler<KillElementDestroyHandler>();
+			Archetype<KillRequest>.RegisterArchetype(AllocatorId, 64);
+			Archetype<DelayKillRequest>.RegisterArchetype(AllocatorId, 64);
+			Archetype<DestroyRequest>.RegisterArchetype(AllocatorId, 64);
 		}
 	}
 }

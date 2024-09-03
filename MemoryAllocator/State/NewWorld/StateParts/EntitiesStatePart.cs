@@ -22,9 +22,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		public Entity SharedEntity { get; private set; }
-		public uint EntitiesCount { get; private set; }
-		public uint EntitiesCapacity { get; private set; }
-		public uint ExpandStep { get; private set; }
+		public int EntitiesCount { get; private set; }
+		public int EntitiesCapacity { get; private set; }
+		public int ExpandStep { get; private set; }
 
 		private List<ushort> _freeEntitiesIds;
 		private List<ushort> _entityIdToGeneration;
@@ -32,10 +32,10 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 #if UNITY_EDITOR
 		public List<FixedString32Bytes> entityIdToName;
-		public uint MaxEntitiesCount { get; private set; }
+		public int MaxEntitiesCount { get; private set; }
 #endif
 
-		public EntitiesStatePart(uint entitiesCapacity, uint expandStep = 512)
+		public EntitiesStatePart(int entitiesCapacity, int expandStep = 512)
 		{
 			_allocatorId = default;
 
@@ -55,13 +55,13 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public void Initialize()
 		{
-			ref var allocator = ref _allocatorId.GetAllocator();
+			var allocator = _allocatorId.GetAllocatorPtr();
 
-			_freeEntitiesIds = new (ref allocator, EntitiesCapacity);
-			_entityIdToGeneration = new(ref allocator, EntitiesCapacity);
-			_entityDestroySubscribers = new(ref allocator, 128);
+			_freeEntitiesIds = new (allocator, EntitiesCapacity);
+			_entityIdToGeneration = new(allocator, EntitiesCapacity);
+			_entityDestroySubscribers = new(allocator, 128);
 #if UNITY_EDITOR
-			entityIdToName = new (ref allocator, EntitiesCapacity);
+			entityIdToName = new (allocator, EntitiesCapacity);
 #endif
 
 			for (ushort i = 0; i < EntitiesCapacity; i++)
@@ -70,9 +70,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			}
 
 #if UNITY_EDITOR
-			SharedEntity = CreateEntity(ref _allocatorId.GetAllocator(), "SHARED");
+			SharedEntity = CreateEntity(allocator, "SHARED");
 #else
-			SharedEntity = CreateEntity();
+			SharedEntity = CreateEntity(allocator);
 #endif
 		}
 
@@ -87,9 +87,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 #if UNITY_EDITOR
-		public Entity CreateEntity(ref Allocator allocator, string name = null)
+		public Entity CreateEntity(Allocator* allocator, string name = null)
 #else
-		public Entity CreateEntity(ref Allocator allocator)
+		public Entity CreateEntity(Allocator* allocator)
 
 #endif
 		{
@@ -98,7 +98,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			var id = _freeEntitiesIds[allocator, EntitiesCount++];
 			var generation = ++_entityIdToGeneration[allocator, id];
 
-			var entity = new Entity(id, generation, allocator.allocatorId);
+			var entity = new Entity(id, generation, allocator->allocatorId);
 #if UNITY_EDITOR
 			entityIdToName[allocator, id] = name;
 			if (MaxEntitiesCount < EntitiesCount)
@@ -141,7 +141,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			_freeEntitiesIds[allocator, --EntitiesCount] = entity.id;
 		}
 
-		private void EnsureCapacity(uint index)
+		private void EnsureCapacity(int index)
 		{
 			if (index < EntitiesCapacity)
 				return;

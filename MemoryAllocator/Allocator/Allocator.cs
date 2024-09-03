@@ -24,8 +24,8 @@ namespace Sapientia.MemoryAllocator
 		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
 #endif
 		public MemZone** zonesList;
-		public uint zonesListCount;
-		internal uint zonesListCapacity;
+		public int zonesListCount;
+		internal int zonesListCapacity;
 		internal int initialSize;
 		internal int maxSize;
 		public ServiceLocator serviceLocator;
@@ -127,7 +127,7 @@ namespace Sapientia.MemoryAllocator
 			threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 			version = 1;
 
-			serviceLocator = ServiceLocator.Create(ref this);
+			serviceLocator = ServiceLocator.Create((Allocator*)this.AsPointer());
 
 			return this;
 		}
@@ -147,22 +147,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(in Allocator other)
+		public void CopyFrom(Allocator* other)
 		{
-			if (other.zonesList == null && zonesList == null)
+			if (other->zonesList == null && zonesList == null)
 			{
 			}
-			else if (other.zonesList == null && zonesList != null)
+			else if (other->zonesList == null && zonesList != null)
 			{
 				FreeZones();
 			}
 			else
 			{
-				if (zonesListCount < other.zonesListCount)
+				if (zonesListCount < other->zonesListCount)
 				{
-					for (var i = zonesListCount; i < other.zonesListCount; ++i)
+					for (var i = zonesListCount; i < other->zonesListCount; ++i)
 					{
-						var otherZone = other.zonesList![i];
+						var otherZone = other->zonesList[i];
 						if (otherZone == null)
 						{
 							AddZone(null, false);
@@ -175,12 +175,12 @@ namespace Sapientia.MemoryAllocator
 					}
 				}
 
-				if (zonesListCount == other.zonesListCount)
+				if (zonesListCount == other->zonesListCount)
 				{
-					for (var i = 0; i < other.zonesListCount; ++i)
+					for (var i = 0; i < other->zonesListCount; ++i)
 					{
 						ref var curZone = ref zonesList[i];
-						var otherZone = other.zonesList![i];
+						var otherZone = other->zonesList[i];
 						{
 							if (curZone == null && otherZone == null) continue;
 
@@ -207,9 +207,9 @@ namespace Sapientia.MemoryAllocator
 				{
 					FreeZones();
 
-					for (var i = 0; i < other.zonesListCount; i++)
+					for (var i = 0; i < other->zonesListCount; i++)
 					{
-						var otherZone = other.zonesList![i];
+						var otherZone = other->zonesList[i];
 
 						if (otherZone != null)
 						{
@@ -225,21 +225,21 @@ namespace Sapientia.MemoryAllocator
 				}
 			}
 
-			threadId = other.threadId;
-			initialSize = other.initialSize;
-			maxSize = other.maxSize;
-			serviceLocator = other.serviceLocator;
+			threadId = other->threadId;
+			initialSize = other->initialSize;
+			maxSize = other->maxSize;
+			serviceLocator = other->serviceLocator;
 
-			version = (ushort)(other.version + 1);
+			version = (ushort)(other->version + 1);
 		}
 
 		[INLINE(256)]
-		public void CopyFromComplete(in Allocator other, int index)
+		public void CopyFromComplete(Allocator* other, int index)
 		{
 			// We must be sure that source allocator has the same structure and size as current
 			// So we must call CopyFromPrepare() first
 			var curZone = zonesList[index];
-			var otherZone = other.zonesList[index];
+			var otherZone = other->zonesList[index];
 			{
 				if (curZone == null && otherZone == null) return;
 				{
@@ -249,22 +249,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void CopyFromPrepare(in Allocator other)
+		public void CopyFromPrepare(Allocator* other)
 		{
-			if (other.zonesList == null && zonesList == null)
+			if (other->zonesList == null && zonesList == null)
 			{
 			}
-			else if (other.zonesList == null && zonesList != null)
+			else if (other->zonesList == null && zonesList != null)
 			{
 				FreeZones();
 			}
 			else
 			{
-				if (zonesListCount < other.zonesListCount)
+				if (zonesListCount < other->zonesListCount)
 				{
-					for (var i = zonesListCount; i < other.zonesListCount; ++i)
+					for (var i = zonesListCount; i < other->zonesListCount; ++i)
 					{
-						var otherZone = other.zonesList![i];
+						var otherZone = other->zonesList![i];
 						if (otherZone == null)
 						{
 							AddZone(null, false);
@@ -277,12 +277,12 @@ namespace Sapientia.MemoryAllocator
 					}
 				}
 
-				if (zonesListCount == other.zonesListCount)
+				if (zonesListCount == other->zonesListCount)
 				{
-					for (var i = 0; i < other.zonesListCount; ++i)
+					for (var i = 0; i < other->zonesListCount; ++i)
 					{
 						ref var curZone = ref zonesList[i];
-						var otherZone = other.zonesList![i];
+						var otherZone = other->zonesList![i];
 						{
 							if (curZone == null && otherZone == null) continue;
 
@@ -307,9 +307,9 @@ namespace Sapientia.MemoryAllocator
 				{
 					FreeZones();
 
-					for (var i = 0; i < other.zonesListCount; i++)
+					for (var i = 0; i < other->zonesListCount; i++)
 					{
-						var otherZone = other.zonesList![i];
+						var otherZone = other->zonesList[i];
 						if (otherZone != null)
 						{
 							var zone = MzCreateZoneEmpty(otherZone->size);
@@ -323,12 +323,12 @@ namespace Sapientia.MemoryAllocator
 				}
 			}
 
-			threadId = other.threadId;
-			initialSize = other.initialSize;
-			maxSize = other.maxSize;
-			serviceLocator = other.serviceLocator;
+			threadId = other->threadId;
+			initialSize = other->initialSize;
+			maxSize = other->maxSize;
+			serviceLocator = other->serviceLocator;
 
-			version = (ushort)(other.version + 1);
+			version = (ushort)(other->version + 1);
 		}
 
 		[INLINE(256)]
@@ -350,11 +350,11 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		internal uint AddZone(MemZone* zone, bool lookUpNull = true)
+		internal int AddZone(MemZone* zone, bool lookUpNull = true)
 		{
 			if (lookUpNull)
 			{
-				for (var i = 0u; i < zonesListCount; ++i)
+				for (var i = 0; i < zonesListCount; ++i)
 				{
 					if (zonesList[i] == null)
 					{
@@ -381,7 +381,7 @@ namespace Sapientia.MemoryAllocator
 
 			zonesList[zonesListCount++] = zone;
 
-			return zonesListCount - 1u;
+			return zonesListCount - 1;
 		}
 
 		///
@@ -511,7 +511,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly void MemFill<T>(in MemPtr dest, T value, long destOffset, uint length) where T: unmanaged
+		public readonly void MemFill<T>(in MemPtr dest, T value, long destOffset, int length) where T: unmanaged
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
 			var zoneIndex = dest.zoneId;
@@ -559,7 +559,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		internal readonly MemPtr GetSafePtr(void* ptr, uint zoneIndex)
+		internal readonly MemPtr GetSafePtr(void* ptr, int zoneIndex)
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
 			if (zoneIndex >= zonesListCount || zonesList[zoneIndex] == null)
@@ -567,7 +567,7 @@ namespace Sapientia.MemoryAllocator
 				throw new System.Exception();
 			}
 #endif
-			return new MemPtr(zoneIndex, (uint)((byte*)ptr - (byte*)zonesList[zoneIndex]), allocatorId);
+			return new MemPtr(zoneIndex, (int)((byte*)ptr - (byte*)zonesList[zoneIndex]), allocatorId);
 		}
 
 		///
@@ -576,25 +576,12 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly MemPtr RefArrayPtr<T>(in MemPtr ptr, int index) where T : unmanaged
 		{
-			var size = TSize<T>.uSize;
-			return new MemPtr(ptr.zoneId, ptr.offset + (uint)index * size, allocatorId);
-		}
-
-		[INLINE(256)]
-		public readonly MemPtr RefArrayPtr<T>(in MemPtr ptr, uint index) where T : unmanaged
-		{
-			var size = TSize<T>.uSize;
+			var size = TSize<T>.size;
 			return new MemPtr(ptr.zoneId, ptr.offset + index * size, allocatorId);
 		}
 
 		[INLINE(256)]
-		public readonly MemPtr RefArrayPtr(in MemPtr ptr, uint size, int index)
-		{
-			return new MemPtr(ptr.zoneId, ptr.offset + (uint)index * size, allocatorId);
-		}
-
-		[INLINE(256)]
-		public readonly MemPtr RefArrayPtr(in MemPtr ptr, uint size, uint index)
+		public readonly MemPtr RefArrayPtr(in MemPtr ptr, int size, int index)
 		{
 			return new MemPtr(ptr.zoneId, ptr.offset + index * size, allocatorId);
 		}
@@ -607,27 +594,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly ref T RefArray<T>(MemPtr ptr, int index) where T : unmanaged
-		{
-			var size = TSize<T>.size;
-			return ref *(T*)this.GetUnsafePtr(in ptr, index * size);
-		}
-
-		[INLINE(256)]
-		public readonly ref T RefArray<T>(in MemPtr ptr, uint index) where T : unmanaged
-		{
-			var size = TSize<T>.uSize;
-			return ref *(T*)this.GetUnsafePtr(in ptr, index * size);
-		}
-
-		[INLINE(256)]
-		public readonly ref T RefArray<T>(MemPtr ptr, uint index) where T : unmanaged
-		{
-			var size = TSize<T>.uSize;
-			return ref *(T*)this.GetUnsafePtr(in ptr, index * size);
-		}
-
-		[INLINE(256)]
 		public MemPtr ReAllocArray<T>(in MemPtr ptr, int newLength) where T : unmanaged
 		{
 			var size = TSize<T>.size;
@@ -635,42 +601,28 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemPtr ReAllocArray<T>(in MemPtr ptr, uint newLength) where T : unmanaged
-		{
-			var size = TSize<T>.uSize;
-			return this.ReAlloc(in ptr, (int)(size * newLength));
-		}
-
-		[INLINE(256)]
-		public MemPtr ReAllocArray<T>(in MemPtr memPtr, uint newLength, out T* ptr) where T : unmanaged
+		public MemPtr ReAllocArray<T>(in MemPtr memPtr, int newLength, out T* ptr) where T : unmanaged
 		{
 			var size = TSize<T>.size;
-			var newPtr = this.ReAlloc(in memPtr, (int)(size * newLength), out var voidPtr);
+			var newPtr = this.ReAlloc(in memPtr, (size * newLength), out var voidPtr);
 			ptr = (T*)voidPtr;
 			return newPtr;
 		}
 
 		[INLINE(256)]
-		public MemPtr ReAllocArray(in MemPtr ptr, uint elementSizeOf, uint newLength)
+		public MemPtr ReAllocArray(in MemPtr ptr, int elementSizeOf, int newLength)
 		{
-			return this.ReAlloc(ptr, (int)(elementSizeOf * newLength));
+			return this.ReAlloc(ptr, (elementSizeOf * newLength));
 		}
 
 		[INLINE(256)]
-		public MemPtr ReAllocArray(in MemPtr ptr, uint elementSizeOf, uint newLength, out void* voidPtr)
+		public MemPtr ReAllocArray(in MemPtr ptr, int elementSizeOf, int newLength, out void* voidPtr)
 		{
-			return this.ReAlloc(in ptr, (int)(elementSizeOf * newLength), out voidPtr);
+			return this.ReAlloc(in ptr, (elementSizeOf * newLength), out voidPtr);
 		}
 
 		[INLINE(256)]
 		public MemPtr AllocArray<T>(int length) where T : struct
-		{
-			var size = TSize<T>.size;
-			return this.Alloc(size * length);
-		}
-
-		[INLINE(256)]
-		public MemPtr AllocArray<T>(uint length) where T : struct
 		{
 			var size = TSize<T>.size;
 			return this.Alloc(size * length);
@@ -683,19 +635,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemPtr AllocArray(uint sizeOf, uint length)
-		{
-			return this.Alloc(sizeOf * length);
-		}
-
-		[INLINE(256)]
-		public MemPtr AllocArray(uint sizeOf, uint length, out void* ptr)
+		public MemPtr AllocArray(int sizeOf, int length, out void* ptr)
 		{
 			return this.Alloc(sizeOf * length, out ptr);
 		}
 
 		[INLINE(256)]
-		public MemPtr AllocArray<T>(uint length, out T* ptr) where T : unmanaged
+		public MemPtr AllocArray<T>(int length, out T* ptr) where T : unmanaged
 		{
 			var size = TSize<T>.size;
 			var memPtr = this.Alloc(size * length, out var voidPtr);

@@ -6,14 +6,14 @@ namespace Sapientia.MemoryAllocator
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct MemPtr : System.IEquatable<MemPtr>
 	{
-		public static readonly MemPtr Invalid = new (0u, 0u, default);
+		public static readonly MemPtr Invalid = new (0, 0, default);
 
-		public uint zoneId;
-		public uint offset;
+		public int zoneId;
+		public int offset;
 		public AllocatorId allocatorId;
 
 		[INLINE(256)]
-		public MemPtr(uint zoneId, uint offset, AllocatorId allocatorId)
+		public MemPtr(int zoneId, int offset, AllocatorId allocatorId)
 		{
 			this.zoneId = zoneId;
 			this.offset = offset;
@@ -54,12 +54,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref Allocator GetAllocator()
-		{
-			return ref *allocatorId.GetAllocatorPtr();
-		}
-
-		[INLINE(256)]
 		public Allocator* GetAllocatorPtr()
 		{
 			return allocatorId.GetAllocatorPtr();
@@ -68,8 +62,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void* GetPtr()
 		{
-			ref var allocator = ref GetAllocator();
-			return allocator.GetUnsafePtr(in this);
+			return GetAllocatorPtr()->GetUnsafePtr(in this);
 		}
 
 		public override string ToString() => $"zoneId: {zoneId}, offset: {offset}, allocatorId: [{allocatorId}]";

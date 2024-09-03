@@ -9,17 +9,17 @@ namespace Sapientia.MemoryAllocator
 		private Dictionary<TypeIndex, ValueRef> _typeToPtr;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServiceLocator Create(uint capacity = 128u)
+		public static ServiceLocator Create(int capacity = 128)
 		{
-			return Create(ref AllocatorManager.CurrentAllocator, capacity);
+			return Create(AllocatorManager.CurrentAllocatorPtr, capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServiceLocator Create(ref Allocator allocator, uint capacity = 128u)
+		public static ServiceLocator Create(Allocator* allocator, int capacity = 128)
 		{
 			return new ServiceLocator
 			{
-				_typeToPtr = new Dictionary<TypeIndex, ValueRef>(ref allocator, capacity),
+				_typeToPtr = new Dictionary<TypeIndex, ValueRef>(allocator, capacity),
 			};
 		}
 
@@ -73,60 +73,60 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>() where T: unmanaged, IIndexedType
 		{
-			ref var allocator = ref _typeToPtr.GetAllocator();
+			var allocator = _typeToPtr.GetAllocatorPtr();
 			var typeIndex = TypeIndex.Create<T>();
 
-			return ref _typeToPtr.GetValue(ref allocator, typeIndex).GetValue<T>(allocator);
+			return ref _typeToPtr.GetValue(allocator, typeIndex).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(out bool exist) where T: unmanaged, IIndexedType
 		{
-			ref var allocator = ref _typeToPtr.GetAllocator();
+			var allocator = _typeToPtr.GetAllocatorPtr();
 			var typeIndex = TypeIndex.Create<T>();
 
-			return ref _typeToPtr.GetValue(ref allocator, typeIndex, out exist).GetValue<T>(allocator);
+			return ref _typeToPtr.GetValue(allocator, typeIndex, out exist).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T* GetServicePtr<T>() where T: unmanaged, IIndexedType
 		{
-			ref var allocator = ref _typeToPtr.GetAllocator();
+			var allocator = _typeToPtr.GetAllocatorPtr();
 			var typeIndex = TypeIndex.Create<T>();
 
-			return _typeToPtr.GetValue(ref allocator, typeIndex).GetPtr<T>(allocator);
+			return _typeToPtr.GetValue(allocator, typeIndex).GetPtr<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(ProxyRef<T> proxyRef) where T: unmanaged, IProxy
 		{
-			ref var allocator = ref _typeToPtr.GetAllocator();
-			return ref _typeToPtr.GetValue(ref allocator, proxyRef.valueRef.typeIndex).GetValue<T>(allocator);
+			var allocator = _typeToPtr.GetAllocatorPtr();
+			return ref _typeToPtr.GetValue(allocator, proxyRef.valueRef.typeIndex).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(ProxyRef<T> proxyRef, out bool exist) where T: unmanaged, IProxy
 		{
-			ref var allocator = ref _typeToPtr.GetAllocator();
-			return ref _typeToPtr.GetValue(ref allocator, proxyRef.valueRef.typeIndex, out exist).GetValue<T>(allocator);
+			var allocator = _typeToPtr.GetAllocatorPtr();
+			return ref _typeToPtr.GetValue(allocator, proxyRef.valueRef.typeIndex, out exist).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetServiceAs<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
-			ref var allocator = ref _typeToPtr.GetAllocator();
+			var allocator = _typeToPtr.GetAllocatorPtr();
 			var typeIndex = TypeIndex.Create<TBase>();
 
-			return ref _typeToPtr.GetValue(ref allocator, typeIndex).GetValue<T>(allocator);
+			return ref _typeToPtr.GetValue(allocator, typeIndex).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T* GetServiceAsPtr<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
-			ref var allocator = ref _typeToPtr.GetAllocator();
+			var allocator = _typeToPtr.GetAllocatorPtr();
 			var typeIndex = TypeIndex.Create<TBase>();
 
-			return _typeToPtr.GetValue(ref allocator, typeIndex).GetPtr<T>();
+			return _typeToPtr.GetValue(allocator, typeIndex).GetPtr<T>();
 		}
 	}
 

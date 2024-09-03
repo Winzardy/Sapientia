@@ -5,7 +5,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
-	public struct Entity : IEquatable<Entity>
+	public unsafe struct Entity : IEquatable<Entity>
 	{
 		public const ushort GENERATION_ZERO = 0;
 
@@ -30,53 +30,53 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(string name)
 		{
-			ref var allocator = ref AllocatorManager.CurrentAllocator;
+			var allocator = AllocatorManager.CurrentAllocatorPtr;
 #if UNITY_EDITOR
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator, name);
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator);
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create()
 		{
-			ref var allocator = ref AllocatorManager.CurrentAllocator;
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator);
+			var allocator = AllocatorManager.CurrentAllocatorPtr;
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(ref Allocator allocator, string name)
+		public static Entity Create(Allocator* allocator, string name)
 		{
 #if UNITY_EDITOR
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator, name);
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator);
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(ref Allocator allocator)
+		public static Entity Create(Allocator* allocator)
 		{
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator);
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(AllocatorId allocatorId, string name)
 		{
-			ref var allocator = ref allocatorId.GetAllocator();
+			var allocator = allocatorId.GetAllocatorPtr();
 #if UNITY_EDITOR
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator, name);
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator);
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(AllocatorId allocatorId)
 		{
-			ref var allocator = ref allocatorId.GetAllocator();
-			return allocator.serviceLocator.GetService<EntitiesStatePart>().CreateEntity(ref allocator);
+			var allocator = allocatorId.GetAllocatorPtr();
+			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

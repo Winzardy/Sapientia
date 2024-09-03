@@ -13,12 +13,13 @@ namespace Sapientia.TypeIndexer
 	{
 		public static void GenerateTypeIndexes(string folderPath)
 		{
-			var typeIndexProvider = CreateTypeIndexProvider();
+			folderPath = Path.Combine(folderPath, nameof(TypeIndexerGenerator));
 
 			if (Directory.Exists(folderPath))
 				Directory.Delete(folderPath, true);
 			Directory.CreateDirectory(folderPath);
 
+			var typeIndexProvider = CreateTypeIndexProvider();
 			File.WriteAllText(Path.Combine(folderPath, "IndexedTypesProvider.generated.cs"), typeIndexProvider);
 		}
 
@@ -28,6 +29,8 @@ namespace Sapientia.TypeIndexer
 				.SelectMany(assembly => assembly.GetTypes())
 				.Where(type =>
 				{
+					if (type.IsGenericType)
+						return false;
 					if (type.GetCustomAttribute<IndexedTypeAttribute>(true) != null)
 						return true;
 					if (type.GetCustomAttribute<InterfaceProxyAttribute>(true) != null)
@@ -44,9 +47,15 @@ namespace Sapientia.TypeIndexer
 				{
 					type.GetChildrenTypes(out var childrenTypes, out var childrenInterfaces);
 					foreach (var child in childrenTypes)
-						types.Add(child);
+					{
+						if (!child.IsGenericType)
+							types.Add(child);
+					}
 					foreach (var child in childrenInterfaces)
-						types.Add(child);
+					{
+						if (!child.IsGenericType)
+							types.Add(child);
+					}
 				}
 			}
 

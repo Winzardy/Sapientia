@@ -1,138 +1,78 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(StackProxy<>))]
-	public unsafe struct Stack<T> where T : unmanaged
+	public unsafe struct Stack<T> : IListEnumerable<T> where T : unmanaged
 	{
-		/*public struct Enumerator : System.Collections.Generic.IEnumerator<T>
-		{
-			private readonly Stack<T> stack;
-			private readonly State* state;
-			private int index;
-			private T currentElement;
+		private const int _defaultCapacity = 4;
 
-			internal Enumerator(Stack<T> stack, State* state)
-			{
-				this.stack = stack;
-				this.state = state;
-				index = -2;
-				currentElement = default(T);
-			}
-
-			public void Dispose()
-			{
-				index = -1;
-			}
-
-			public bool MoveNext()
-			{
-				bool retval;
-				if (index == -2)
-				{
-					// First call to enumerator.
-					index = (int)stack.size - 1;
-					retval = index >= 0;
-					if (retval)
-					{
-						currentElement = stack.array[in state->allocator, index];
-					}
-
-					return retval;
-				}
-
-				if (index == -1)
-				{
-					// End of enumeration.
-					return false;
-				}
-
-				retval = --index >= 0;
-				if (retval)
-				{
-					currentElement = stack.array[in state->allocator, index];
-				}
-				else
-				{
-					currentElement = default(T);
-				}
-
-				return retval;
-			}
-
-			public T Current
-			{
-				get { return currentElement; }
-			}
-
-			object System.Collections.IEnumerator.Current
-			{
-				get { return currentElement; }
-			}
-
-			void System.Collections.IEnumerator.Reset()
-			{
-				index = -2;
-				currentElement = default;
-			}
-		}*/
-
-		private const uint DEFAULT_CAPACITY = 4u;
-
-		private MemArray<T> array;
-		private uint size;
+		private MemArray<T> _array;
+		private int _count;
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => array.IsCreated;
+			[INLINE(256)] get => _array.IsCreated;
 		}
 
-		public readonly uint Count => size;
+		public readonly int Count
+		{
+			[INLINE(256)] get => _count;
+		}
+
+		public int ElementSize
+		{
+			[INLINE(256)] get => _array.ElementSize;
+		}
 
 		[INLINE(256)]
-		public Stack(ref Allocator allocator, uint capacity, byte growFactor = 1)
+		public Allocator* GetAllocatorPtr()
+		{
+			return _array.GetAllocatorPtr();
+		}
+
+		[INLINE(256)]
+		public Stack(Allocator* allocator, int capacity, byte growFactor = 1)
 		{
 			this = default;
-			array = new MemArray<T>(ref allocator, capacity, growFactor: growFactor);
-		}
-
-		/*public Enumerator GetEnumerator(World world)
-		{
-			return new Enumerator(this, world.state);
-		}*/
-
-		[INLINE(256)]
-		public void* GetUnsafePtr(in Allocator allocator)
-		{
-			return array.GetPtr(in allocator);
+			_array = new MemArray<T>(allocator, capacity, growFactor: growFactor);
 		}
 
 		[INLINE(256)]
-		public void BurstMode(in Allocator allocator, bool state)
+		public T* GetValuePtr()
 		{
-			array.BurstMode(in allocator, state);
+			return _array.GetValuePtr();
 		}
 
 		[INLINE(256)]
-		public void Dispose(ref Allocator allocator)
+		public T* GetValuePtr(Allocator* allocator)
 		{
-			array.Dispose(ref allocator);
+			return _array.GetValuePtr(allocator);
+		}
+
+		[INLINE(256)]
+		public void Dispose(Allocator* allocator)
+		{
+			_array.Dispose(allocator);
 			this = default;
 		}
 
 		[INLINE(256)]
 		public void Clear()
 		{
-			size = 0;
+			_count = 0;
 		}
 
 		[INLINE(256)]
-		public bool Contains<U>(in Allocator allocator, U item) where U : System.IEquatable<T>
+		public bool Contains<TU>(Allocator* allocator, TU item) where TU : System.IEquatable<T>
 		{
-			var count = size;
+			var count = _count;
 			while (count-- > 0)
 			{
-				if (item.Equals(array[in allocator, count]))
+				if (item.Equals(_array[allocator, count]))
 				{
 					return true;
 				}
@@ -142,77 +82,101 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly T Peek(in Allocator allocator)
+		public readonly T Peek(Allocator* allocator)
 		{
-			E.IS_EMPTY(size);
-
-			return array[in allocator, size - 1];
+			return _array[allocator, _count - 1];
 		}
 
 		[INLINE(256)]
-		public T Pop(in Allocator allocator)
+		public T Pop(Allocator* allocator)
 		{
-			E.IS_EMPTY(size);
-
-			var item = array[in allocator, --size];
-			array[in allocator, size] = default;
+			var item = _array[allocator, --_count];
+			_array[allocator, _count] = default;
 			return item;
 		}
 
 		[INLINE(256)]
-		public void Push(ref Allocator allocator, T item)
+		public void Push(Allocator* allocator, T item)
 		{
-			if (size == array.Length)
+			if (_count == _array.Length)
 			{
-				array.Resize(ref allocator, array.Length == 0 ? DEFAULT_CAPACITY : 2 * array.Length);
+				_array.Resize(allocator, _array.Length == 0 ? _defaultCapacity : 2 * _array.Length);
 			}
 
-			array[in allocator, size++] = item;
+			_array[allocator, _count++] = item;
 		}
-
-		/*[INLINE(256)]
-		public void PushLock(ref LockSpinner spinner, ref Allocator allocator, T item)
-		{
-			if (size == array.Length)
-			{
-				spinner.Lock();
-				if (size == array.Length)
-				{
-					array.Resize(ref allocator, array.Length == 0 ? DEFAULT_CAPACITY : 2 * array.Length);
-				}
-
-				spinner.Unlock();
-			}
-
-			var idx = JobUtils.Increment(ref size);
-			array[in allocator, idx - 1u] = item;
-		}
-
-		[INLINE(256)]
-		public void PushRange(ref Allocator allocator, Unity.Collections.LowLevel.Unsafe.UnsafeList<uint>* list)
-		{
-			var freeItems = array.Length - size;
-			if (list->Length >= freeItems)
-			{
-				var delta = (uint)list->Length - freeItems;
-				array.Resize(ref allocator, array.Length + delta, growFactor: 1);
-			}
-
-			MemoryExt.MemCopy(list->Ptr, (byte*)array.GetUnsafePtr(in allocator) + sizeof(uint) * size,
-				(uint)(sizeof(uint) * list->Length));
-			size += (uint)list->Length;
-		}*/
 
 		[INLINE(256)]
 		public void PushNoChecks(T item, T* ptr)
 		{
 			*ptr = item;
-			++size;
+			++_count;
 		}
 
-		public uint GetReservedSizeInBytes()
+		[INLINE(256)]
+		public int GetReservedSizeInBytes()
 		{
-			return array.GetReservedSizeInBytes();
+			return _array.GetReservedSizeInBytes();
+		}
+
+		[INLINE(256)]
+		public ListEnumerator<T> GetEnumerator(Allocator* allocator)
+		{
+			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
+		}
+
+		[INLINE(256)]
+		public new ListEnumerator<T> GetEnumerator()
+		{
+			return new ListEnumerator<T>(GetValuePtr(), Count);
+		}
+
+		[INLINE(256)]
+		public ListPtrEnumerator GetPtrEnumerator(Allocator* allocator)
+		{
+			return new ListPtrEnumerator((byte*)GetValuePtr(allocator), ElementSize, Count);
+		}
+
+		[INLINE(256)]
+		public ListPtrEnumerator GetPtrEnumerator()
+		{
+			return new ListPtrEnumerator((byte*)GetValuePtr(), ElementSize, Count);
+		}
+
+		[INLINE(256)]
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator* allocator)
+		{
+			return new (new (GetValuePtr(allocator), Count));
+		}
+
+		[INLINE(256)]
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
+		{
+			return new (new (GetValuePtr(), Count));
+		}
+
+		[INLINE(256)]
+		public Enumerable<IntPtr, ListPtrEnumerator> GetPtrEnumerable(Allocator* allocator)
+		{
+			return new (new ((byte*)GetValuePtr(allocator), ElementSize, Count));
+		}
+
+		[INLINE(256)]
+		public Enumerable<IntPtr, ListPtrEnumerator> GetPtrEnumerable()
+		{
+			return new (new ((byte*)GetValuePtr(), ElementSize, Count));
+		}
+
+		[INLINE(256)]
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		[INLINE(256)]
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 }

@@ -1,7 +1,9 @@
 {
     "name": "Sapientia",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:cf972f145dd0e414e8b24ecfca3682b5"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,

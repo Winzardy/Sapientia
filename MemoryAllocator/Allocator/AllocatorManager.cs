@@ -14,10 +14,10 @@ namespace Sapientia.MemoryAllocator
 		private static ushort _capacity = 0;
 		private static ushort _nextId = 0;
 
-		public static ref Allocator CurrentAllocator
+		public static Allocator* CurrentAllocatorPtr
 		{
 			[INLINE(256)]
-			get => ref *_currentAllocator;
+			get => _currentAllocator;
 		}
 
 		[INLINE(256)]

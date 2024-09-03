@@ -17,15 +17,15 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref Allocator GetAllocator()
+		public Allocator* GetAllocatorPtr()
 		{
-			return ref proxies.GetAllocator();
+			return proxies.GetAllocatorPtr();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ProxyEvent(ref Allocator allocator, uint capacity)
+		public ProxyEvent(Allocator* allocator, int capacity)
 		{
-			proxies = new HashSet<ProxyRef<T>>(ref allocator, capacity);
+			proxies = new HashSet<ProxyRef<T>>(allocator, capacity);
 		}
 
 		public bool Subscribe(in ProxyRef<T> proxyRef)
@@ -39,33 +39,33 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSet<ProxyRef<T>>.IntPtrEnumerable GetEnumerable(Allocator* allocator)
+		public Enumerable<IntPtr, HashSetPtrEnumerator<ProxyRef<T>>> GetEnumerable(Allocator* allocator)
 		{
-			return proxies.GetIntPtrEnumerable(allocator);
+			return proxies.GetPtrEnumerable(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSet<ProxyRef<T>>.IntPtrEnumerable GetEnumerable(in Allocator allocator)
+		public Enumerable<IntPtr, HashSetPtrEnumerator<ProxyRef<T>>> GetEnumerable()
 		{
-			return proxies.GetIntPtrEnumerable(allocator);
+			return proxies.GetPtrEnumerable();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSet<ProxyRef<T>>.IntPtrEnumerator GetEnumerator(in Allocator allocator)
+		public HashSetPtrEnumerator<ProxyRef<T>> GetEnumerator(Allocator* allocator)
 		{
-			return proxies.GetIntPtrEnumerator(allocator);
+			return proxies.GetPtrEnumerator(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSet<ProxyRef<T>>.IntPtrEnumerator GetEnumerator()
+		public HashSetPtrEnumerator<ProxyRef<T>> GetEnumerator()
 		{
-			return proxies.GetIntPtrEnumerator();
+			return proxies.GetPtrEnumerator();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator<IntPtr> IEnumerable<IntPtr>.GetEnumerator()
 		{
-			return proxies.GetIntPtrEnumerator();
+			return proxies.GetPtrEnumerator();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,11 +74,13 @@ namespace Sapientia.MemoryAllocator.Data
 			return GetEnumerator();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
 			proxies.Dispose();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(Allocator* allocator)
 		{
 			proxies.Dispose(allocator);

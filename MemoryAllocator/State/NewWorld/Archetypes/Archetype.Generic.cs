@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Collections;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
@@ -11,28 +10,28 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	{
 		public Archetype innerArchetype;
 
-		public uint Count
+		public int Count
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => innerArchetype.Count;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype<T> RegisterArchetype(in AllocatorId allocatorId, uint elementsCount)
+		public static ref Archetype<T> RegisterArchetype(AllocatorId allocatorId, int elementsCount)
 		{
-			return ref RegisterArchetype(ref AllocatorManager.GetAllocator(allocatorId), elementsCount);
+			return ref RegisterArchetype(allocatorId.GetAllocatorPtr(), elementsCount);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype<T> RegisterArchetype(ref Allocator allocator, uint elementsCount)
+		public static ref Archetype<T> RegisterArchetype(Allocator* allocator, int elementsCount)
 		{
-			return ref RegisterArchetype(ref allocator, elementsCount, allocator.serviceLocator.GetService<EntitiesStatePart>().EntitiesCapacity);
+			return ref RegisterArchetype(allocator, elementsCount, allocator->serviceLocator.GetService<EntitiesStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype<T> RegisterArchetype(ref Allocator allocator, uint elementsCount, uint entitiesCapacity)
+		public static ref Archetype<T> RegisterArchetype(Allocator* allocator, int elementsCount, int entitiesCapacity)
 		{
-			return ref Archetype.RegisterArchetype<T>(ref allocator, elementsCount, entitiesCapacity).As<Archetype, Archetype<T>>();
+			return ref Archetype.RegisterArchetype<T>(allocator, elementsCount, entitiesCapacity).As<Archetype, Archetype<T>>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -108,9 +107,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SparseSet.Enumerator<T> GetEnumerator()
+		public ListEnumerator<T> GetEnumerator()
 		{
-			return new SparseSet.Enumerator<T>(innerArchetype._elements.GetAllocator(), ref innerArchetype._elements);
+			return new ListEnumerator<T>(innerArchetype._elements.GetValuePtr<T>(), innerArchetype.Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

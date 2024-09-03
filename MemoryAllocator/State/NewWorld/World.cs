@@ -19,20 +19,20 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public bool IsStarted => Tick > 0u;
 
-		public static Ptr<World> Create(AllocatorId allocatorId, uint elementsCount = 64)
+		public static Ptr<World> Create(AllocatorId allocatorId, int elementsCount = 64)
 		{
-			ref var allocator = ref allocatorId.GetAllocator();
+			var allocator = allocatorId.GetAllocatorPtr();
 
-			var worldPtr = allocator.Alloc<World>(out var world);
+			var worldPtr = allocator->Alloc<World>(out var world);
 			world->Tick = 0u;
 			world->Time = 0f;
 			world->AllowLateUpdate = false;
 
 			world->allocatorId = allocatorId;
-			world->worldElements = new (ref allocator, elementsCount);
-			world->worldSystems = new (ref allocator, elementsCount);
+			world->worldElements = new (allocator, elementsCount);
+			world->worldSystems = new (allocator, elementsCount);
 
-			allocator.serviceLocator.RegisterService<World>(worldPtr);
+			allocator->serviceLocator.RegisterService<World>(worldPtr);
 
 			return worldPtr;
 		}
@@ -44,11 +44,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			AddStateParts(stateParts);
 			AddSystems(systems);
 
-			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetIntPtrEnumerable())
+			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
 			{
 				element->Initialize();
 			}
-			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetIntPtrEnumerable())
+			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
 			{
 				element->LateInitialize();
 			}
@@ -85,7 +85,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		/// </summary>
 		private void Start()
 		{
-			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetIntPtrEnumerable())
+			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
 			{
 				element->Start();
 			}
@@ -103,7 +103,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			Tick++;
 			Time += deltaTime;
 
-			foreach (ProxyRef<IWorldSystemProxy>* system in worldSystems.GetIntPtrEnumerable())
+			foreach (ProxyRef<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable())
 			{
 				system->Update(deltaTime);
 			}
@@ -125,7 +125,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			SendBeginDisposeMessage();
 
-			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetIntPtrEnumerable())
+			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
 			{
 				element->Dispose();
 			}

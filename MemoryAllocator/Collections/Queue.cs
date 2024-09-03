@@ -1,176 +1,210 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+
 namespace Sapientia.MemoryAllocator
 {
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(QueueProxy<>))]
-	public unsafe struct Queue<T> where T : unmanaged
+	public unsafe struct Queue<T> : ICircleListEnumerable<T> where T : unmanaged
 	{
-		/*public struct Enumerator : System.Collections.Generic.IEnumerator<T>
+		private const int _minimumGrow = 4;
+		private const int _growFactor = 200;
+
+		private MemArray<T> _array;
+		private int _headIndex;
+		private int _tailIndex;
+		private int _count;
+
+		public readonly bool IsCreated
 		{
-			private State* state;
-			private Queue<T> q;
-			private int index; // -1 = not started, -2 = ended/disposed
-			private T currentElement;
-
-			internal Enumerator(Queue<T> q, State* state)
-			{
-				this.q = q;
-				index = -1;
-				currentElement = default(T);
-				this.state = state;
-			}
-
-			public void Dispose()
-			{
-				index = -2;
-				currentElement = default(T);
-			}
-
-			public bool MoveNext()
-			{
-				if (index == -2)
-				{
-					return false;
-				}
-
-				index++;
-
-				if (index == q.size)
-				{
-					index = -2;
-					currentElement = default(T);
-					return false;
-				}
-
-				currentElement = q.GetElement(in state->allocator, (uint)index);
-				return true;
-			}
-
-			public T Current
-			{
-				get { return currentElement; }
-			}
-
-			object System.Collections.IEnumerator.Current
-			{
-				get { return currentElement; }
-			}
-
-			void System.Collections.IEnumerator.Reset()
-			{
-				index = -1;
-				currentElement = default(T);
-			}
-		}*/
-
-		private const uint MINIMUM_GROW = 4;
-		private const uint GROW_FACTOR = 200;
-
-		private MemArray<T> array;
-		private uint head;
-		private uint tail;
-		private uint size;
-		private uint version;
-		public readonly bool isCreated => array.IsCreated;
-
-		public readonly uint Count => size;
-		public readonly uint Capacity => array.Length;
-
-		public Queue(ref Allocator allocator, uint capacity)
-		{
-			this = default;
-			array = new MemArray<T>(ref allocator, capacity);
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _array.IsCreated;
 		}
 
-		public void Dispose(ref Allocator allocator)
+		public int HeadIndex
 		{
-			array.Dispose(ref allocator);
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _headIndex;
+		}
+
+		public readonly int Count
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _count;
+		}
+
+		public readonly int Capacity
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _array.Length;
+		}
+
+		public readonly int ElementSize
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _array.ElementSize;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Queue(Allocator* allocator, int capacity)
+		{
+			this = default;
+			_array = new MemArray<T>(allocator, capacity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose(Allocator* allocator)
+		{
+			_array.Dispose(allocator);
 			this = default;
 		}
 
-		/*public readonly Enumerator GetEnumerator(World world)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetValuePtr()
 		{
-			return new Enumerator(this, world.state);
+			return _array.GetValuePtr();
 		}
 
-		public readonly Enumerator GetEnumerator(State* state)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetValuePtr(Allocator* allocator)
 		{
-			return new Enumerator(this, state);
-		}*/
+			return _array.GetValuePtr(allocator);
+		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
-			head = 0;
-			tail = 0;
-			size = 0;
-			version++;
+			_headIndex = 0;
+			_tailIndex = 0;
+			_count = 0;
 		}
 
-		public void Enqueue(ref Allocator allocator, T item)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Enqueue(Allocator* allocator, T item)
 		{
-			if (size == array.Length)
+			if (_count == _array.Length)
 			{
-				var newCapacity = (uint)((long)array.Length * (long)GROW_FACTOR / 100L);
-				if (newCapacity < array.Length + MINIMUM_GROW)
+				var newCapacity = (int)((long)_array.Length * (long)_growFactor / 100L);
+				if (newCapacity < _array.Length + _minimumGrow)
 				{
-					newCapacity = array.Length + MINIMUM_GROW;
+					newCapacity = _array.Length + _minimumGrow;
 				}
 
-				SetCapacity(ref allocator, newCapacity);
+				SetCapacity(allocator, newCapacity);
 			}
 
-			array[in allocator, tail] = item;
-			tail = (tail + 1) % array.Length;
-			size++;
-			version++;
+			_array[allocator, _tailIndex] = item;
+			_tailIndex = (_tailIndex + 1) % _array.Length;
+			_count++;
 		}
 
-		public T Dequeue(ref Allocator allocator)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T Dequeue(Allocator* allocator)
 		{
-			E.IS_EMPTY(size);
-
-			var removed = array[in allocator, head];
-			array[in allocator, head] = default(T);
-			head = (head + 1) % array.Length;
-			size--;
-			version++;
+			var removed = _array[allocator, _headIndex];
+			_array[allocator, _headIndex] = default;
+			_headIndex = (_headIndex + 1) % _array.Length;
+			_count--;
 			return removed;
 		}
 
-		public T Peek(in Allocator allocator)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T Peek(Allocator* allocator)
 		{
-			E.IS_EMPTY(size);
-
-			return array[in allocator, head];
+			return _array[allocator, _headIndex];
 		}
 
-		public bool Contains<U>(in Allocator allocator, U item) where U : System.IEquatable<T>
+		public bool Contains<TU>(Allocator* allocator, TU item) where TU : System.IEquatable<T>
 		{
-			var index = head;
-			var count = size;
+			var index = _headIndex;
+			var count = _count;
 
 			while (count-- > 0)
 			{
-				if (item.Equals(array[in allocator, index]))
+				if (item.Equals(_array[allocator, index]))
 				{
 					return true;
 				}
 
-				index = (index + 1) % array.Length;
+				index = (index + 1) % _array.Length;
 			}
 
 			return false;
 		}
 
-		private T GetElement(in Allocator allocator, uint i)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private T GetElement(Allocator* allocator, int i)
 		{
-			return array[in allocator, (head + i) % array.Length];
+			return _array[allocator, (_headIndex + i) % _array.Length];
 		}
 
-		private void SetCapacity(ref Allocator allocator, uint capacity)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void SetCapacity(Allocator* allocator, int capacity)
 		{
-			array.Resize(ref allocator, capacity);
-			head = 0;
-			tail = size == capacity ? 0 : size;
-			version++;
+			_array.Resize(allocator, capacity);
+			_headIndex = 0;
+			_tailIndex = _count == capacity ? 0 : _count;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public CircleListEnumerator<T> GetEnumerator(Allocator* allocator)
+		{
+			return new CircleListEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public new CircleListEnumerator<T> GetEnumerator()
+		{
+			return new CircleListEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public CircleListPtrEnumerator GetPtrEnumerator(Allocator* allocator)
+		{
+			return new CircleListPtrEnumerator((byte*)GetValuePtr(allocator), ElementSize, HeadIndex, Count, Capacity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public CircleListPtrEnumerator GetPtrEnumerator()
+		{
+			return new CircleListPtrEnumerator((byte*)GetValuePtr(), ElementSize, HeadIndex, Count, Capacity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Enumerable<T, CircleListEnumerator<T>> GetEnumerable(Allocator* allocator)
+		{
+			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Enumerable<T, CircleListEnumerator<T>> GetEnumerable()
+		{
+			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Enumerable<IntPtr, CircleListPtrEnumerator> GetPtrEnumerable(Allocator* allocator)
+		{
+			return new (new ((byte*)GetValuePtr(allocator), ElementSize, HeadIndex, Count, Capacity));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Enumerable<IntPtr, CircleListPtrEnumerator> GetPtrEnumerable()
+		{
+			return new (new ((byte*)GetValuePtr(), ElementSize, HeadIndex, Count, Capacity));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 }

@@ -96,7 +96,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 			if (destroyElement.killCallbacks.IsCreated)
 			{
-				for (var i = 0u; i < destroyElement.killCallbacks.Count; i++)
+				for (var i = 0; i < destroyElement.killCallbacks.Count; i++)
 				{
 					ref var killCallback = ref destroyElement.killCallbacks[_allocator, i];
 
@@ -123,13 +123,13 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 			if (destroyElement.killCallbackHolders.IsCreated)
 			{
-				for (var i = 0u; i < destroyElement.killCallbackHolders.Count; i++)
+				for (var i = 0; i < destroyElement.killCallbackHolders.Count; i++)
 				{
 					var holder = destroyElement.killCallbackHolders[_allocator, i];
 					if (!_killElementsArchetype->HasElement(holder) || !_entitiesStatePart->IsEntityAlive(_allocator, holder))
 						continue;
 					ref var holderElement = ref _killElementsArchetype->GetElement(holder);
-					for (var j = 0u; j < holderElement.killCallbacks.Count; j++)
+					for (var j = 0; j < holderElement.killCallbacks.Count; j++)
 					{
 						if (holderElement.killCallbacks[_allocator, j].target.id == entity.id)
 						{
@@ -156,13 +156,13 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			if (!destroyElement.parents.IsCreated)
 				return;
 
-			for (var i = 0u; i < destroyElement.parents.Count; i++)
+			for (var i = 0; i < destroyElement.parents.Count; i++)
 			{
 				var parent = destroyElement.parents[_allocator, i];
 				if (!_killElementsArchetype->HasElement(parent) || !_entitiesStatePart->IsEntityAlive(_allocator, parent))
 					continue;
 				ref var parentElement = ref _killElementsArchetype->GetElement(_allocator, parent);
-				for (var j = 0u; j < parentElement.children.Count; j++)
+				for (var j = 0; j < parentElement.children.Count; j++)
 				{
 					if (parentElement.children[_allocator, j].id == entity.id)
 					{
@@ -186,7 +186,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 			if (!destroyElement.children.IsCreated)
 				return;
-			for (var i = 0u; i < destroyElement.children.Count; i++)
+			for (var i = 0; i < destroyElement.children.Count; i++)
 			{
 				var child = destroyElement.children[_allocator, i];
 				if (_killRequestArchetype->HasElement(child) || !_entitiesStatePart->IsEntityAlive(child))

@@ -29,7 +29,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public ValueRef(in Allocator allocator, void* cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
+		public ValueRef(Allocator* allocator, void* cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
 		{
 			_ptr = new Ptr(allocator, cachedPtr, memPtr);
 			this.typeIndex = typeIndex;
@@ -48,16 +48,16 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public static ValueRef Create<T>(ref Allocator allocator) where T : unmanaged
+		public static ValueRef Create<T>(Allocator* allocator) where T : unmanaged
 		{
-			var memPtr = allocator.Alloc<T>(out var rawPtr);
+			var memPtr = allocator->Alloc<T>(out var rawPtr);
 			return new ValueRef(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static ValueRef Create<T>(ref Allocator allocator, in T value) where T : unmanaged
+		public static ValueRef Create<T>(Allocator* allocator, in T value) where T : unmanaged
 		{
-			var memPtr = allocator.Alloc<T>(value, out var rawPtr);
+			var memPtr = allocator->Alloc<T>(value, out var rawPtr);
 			return new ValueRef(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
@@ -69,7 +69,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public ref T GetValue<T>(in Allocator allocator) where T : unmanaged
+		public ref T GetValue<T>(Allocator* allocator) where T : unmanaged
 		{
 			Debug.Assert(IsCreated);
 			return ref _ptr.Get<T>(allocator);
@@ -83,7 +83,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public void* GetPtr(in Allocator allocator)
+		public void* GetPtr(Allocator* allocator)
 		{
 			Debug.Assert(IsCreated);
 			return _ptr.GetPtr(allocator);
@@ -97,7 +97,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public T* GetPtr<T>(in Allocator allocator) where T: unmanaged
+		public T* GetPtr<T>(Allocator* allocator) where T: unmanaged
 		{
 			Debug.Assert(IsCreated);
 			return (T*)_ptr.GetPtr(allocator);
@@ -118,9 +118,9 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public void Dispose(ref Allocator allocator)
+		public void Dispose(Allocator* allocator)
 		{
-			allocator.Free(_ptr.memPtr);
+			allocator->Free(_ptr.memPtr);
 			_ptr = Ptr.Invalid;
 		}
 

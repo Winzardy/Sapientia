@@ -60,7 +60,7 @@ namespace Sapientia.MemoryAllocator
 			ValidateConsistency(ref allocator);
 			allocator.locker.SetBusyIgnoreThread();
 
-			voidPtr = GetUnsafePtr(in allocator, ptr);
+			voidPtr = GetUnsafePtr(allocator, ptr);
 			var block = (MemBlock*)((byte*)voidPtr - TSize<MemBlock>.size);
 			var blockSize = block->size;
 			var blockDataSize = blockSize - TSize<MemBlock>.size;
@@ -178,7 +178,7 @@ namespace Sapientia.MemoryAllocator
 
 			allocator.locker.SetBusyIgnoreThread();
 
-			for (uint i = 0u, cnt = allocator.zonesListCount; i < cnt; ++i)
+			for (int i = 0, cnt = allocator.zonesListCount; i < cnt; ++i)
 			{
 				var zone = allocator.zonesList[i];
 				if (zone == null)
@@ -248,7 +248,7 @@ namespace Sapientia.MemoryAllocator
 			var success = false;
 			if (zone != null)
 			{
-				success = Allocator.MzFree(zone, GetUnsafePtr(in allocator, ptr));
+				success = Allocator.MzFree(zone, GetUnsafePtr(allocator, ptr));
 
 				if (Allocator.IsEmptyZone(zone))
 				{
