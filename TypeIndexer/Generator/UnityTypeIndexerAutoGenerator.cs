@@ -5,7 +5,6 @@ using System.IO;
 using Sapientia.Extensions;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine;
 
 namespace Sapientia.TypeIndexer
 {
@@ -19,24 +18,6 @@ namespace Sapientia.TypeIndexer
 		[MenuItem("Code Gen/Generate Type Indexes")]
 		private static void GenerateTypeIndex()
 		{
-			var test = new Dictionary<int, int>();
-			for (var i = 0; i < 100; i++)
-			{
-				test.Add(i, i);
-			}
-
-			test.Remove(50);
-
-			var k = 0;
-			foreach (var keyValue in test)
-			{
-				k++;
-			}
-
-			Debug.LogWarning(k);
-			Debug.LogWarning(test.Count);
-			return;
-
 			var baseGenerationFolder = Path.Combine("Assets", "_scripts.generated");
 			TypeIndexerGenerator.GenerateTypeIndexes(baseGenerationFolder);
 
