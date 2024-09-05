@@ -1,8 +1,13 @@
 {
-    "name": "Sapientia",
+    "name": "Sapientia.CodeGen",
     "rootNamespace": "",
-    "references": [],
-    "includePlatforms": [],
+    "references": [
+        "GUID:245a0aa85c0f18e4fa9d0efc10b71ddf",
+        "GUID:bd10b8cc39d09ac4e9c31728752096c0"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": false,
