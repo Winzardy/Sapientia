@@ -1,9 +1,11 @@
+#if UNITY_EDITOR || !UNITY_5_3_OR_NEWER
+
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace Sapientia.Extensions
+namespace Sapientia.Extensions.Reflection
 {
 	public static class CodeGenExt
 	{
@@ -108,3 +110,5 @@ namespace Sapientia.Extensions
 		}
 	}
 }
+
+#endif

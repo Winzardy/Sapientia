@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using GameLogic.Extensions;
 using Sapientia.Extensions;
+using Sapientia.Extensions.Reflection;
 
 namespace Sapientia.TypeIndexer
 {

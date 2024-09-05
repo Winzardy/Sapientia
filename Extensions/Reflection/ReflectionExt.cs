@@ -1,4 +1,5 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR || !UNITY_5_3_OR_NEWER
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -6,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-namespace GameLogic.Extensions
+namespace Sapientia.Extensions.Reflection
 {
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#242e037edaf64d27ba8bfd71d602528a
@@ -482,4 +483,5 @@ namespace GameLogic.Extensions
 		}
 	}
 }
+
 #endif
