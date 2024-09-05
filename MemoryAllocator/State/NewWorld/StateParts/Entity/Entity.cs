@@ -40,7 +40,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 #if UNITY_EDITOR
 			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
@@ -57,7 +57,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 #if UNITY_EDITOR
 			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
@@ -74,7 +74,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 #if UNITY_EDITOR
 			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
