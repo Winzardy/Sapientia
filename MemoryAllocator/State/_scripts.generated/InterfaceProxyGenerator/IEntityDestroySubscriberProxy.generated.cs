@@ -36,26 +36,32 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IEntityDestroySubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ProxyRef<IEntityDestroySubscriberProxy> __proxyRef, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		public static void EntityDestroyed(this ref ProxyPtr<IEntityDestroySubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
-			__proxyRef.proxy.EntityDestroyed(__proxyRef.GetPtr(), allocator, in entity);
+			__proxyPtr.proxy.EntityDestroyed(__proxyPtr.GetPtr(), allocator, in entity);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void EntityDestroyed(this ref ProxyPtr<IEntityDestroySubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		{
+			__proxyPtr.proxy.EntityDestroyed(__proxyPtr.GetPtr(__allocator), allocator, in entity);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityDestroyed(this ref ProxyEvent<IEntityDestroySubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
-			foreach (ProxyRef<IEntityDestroySubscriberProxy>* __proxyRef in __proxyEvent.GetEnumerable())
+			foreach (ProxyPtr<IEntityDestroySubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyRef->proxy.EntityDestroyed(__proxyRef->GetPtr(), allocator, in entity);
+				__proxyPtr->proxy.EntityDestroyed(__proxyPtr->GetPtr(), allocator, in entity);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityDestroyed(this ref ProxyEvent<IEntityDestroySubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
-			foreach (ProxyRef<IEntityDestroySubscriberProxy>* __proxyRef in __proxyEvent.GetEnumerable(__allocator))
+			foreach (ProxyPtr<IEntityDestroySubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyRef->proxy.EntityDestroyed(__proxyRef->GetPtr(), allocator, in entity);
+				__proxyPtr->proxy.EntityDestroyed(__proxyPtr->GetPtr(__allocator), allocator, in entity);
 			}
 		}
 
@@ -73,7 +79,10 @@ namespace Sapientia.TypeIndexer
 		private static void EntityDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
 			__source.EntityDestroyed(allocator, in entity);
+#endif
 		}
 
 #if UNITY_5_3_OR_NEWER

@@ -341,6 +341,24 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void AddRange<TEnumerable>(TEnumerable collection) where TEnumerable: IEnumerable<T>
+		{
+			foreach (var value in collection)
+			{
+				Add(value);
+			}
+		}
+
+		[INLINE(256)]
+		public void AddRange<TEnumerable>(Allocator* allocator, TEnumerable collection) where TEnumerable: IEnumerable<T>
+		{
+			foreach (var value in collection)
+			{
+				Add(allocator, value);
+			}
+		}
+
+		[INLINE(256)]
 		public readonly void CopyTo(Allocator* allocator, MemArray<T> arr, int srcOffset, int index, int count)
 		{
 			var size = sizeof(T);

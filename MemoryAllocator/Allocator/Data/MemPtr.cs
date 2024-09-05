@@ -65,6 +65,20 @@ namespace Sapientia.MemoryAllocator
 			return GetAllocatorPtr()->GetUnsafePtr(in this);
 		}
 
+		[INLINE(256)]
+		public void Dispose(Allocator* allocator)
+		{
+			allocator->Free(this);
+			this = Invalid;
+		}
+
+		[INLINE(256)]
+		public void Dispose()
+		{
+			GetAllocatorPtr()->Free(this);
+			this = Invalid;
+		}
+
 		public override string ToString() => $"zoneId: {zoneId}, offset: {offset}, allocatorId: [{allocatorId}]";
 	}
 }

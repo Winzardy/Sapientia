@@ -36,26 +36,32 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IActionProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Invoke(this ProxyRef<IActionProxy> __proxyRef)
+		public static void Invoke(this ref ProxyPtr<IActionProxy> __proxyPtr)
 		{
-			__proxyRef.proxy.Invoke(__proxyRef.GetPtr());
+			__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr());
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void Invoke(this ref ProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator)
+		{
+			__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr(__allocator));
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Invoke(this ref ProxyEvent<IActionProxy> __proxyEvent)
 		{
-			foreach (ProxyRef<IActionProxy>* __proxyRef in __proxyEvent.GetEnumerable())
+			foreach (ProxyPtr<IActionProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyRef->proxy.Invoke(__proxyRef->GetPtr());
+				__proxyPtr->proxy.Invoke(__proxyPtr->GetPtr());
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Invoke(this ref ProxyEvent<IActionProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator)
 		{
-			foreach (ProxyRef<IActionProxy>* __proxyRef in __proxyEvent.GetEnumerable(__allocator))
+			foreach (ProxyPtr<IActionProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyRef->proxy.Invoke(__proxyRef->GetPtr());
+				__proxyPtr->proxy.Invoke(__proxyPtr->GetPtr(__allocator));
 			}
 		}
 
@@ -73,7 +79,10 @@ namespace Sapientia.TypeIndexer
 		private static void Invoke(void* executorPtr)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
 			__source.Invoke();
+#endif
 		}
 
 #if UNITY_5_3_OR_NEWER

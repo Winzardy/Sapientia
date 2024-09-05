@@ -6,7 +6,7 @@ namespace Sapientia.MemoryAllocator
 {
 	public unsafe struct ServiceLocator
 	{
-		private Dictionary<TypeIndex, ValueRef> _typeToPtr;
+		private Dictionary<TypeIndex, IndexedPtr> _typeToPtr;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ServiceLocator Create(int capacity = 128)
@@ -19,7 +19,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			return new ServiceLocator
 			{
-				_typeToPtr = new Dictionary<TypeIndex, ValueRef>(allocator, capacity),
+				_typeToPtr = new Dictionary<TypeIndex, IndexedPtr>(allocator, capacity),
 			};
 		}
 
@@ -27,34 +27,34 @@ namespace Sapientia.MemoryAllocator
 		public void RegisterService<T>(MemPtr ptr) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
-			_typeToPtr.Add(typeIndex, new ValueRef(ptr, typeIndex));
+			_typeToPtr.Add(typeIndex, new IndexedPtr(ptr, typeIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService<T>(Ptr<T> ptr) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
-			_typeToPtr.Add(typeIndex, new ValueRef(ptr, typeIndex));
+			_typeToPtr.Add(typeIndex, new IndexedPtr(ptr, typeIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService<T>(Ptr ptr) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
-			_typeToPtr.Add(typeIndex, new ValueRef(ptr, typeIndex));
+			_typeToPtr.Add(typeIndex, new IndexedPtr(ptr, typeIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(ValueRef valueRef)
+		public void RegisterService(IndexedPtr indexedPtr)
 		{
-			_typeToPtr.Add(valueRef.typeIndex, valueRef);
+			_typeToPtr.Add(indexedPtr.typeIndex, indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterServiceAs<T, TBase>(Ptr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			var typeIndex = TypeIndex.Create<TBase>();
-			_typeToPtr.Add(typeIndex, new ValueRef(ptr, typeIndex));
+			_typeToPtr.Add(typeIndex, new IndexedPtr(ptr, typeIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,9 +65,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService(ValueRef valueRef)
+		public void RemoveService(IndexedPtr indexedPtr)
 		{
-			_typeToPtr.Remove(valueRef.typeIndex);
+			_typeToPtr.Remove(indexedPtr.typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,17 +98,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(ProxyRef<T> proxyRef) where T: unmanaged, IProxy
+		public ref T GetService<T>(ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
 		{
 			var allocator = _typeToPtr.GetAllocatorPtr();
-			return ref _typeToPtr.GetValue(allocator, proxyRef.valueRef.typeIndex).GetValue<T>(allocator);
+			return ref _typeToPtr.GetValue(allocator, proxyPtr.indexedPtr.typeIndex).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(ProxyRef<T> proxyRef, out bool exist) where T: unmanaged, IProxy
+		public ref T GetService<T>(ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
 		{
 			var allocator = _typeToPtr.GetAllocatorPtr();
-			return ref _typeToPtr.GetValue(allocator, proxyRef.valueRef.typeIndex, out exist).GetValue<T>(allocator);
+			return ref _typeToPtr.GetValue(allocator, proxyPtr.indexedPtr.typeIndex, out exist).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -153,9 +153,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterService(this ref Allocator allocator, ValueRef valueRef)
+		public static void RegisterService(this ref Allocator allocator, IndexedPtr indexedPtr)
 		{
-			allocator.serviceLocator.RegisterService(valueRef);
+			allocator.serviceLocator.RegisterService(indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -171,9 +171,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RemoveService(this ref Allocator allocator, ValueRef valueRef)
+		public static void RemoveService(this ref Allocator allocator, IndexedPtr indexedPtr)
 		{
-			allocator.serviceLocator.RemoveService(valueRef);
+			allocator.serviceLocator.RemoveService(indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -195,15 +195,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T GetService<T>(this ref Allocator allocator, ProxyRef<T> proxyRef) where T: unmanaged, IProxy
+		public static ref T GetService<T>(this ref Allocator allocator, ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
 		{
-			return ref allocator.serviceLocator.GetService(proxyRef);
+			return ref allocator.serviceLocator.GetService(proxyPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T GetService<T>(this ref Allocator allocator, ProxyRef<T> proxyRef, out bool exist) where T: unmanaged, IProxy
+		public static ref T GetService<T>(this ref Allocator allocator, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
 		{
-			return ref allocator.serviceLocator.GetService(proxyRef, out exist);
+			return ref allocator.serviceLocator.GetService(proxyPtr, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -241,9 +241,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterService(this ref AllocatorId allocatorId, ValueRef valueRef)
+		public static void RegisterService(this ref AllocatorId allocatorId, IndexedPtr indexedPtr)
 		{
-			allocatorId.GetAllocator().serviceLocator.RegisterService(valueRef);
+			allocatorId.GetAllocator().serviceLocator.RegisterService(indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -259,9 +259,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RemoveService(this ref AllocatorId allocatorId, ValueRef valueRef)
+		public static void RemoveService(this ref AllocatorId allocatorId, IndexedPtr indexedPtr)
 		{
-			allocatorId.GetAllocator().serviceLocator.RemoveService(valueRef);
+			allocatorId.GetAllocator().serviceLocator.RemoveService(indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -283,15 +283,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T GetService<T>(this ref AllocatorId allocatorId, ProxyRef<T> proxyRef) where T: unmanaged, IProxy
+		public static ref T GetService<T>(this ref AllocatorId allocatorId, ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
 		{
-			return ref allocatorId.GetAllocator().serviceLocator.GetService(proxyRef);
+			return ref allocatorId.GetAllocator().serviceLocator.GetService(proxyPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T GetService<T>(this ref AllocatorId allocatorId, ProxyRef<T> proxyRef, out bool exist) where T: unmanaged, IProxy
+		public static ref T GetService<T>(this ref AllocatorId allocatorId, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
 		{
-			return ref allocatorId.GetAllocator().serviceLocator.GetService(proxyRef, out exist);
+			return ref allocatorId.GetAllocator().serviceLocator.GetService(proxyPtr, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

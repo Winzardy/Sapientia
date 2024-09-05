@@ -2,12 +2,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 {
 	public unsafe struct DestroySystem : IWorldSystem
 	{
-		private AllocatorId _allocatorId;
-		public AllocatorId AllocatorId { get => _allocatorId; set => _allocatorId = value; }
-
-		public void Update(float deltaTime)
+		public void Update(Allocator* allocator, float deltaTime)
 		{
-			var updater = new DestroyUpdater(_allocatorId.GetAllocatorPtr());
+			var updater = new DestroyUpdater(allocator);
 			updater.Update(deltaTime);
 		}
 	}

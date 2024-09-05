@@ -25,7 +25,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype<T> RegisterArchetype(Allocator* allocator, int elementsCount)
 		{
-			return ref RegisterArchetype(allocator, elementsCount, allocator->serviceLocator.GetService<EntitiesStatePart>().EntitiesCapacity);
+			return ref RegisterArchetype(allocator, elementsCount, allocator->serviceLocator.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,9 +59,21 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref readonly T ReadElement(Allocator* allocator, Entity entity)
+		{
+			return ref innerArchetype.ReadElement<T>(allocator, entity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SimpleList<T> ReadElements<TEnumerable>(in TEnumerable entities) where TEnumerable: IEnumerable<Entity>
 		{
 			return innerArchetype.ReadElements<T, TEnumerable>(entities);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasElement(Allocator* allocator, Entity entity)
+		{
+			return innerArchetype.HasElement(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,9 +89,21 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetElement(Allocator* allocator, Entity entity, out bool isCreated)
+		{
+			return ref innerArchetype.GetElement<T>(allocator, entity, out isCreated);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement(Entity entity)
 		{
 			return ref innerArchetype.GetElement<T>(entity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetElement(Entity entity, out bool isCreated)
+		{
+			return ref innerArchetype.GetElement<T>(entity, out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -92,6 +116,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public void ClearFast()
 		{
 			innerArchetype.ClearFast<T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBackElement(Allocator* allocator, Entity entity)
+		{
+			innerArchetype.RemoveSwapBackElement(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

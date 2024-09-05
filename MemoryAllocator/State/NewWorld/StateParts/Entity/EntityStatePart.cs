@@ -12,15 +12,8 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public void EntityDestroyed(Allocator* allocator, in Entity entity);
 	}
 
-	public unsafe struct EntitiesStatePart : IWorldStatePart
+	public unsafe struct EntityStatePart : IWorldStatePart
 	{
-		private AllocatorId _allocatorId;
-		AllocatorId IWorldElement.AllocatorId
-		{
-			get => _allocatorId;
-			set => _allocatorId = value;
-		}
-
 		public Entity SharedEntity { get; private set; }
 		public int EntitiesCount { get; private set; }
 		public int EntitiesCapacity { get; private set; }
@@ -35,10 +28,8 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public int MaxEntitiesCount { get; private set; }
 #endif
 
-		public EntitiesStatePart(int entitiesCapacity, int expandStep = 512)
+		public EntityStatePart(int entitiesCapacity, int expandStep = 512)
 		{
-			_allocatorId = default;
-
 			SharedEntity = default;
 			EntitiesCount = 0;
 			EntitiesCapacity = entitiesCapacity;
@@ -53,10 +44,8 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 #endif
 		}
 
-		public void Initialize()
+		public void Initialize(Allocator* allocator)
 		{
-			var allocator = _allocatorId.GetAllocatorPtr();
-
 			_freeEntitiesIds = new (allocator, EntitiesCapacity);
 			_entityIdToGeneration = new(allocator, EntitiesCapacity);
 			_entityDestroySubscribers = new(allocator, 128);
@@ -76,12 +65,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 #endif
 		}
 
-		public void AddSubscriber(in ProxyRef<IEntityDestroySubscriberProxy> subscriber)
+		public void AddSubscriber(in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
 			_entityDestroySubscribers.Subscribe(subscriber);
 		}
 
-		public void RemoveSubscriber(in ProxyRef<IEntityDestroySubscriberProxy> subscriber)
+		public void RemoveSubscriber(in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
 			_entityDestroySubscribers.UnSubscribe(subscriber);
 		}
@@ -108,27 +97,27 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			return entity;
 		}
 
-		public bool IsEntityAlive(Allocator* allocator, in Entity entity)
+		public bool IsEntityExist(Allocator* allocator, in Entity entity)
 		{
 			return _entityIdToGeneration[allocator, entity.id] == entity.generation;
 		}
 
-		public bool IsEntityAlive(in Entity entity)
+		public bool IsEntityExist(in Entity entity)
 		{
 			return _entityIdToGeneration[entity.id] == entity.generation;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DestroyEntity(in Entity entity)
+		public void DestroyEntity(ref Entity entity)
 		{
-			var allocator = _allocatorId.GetAllocatorPtr();
+			var allocator = entity.GetAllocatorPtr();
 			DestroyEntity(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void DestroyEntity(Allocator* allocator, in Entity entity)
 		{
-			Debug.Assert(IsEntityAlive(allocator, entity));
+			Debug.Assert(IsEntityExist(allocator, entity));
 
 			_entityDestroySubscribers.EntityDestroyed(allocator, allocator, entity);
 

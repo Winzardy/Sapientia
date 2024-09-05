@@ -4,7 +4,7 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator.Data
 {
-	public unsafe struct ValueRef : IIsCreated
+	public unsafe struct IndexedPtr : IIsCreated
 	{
 		private Ptr _ptr;
 		public readonly TypeIndex typeIndex;
@@ -15,50 +15,58 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public ValueRef(MemPtr memPtr, TypeIndex typeIndex)
+		public IndexedPtr(MemPtr memPtr, TypeIndex typeIndex)
 		{
 			_ptr = new (memPtr);
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public ValueRef(Ptr ptr, TypeIndex typeIndex)
+		public IndexedPtr(Ptr ptr, TypeIndex typeIndex)
 		{
 			_ptr = ptr;
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public ValueRef(Allocator* allocator, void* cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
+		public IndexedPtr(Allocator* allocator, void* cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
 		{
 			_ptr = new Ptr(allocator, cachedPtr, memPtr);
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public static ValueRef Create<T>(Ptr<T> ptr) where T : unmanaged
+		public static IndexedPtr Create<T>(Ptr<T> ptr) where T : unmanaged
 		{
-			return new ValueRef(ptr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static ValueRef Create<T>(Ptr ptr) where T : unmanaged
+		public static IndexedPtr Create<T>(Ptr ptr) where T : unmanaged
 		{
-			return new ValueRef(ptr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static ValueRef Create<T>(Allocator* allocator) where T : unmanaged
+		public static IndexedPtr Create<T>(Allocator* allocator) where T : unmanaged
 		{
 			var memPtr = allocator->Alloc<T>(out var rawPtr);
-			return new ValueRef(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static ValueRef Create<T>(Allocator* allocator, in T value) where T : unmanaged
+		public static IndexedPtr Create<T>(Allocator* allocator, in T value) where T : unmanaged
 		{
 			var memPtr = allocator->Alloc<T>(value, out var rawPtr);
-			return new ValueRef(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+		}
+
+		[INLINE(256)]
+		public static IndexedPtr Create<T>(in T value) where T : unmanaged
+		{
+			var allocator = AllocatorManager.CurrentAllocatorPtr;
+			var memPtr = allocator->Alloc<T>(value, out var rawPtr);
+			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
@@ -120,16 +128,23 @@ namespace Sapientia.MemoryAllocator.Data
 		[INLINE(256)]
 		public void Dispose(Allocator* allocator)
 		{
-			allocator->Free(_ptr.memPtr);
-			_ptr = Ptr.Invalid;
+			_ptr.Dispose(allocator);
+			this = default;
 		}
 
-		public static bool operator ==(ValueRef a, ValueRef b)
+		[INLINE(256)]
+		public void Dispose()
+		{
+			_ptr.Dispose();
+			this = default;
+		}
+
+		public static bool operator ==(IndexedPtr a, IndexedPtr b)
 		{
 			return a.typeIndex == b.typeIndex && a._ptr == b._ptr;
 		}
 
-		public static bool operator !=(ValueRef a, ValueRef b)
+		public static bool operator !=(IndexedPtr a, IndexedPtr b)
 		{
 			return a.typeIndex != b.typeIndex || a._ptr != b._ptr;
 		}

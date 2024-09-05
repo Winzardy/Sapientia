@@ -407,7 +407,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemPtr Alloc<T>(T data, out T* rawPtr) where T : unmanaged
+		public MemPtr Alloc<T>(in T data, out T* rawPtr) where T : unmanaged
 		{
 			var ptr = Alloc<T>(out rawPtr);
 			Ref<T>(ptr) = data;

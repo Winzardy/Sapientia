@@ -14,98 +14,76 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public AllocatorId allocatorId;
 
-		public List<ProxyRef<IWorldElementProxy>> worldElements;
-		public List<ProxyRef<IWorldSystemProxy>> worldSystems;
+		public List<ProxyPtr<IWorldElementProxy>> worldElements;
+		public List<ProxyPtr<IWorldSystemProxy>> worldSystems;
 
 		public bool IsStarted => Tick > 0u;
 
-		public static Ptr<World> Create(AllocatorId allocatorId, int elementsCount = 64)
+		public static World* Create(Allocator* allocator, int elementsCount = 64)
 		{
-			var allocator = allocatorId.GetAllocatorPtr();
-
 			var worldPtr = allocator->Alloc<World>(out var world);
 			world->Tick = 0u;
 			world->Time = 0f;
 			world->AllowLateUpdate = false;
 
-			world->allocatorId = allocatorId;
+			world->allocatorId = allocator->allocatorId;
 			world->worldElements = new (allocator, elementsCount);
 			world->worldSystems = new (allocator, elementsCount);
 
 			allocator->serviceLocator.RegisterService<World>(worldPtr);
 
-			return worldPtr;
+			return world;
 		}
 
-		public void Initialize(IEnumerable<ProxyRef<IWorldStatePartProxy>> stateParts, IEnumerable<ProxyRef<IWorldSystemProxy>> systems)
+		public void Initialize(IEnumerable<ProxyPtr<IWorldStatePartProxy>> stateParts, IEnumerable<ProxyPtr<IWorldSystemProxy>> systems)
 		{
-			using var scope = allocatorId.GetCurrentAllocatorScope();
+			using var scope = allocatorId.GetCurrentAllocatorScope(out var allocator);
 
-			AddStateParts(stateParts);
-			AddSystems(systems);
-
-			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
-			{
-				element->Initialize();
-			}
-			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
-			{
-				element->LateInitialize();
-			}
-		}
-
-		private void AddWorldElement(ProxyRef<IWorldElementProxy> element)
-		{
-			worldElements.Add(element);
-			element.SetAllocatorId(allocatorId);
-
-			allocatorId.RegisterService(element);
-		}
-
-		private void AddStateParts(IEnumerable<ProxyRef<IWorldStatePartProxy>> stateParts)
-		{
 			foreach (var statePart in stateParts)
 			{
-				AddWorldElement(statePart.ToProxy<IWorldElementProxy>());
-				AddStateParts(statePart.GetStateParts());
+				AddWorldElement(allocator, statePart.ToProxy<IWorldElementProxy>());
 			}
-		}
-
-		private void AddSystems(IEnumerable<ProxyRef<IWorldSystemProxy>> systems)
-		{
 			foreach (var system in systems)
 			{
-				AddWorldElement(system.ToProxy<IWorldElementProxy>());
-				AddSystems(system.GetSystems());
+				AddWorldElement(allocator, system.ToProxy<IWorldElementProxy>());
+			}
+
+			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
+			{
+				element->Initialize(allocator, allocator);
+			}
+			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
+			{
+				element->LateInitialize(allocator, allocator);
 			}
 		}
 
-		/// <summary>
-		/// Right before first world update
-		/// </summary>
-		private void Start()
+		private void AddWorldElement(Allocator* allocator, ProxyPtr<IWorldElementProxy> element)
 		{
-			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
-			{
-				element->Start();
-			}
-
-			SendStartedMessage();
+			worldElements.Add(allocator, element);
+			allocator->RegisterService(element);
 		}
 
 		public void Update(float deltaTime)
 		{
-			using var scope = allocatorId.GetCurrentAllocatorScope();
+			using var scope = allocatorId.GetCurrentAllocatorScope(out var allocator);
 
 			if (!IsStarted)
-				Start();
+			{
+				foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
+				{
+					element->Start(allocator, allocator);
+				}
+
+				SendStartedMessage();
+			}
 
 			Tick++;
 			Time += deltaTime;
 
-			foreach (ProxyRef<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable())
+			foreach (ProxyPtr<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable(allocator))
 			{
-				system->Update(deltaTime);
+				system->Update(allocator, allocator, deltaTime);
 			}
 
 			AllowLateUpdate = true;
@@ -123,11 +101,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public void Dispose()
 		{
+			using var scope = allocatorId.GetCurrentAllocatorScope(out var allocator);
 			SendBeginDisposeMessage();
 
-			foreach (ProxyRef<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
+			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
 			{
-				element->Dispose();
+				element->Dispose(allocator, allocator);
 			}
 
 			SendDisposedMessage();
@@ -138,36 +117,26 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	}
 
 	[InterfaceProxy]
-	public interface IWorldElement : IIndexedType
+	public unsafe interface IWorldElement : IIndexedType
 	{
-		public AllocatorId AllocatorId { get; set; }
+		public virtual void Initialize(Allocator* allocator) {}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetAllocatorId(AllocatorId allocatorId)
-		{
-			AllocatorId = allocatorId;
-		}
-
-		public virtual void Initialize() {}
-
-		public virtual void LateInitialize() {}
+		public virtual void LateInitialize(Allocator* allocator) {}
 
 		/// <summary>
 		/// Right before first world update
 		/// </summary>
-		public virtual void Start() {}
+		public virtual void Start(Allocator* allocator) {}
 
-		public virtual void Dispose() {}
+		public virtual void Dispose(Allocator* allocator) {}
 	}
 
 	public unsafe interface IWorldSystem : IWorldElement
 	{
-		public virtual IEnumerable<ProxyRef<IWorldSystemProxy>> GetSystems() => Array.Empty<ProxyRef<IWorldSystemProxy>>();
-		public virtual void Update(float deltaTime) {}
+		public virtual void Update(Allocator* allocator, float deltaTime) {}
 	}
 
 	public interface IWorldStatePart : IWorldElement
 	{
-		public virtual IEnumerable<ProxyRef<IWorldStatePartProxy>> GetStateParts() => Array.Empty<ProxyRef<IWorldStatePartProxy>>();
 	}
 }

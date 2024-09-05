@@ -36,26 +36,32 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IKillSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ProxyRef<IKillSubscriberProxy> __proxyRef, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
-			__proxyRef.proxy.EntityKilled(__proxyRef.GetPtr(), in entity);
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(), in entity);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		{
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__allocator), in entity);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
-			foreach (ProxyRef<IKillSubscriberProxy>* __proxyRef in __proxyEvent.GetEnumerable())
+			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyRef->proxy.EntityKilled(__proxyRef->GetPtr(), in entity);
+				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(), in entity);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
-			foreach (ProxyRef<IKillSubscriberProxy>* __proxyRef in __proxyEvent.GetEnumerable(__allocator))
+			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyRef->proxy.EntityKilled(__proxyRef->GetPtr(), in entity);
+				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__allocator), in entity);
 			}
 		}
 
@@ -73,7 +79,10 @@ namespace Sapientia.TypeIndexer
 		private static void EntityKilled(void* executorPtr, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
 			__source.EntityKilled(in entity);
+#endif
 		}
 
 #if UNITY_5_3_OR_NEWER

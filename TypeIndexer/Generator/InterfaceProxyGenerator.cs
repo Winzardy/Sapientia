@@ -195,34 +195,49 @@ namespace Sapientia.TypeIndexer
 				var parametersString = CodeGenExt.GetParametersString(parameters, false);
 				var parametersWithoutTypeString = CodeGenExt.GetParametersString(parameters, true);
 				{
-					var proxyRefParametersString = parametersString.Replace("(", $"(this ProxyRef<{baseType.Name}Proxy> __proxyRef" + (parameters.Length > 0 ? ", " : string.Empty));
-					var proxyRefParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyRef.GetPtr()" + (parameters.Length > 0 ? ", " : string.Empty));
+					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr" + (parameters.Length > 0 ? ", " : string.Empty));
+					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr()" + (parameters.Length > 0 ? ", " : string.Empty));
 
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
-					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyRefParametersString}");
+					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
 					sourceBuilder.AppendLine($"		{{");
 					if (returnType.IsVoid())
-						sourceBuilder.AppendLine($"			__proxyRef.proxy.{methodInfo.Name}{genericParametersString}{proxyRefParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"			__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
 					else
-						sourceBuilder.AppendLine($"			return __proxyRef.proxy.{methodInfo.Name}{genericParametersString}{proxyRefParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"			return __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
 					sourceBuilder.AppendLine($"		}}");
 					sourceBuilder.AppendLine();
 				}
 
-				var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent" + (parameters.Length > 0 ? ", " : string.Empty));
-				var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyRef->GetPtr()" + (parameters.Length > 0 ? ", " : string.Empty));
 				{
+					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(Allocator).FullName}* __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
+					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr(__allocator)" + (parameters.Length > 0 ? ", " : string.Empty));
+
+					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
+					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
+					sourceBuilder.AppendLine($"		{{");
+					if (returnType.IsVoid())
+						sourceBuilder.AppendLine($"			__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+					else
+						sourceBuilder.AppendLine($"			return __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+					sourceBuilder.AppendLine($"		}}");
+					sourceBuilder.AppendLine();
+				}
+
+				{
+					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent" + (parameters.Length > 0 ? ", " : string.Empty));
+					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr()" + (parameters.Length > 0 ? ", " : string.Empty));
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{eventParametersString}");
 					sourceBuilder.AppendLine($"		{{");
 					if (!returnType.IsVoid())
 						sourceBuilder.AppendLine($"			{returnTypeString} __result = default;");
-					sourceBuilder.AppendLine($"			foreach (ProxyRef<{baseType.Name}Proxy>* __proxyRef in __proxyEvent.GetEnumerable())");
+					sourceBuilder.AppendLine($"			foreach (ProxyPtr<{baseType.Name}Proxy>* __proxyPtr in __proxyEvent.GetEnumerable())");
 					sourceBuilder.AppendLine($"			{{");
 					if (returnType.IsVoid())
-						sourceBuilder.AppendLine($"				__proxyRef->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"				__proxyPtr->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
 					else
-						sourceBuilder.AppendLine($"				__result = __proxyRef->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"				__result = __proxyPtr->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
 					sourceBuilder.AppendLine($"			}}");
 					if (!returnType.IsVoid())
 						sourceBuilder.AppendLine($"			return __result;");
@@ -230,19 +245,21 @@ namespace Sapientia.TypeIndexer
 					sourceBuilder.AppendLine();
 				}
 
-				var eventAllocatorParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent, {typeof(Allocator).FullName}* __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
 				{
+					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent, {typeof(Allocator).FullName}* __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
+					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr(__allocator)" + (parameters.Length > 0 ? ", " : string.Empty));
+
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
-					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{eventAllocatorParametersString}");
+					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{eventParametersString}");
 					sourceBuilder.AppendLine($"		{{");
 					if (!returnType.IsVoid())
 						sourceBuilder.AppendLine($"			{returnTypeString} __result = default;");
-					sourceBuilder.AppendLine($"			foreach (ProxyRef<{baseType.Name}Proxy>* __proxyRef in __proxyEvent.GetEnumerable(__allocator))");
+					sourceBuilder.AppendLine($"			foreach (ProxyPtr<{baseType.Name}Proxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))");
 					sourceBuilder.AppendLine($"			{{");
 					if (returnType.IsVoid())
-						sourceBuilder.AppendLine($"				__proxyRef->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"				__proxyPtr->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
 					else
-						sourceBuilder.AppendLine($"				__result = __proxyRef->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"				__result = __proxyPtr->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
 					sourceBuilder.AppendLine($"			}}");
 					if (!returnType.IsVoid())
 						sourceBuilder.AppendLine($"			return __result;");
@@ -287,10 +304,15 @@ namespace Sapientia.TypeIndexer
 				sourceBuilder.AppendLine($"		private static {returnTypeString} {methodInfo.Name}{genericParametersString}{parametersString}");
 				sourceBuilder.AppendLine("		{");
 				sourceBuilder.AppendLine($"			ref var __source = ref {typeof(UnsafeExt).FullName}.AsRef<TSource>(executorPtr);");
+				sourceBuilder.AppendLine($"#if PROXY_REFACTORING");
+				if (!returnType.IsVoid())
+					sourceBuilder.AppendLine($"return default;");
+				sourceBuilder.AppendLine($"#else");
 				if (returnType.IsVoid())
 					sourceBuilder.AppendLine($"			__source.{methodInfo.Name}{genericParametersString}{methodParametersWithoutTypeString};");
 				else
 					sourceBuilder.AppendLine($"			return __source.{methodInfo.Name}{genericParametersString}{methodParametersWithoutTypeString};");
+				sourceBuilder.AppendLine($"#endif");
 				sourceBuilder.AppendLine("		}");
 				sourceBuilder.AppendLine();
 				sourceBuilder.AppendLine("#if UNITY_5_3_OR_NEWER");

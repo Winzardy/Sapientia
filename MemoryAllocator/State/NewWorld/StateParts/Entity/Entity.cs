@@ -20,6 +20,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 #endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Allocator* GetAllocatorPtr()
+		{
+			return allocatorId.GetAllocatorPtr();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal Entity(ushort id, ushort generation, AllocatorId allocatorId)
 		{
 			this.id = id;
@@ -32,7 +38,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
 #if UNITY_EDITOR
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator, name);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
 			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 #endif
@@ -42,14 +48,14 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public static Entity Create()
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(Allocator* allocator, string name)
 		{
 #if UNITY_EDITOR
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator, name);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
 			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 #endif
@@ -58,7 +64,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(Allocator* allocator)
 		{
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,7 +72,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			var allocator = allocatorId.GetAllocatorPtr();
 #if UNITY_EDITOR
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator, name);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
 			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
 #endif
@@ -76,7 +82,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public static Entity Create(AllocatorId allocatorId)
 		{
 			var allocator = allocatorId.GetAllocatorPtr();
-			return allocator->serviceLocator.GetService<EntitiesStatePart>().CreateEntity(allocator);
+			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,7 +94,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Entity a, Entity b)
 		{
-			return a.id == b.id && a.generation == b.generation && a.allocatorId == b.allocatorId;
+			return a.id == b.id && a.generation == b.generation && a.allocatorId.id == b.allocatorId.id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

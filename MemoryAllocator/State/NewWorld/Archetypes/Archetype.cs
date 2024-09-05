@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, int elementsCount) where T: unmanaged, IComponent
 		{
-			return ref RegisterArchetype<T>(allocator, elementsCount, allocator->serviceLocator.GetService<EntitiesStatePart>().EntitiesCapacity);
+			return ref RegisterArchetype<T>(allocator, elementsCount, allocator->serviceLocator.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -97,7 +97,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			archetype._hasDestroyHandler = false;
 			archetype._destroyHandlerProxy = default;
 
-			allocator->serviceLocator.GetService<EntitiesStatePart>().AddSubscriber((ValueRef)archetypePtr);
+			allocator->serviceLocator.GetService<EntityStatePart>().AddSubscriber((IndexedPtr)archetypePtr);
 
 			return archetypePtr;
 		}
@@ -124,9 +124,15 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement<T>(Entity entity) where T : unmanaged, IComponent
 		{
-			if (!_elements.Has(entity.id))
+			return ref ReadElement<T>(entity.GetAllocatorPtr(), entity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref readonly T ReadElement<T>(Allocator* allocator, Entity entity) where T : unmanaged, IComponent
+		{
+			if (!_elements.Has(allocator, entity.id))
 				return ref DefaultValue<T>.DEFAULT;
-			return ref _elements.Get<ArchetypeElement<T>>(entity.id).value;
+			return ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id).value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -150,9 +156,60 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasElement(Entity entity)
 		{
-			return _elements.Has(entity.id);
+			return HasElement(entity.GetAllocatorPtr(), entity);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasElement(Allocator* allocator, Entity entity)
+		{
+			return _elements.Has(allocator, entity.id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetElement<T>(Allocator* allocator, Entity entity, out bool isCreated) where T : unmanaged, IComponent
+		{
+			if (_elements.Has(allocator, entity.id))
+			{
+				ref var element = ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id);
+				Debug.Assert(element.entity == entity);
+
+				isCreated = false;
+				return ref element.value;
+			}
+			else
+			{
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
+				var oldCapacity = _elements.Capacity;
+				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
+				if (oldCapacity != _elements.Capacity)
+					UnityEngine.Debug.LogWarning($"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+#else
+				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
+#endif
+				element = new ArchetypeElement<T>(entity, default);
+
+				isCreated = true;
+				return ref element.value;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetElement<T>(Entity entity, out bool isCreated) where T : unmanaged, IComponent
+		{
+			return ref GetElement<T>(_elements.GetAllocatorPtr(), entity, out isCreated);
+		}
+
+		/// Тут идёт дублирование кода, т.к:
+		/// 1) Если написать:
+		///		return ref GetElement<T>(_elements.GetAllocatorPtr(), entity, out _);
+		/// Будет ошибка: "An expression cannot be used in this context because it cannot be passed or returned by reference"
+		/// 2) Если написать:
+		///		bool b;
+		///		return ref GetElement<T>(_elements.GetAllocatorPtr(), entity, out b);
+		///	Будет предупреждение: "This returns local variable '_' by reference but it is not a ref local"
+		/// Которое Unity считает ошибкой компиляции.
+		///
+		/// В общем это тупо, но обойти не получается...
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement<T>(Allocator* allocator, Entity entity) where T : unmanaged, IComponent
 		{
@@ -160,6 +217,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			{
 				ref var element = ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id);
 				Debug.Assert(element.entity == entity);
+
 				return ref element.value;
 			}
 			else
@@ -173,6 +231,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
 #endif
 				element = new ArchetypeElement<T>(entity, default);
+
 				return ref element.value;
 			}
 		}
@@ -180,25 +239,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement<T>(Entity entity) where T : unmanaged, IComponent
 		{
-			if (_elements.Has(entity.id))
-			{
-				ref var element = ref _elements.Get<ArchetypeElement<T>>(entity.id);
-				Debug.Assert(element.entity == entity);
-				return ref element.value;
-			}
-			else
-			{
-#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
-				var oldCapacity = _elements.Capacity;
-				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(entity.id);
-				if (oldCapacity != _elements.Capacity)
-					UnityEngine.Debug.LogWarning($"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
-#else
-				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(entity.id);
-#endif
-				element = new ArchetypeElement<T>(entity, default);
-				return ref element.value;
-			}
+			return ref GetElement<T>(_elements.GetAllocatorPtr(), entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -224,6 +265,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			}
 
 			_elements.ClearFast();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBackElement(Allocator* allocator, Entity entity)
+		{
+			_elements.RemoveSwapBack(allocator, entity.id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

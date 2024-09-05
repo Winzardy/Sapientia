@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator
 {
 	public static unsafe class AllocatorManager
 	{
-		private static Allocator* _currentAllocator;
+		private static Allocator* _currentAllocator = null;
 		private static Allocator** _allocators = null;
 		private static ushort _count = 0;
 		private static ushort _capacity = 0;
@@ -20,10 +20,11 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public static CurrentAllocatorScope GetCurrentAllocatorScope(this ref AllocatorId allocatorId)
+		public static CurrentAllocatorScope GetCurrentAllocatorScope(this ref AllocatorId allocatorId, out Allocator* allocator)
 		{
 			var scope = new CurrentAllocatorScope(_currentAllocator);
 			allocatorId.SetCurrentAllocator();
+			allocator = _currentAllocator;
 			return scope;
 		}
 
@@ -33,7 +34,7 @@ namespace Sapientia.MemoryAllocator
 			_currentAllocator = allocatorId.GetAllocatorPtr();
 		}
 
-		public static AllocatorId DeserializeAllocator(ref StreamBufferReader stream)
+		public static Allocator* DeserializeAllocator(ref StreamBufferReader stream)
 		{
 			var allocator = Allocator.Deserialize(ref stream);
 
@@ -50,10 +51,10 @@ namespace Sapientia.MemoryAllocator
 			_allocators[allocatorId.index] = allocator;
 			_nextId = _nextId.Max(allocatorId.id + 1);
 
-			return allocator->allocatorId;
+			return allocator;
 		}
 
-		public static AllocatorId CreateAllocator(int initialSize = -1, int maxSize = -1)
+		public static Allocator* CreateAllocator(int initialSize = -1, int maxSize = -1)
 		{
 			Prewarm(_count);
 
@@ -63,7 +64,7 @@ namespace Sapientia.MemoryAllocator
 			_allocators[allocatorId.index] = allocator;
 
 			allocator->Initialize(allocatorId, initialSize, maxSize);
-			return allocatorId;
+			return allocator;
 		}
 
 		private static void Prewarm(int index)
@@ -86,7 +87,7 @@ namespace Sapientia.MemoryAllocator
 
 			_allocators[allocatorId.index]->Dispose();
 			if (_currentAllocator == _allocators[allocatorId.index])
-				_currentAllocator = default;
+				_currentAllocator = null;
 
 			_allocators[allocatorId.index] = _allocators[_count - 1];
 			_count--;

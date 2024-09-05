@@ -101,7 +101,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void* GetValuePtr(int id)
 		{
-			return _values.GetValuePtr(_sparse[id]);
+			return GetValuePtr(GetAllocatorPtr(), id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -125,7 +125,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Get<T>(int id) where T: unmanaged
 		{
-			return ref _values.GetValue<T>(_sparse[id]);
+			return ref Get<T>(GetAllocatorPtr(), id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -138,8 +138,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(int id)
 		{
-			var denseId = _sparse[id];
-			return denseId < _count && _dense[denseId] == id;
+			return Has(GetAllocatorPtr(), id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

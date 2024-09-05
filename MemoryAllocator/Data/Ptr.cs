@@ -138,6 +138,20 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
+		public void Dispose(Allocator* allocator)
+		{
+			memPtr.Dispose(allocator);
+			this = Invalid;
+		}
+
+		[INLINE(256)]
+		public void Dispose()
+		{
+			memPtr.Dispose();
+			this = Invalid;
+		}
+
+		[INLINE(256)]
 		public static implicit operator Ptr(MemPtr value)
 		{
 			return new Ptr(value);
@@ -315,9 +329,9 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public static implicit operator ValueRef(Ptr<T> value)
+		public static implicit operator IndexedPtr(Ptr<T> value)
 		{
-			return ValueRef.Create(value);
+			return IndexedPtr.Create(value);
 		}
 
 		[INLINE(256)]

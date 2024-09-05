@@ -8,7 +8,7 @@ namespace Sapientia.MemoryAllocator.Data
 {
 	public unsafe struct ProxyEvent<T> : IEnumerable<IntPtr> where T: unmanaged, IProxy
 	{
-		private HashSet<ProxyRef<T>> _proxies;
+		private HashSet<ProxyPtr<T>> _proxies;
 
 		public bool IsCreated
 		{
@@ -25,39 +25,39 @@ namespace Sapientia.MemoryAllocator.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ProxyEvent(Allocator* allocator, int capacity)
 		{
-			_proxies = new HashSet<ProxyRef<T>>(allocator, capacity);
+			_proxies = new HashSet<ProxyPtr<T>>(allocator, capacity);
 		}
 
-		public bool Subscribe(in ProxyRef<T> proxyRef)
+		public bool Subscribe(in ProxyPtr<T> proxyPtr)
 		{
-			return _proxies.Add(proxyRef);
+			return _proxies.Add(proxyPtr);
 		}
 
-		public bool UnSubscribe(in ProxyRef<T> proxyRef)
+		public bool UnSubscribe(in ProxyPtr<T> proxyPtr)
 		{
-			return _proxies.Remove(proxyRef);
+			return _proxies.Remove(proxyPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, HashSetPtrEnumerator<ProxyRef<T>>> GetEnumerable(Allocator* allocator)
+		public Enumerable<IntPtr, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable(Allocator* allocator)
 		{
 			return _proxies.GetPtrEnumerable(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, HashSetPtrEnumerator<ProxyRef<T>>> GetEnumerable()
+		public Enumerable<IntPtr, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable()
 		{
 			return _proxies.GetPtrEnumerable();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<ProxyRef<T>> GetEnumerator(Allocator* allocator)
+		public HashSetPtrEnumerator<ProxyPtr<T>> GetEnumerator(Allocator* allocator)
 		{
 			return _proxies.GetPtrEnumerator(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<ProxyRef<T>> GetEnumerator()
+		public HashSetPtrEnumerator<ProxyPtr<T>> GetEnumerator()
 		{
 			return _proxies.GetPtrEnumerator();
 		}

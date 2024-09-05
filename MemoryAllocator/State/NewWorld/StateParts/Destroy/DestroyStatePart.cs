@@ -12,7 +12,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	public struct KillCallback
 	{
 		public Entity target;
-		public ProxyEvent<IKillSubscriberProxy> callback;
+		public ProxyPtr<IKillSubscriberProxy> callback;
 	}
 
 	public struct KillElement : IComponent
@@ -53,10 +53,6 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			element.value.children.Clear();
 			element.value.parents.Clear();
 			element.value.killCallbackHolders.Clear();
-			foreach (KillCallback* component in element.value.killCallbacks.GetPtrEnumerable(allocator))
-			{
-				component->callback.Dispose(allocator);
-			}
 			element.value.killCallbacks.Clear();
 		}
 
