@@ -18,8 +18,8 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	{
 		protected Allocator* _allocator;
 
-		private SimpleList<ProxyPtr<IWorldStatePartProxy>> _stateParts = new();
-		private SimpleList<ProxyPtr<IWorldSystemProxy>> _systems = new();
+		private readonly SimpleList<ProxyPtr<IWorldStatePartProxy>> _stateParts = new();
+		private readonly SimpleList<ProxyPtr<IWorldSystemProxy>> _systems = new();
 
 		public AllocatorId Build(int initialSize = -1, int maxSize = -1)
 		{
