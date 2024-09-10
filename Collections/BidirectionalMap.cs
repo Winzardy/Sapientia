@@ -82,5 +82,19 @@ namespace Sapientia.Collections
 		public bool TryGetBySecond(TSecond second, out TFirst first) => _secondToFirst.TryGetValue(second, out first);
 
 		public bool IsNullOrEmpty() => _firstToSecond.IsNullOrEmpty() || _secondToFirst.IsNullOrEmpty();
+
+		public void Remove(TFirst index)
+		{
+			var second = _firstToSecond[index];
+			_secondToFirst.Remove(second);
+			_firstToSecond.Remove(index);
+		}
+
+		public void Remove(TSecond second)
+		{
+			var first = _secondToFirst[second];
+			_firstToSecond.Remove(first);
+			_secondToFirst.Remove(second);
+		}
 	}
 }
