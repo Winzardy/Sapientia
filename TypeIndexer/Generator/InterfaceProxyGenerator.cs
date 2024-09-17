@@ -16,22 +16,22 @@ namespace Sapientia.TypeIndexer
 		private static string MethodImplAttribute = $"[{typeof(System.Runtime.CompilerServices.MethodImplAttribute).FullName}(256)]";
 		private static string BurstAttribute = "[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]";
 
-		private static string PrepareDirectory(string generationFolder)
+		private static string PrepareDirectory(string generationPath)
 		{
-			generationFolder = Path.Combine(generationFolder, nameof(InterfaceProxyGenerator));
-			if (Directory.Exists(generationFolder))
-				Directory.Delete(generationFolder, true);
+			generationPath = Path.Combine(Path.Combine(generationPath, "_scripts.generated"), nameof(InterfaceProxyGenerator));
+			if (Directory.Exists(generationPath))
+				Directory.Delete(generationPath, true);
 
-			return generationFolder;
+			return generationPath;
 		}
 
-		public static void GenerateProxies(string baseGenerationFolder, System.Collections.Generic.Dictionary<string, string> assemblyNameToGenerationFolder)
+		public static void GenerateProxies(string baseGenerationFolder, System.Collections.Generic.Dictionary<string, string> assemblyNameToPath)
 		{
 			var baseFolder = PrepareDirectory(baseGenerationFolder);
-			var assemblyNameToFolder = new System.Collections.Generic.Dictionary<string, string>(assemblyNameToGenerationFolder.Count);
-			foreach (var (assemblyName, generationFolder) in assemblyNameToGenerationFolder)
+			var assemblyNameToGenerationPath = new System.Collections.Generic.Dictionary<string, string>(assemblyNameToPath.Count);
+			foreach (var (assemblyName, generationFolder) in assemblyNameToPath)
 			{
-				assemblyNameToFolder.Add(assemblyName, PrepareDirectory(generationFolder));
+				assemblyNameToGenerationPath.Add(assemblyName, PrepareDirectory(generationFolder));
 			}
 
 			var proxyTypes = GetProxyTypes();
@@ -40,7 +40,7 @@ namespace Sapientia.TypeIndexer
 				var proxyCode = CreateFile(proxyTypes[i].baseType, i);
 
 				var assemblyName = proxyTypes[i].baseType.Assembly.GetName().Name;
-				var path = assemblyNameToFolder.GetValueOrDefault(assemblyName, baseFolder);
+				var path = assemblyNameToGenerationPath.GetValueOrDefault(assemblyName, baseFolder);
 
 				Directory.CreateDirectory(path);
 				File.WriteAllText(Path.Combine(path, $"{proxyTypes[i].baseType.Name}Proxy.generated.cs"), proxyCode);

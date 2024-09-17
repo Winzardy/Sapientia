@@ -12,7 +12,7 @@ namespace Sapientia.Extensions.Reflection
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#242e037edaf64d27ba8bfd71d602528a
 	/// </summary>
-	public static class ReflectionExt
+	public static partial class ReflectionExt
 	{
 		public const BindingFlags FIELD_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
 
