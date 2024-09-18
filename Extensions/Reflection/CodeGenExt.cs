@@ -79,12 +79,13 @@ namespace Sapientia.Extensions.Reflection
 			return delegateBuilder.ToString();
 		}
 
-		public static string GetTypeString(Type type)
+		public static string GetTypeString(Type type, bool useFullName = true)
 		{
 			if (type.IsGenericType)
 			{
 				var typeName = new StringBuilder();
-				typeName.Append(type.Namespace + ".");
+				if (useFullName)
+					typeName.Append(type.Namespace + ".");
 				typeName.Append(type.Name.Substring(0, type.Name.IndexOf('`')));
 				typeName.Append("<");
 				var genericArguments = type.GetGenericArguments();
@@ -100,6 +101,8 @@ namespace Sapientia.Extensions.Reflection
 			}
 			else
 			{
+				if (!useFullName)
+					return type.Name;
 				var fullName = type.FullName;
 				if (fullName == null)
 					return type.Name;
