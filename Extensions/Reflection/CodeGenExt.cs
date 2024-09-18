@@ -91,7 +91,7 @@ namespace Sapientia.Extensions.Reflection
 				var genericArguments = type.GetGenericArguments();
 				for (var i = 0; i < genericArguments.Length; i++)
 				{
-					typeName.Append(GetTypeString(genericArguments[i]));
+					typeName.Append(GetTypeString(genericArguments[i], useFullName));
 					if (i < genericArguments.Length - 1)
 						typeName.Append(", ");
 				}
