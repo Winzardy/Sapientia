@@ -7,6 +7,11 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace Sapientia.Extensions
 {
+	public struct TDefaultValue<T>
+	{
+		public static readonly T value = default;
+	}
+
 	public struct TSize<T> where T : struct
 	{
 		public static readonly int size = UnsafeExt.SizeOf<T>();
