@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 
@@ -50,11 +48,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
 			{
-				element->Initialize(allocator, allocator);
+				element->Initialize(allocator, allocator, element->indexedPtr);
 			}
 			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
 			{
-				element->LateInitialize(allocator, allocator);
+				element->LateInitialize(allocator, allocator, element->indexedPtr);
 			}
 		}
 
@@ -72,7 +70,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			{
 				foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
 				{
-					element->Start(allocator, allocator);
+					element->Start(allocator, allocator, element->indexedPtr);
 				}
 
 				SendStartedMessage();
@@ -83,7 +81,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 			foreach (ProxyPtr<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable(allocator))
 			{
-				system->Update(allocator, allocator, deltaTime);
+				system->Update(allocator, allocator, system->indexedPtr, deltaTime);
 			}
 
 			AllowLateUpdate = true;
@@ -106,7 +104,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
 			{
-				element->Dispose(allocator, allocator);
+				element->Dispose(allocator, allocator, element->indexedPtr);
 			}
 
 			SendDisposedMessage();
@@ -119,21 +117,21 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	[InterfaceProxy]
 	public unsafe interface IWorldElement : IIndexedType
 	{
-		public virtual void Initialize(Allocator* allocator) {}
+		public virtual void Initialize(Allocator* allocator, IndexedPtr statePartPtr) {}
 
-		public virtual void LateInitialize(Allocator* allocator) {}
+		public virtual void LateInitialize(Allocator* allocator, IndexedPtr statePartPtr) {}
 
 		/// <summary>
 		/// Right before first world update
 		/// </summary>
-		public virtual void Start(Allocator* allocator) {}
+		public virtual void Start(Allocator* allocator, IndexedPtr statePartPtr) {}
 
-		public virtual void Dispose(Allocator* allocator) {}
+		public virtual void Dispose(Allocator* allocator, IndexedPtr statePartPtr) {}
 	}
 
 	public unsafe interface IWorldSystem : IWorldElement
 	{
-		public virtual void Update(Allocator* allocator, float deltaTime) {}
+		public virtual void Update(Allocator* allocator, IndexedPtr statePartPtr, float deltaTime) {}
 	}
 
 	public interface IWorldStatePart : IWorldElement

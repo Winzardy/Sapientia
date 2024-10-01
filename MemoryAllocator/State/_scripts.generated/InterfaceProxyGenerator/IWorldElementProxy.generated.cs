@@ -22,40 +22,40 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		internal delegate void InitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
+		internal delegate void InitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void Initialize(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		public readonly void Initialize(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 0);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<InitializeDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, allocator);
+			__method.Invoke(__executorPtr, allocator, statePartPtr);
 		}
 
-		internal delegate void LateInitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
+		internal delegate void LateInitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void LateInitialize(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		public readonly void LateInitialize(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 1);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<LateInitializeDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, allocator);
+			__method.Invoke(__executorPtr, allocator, statePartPtr);
 		}
 
-		internal delegate void StartDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
+		internal delegate void StartDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void Start(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		public readonly void Start(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 2);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<StartDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, allocator);
+			__method.Invoke(__executorPtr, allocator, statePartPtr);
 		}
 
-		internal delegate void DisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
+		internal delegate void DisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 3);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<DisposeDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, allocator);
+			__method.Invoke(__executorPtr, allocator, statePartPtr);
 		}
 
 	}
@@ -63,122 +63,122 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IWorldElementProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Initialize(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Initialize(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
-			__proxyPtr.proxy.Initialize(__proxyPtr.GetPtr(), allocator);
+			__proxyPtr.proxy.Initialize(__proxyPtr.GetPtr(), allocator, statePartPtr);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Initialize(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Initialize(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
-			__proxyPtr.proxy.Initialize(__proxyPtr.GetPtr(__allocator), allocator);
+			__proxyPtr.proxy.Initialize(__proxyPtr.GetPtr(__allocator), allocator, statePartPtr);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Initialize(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Initialize(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			foreach (ProxyPtr<IWorldElementProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.Initialize(__proxyPtr->GetPtr(), allocator);
+				__proxyPtr->proxy.Initialize(__proxyPtr->GetPtr(), allocator, statePartPtr);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Initialize(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Initialize(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			foreach (ProxyPtr<IWorldElementProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.Initialize(__proxyPtr->GetPtr(__allocator), allocator);
+				__proxyPtr->proxy.Initialize(__proxyPtr->GetPtr(__allocator), allocator, statePartPtr);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateInitialize(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void LateInitialize(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
-			__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr(), allocator);
+			__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr(), allocator, statePartPtr);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateInitialize(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void LateInitialize(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
-			__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr(__allocator), allocator);
+			__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr(__allocator), allocator, statePartPtr);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateInitialize(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void LateInitialize(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			foreach (ProxyPtr<IWorldElementProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.LateInitialize(__proxyPtr->GetPtr(), allocator);
+				__proxyPtr->proxy.LateInitialize(__proxyPtr->GetPtr(), allocator, statePartPtr);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateInitialize(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void LateInitialize(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			foreach (ProxyPtr<IWorldElementProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.LateInitialize(__proxyPtr->GetPtr(__allocator), allocator);
+				__proxyPtr->proxy.LateInitialize(__proxyPtr->GetPtr(__allocator), allocator, statePartPtr);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Start(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Start(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
-			__proxyPtr.proxy.Start(__proxyPtr.GetPtr(), allocator);
+			__proxyPtr.proxy.Start(__proxyPtr.GetPtr(), allocator, statePartPtr);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Start(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Start(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
-			__proxyPtr.proxy.Start(__proxyPtr.GetPtr(__allocator), allocator);
+			__proxyPtr.proxy.Start(__proxyPtr.GetPtr(__allocator), allocator, statePartPtr);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Start(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Start(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			foreach (ProxyPtr<IWorldElementProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.Start(__proxyPtr->GetPtr(), allocator);
+				__proxyPtr->proxy.Start(__proxyPtr->GetPtr(), allocator, statePartPtr);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Start(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Start(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			foreach (ProxyPtr<IWorldElementProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.Start(__proxyPtr->GetPtr(__allocator), allocator);
+				__proxyPtr->proxy.Start(__proxyPtr->GetPtr(__allocator), allocator, statePartPtr);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Dispose(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Dispose(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
-			__proxyPtr.proxy.Dispose(__proxyPtr.GetPtr(), allocator);
+			__proxyPtr.proxy.Dispose(__proxyPtr.GetPtr(), allocator, statePartPtr);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Dispose(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Dispose(this ref ProxyPtr<IWorldElementProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
-			__proxyPtr.proxy.Dispose(__proxyPtr.GetPtr(__allocator), allocator);
+			__proxyPtr.proxy.Dispose(__proxyPtr.GetPtr(__allocator), allocator, statePartPtr);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Dispose(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Dispose(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			foreach (ProxyPtr<IWorldElementProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.Dispose(__proxyPtr->GetPtr(), allocator);
+				__proxyPtr->proxy.Dispose(__proxyPtr->GetPtr(), allocator, statePartPtr);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Dispose(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		public static void Dispose(this ref ProxyEvent<IWorldElementProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			foreach (ProxyPtr<IWorldElementProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.Dispose(__proxyPtr->GetPtr(__allocator), allocator);
+				__proxyPtr->proxy.Dispose(__proxyPtr->GetPtr(__allocator), allocator, statePartPtr);
 			}
 		}
 
@@ -193,12 +193,12 @@ namespace Sapientia.TypeIndexer
 #endif
 #endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IWorldElementProxy.InitializeDelegate))]
-		private static void Initialize(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		private static void Initialize(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.Initialize(allocator);
+			__source.Initialize(allocator, statePartPtr);
 #endif
 		}
 
@@ -217,12 +217,12 @@ namespace Sapientia.TypeIndexer
 #endif
 #endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IWorldElementProxy.LateInitializeDelegate))]
-		private static void LateInitialize(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		private static void LateInitialize(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.LateInitialize(allocator);
+			__source.LateInitialize(allocator, statePartPtr);
 #endif
 		}
 
@@ -241,12 +241,12 @@ namespace Sapientia.TypeIndexer
 #endif
 #endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IWorldElementProxy.StartDelegate))]
-		private static void Start(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		private static void Start(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.Start(allocator);
+			__source.Start(allocator, statePartPtr);
 #endif
 		}
 
@@ -265,12 +265,12 @@ namespace Sapientia.TypeIndexer
 #endif
 #endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IWorldElementProxy.DisposeDelegate))]
-		private static void Dispose(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		private static void Dispose(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr statePartPtr)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.Dispose(allocator);
+			__source.Dispose(allocator, statePartPtr);
 #endif
 		}
 
