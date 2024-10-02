@@ -116,18 +116,23 @@ namespace Sapientia.Collections.Archetypes
 			if (index < EntitiesCapacity)
 				return;
 
+			var oldCapacity = (ushort)EntitiesCapacity;
 			do
 				EntitiesCapacity += ExpandStep;
 			while (index >= EntitiesCapacity);
 
 			_freeEntitiesIds.Expand(EntitiesCapacity);
-			_entityIdToGeneration.Expand(EntitiesCapacity);
+			_entityIdToGeneration.Expand(EntitiesCapacity, default);
 #if UNITY_EDITOR
-			entitiesNames.Expand(EntitiesCapacity);
+			entitiesNames.Expand(EntitiesCapacity, default);
 #endif
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && ARCHETYPES_DEBUG)
 			UnityEngine.Debug.LogWarning($"Entities Capacity was expanded to {EntitiesCapacity}");
 #endif
+			for (var i = oldCapacity; i < EntitiesCapacity; i++)
+			{
+				_freeEntitiesIds[i] = i;
+			}
 		}
 	}
 }

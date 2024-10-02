@@ -83,13 +83,15 @@ namespace Sapientia.Collections
 
 		public bool Has(int id)
 		{
+			if (_sparseCapacity <= id)
+				return false;
 			var denseId = _sparse[id];
 			return denseId < _count && _dense[denseId] == id;
 		}
 
 		public ref T EnsureGet(int id)
 		{
-			ExpandSparseIfNeeded(id);
+			ExpandSparseIfNeeded(id + 1);
 			ref var denseId = ref _sparse[id];
 			if (denseId >= _count || _dense[denseId] != id)
 			{
@@ -178,7 +180,10 @@ namespace Sapientia.Collections
 			Array.Fill(_dense, 0, from, to - from);
 
 			if (_resetValue == null)
+			{
+				Array.Fill(_values, default, from, to - from);
 				return;
+			}
 			for (var i = from; i < to; i++)
 			{
 				_resetValue.Invoke(ref _values[i]);
