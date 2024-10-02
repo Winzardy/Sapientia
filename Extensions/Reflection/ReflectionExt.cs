@@ -1,5 +1,3 @@
-#if UNITY_EDITOR || !UNITY_5_3_OR_NEWER
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -29,6 +27,13 @@ namespace Sapientia.Extensions.Reflection
 
 		private static readonly Dictionary<(Type baseType, bool insertNull, bool includeInterfaces, bool interfacesOnly), Type[]> TYPES = new ();
 		private static readonly Dictionary<Type[], Dictionary<string, Type>> NAMES_TO_TYPES = new ();
+
+		public static string GetTypeName(this Type type)
+		{
+			var name = type.Name;
+			var index = name.IndexOf('`');
+			return index == -1 ? name : name.Substring(0, index);
+		}
 
 		public static bool HasAttribute<T>(this Type type) where T: Attribute
 		{
@@ -483,5 +488,3 @@ namespace Sapientia.Extensions.Reflection
 		}
 	}
 }
-
-#endif
