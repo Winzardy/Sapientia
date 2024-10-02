@@ -9,7 +9,7 @@ namespace Sapientia.Extensions
 {
 	public struct TDefaultValue<T>
 	{
-		public static readonly T value = default;
+		public static T value = default;
 	}
 
 	public struct TSize<T> where T : struct

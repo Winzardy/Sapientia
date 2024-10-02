@@ -38,9 +38,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
 #if UNITY_EDITOR
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
@@ -48,23 +48,23 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public static Entity Create()
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(Allocator* allocator, string name)
 		{
 #if UNITY_EDITOR
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(Allocator* allocator)
 		{
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,9 +72,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			var allocator = allocatorId.GetAllocatorPtr();
 #if UNITY_EDITOR
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
@@ -82,7 +82,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public static Entity Create(AllocatorId allocatorId)
 		{
 			var allocator = allocatorId.GetAllocatorPtr();
-			return allocator->serviceLocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

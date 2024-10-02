@@ -35,14 +35,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 	public struct DestroyStatePart : IWorldStatePart
 	{
-		public AllocatorId AllocatorId { get; set; }
-
-		public void Initialize()
+		public unsafe void Initialize(Allocator* allocator, IndexedPtr statePartPtr)
 		{
-			Archetype<KillElement>.RegisterArchetype(AllocatorId, 512).SetDestroyHandler<KillElementDestroyHandler>();
-			Archetype<KillRequest>.RegisterArchetype(AllocatorId, 64);
-			Archetype<DelayKillRequest>.RegisterArchetype(AllocatorId, 64);
-			Archetype<DestroyRequest>.RegisterArchetype(AllocatorId, 64);
+			Archetype<KillElement>.RegisterArchetype(allocator, 512).SetDestroyHandler<KillElementDestroyHandler>();
+			Archetype<KillRequest>.RegisterArchetype(allocator, 64);
+			Archetype<DelayKillRequest>.RegisterArchetype(allocator, 64);
+			Archetype<DestroyRequest>.RegisterArchetype(allocator, 64);
 		}
 	}
 

@@ -44,6 +44,12 @@ namespace Sapientia.MemoryAllocator
 			get => _count >= _capacity;
 		}
 
+		public bool IsCreated
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _values.IsCreated;
+		}
+
 		public int ElementSize
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

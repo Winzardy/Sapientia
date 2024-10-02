@@ -28,7 +28,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			world->worldElements = new (allocator, elementsCount);
 			world->worldSystems = new (allocator, elementsCount);
 
-			allocator->serviceLocator.RegisterService<World>(worldPtr);
+			allocator->RegisterService<World>(worldPtr);
 
 			return world;
 		}

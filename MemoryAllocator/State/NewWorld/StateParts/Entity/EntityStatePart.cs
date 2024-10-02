@@ -65,6 +65,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 #endif
 		}
 
+		public void AddSubscriber(Allocator* allocator, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
+		{
+			_entityDestroySubscribers.Subscribe(allocator, subscriber);
+		}
+
 		public void AddSubscriber(in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
 			_entityDestroySubscribers.Subscribe(subscriber);
@@ -73,6 +78,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public void RemoveSubscriber(in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
 			_entityDestroySubscribers.UnSubscribe(subscriber);
+		}
+
+		public void RemoveSubscriber(Allocator* allocator, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
+		{
+			_entityDestroySubscribers.UnSubscribe(allocator, subscriber);
 		}
 
 #if UNITY_EDITOR

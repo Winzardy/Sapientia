@@ -76,14 +76,14 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, int elementsCount) where T: unmanaged, IComponent
 		{
-			return ref RegisterArchetype<T>(allocator, elementsCount, allocator->serviceLocator.GetService<EntityStatePart>().EntitiesCapacity);
+			return ref RegisterArchetype<T>(allocator, elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, int elementsCount, int entitiesCapacity) where T: unmanaged, IComponent
 		{
 			var archetypePtr = RegisterArchetype(allocator, TSize<ArchetypeElement<T>>.size, elementsCount, entitiesCapacity);
-			allocator->serviceLocator.RegisterServiceAs<Archetype, T>(archetypePtr);
+			allocator->RegisterServiceAs<Archetype, T>(archetypePtr);
 
 			return ref archetypePtr.GetValue();
 		}
@@ -97,7 +97,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			archetype._hasDestroyHandler = false;
 			archetype._destroyHandlerProxy = default;
 
-			allocator->serviceLocator.GetService<EntityStatePart>().AddSubscriber((IndexedPtr)archetypePtr);
+			allocator->GetService<EntityStatePart>().AddSubscriber((IndexedPtr)archetypePtr);
 
 			return archetypePtr;
 		}

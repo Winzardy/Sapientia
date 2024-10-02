@@ -28,6 +28,11 @@ namespace Sapientia.MemoryAllocator.Data
 			_proxies = new HashSet<ProxyPtr<T>>(allocator, capacity);
 		}
 
+		public bool Subscribe(Allocator* allocator, in ProxyPtr<T> proxyPtr)
+		{
+			return _proxies.Add(allocator, proxyPtr);
+		}
+
 		public bool Subscribe(in ProxyPtr<T> proxyPtr)
 		{
 			return _proxies.Add(proxyPtr);
@@ -36,6 +41,11 @@ namespace Sapientia.MemoryAllocator.Data
 		public bool UnSubscribe(in ProxyPtr<T> proxyPtr)
 		{
 			return _proxies.Remove(proxyPtr);
+		}
+
+		public bool UnSubscribe(Allocator* allocator, in ProxyPtr<T> proxyPtr)
+		{
+			return _proxies.Remove(allocator, proxyPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

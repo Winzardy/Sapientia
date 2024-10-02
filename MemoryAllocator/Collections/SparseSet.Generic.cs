@@ -33,6 +33,12 @@ namespace Sapientia.MemoryAllocator
 			get => _innerSet.IsFull;
 		}
 
+		public bool IsCreated
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _innerSet.IsCreated;
+		}
+
 		public int ElementSize
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,9 +73,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T Get(Allocator* allocator, int id)
+		{
+			return ref _innerSet.Get<T>(allocator, id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Get(int id)
 		{
 			return ref _innerSet.Get<T>(id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Has(Allocator* allocator, int id)
+		{
+			return _innerSet.Has(allocator, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,9 +97,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T EnsureGet(Allocator* allocator, int id)
+		{
+			return ref _innerSet.EnsureGet<T>(allocator, id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T EnsureGet(int id)
 		{
 			return ref _innerSet.EnsureGet<T>(id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBack(Allocator* allocator, int id)
+		{
+			_innerSet.RemoveSwapBack(allocator, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

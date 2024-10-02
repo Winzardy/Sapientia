@@ -25,7 +25,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype<T> RegisterArchetype(Allocator* allocator, int elementsCount)
 		{
-			return ref RegisterArchetype(allocator, elementsCount, allocator->serviceLocator.GetService<EntityStatePart>().EntitiesCapacity);
+			return ref RegisterArchetype(allocator, elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
