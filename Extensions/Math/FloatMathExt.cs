@@ -24,6 +24,13 @@ namespace Sapientia.Extensions
 		private const float POSITIVE_CEIL_OFFSET = 1f - EPSILON;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int DivRem(this float value, float divider, out float remainder)
+		{
+			remainder = value % divider;
+			return (int)((value - remainder) / divider);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float ToRad(this float value)
 		{
 			return value * DEG_TO_RAD;
