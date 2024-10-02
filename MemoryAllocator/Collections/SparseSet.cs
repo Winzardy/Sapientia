@@ -137,6 +137,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(Allocator* allocator, int id)
 		{
+			if (_sparseCapacity <= id)
+				return false;
 			var denseId = _sparse[allocator, id];
 			return denseId < _count && _dense[allocator, denseId] == id;
 		}
@@ -150,7 +152,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T EnsureGet<T>(Allocator* allocator, int id) where T: unmanaged
 		{
-			ExpandSparseIfNeeded(id);
+			ExpandSparseIfNeeded(id + 1);
 			ref var denseId = ref _sparse[allocator, id];
 			if (denseId >= _count || _dense[allocator, denseId] != id)
 			{
