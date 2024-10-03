@@ -1,5 +1,6 @@
 using System;
 using Sapientia.Extensions;
+using Sapientia.ServiceManagement;
 
 namespace Sapientia.Data
 {
@@ -8,29 +9,33 @@ namespace Sapientia.Data
 		private readonly DelayableAction<TContext> _callbackContextEvent = new ();
 		private readonly DelayableAction _callbackEvent = new ();
 
-		private static AsyncValueClassAsyncBusyScope<CallbackService<TContext>> GetServiceScope<TServiceContext>(TServiceContext serviceContext)
+		private static ServiceScope<CallbackService<TContext>> GetServiceScope<TServiceContext>(TServiceContext serviceContext)
 		{
-			return ServiceLocator<TServiceContext, CallbackService<TContext>>.GetServiceBusyScope<CallbackService<TContext>>(serviceContext);
+			if (ServiceLocator<CallbackService<TContext>>.GetService(serviceContext) == null)
+				ServiceLocator<CallbackService<TContext>>.SetService(serviceContext, new());
+			return ServiceLocator<CallbackService<TContext>>.GetServiceScope(serviceContext);
 		}
 
 		public static void InvokeDelayed<TServiceContext>(TServiceContext serviceContext)
 		{
 			using var scope = GetServiceScope(serviceContext);
-			scope.Value._callbackContextEvent.InvokeDelayedInterlocked();
-			scope.Value._callbackEvent.InvokeDelayedInterlocked();
+			scope.service._callbackContextEvent.InvokeDelayedInterlocked();
+			scope.service._callbackEvent.InvokeDelayedInterlocked();
 		}
 
 		public static void InvokeDelayedOnce<TServiceContext>(TServiceContext serviceContext)
 		{
 			using var scope = GetServiceScope(serviceContext);
-			scope.Value._callbackContextEvent.InvokeDelayedOnceInterlocked();
-			scope.Value._callbackEvent.InvokeDelayedOnceInterlocked();
+			scope.service._callbackContextEvent.InvokeDelayedOnceInterlocked();
+			scope.service._callbackEvent.InvokeDelayedOnceInterlocked();
 		}
 
-		public static void ReplaceServiceContext<TServiceContext>(TServiceContext oldContext, TServiceContext newContext, ServiceAccessType accessType = ServiceAccessType.Default)
+		public static void ReplaceServiceContext<TServiceContext>(TServiceContext oldContext, TServiceContext newContext)
 		{
-			ServiceLocator<TServiceContext, CallbackService<TContext>>.ReplaceContext<CallbackService<TContext>>(oldContext, newContext);
-			ServiceLocator<TServiceContext, CallbackService<TContext>>.SetAccessType(newContext, accessType);
+			ServiceLocator<CallbackService<TContext>>.ReplaceContext(oldContext, newContext);
+			var service = ServiceLocator<CallbackService<TContext>>.GetService(newContext);
+			if (service == null)
+				ServiceLocator<CallbackService<TContext>>.SetService(newContext, new());
 		}
 
 		public static void DelayInvoke<TServiceContext>(TServiceContext serviceContext, in TContext context = default)
@@ -40,7 +45,7 @@ namespace Sapientia.Data
 #endif
 			{
 				using var scope = GetServiceScope(serviceContext);
-				var service = scope.Value;
+				var service = scope.service;
 				if (service._callbackContextEvent.HasSubscribers())
 					service._callbackContextEvent.DelayInvokeInterlocked(context);
 				if (service._callbackEvent.HasSubscribers())
@@ -58,25 +63,25 @@ namespace Sapientia.Data
 		public static void Subscribe<TServiceContext>(TServiceContext serviceContext, Action<TContext> callback)
 		{
 			using var scope = GetServiceScope(serviceContext);
-			scope.Value._callbackContextEvent.SubscribeInterlocked(callback);
+			scope.service._callbackContextEvent.SubscribeInterlocked(callback);
 		}
 
 		public static void UnSubscribe<TServiceContext>(TServiceContext serviceContext, Action<TContext> callback)
 		{
 			using var scope = GetServiceScope(serviceContext);
-			scope.Value._callbackContextEvent.UnSubscribeInterlocked(callback);
+			scope.service._callbackContextEvent.UnSubscribeInterlocked(callback);
 		}
 
 		public static void Subscribe<TServiceContext>(TServiceContext serviceContext, Action callback)
 		{
 			using var scope = GetServiceScope(serviceContext);
-			scope.Value._callbackEvent.SubscribeInterlocked(callback);
+			scope.service._callbackEvent.SubscribeInterlocked(callback);
 		}
 
 		public static void UnSubscribe<TServiceContext>(TServiceContext serviceContext, Action callback)
 		{
 			using var scope = GetServiceScope(serviceContext);
-			scope.Value._callbackEvent.UnSubscribeInterlocked(callback);
+			scope.service._callbackEvent.UnSubscribeInterlocked(callback);
 		}
 	}
 }

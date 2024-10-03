@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Sapientia.Extensions;
+using Sapientia.ServiceManagement;
 
 namespace Sapientia.Collections.Archetypes
 {
@@ -8,18 +9,18 @@ namespace Sapientia.Collections.Archetypes
 	{
 		public static bool IsExist(this in Entity entity)
 		{
-			return ServiceLocator<EntitiesState>.Instance.IsEntityAlive(entity);
+			return SingleService<EntitiesState>.Instance.IsEntityAlive(entity);
 		}
 
 		public static void Destroy(this in Entity entity)
 		{
-			ServiceLocator<EntitiesState>.Instance.DestroyEntity(entity);
+			SingleService<EntitiesState>.Instance.DestroyEntity(entity);
 		}
 	}
 
 	public class EntitiesState : WorldStatePart
 	{
-		public static EntitiesState Instance => ServiceLocator<EntitiesState>.Instance;
+		public static EntitiesState Instance => SingleService<EntitiesState>.Instance;
 
 		public Entity SharedEntity { get; private set; }
 

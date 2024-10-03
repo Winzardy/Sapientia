@@ -10,7 +10,7 @@ namespace Sapientia.Extensions
 	/// </summary>
 	public static class ArrayExt
 	{
-		public static bool IsArrayEqual<T>(this T[] a, T[] b)
+		public static bool ArrayEquals<T>(this T[] a, T[] b)
 		{
 			if (Equals(a, b))
 				return true;

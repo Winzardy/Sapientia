@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Sapientia.Extensions;
+using Sapientia.ServiceManagement;
 
 namespace Sapientia.Collections.Archetypes
 {
@@ -23,7 +24,7 @@ namespace Sapientia.Collections.Archetypes
 		public static event Action LateGameUpdateEvent;
 		public static event Action LateExecuteOnceEvent;
 
-		public static World Instance => ServiceLocator<World>.Instance;
+		public static World Instance => SingleService<World>.Instance;
 
 		public uint Tick { get; private set; }
 		public float Time { get; private set; }
@@ -194,12 +195,12 @@ namespace Sapientia.Collections.Archetypes
 
 		protected TService GetService<TService>()
 		{
-			return ServiceLocator<TService>.Instance;
+			return SingleService<TService>.Instance;
 		}
 
 		protected void GetService<TService>(out TService service)
 		{
-			service = ServiceLocator<TService>.Instance;
+			service = SingleService<TService>.Instance;
 		}
 	}
 

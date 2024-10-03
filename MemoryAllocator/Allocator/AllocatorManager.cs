@@ -20,9 +20,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public static CurrentAllocatorScope GetCurrentAllocatorScope(this ref AllocatorId allocatorId, out Allocator* allocator)
+		public static AllocatorScope GetAllocatorScope(this ref AllocatorId allocatorId, out Allocator* allocator)
 		{
-			var scope = new CurrentAllocatorScope(_currentAllocator);
+			var scope = new AllocatorScope(_currentAllocator);
 			allocatorId.SetCurrentAllocator();
 			allocator = _currentAllocator;
 			return scope;
@@ -133,11 +133,11 @@ namespace Sapientia.MemoryAllocator
 			return false;
 		}
 
-		public readonly ref struct CurrentAllocatorScope
+		public readonly ref struct AllocatorScope
 		{
 			private readonly Allocator* _previousAllocator;
 
-			public CurrentAllocatorScope(Allocator* previousAllocator)
+			public AllocatorScope(Allocator* previousAllocator)
 			{
 				_previousAllocator = previousAllocator;
 			}

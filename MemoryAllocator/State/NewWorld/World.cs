@@ -35,7 +35,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public void Initialize(IEnumerable<ProxyPtr<IWorldStatePartProxy>> stateParts, IEnumerable<ProxyPtr<IWorldSystemProxy>> systems)
 		{
-			using var scope = allocatorId.GetCurrentAllocatorScope(out var allocator);
+			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 
 			foreach (var statePart in stateParts)
 			{
@@ -64,7 +64,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public void Update(float deltaTime)
 		{
-			using var scope = allocatorId.GetCurrentAllocatorScope(out var allocator);
+			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 
 			if (!IsStarted)
 			{
@@ -99,7 +99,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public void Dispose()
 		{
-			using var scope = allocatorId.GetCurrentAllocatorScope(out var allocator);
+			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 			SendBeginDisposeMessage();
 
 			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
+using Sapientia.ServiceManagement;
 
 namespace Sapientia.Collections.Archetypes
 {
@@ -125,7 +126,7 @@ namespace Sapientia.Collections.Archetypes
 		public static Archetype<TValue> Instance
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ServiceLocator<Archetype<TValue>>.Instance;
+			get => SingleService<Archetype<TValue>>.Instance;
 		}
 
 		private static readonly TValue DEFAULT = default;
@@ -138,13 +139,13 @@ namespace Sapientia.Collections.Archetypes
 		public int Count => _elements.Count;
 
 		public Archetype(SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
-			DestroyEvents? destroyEvents = null) : this(ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, destroyEvents)
+			DestroyEvents? destroyEvents = null) : this(SingleService<EntitiesState>.Instance.EntitiesCapacity, resetAction, destroyEvents)
 		{
 
 		}
 
 		public Archetype(int elementsCount, SparseSet<ArchetypeElement<TValue>>.ResetAction resetAction = null,
-			DestroyEvents? destroyEvents = null) : this(elementsCount, ServiceLocator<EntitiesState>.Instance.EntitiesCapacity, resetAction, destroyEvents)
+			DestroyEvents? destroyEvents = null) : this(elementsCount, SingleService<EntitiesState>.Instance.EntitiesCapacity, resetAction, destroyEvents)
 		{
 
 		}
@@ -154,13 +155,13 @@ namespace Sapientia.Collections.Archetypes
 			_elements = new SparseSet<ArchetypeElement<TValue>>(elementsCount, entitiesCapacity, resetAction);
 
 			if (destroyEvents == null)
-				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += RemoveSwapBackElement;
+				SingleService<EntitiesState>.Instance.EntityDestroyEvent += RemoveSwapBackElement;
 			else
 			{
 				OnEntityDestroyEvent = destroyEvents.Value.OnEntityDestroyEvent;
 				OnEntityArrayDestroyEvent = destroyEvents.Value.OnEntityArrayDestroyEvent;
 
-				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent += OnEntityDestroy;
+				SingleService<EntitiesState>.Instance.EntityDestroyEvent += OnEntityDestroy;
 			}
 		}
 
@@ -262,13 +263,13 @@ namespace Sapientia.Collections.Archetypes
 
 		~Archetype()
 		{
-			if (ServiceLocator<EntitiesState>.Instance == null)
+			if (SingleService<EntitiesState>.Instance == null)
 				return;
 
 			if (OnEntityDestroyEvent == null)
-				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= RemoveSwapBackElement;
+				SingleService<EntitiesState>.Instance.EntityDestroyEvent -= RemoveSwapBackElement;
 			else
-				ServiceLocator<EntitiesState>.Instance.EntityDestroyEvent -= OnEntityDestroy;
+				SingleService<EntitiesState>.Instance.EntityDestroyEvent -= OnEntityDestroy;
 		}
 
 		public IEnumerator<ArchetypeElement<TValue>> GetEnumerator()
