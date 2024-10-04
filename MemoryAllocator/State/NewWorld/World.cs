@@ -50,6 +50,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			{
 				element->Initialize(allocator, allocator, element->indexedPtr);
 			}
+
+			LocalStatePartService.Initialize(allocator);
+
 			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
 			{
 				element->LateInitialize(allocator, allocator, element->indexedPtr);
@@ -117,24 +120,34 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	[InterfaceProxy]
 	public unsafe interface IWorldElement : IIndexedType
 	{
-		public virtual void Initialize(Allocator* allocator, IndexedPtr statePartPtr) {}
+		public virtual void Initialize(Allocator* allocator, IndexedPtr elementPtr) {}
 
-		public virtual void LateInitialize(Allocator* allocator, IndexedPtr statePartPtr) {}
+		public virtual void LateInitialize(Allocator* allocator, IndexedPtr elementPtr) {}
 
 		/// <summary>
 		/// Right before first world update
 		/// </summary>
-		public virtual void Start(Allocator* allocator, IndexedPtr statePartPtr) {}
+		public virtual void Start(Allocator* allocator, IndexedPtr elementPtr) {}
 
-		public virtual void Dispose(Allocator* allocator, IndexedPtr statePartPtr) {}
+		public virtual void Dispose(Allocator* allocator, IndexedPtr elementPtr) {}
 	}
 
 	public unsafe interface IWorldSystem : IWorldElement
 	{
-		public virtual void Update(Allocator* allocator, IndexedPtr statePartPtr, float deltaTime) {}
+		public virtual void Update(Allocator* allocator, IndexedPtr elementPtr, float deltaTime) {}
 	}
 
 	public interface IWorldStatePart : IWorldElement
 	{
+	}
+
+	public abstract unsafe class WorldLocalStatePart
+	{
+		public void Initialize(Allocator* allocator)
+		{
+
+		}
+
+		public virtual void InternalInitialize(Allocator* allocator) {}
 	}
 }

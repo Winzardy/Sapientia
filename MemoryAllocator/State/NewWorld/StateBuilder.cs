@@ -43,13 +43,23 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		}
 
+		public void AddLocalStatePart<T>() where T: IWoldLocalStatePart, new()
+		{
+			AddLocalStatePart(new T());
+		}
+
+		public void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
+		{
+			LocalStatePartService.AddStatePart(value);
+		}
+
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart
 		{
 			var proxy = ProxyPtr<IWorldStatePartProxy>.Create(_allocator, value);
 			_stateParts.Add(proxy);
 		}
 
-		public void AddStatePartGroup<T>() where T: StatePartGroup, new()
+		public void AddStatePartGroup<T>() where T: WorldStatePartGroup, new()
 		{
 			var group = new T();
 			group.AddStateParts(this);
@@ -61,14 +71,14 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			_systems.Add(proxy);
 		}
 
-		public void AddSystemGroup<T>() where T: SystemGroup, new()
+		public void AddSystemGroup<T>() where T: WorldSystemGroup, new()
 		{
 			var group = new T();
 			group.AddSystems(this);
 		}
 	}
 
-	public abstract class StatePartGroup
+	public abstract class WorldStatePartGroup
 	{
 		private StateBuilder _builder;
 
@@ -80,7 +90,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		protected abstract void AddStateParts();
 
-		protected void AddStatePartGroup<T>() where T: SystemGroup, new()
+		protected void AddStatePartGroup<T>() where T: WorldSystemGroup, new()
 		{
 			_builder.AddSystemGroup<T>();
 		}
@@ -89,9 +99,19 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			_builder.AddStatePart<T>(value);
 		}
+
+		protected void AddLocalStatePart<T>() where T: IWoldLocalStatePart, new()
+		{
+			_builder.AddLocalStatePart<T>();
+		}
+
+		protected void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
+		{
+			_builder.AddLocalStatePart<T>(value);
+		}
 	}
 
-	public abstract class SystemGroup
+	public abstract class WorldSystemGroup
 	{
 		private StateBuilder _builder;
 
@@ -103,7 +123,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		protected abstract void AddSystems();
 
-		protected void AddSystemGroup<T>() where T: SystemGroup, new()
+		protected void AddSystemGroup<T>() where T: WorldSystemGroup, new()
 		{
 			_builder.AddSystemGroup<T>();
 		}

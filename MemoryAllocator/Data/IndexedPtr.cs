@@ -126,6 +126,13 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
+		public readonly Ptr<T> GetCachedPtr<T>() where T : unmanaged
+		{
+			Debug.Assert(IsCreated);
+			return _ptr;
+		}
+
+		[INLINE(256)]
 		public void Dispose(Allocator* allocator)
 		{
 			_ptr.Dispose(allocator);
