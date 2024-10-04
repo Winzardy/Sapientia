@@ -1,6 +1,7 @@
 using System;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
+using Sapientia.ServiceManagement;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
@@ -31,7 +32,16 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public static void SetCurrentAllocator(this ref AllocatorId allocatorId)
 		{
-			_currentAllocator = allocatorId.GetAllocatorPtr();
+			SetCurrentAllocator(allocatorId.GetAllocatorPtr());
+		}
+
+		[INLINE(256)]
+		public static void SetCurrentAllocator(Allocator* allocator)
+		{
+			_currentAllocator = allocator;
+
+			var context = allocator == null ? default : allocator->allocatorId;
+			ServiceContext<AllocatorId>.SetContext(context);
 		}
 
 		public static Allocator* DeserializeAllocator(ref StreamBufferReader stream)
@@ -87,7 +97,7 @@ namespace Sapientia.MemoryAllocator
 
 			_allocators[allocatorId.index]->Dispose();
 			if (_currentAllocator == _allocators[allocatorId.index])
-				_currentAllocator = null;
+				SetCurrentAllocator(null);
 
 			_allocators[allocatorId.index] = _allocators[_count - 1];
 			_count--;
@@ -144,7 +154,7 @@ namespace Sapientia.MemoryAllocator
 
 			public void Dispose()
 			{
-				_currentAllocator = _previousAllocator;
+				SetCurrentAllocator(_previousAllocator);
 			}
 		}
 	}
