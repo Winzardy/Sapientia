@@ -152,6 +152,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void EnsureCount(int count, in T defaultValue = default)
+		{
+			EnsureCount(GetAllocatorPtr(), count, defaultValue);
+		}
+
+		[INLINE(256)]
+		public void EnsureCount(Allocator* allocator, int count, in T defaultValue = default)
+		{
+			EnsureCapacity(allocator, count);
+			if (_count < count)
+			{
+				_arr.Fill(allocator, defaultValue, _count, count - 1);
+			}
+		}
+
+		[INLINE(256)]
 		public void Add(T obj)
 		{
 			Debug.Assert(IsCreated);
