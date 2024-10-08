@@ -92,8 +92,10 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype<T> RegisterArchetype<T>(Allocator* allocator, int elementsCount, int entitiesCapacity) where T: unmanaged, IIndexedType
 		{
-			Ptr<Archetype<T>> _;
-			return ref RegisterArchetype<T>(allocator, elementsCount, entitiesCapacity, out _);
+			var archetypePtr = CreateArchetype<T>(allocator, elementsCount, entitiesCapacity);
+			allocator->RegisterServiceAs<Archetype<T>, T>(archetypePtr);
+
+			return ref archetypePtr.GetValue();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

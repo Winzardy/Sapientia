@@ -37,16 +37,16 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	{
 		public unsafe void Initialize(Allocator* allocator, IndexedPtr statePartPtr)
 		{
-			Archetype<KillElement>.RegisterArchetype(allocator, 512).SetDestroyHandler<KillElementDestroyHandler>();
-			Archetype<KillRequest>.RegisterArchetype(allocator, 64);
-			Archetype<DelayKillRequest>.RegisterArchetype(allocator, 64);
-			Archetype<DestroyRequest>.RegisterArchetype(allocator, 64);
+			Archetype.RegisterArchetype<KillElement>(allocator, 512).SetDestroyHandler<KillElementDestroyHandler>();
+			Archetype.RegisterArchetype<KillRequest>(allocator, 64);
+			Archetype.RegisterArchetype<DelayKillRequest>(allocator, 64);
+			Archetype.RegisterArchetype<DestroyRequest>(allocator, 64);
 		}
 	}
 
 	public unsafe struct KillElementDestroyHandler : IElementDestroyHandler<KillElement>
 	{
-		public void EntityDestroyed(Allocator* allocator, ref ArchetypeElement<KillElement> element)
+		public void EntityDestroyed(Allocator* allocator, ref Archetype<KillElement> archetype, ref ArchetypeElement<KillElement> element)
 		{
 			element.value.children.Clear();
 			element.value.parents.Clear();
@@ -54,18 +54,18 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			element.value.killCallbacks.Clear();
 		}
 
-		public void EntityArrayDestroyed(Allocator* allocator, ArchetypeElement<KillElement>* element, uint count)
+		public void EntityArrayDestroyed(Allocator* allocator, ref Archetype<KillElement> archetype, ArchetypeElement<KillElement>* elementsPtr, int count)
 		{
 			for (var i = 0u; i < count; i++)
 			{
-				element[i].value.children.Clear();
-				element[i].value.parents.Clear();
-				element[i].value.killCallbackHolders.Clear();
-				foreach (KillCallback* component in element[i].value.killCallbacks.GetPtrEnumerable(allocator))
+				elementsPtr[i].value.children.Clear();
+				elementsPtr[i].value.parents.Clear();
+				elementsPtr[i].value.killCallbackHolders.Clear();
+				foreach (KillCallback* component in elementsPtr[i].value.killCallbacks.GetPtrEnumerable(allocator))
 				{
 					component->callback.Dispose(allocator);
 				}
-				element[i].value.killCallbacks.Clear();
+				elementsPtr[i].value.killCallbacks.Clear();
 			}
 		}
 	}
