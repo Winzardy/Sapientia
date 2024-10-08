@@ -12,6 +12,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void SetDestroyHandler<THandler>(this ref Ptr<Archetype> archetypePtr, Allocator* allocator) where THandler : unmanaged, IElementDestroyHandler
+		{
+			archetypePtr.GetValue().SetDestroyHandler<THandler>(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype<TComponent> GetArchetype<TComponent>(this ref Allocator allocator) where TComponent : unmanaged, IComponent
 		{
 			return ref allocator.GetServiceAs<TComponent, Archetype<TComponent>>();

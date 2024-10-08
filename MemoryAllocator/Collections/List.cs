@@ -259,6 +259,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public bool RemoveAtSwapBack(int index)
+		{
+			return RemoveAtSwapBack(GetAllocatorPtr(), index);
+		}
+
+		[INLINE(256)]
 		public bool RemoveAtSwapBack(Allocator* allocator, int index)
 		{
 			if (index >= _count)

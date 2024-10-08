@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
-	public unsafe struct Archetype<T> : IEnumerable<T> where T: unmanaged, IComponent
+	public unsafe struct Archetype<T> : IEnumerable<T> where T: unmanaged
 	{
 		public Archetype innerArchetype;
 
@@ -14,24 +15,6 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => innerArchetype.Count;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype<T> RegisterArchetype(AllocatorId allocatorId, int elementsCount)
-		{
-			return ref RegisterArchetype(allocatorId.GetAllocatorPtr(), elementsCount);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype<T> RegisterArchetype(Allocator* allocator, int elementsCount)
-		{
-			return ref RegisterArchetype(allocator, elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype<T> RegisterArchetype(Allocator* allocator, int elementsCount, int entitiesCapacity)
-		{
-			return ref Archetype.RegisterArchetype<T>(allocator, elementsCount, entitiesCapacity).As<Archetype, Archetype<T>>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
