@@ -291,7 +291,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			if (_destroyHandlerProxy.IsCreated)
 			{
 				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
-				_destroyHandlerProxy.EntityArrayDestroyed(allocator, valueArray, _elements.Count);
+				_destroyHandlerProxy.EntityArrayDestroyed(allocator, ref this, valueArray, _elements.Count);
 			}
 			_elements.Clear(allocator);
 		}
@@ -303,7 +303,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			if (_destroyHandlerProxy.IsCreated)
 			{
 				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
-				_destroyHandlerProxy.EntityArrayDestroyed(allocator, valueArray, _elements.Count);
+				_destroyHandlerProxy.EntityArrayDestroyed(allocator, ref this, valueArray, _elements.Count);
 			}
 
 			_elements.ClearFast();
@@ -330,7 +330,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			if (_destroyHandlerProxy.IsCreated)
 			{
 				var value = _elements.GetValuePtr(allocator, entity.id);
-				_destroyHandlerProxy.EntityDestroyed(allocator, value);
+				_destroyHandlerProxy.EntityDestroyed(allocator, ref this, value);
 
 				if (!_elements.Has(allocator, entity.id))
 					return;

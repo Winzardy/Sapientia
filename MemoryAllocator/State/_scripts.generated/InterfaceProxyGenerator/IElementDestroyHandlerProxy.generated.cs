@@ -22,22 +22,22 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		internal delegate void EntityDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element);
+		internal delegate void EntityDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void EntityDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public readonly void EntityDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 0);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityDestroyedDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, allocator, element);
+			__method.Invoke(__executorPtr, allocator, ref archetype, element);
 		}
 
-		internal delegate void EntityArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count);
+		internal delegate void EntityArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element, System.Int32 count);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void EntityArrayDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public readonly void EntityArrayDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element, System.Int32 count)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 1);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityArrayDestroyedDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, allocator, element, count);
+			__method.Invoke(__executorPtr, allocator, ref archetype, element, count);
 		}
 
 	}
@@ -45,62 +45,62 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IElementDestroyHandlerProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public static void EntityDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element)
 		{
-			__proxyPtr.proxy.EntityDestroyed(__proxyPtr.GetPtr(), allocator, element);
+			__proxyPtr.proxy.EntityDestroyed(__proxyPtr.GetPtr(), allocator, ref archetype, element);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public static void EntityDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element)
 		{
-			__proxyPtr.proxy.EntityDestroyed(__proxyPtr.GetPtr(__allocator), allocator, element);
+			__proxyPtr.proxy.EntityDestroyed(__proxyPtr.GetPtr(__allocator), allocator, ref archetype, element);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public static void EntityDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element)
 		{
 			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.EntityDestroyed(__proxyPtr->GetPtr(), allocator, element);
+				__proxyPtr->proxy.EntityDestroyed(__proxyPtr->GetPtr(), allocator, ref archetype, element);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public static void EntityDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element)
 		{
 			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.EntityDestroyed(__proxyPtr->GetPtr(__allocator), allocator, element);
+				__proxyPtr->proxy.EntityDestroyed(__proxyPtr->GetPtr(__allocator), allocator, ref archetype, element);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element, System.Int32 count)
 		{
-			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(), allocator, element, count);
+			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(), allocator, ref archetype, element, count);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element, System.Int32 count)
 		{
-			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(__allocator), allocator, element, count);
+			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(__allocator), allocator, ref archetype, element, count);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element, System.Int32 count)
 		{
 			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(), allocator, element, count);
+				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(), allocator, ref archetype, element, count);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element, System.Int32 count)
 		{
 			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(__allocator), allocator, element, count);
+				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(__allocator), allocator, ref archetype, element, count);
 			}
 		}
 
@@ -115,12 +115,12 @@ namespace Sapientia.TypeIndexer
 #endif
 #endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IElementDestroyHandlerProxy.EntityDestroyedDelegate))]
-		private static void EntityDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		private static void EntityDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.EntityDestroyed(allocator, element);
+			__source.EntityDestroyed(allocator, ref archetype, element);
 #endif
 		}
 
@@ -139,12 +139,12 @@ namespace Sapientia.TypeIndexer
 #endif
 #endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IElementDestroyHandlerProxy.EntityArrayDestroyedDelegate))]
-		private static void EntityArrayDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		private static void EntityArrayDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, ref Sapientia.MemoryAllocator.State.NewWorld.Archetype archetype, void* element, System.Int32 count)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.EntityArrayDestroyed(allocator, element, count);
+			__source.EntityArrayDestroyed(allocator, ref archetype, element, count);
 #endif
 		}
 
