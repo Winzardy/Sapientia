@@ -205,7 +205,7 @@ namespace Sapientia.Collections.Archetypes.StateParts
 		{
 			Debug.Assert(entity.IsAlive());
 
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 			service.destroyRequestArchetype.GetElement(entity);
 
 			Debug.Assert(!service.killElementsArchetype.HasElement(entity));
@@ -213,21 +213,21 @@ namespace Sapientia.Collections.Archetypes.StateParts
 
 		public static bool HasDestroyRequest(this Entity entity)
 		{
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 			return service.destroyRequestArchetype.HasElement(entity);
 		}
 
 		public static void RequestKill(this Entity entity)
 		{
 			Debug.Assert(entity.IsAlive());
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 			service.killRequestArchetype.GetElement(entity);
 		}
 
 		public static void RequestKill(this Entity entity, float delay)
 		{
 			Debug.Assert(entity.IsAlive());
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 			if (service.killRequestArchetype.HasElement(entity))
 				return;
 			var hasRequest = service.delayKillRequestArchetype.HasElement(entity);
@@ -238,13 +238,13 @@ namespace Sapientia.Collections.Archetypes.StateParts
 
 		public static bool HasKillRequest(this Entity entity)
 		{
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 			return service.killRequestArchetype.HasElement(entity);
 		}
 
 		public static bool HasDestroyOrKillRequest(this Entity entity)
 		{
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 			return service.killRequestArchetype.HasElement(entity) || service.destroyRequestArchetype.HasElement(entity);
 		}
 
@@ -252,7 +252,7 @@ namespace Sapientia.Collections.Archetypes.StateParts
 		{
 			Debug.Assert(child.IsAlive());
 			Debug.Assert(parent.IsAlive());
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 
 			ref var childElement = ref service.killElementsArchetype.GetElement(child);
 			ref var parentElement = ref service.killElementsArchetype.GetElement(parent);
@@ -272,7 +272,7 @@ namespace Sapientia.Collections.Archetypes.StateParts
 		public static void AddKillChildren(this Entity parent, SimpleList<Entity> children)
 		{
 			Debug.Assert(parent.IsAlive());
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 
 			ref var parentElement = ref service.killElementsArchetype.GetElement(parent);
 
@@ -291,7 +291,7 @@ namespace Sapientia.Collections.Archetypes.StateParts
 
 		public static void AddKillCallback(this Entity holder, Entity target, Action<Entity> callback)
 		{
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 
 			ref var holderElement = ref service.killElementsArchetype.GetElement(holder);
 
@@ -309,7 +309,7 @@ namespace Sapientia.Collections.Archetypes.StateParts
 
 		public static bool IsAlive(this Entity entity)
 		{
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 			return !service.destroyRequestArchetype.HasElement(entity) &&
 			       !service.killRequestArchetype.HasElement(entity) &&
 			       entity.IsExist();
@@ -317,7 +317,7 @@ namespace Sapientia.Collections.Archetypes.StateParts
 
 		public static bool IsDead(this Entity entity)
 		{
-			var service = SingleService<DestroyStatePart>.Instance;
+			var service = ServiceLocator<DestroyStatePart>.Instance;
 			return service.destroyRequestArchetype.HasElement(entity) ||
 			       service.killRequestArchetype.HasElement(entity) ||
 			       !entity.IsExist();

@@ -5,35 +5,16 @@ using Sapientia.Data;
 
 namespace Sapientia.ServiceManagement
 {
-	public enum ServiceAccessType
-	{
-		Default,
-		Interlocked,
-	}
-
-	public static class SingleService<TService>
+	public static partial class ServiceLocator<TService>
 	{
 		private static AsyncValue<TService> _instance = new (default);
-		public static ServiceAccessType AccessType { get; set; }
 
 		public static TService Instance
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				if (AccessType == ServiceAccessType.Interlocked)
-					return _instance.ReadValue();
-				return _instance.value;
-			}
+			get => _instance.ReadValue();
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			private set
-			{
-
-				if (AccessType == ServiceAccessType.Interlocked)
-					_instance.SetValue(value);
-				else
-					_instance.value = value;
-			}
+			private set => _instance.SetValue(value);
 		}
 
 		public static bool HasInstance()
@@ -120,26 +101,26 @@ namespace Sapientia.ServiceManagement
 		}
 	}
 
-	public static class SingleService
+	public static class ServiceLocator
 	{
 		#region Get
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Get<TService>() where TService : new()
 		{
-			return SingleService<TService>.Get<TService>();
+			return ServiceLocator<TService>.Get<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Get<TService, TConcrete>() where TConcrete : TService, new()
 		{
-			return SingleService<TService>.Get<TConcrete>();
+			return ServiceLocator<TService>.Get<TConcrete>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Get<TService>(out TService service)
 		{
-			var result = SingleService<TService>.TryGet(out service);
+			var result = ServiceLocator<TService>.TryGet(out service);
 
 			if (!result)
 				throw new Exception($"Not have target service [ {typeof(TService)} ]");
@@ -148,15 +129,14 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void GetOrCreate<TService>(out TService service) where TService : new()
 		{
-			service = SingleService<TService>.Get<TService>();
+			service = ServiceLocator<TService>.Get<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGet<TService>(out TService service)
 		{
-			return SingleService<TService>.TryGet(out service);
+			return ServiceLocator<TService>.TryGet(out service);
 		}
-
 
 		#endregion
 
@@ -165,13 +145,13 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Create<TService>() where TService : new()
 		{
-			return SingleService<TService>.Create<TService>();
+			return ServiceLocator<TService>.Create<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Create<TService, TConcrete>() where TConcrete : TService, new()
 		{
-			return SingleService<TService>.Create<TConcrete>();
+			return ServiceLocator<TService>.Create<TConcrete>();
 		}
 
 		#endregion
@@ -181,13 +161,13 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryRegisterAsService<TService>(this TService service)
 		{
-			return SingleService<TService>.TryRegister(service);
+			return ServiceLocator<TService>.TryRegister(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService RegisterAsService<TService>(this TService service)
 		{
-			return SingleService<TService>.Register(service);
+			return ServiceLocator<TService>.Register(service);
 		}
 
 		#endregion
@@ -197,13 +177,13 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryUnRegisterAsService<TService>(this TService service)
 		{
-			return SingleService<TService>.TryUnRegister(service);
+			return ServiceLocator<TService>.TryUnRegister(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void UnRegisterAsService<TService>(this TService service)
 		{
-			SingleService<TService>.UnRegister(service);
+			ServiceLocator<TService>.UnRegister(service);
 		}
 
 		#endregion
@@ -213,18 +193,9 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService ReplaceService<TService>(this TService service)
 		{
-			return SingleService<TService>.ReplaceService(service);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService ReplaceService<TService>(this TService service, ServiceAccessType accessType)
-		{
-			SingleService<TService>.AccessType = accessType;
-			return SingleService<TService>.ReplaceService(service);
+			return ServiceLocator<TService>.ReplaceService(service);
 		}
 
 		#endregion
 	}
-
-	public interface IService {}
 }

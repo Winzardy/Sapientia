@@ -16,7 +16,7 @@ namespace Sapientia.Collections.Archetypes
 		}
 	}
 
-	public abstract class World : IService
+	public abstract class World
 	{
 		public static event Action OnGameStartEvent;
 		public static event Action OnBeforeGameEndEvent;
@@ -24,7 +24,7 @@ namespace Sapientia.Collections.Archetypes
 		public static event Action LateGameUpdateEvent;
 		public static event Action LateExecuteOnceEvent;
 
-		public static World Instance => SingleService<World>.Instance;
+		public static World Instance => ServiceLocator<World>.Instance;
 
 		public uint Tick { get; private set; }
 		public float Time { get; private set; }
@@ -195,12 +195,12 @@ namespace Sapientia.Collections.Archetypes
 
 		protected TService GetService<TService>()
 		{
-			return SingleService<TService>.Instance;
+			return ServiceLocator<TService>.Instance;
 		}
 
 		protected void GetService<TService>(out TService service)
 		{
-			service = SingleService<TService>.Instance;
+			service = ServiceLocator<TService>.Instance;
 		}
 	}
 

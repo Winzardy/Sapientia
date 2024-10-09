@@ -9,18 +9,18 @@ namespace Sapientia.Collections.Archetypes
 	{
 		public static bool IsExist(this in Entity entity)
 		{
-			return SingleService<EntitiesState>.Instance.IsEntityAlive(entity);
+			return ServiceLocator<EntitiesState>.Instance.IsEntityAlive(entity);
 		}
 
 		public static void Destroy(this in Entity entity)
 		{
-			SingleService<EntitiesState>.Instance.DestroyEntity(entity);
+			ServiceLocator<EntitiesState>.Instance.DestroyEntity(entity);
 		}
 	}
 
 	public class EntitiesState : WorldStatePart
 	{
-		public static EntitiesState Instance => SingleService<EntitiesState>.Instance;
+		public static EntitiesState Instance => ServiceLocator<EntitiesState>.Instance;
 
 		public Entity SharedEntity { get; private set; }
 

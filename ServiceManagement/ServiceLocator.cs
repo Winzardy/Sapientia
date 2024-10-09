@@ -310,7 +310,7 @@ namespace Sapientia.ServiceManagement
 		}
 	}
 
-	public static class ServiceLocator<TService>
+	public static partial class ServiceLocator<TService>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetService<TContext>(in TService service)

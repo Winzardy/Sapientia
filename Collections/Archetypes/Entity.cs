@@ -14,7 +14,7 @@ namespace Sapientia.Collections.Archetypes
 		public readonly ushort generation;
 
 #if UNITY_EDITOR
-		public string Name => id >= 0 ? SingleService<EntitiesState>.Instance.entitiesNames[id] : string.Empty;
+		public string Name => id >= 0 ? ServiceLocator<EntitiesState>.Instance.entitiesNames[id] : string.Empty;
 #endif
 
 		internal Entity(ushort id, ushort generation)
@@ -26,15 +26,15 @@ namespace Sapientia.Collections.Archetypes
 		public static Entity Create(string name)
 		{
 #if UNITY_EDITOR
-			return SingleService<EntitiesState>.Instance.CreateEntity(name);
+			return ServiceLocator<EntitiesState>.Instance.CreateEntity(name);
 #else
-			return SingleService<EntitiesState>.Instance.CreateEntity();
+			return ServiceLocator<EntitiesState>.Instance.CreateEntity();
 #endif
 		}
 
 		public static Entity Create()
 		{
-			return SingleService<EntitiesState>.Instance.CreateEntity();
+			return ServiceLocator<EntitiesState>.Instance.CreateEntity();
 		}
 
 		public bool IsEmpty()

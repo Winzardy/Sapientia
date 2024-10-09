@@ -4,7 +4,7 @@ using Sapientia.ServiceManagement;
 
 namespace Sapientia.Data
 {
-	public class CallbackService<TContext> : IService
+	public class CallbackService<TContext>
 	{
 		private readonly DelayableAction<TContext> _callbackContextEvent = new ();
 		private readonly DelayableAction _callbackEvent = new ();
