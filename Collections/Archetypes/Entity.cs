@@ -28,7 +28,7 @@ namespace Sapientia.Collections.Archetypes
 #if UNITY_EDITOR
 			return SingleService<EntitiesState>.Instance.CreateEntity(name);
 #else
-			return ServiceLocator<EntitiesState>.Instance.CreateEntity();
+			return SingleService<EntitiesState>.Instance.CreateEntity();
 #endif
 		}
 
