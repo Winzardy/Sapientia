@@ -83,7 +83,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Remove<T>(this Entity entity, Allocator* allocator) where T: unmanaged, IComponent
+		public static void Remove<T>(this ref Entity entity, Allocator* allocator) where T: unmanaged, IComponent
 		{
 			allocator->GetArchetype<T>().RemoveSwapBackElement(allocator, entity);
 		}
