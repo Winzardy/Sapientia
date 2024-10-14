@@ -196,7 +196,7 @@ namespace Sapientia.MemoryAllocator
 				var e = _arr.GetEnumerator();
 				while (e.MoveNext())
 				{
-					arr[i++] = e.Current.value;
+					arr[i++] = e.Current;
 				}
 
 				e.Dispose();
