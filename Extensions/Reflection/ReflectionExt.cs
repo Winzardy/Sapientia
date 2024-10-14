@@ -28,7 +28,7 @@ namespace Sapientia.Extensions.Reflection
 		private static readonly Dictionary<(Type baseType, bool insertNull, bool includeInterfaces, bool interfacesOnly), Type[]> TYPES = new ();
 		private static readonly Dictionary<Type[], Dictionary<string, Type>> NAMES_TO_TYPES = new ();
 
-		public static string GetTypeName(this Type type)
+		public static string GetGenericTypeName(this Type type)
 		{
 			var name = type.Name;
 			var index = name.IndexOf('`');
