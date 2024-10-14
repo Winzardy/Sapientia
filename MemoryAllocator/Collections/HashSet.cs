@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Sapientia.Extensions;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe struct HashSet<T> : IIsCreated, IHashSetEnumerable<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct HashSet<T> : IIsCreated, IHashSetEnumerable<T> where T : unmanaged
 	{
 		public struct Slot
 		{
@@ -497,7 +498,8 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public static bool Equal(T v1, T v2)
 		{
-			return EqualityComparer<T>.Default.Equals(v1, v2);
+			return v1.IsEquals<T>(ref v2);
+			//return EqualityComparer<T>.Default.Equals(v1, v2);
 		}
 
 		[INLINE(256)]
@@ -531,13 +533,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<Slot, HashSetEnumerator<T>> GetEnumerable(Allocator* allocator)
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(Allocator* allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}
 
 		[INLINE(256)]
-		public Enumerable<Slot, HashSetEnumerator<T>> GetEnumerable()
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable()
 		{
 			return new (new (GetSlotPtr(), LastIndex));
 		}

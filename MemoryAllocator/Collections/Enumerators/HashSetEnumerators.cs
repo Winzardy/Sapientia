@@ -5,8 +5,8 @@ using System.Runtime.CompilerServices;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface IHashSetEnumerable<T> : IEnumerable<HashSet<T>.Slot>
-		where T: unmanaged, IEquatable<T>
+	public unsafe interface IHashSetEnumerable<T> : IEnumerable<T>
+		where T: unmanaged
 	{
 		public int LastIndex { get; }
 		public HashSet<T>.Slot* GetSlotPtr();
@@ -37,13 +37,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<HashSet<T>.Slot, HashSetEnumerator<T>> GetEnumerable(Allocator* allocator)
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(Allocator* allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<HashSet<T>.Slot, HashSetEnumerator<T>> GetEnumerable()
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable()
 		{
 			return new (new (GetSlotPtr(), LastIndex));
 		}
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<HashSet<T>.Slot> IEnumerable<HashSet<T>.Slot>.GetEnumerator()
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
 			return GetEnumerator();
 		}
@@ -74,7 +74,7 @@ namespace Sapientia.MemoryAllocator
 	}
 
 	public unsafe struct HashSetPtrEnumerator<T> : IEnumerator<IntPtr>
-		where T: unmanaged, IEquatable<T>
+		where T: unmanaged
 	{
 		private readonly HashSet<T>.Slot* _slots;
 		private readonly int _lastIndex;
@@ -132,8 +132,8 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe struct HashSetEnumerator<T> : IEnumerator<HashSet<T>.Slot>
-		where T: unmanaged, IEquatable<T>
+	public unsafe struct HashSetEnumerator<T> : IEnumerator<T>
+		where T: unmanaged
 	{
 		private readonly HashSet<T>.Slot* _slots;
 		private readonly int _lastIndex;
@@ -178,10 +178,10 @@ namespace Sapientia.MemoryAllocator
 			get => Current;
 		}
 
-		public HashSet<T>.Slot Current
+		public T Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => *(_slots + _index - 1);
+			get => (_slots + _index - 1)->value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
