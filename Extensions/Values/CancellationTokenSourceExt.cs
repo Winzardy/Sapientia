@@ -12,5 +12,16 @@ namespace Sapientia.Extensions
 			cts.Cancel();
 			cts.Dispose();
 		}
+
+		public static void Trigger(ref CancellationTokenSource cts)
+		{
+			if (cts == null)
+				return;
+
+			cts.Cancel();
+			cts.Dispose();
+
+			cts = null;
+		}
 	}
 }
