@@ -24,12 +24,12 @@ namespace Sapientia.Messaging
 
 		private struct StrongMessageSubscription<TMessage> : IMessageSubscription where TMessage : struct
 		{
-			private Action<TMessage> _receiver;
+			private Receiver<TMessage> _receiver;
 
 			[CanBeNull]
-			private Func<TMessage, bool> _filter;
+			private Filter<TMessage> _filter;
 
-			public StrongMessageSubscription(Action<TMessage> receiver, [CanBeNull] Func<TMessage, bool> filter)
+			public StrongMessageSubscription(Receiver<TMessage> receiver, [CanBeNull] Filter<TMessage> filter)
 			{
 				_receiver = receiver;
 				_filter = filter;
@@ -46,12 +46,12 @@ namespace Sapientia.Messaging
 
 		private struct WeakMessageSubscription<TMessage> : IMessageSubscription where TMessage : struct
 		{
-			private WeakReference<Action<TMessage>> _weakReceiver;
+			private WeakReference<Receiver<TMessage>> _weakReceiver;
 
 			[CanBeNull]
-			private WeakReference<Func<TMessage, bool>> _weakFilter;
+			private WeakReference<Filter<TMessage>> _weakFilter;
 
-			public WeakMessageSubscription(Action<TMessage> receiver, [CanBeNull] Func<TMessage, bool> filter)
+			public WeakMessageSubscription(Receiver<TMessage> receiver, [CanBeNull] Filter<TMessage> filter)
 			{
 				_weakReceiver = new(receiver);
 				_weakFilter = filter == null ? null : new(filter);

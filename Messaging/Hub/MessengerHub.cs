@@ -7,6 +7,9 @@ using Sapientia.Data;
 
 namespace Sapientia.Messaging
 {
+	public delegate void Receiver<T>(in T msg);
+	public delegate bool Filter<T>(in T msg);
+
 	/// <summary>
 	/// Messenger hub responsible for taking subscriptions/publications and delivering of messages.
 	/// </summary>
@@ -24,7 +27,7 @@ namespace Sapientia.Messaging
 		/// <param name="receiver">Action to invoke when message is delivered</param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Action<TMessage> receiver) where TMessage : struct
+		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver) where TMessage : struct
 		{
 			return AddSubscriptionInternal(receiver, null, true);
 		}
@@ -41,10 +44,10 @@ namespace Sapientia.Messaging
 		/// <param name="proxy">Proxy to use when delivering the messages</param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Action<TMessage> receiver, bool useStrongReferences)
+		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, bool useStrongReferences)
 			where TMessage : struct
 		{
-			return AddSubscriptionInternal<TMessage>(receiver, (m) => true, useStrongReferences);
+			return AddSubscriptionInternal<TMessage>(receiver, null, useStrongReferences);
 		}
 
 		/// <summary>
@@ -58,7 +61,7 @@ namespace Sapientia.Messaging
 		/// <param name="receiver">Action to invoke when message is delivered</param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Action<TMessage> receiver, [CanBeNull] Func<TMessage, bool> filter)
+		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, [CanBeNull] Filter<TMessage> filter)
 			where TMessage : struct
 		{
 			return AddSubscriptionInternal<TMessage>(receiver, filter, true);
@@ -75,7 +78,7 @@ namespace Sapientia.Messaging
 		/// <param name="useStrongReferences">Use strong references to destination and receiver </param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Action<TMessage> receiver, [CanBeNull] Func<TMessage, bool> filter,
+		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, [CanBeNull] Filter<TMessage> filter,
 			bool useStrongReferences)
 			where TMessage : struct
 		{
@@ -128,8 +131,8 @@ namespace Sapientia.Messaging
 			SendAndUnsubscribeAllInternal(ref msg);
 		}
 
-		private MessageSubscriptionToken<TMessage> AddSubscriptionInternal<TMessage>(Action<TMessage> receiver,
-			[CanBeNull] Func<TMessage, bool> filter,
+		private MessageSubscriptionToken<TMessage> AddSubscriptionInternal<TMessage>(Receiver<TMessage> receiver,
+			[CanBeNull] Filter<TMessage> filter,
 			bool strongReference)
 			where TMessage : struct
 		{

@@ -11,7 +11,7 @@ namespace Sapientia.Messaging
 		/// </summary>
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SendSendAndUnsubscribeAll<TMessage>(ref TMessage msg)
+		public static void SendAndUnsubscribeAll<TMessage>(ref TMessage msg)
 			where TMessage : struct =>
 			instance.SendAndUnsubscribeAll(ref msg);
 
@@ -31,7 +31,7 @@ namespace Sapientia.Messaging
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		/// <returns>Возвращает токен по которому нужно отписаться</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMessageSubscriptionToken Subscribe<TMessage>(Action<TMessage> receiver)
+		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver)
 			where TMessage : struct =>
 			instance.Subscribe(receiver);
 
@@ -43,8 +43,8 @@ namespace Sapientia.Messaging
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		/// <returns>Возвращает токен по которому нужно отписаться</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMessageSubscriptionToken Subscribe<TMessage>(Action<TMessage> receiver,
-			Func<TMessage, bool> filter)
+		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver,
+			Filter<TMessage> filter)
 			where TMessage : struct =>
 			instance.Subscribe(receiver, filter);
 
