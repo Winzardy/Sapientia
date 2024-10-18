@@ -18,6 +18,13 @@ namespace Sapientia.Data
 
 		public int mask;
 
+		public static EnumMask<T> Create(T value)
+		{
+			var result = new EnumMask<T>();
+			result.Add(value);
+			return result;
+		}
+
 		public bool HasNothing()
 		{
 			return mask == 0;
