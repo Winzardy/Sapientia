@@ -127,6 +127,12 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Clear<T>(this T[] array)
+		{
+			Array.Clear(array, 0, array.Length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Sort<T>(this T[] array)
 		{
 			Array.Sort(array);
