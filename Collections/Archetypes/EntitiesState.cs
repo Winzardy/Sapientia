@@ -99,7 +99,7 @@ namespace Sapientia.Collections.Archetypes
 
 		public bool IsEntityAlive(in Entity entity)
 		{
-			return _entityIdToGeneration[entity.id] == entity.generation;
+			return entity.id < EntitiesCapacity && _entityIdToGeneration[entity.id] == entity.generation;
 		}
 
 		public void DestroyEntity(in Entity entity)

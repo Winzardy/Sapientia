@@ -109,12 +109,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public bool IsEntityExist(Allocator* allocator, in Entity entity)
 		{
-			return _entityIdToGeneration[allocator, entity.id] == entity.generation;
+			return entity.id < EntitiesCapacity && _entityIdToGeneration[allocator, entity.id] == entity.generation;
 		}
 
 		public bool IsEntityExist(in Entity entity)
 		{
-			return _entityIdToGeneration[entity.id] == entity.generation;
+			return entity.id < EntitiesCapacity && _entityIdToGeneration[entity.id] == entity.generation;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
