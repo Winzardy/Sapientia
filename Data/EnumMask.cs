@@ -35,9 +35,20 @@ namespace Sapientia.Data
 			return Has(value.ToInt());
 		}
 
+		public readonly bool HasOnly(T value)
+		{
+			return HasOnly(value.ToInt());
+		}
+
 		public readonly bool Has(int value)
 		{
 			return (mask & (1 << value)) != 0;
+		}
+
+		public readonly bool HasOnly(int value)
+		{
+			var valueMask = 1 << value;
+			return ((mask & (1 << value)) != 0) && ((mask & ~valueMask) == 0);
 		}
 
 		public readonly bool Has(EnumMask<T> value)
@@ -85,6 +96,15 @@ namespace Sapientia.Data
 		public static implicit operator uint(EnumMask<T> value)
 		{
 			return value.mask.As<int, uint>();
+		}
+
+		public static implicit operator EnumMask<T>(uint value)
+		{
+			var mask = value.As<uint, int>();
+			return new EnumMask<T>
+			{
+				mask = mask,
+			};
 		}
 	}
 
