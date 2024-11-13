@@ -17,9 +17,47 @@ namespace Sapientia.Extensions
 		public static readonly int ENUM_LENGHT = NAMES.Length;
 	}
 
+	public static class EnumValueToIndex<T> where T : unmanaged, Enum
+	{
+		private static readonly Dictionary<T, int> VALUE_TO_INDEX;
+
+		static EnumValueToIndex()
+		{
+			var values = EnumValues<T>.VALUES;
+
+			VALUE_TO_INDEX = new Dictionary<T, int>(values.Length);
+			for (var i = 0; i < values.Length; i++)
+			{
+				VALUE_TO_INDEX.Add(values[i], i);
+			}
+		}
+
+		public static bool TryGetIndex(T value, out int index)
+		{
+			return VALUE_TO_INDEX.TryGetValue(value, out index);
+		}
+
+		public static int GetIndex(T value)
+		{
+			return VALUE_TO_INDEX[value];
+		}
+	}
+
 	public static class EnumNameToValue<T> where T : unmanaged, Enum
 	{
 		private static readonly Dictionary<string, T> NAME_TO_VALUE;
+
+		static EnumNameToValue()
+		{
+			var values = EnumValues<T>.VALUES;
+			var names = EnumNames<T>.NAMES;
+
+			NAME_TO_VALUE = new Dictionary<string, T>(values.Length);
+			for (var i = 0; i < values.Length; i++)
+			{
+				NAME_TO_VALUE.Add(names[i], values[i]);
+			}
+		}
 
 		public static bool TryGetValue(string name, out T value)
 		{
@@ -34,18 +72,6 @@ namespace Sapientia.Extensions
 		public static bool ContainsName(string name)
 		{
 			return NAME_TO_VALUE.ContainsKey(name);
-		}
-
-		static EnumNameToValue()
-		{
-			var values = EnumValues<T>.VALUES;
-			var names = EnumNames<T>.NAMES;
-
-			NAME_TO_VALUE = new Dictionary<string, T>(values.Length);
-			for (var i = 0; i < values.Length; i++)
-			{
-				NAME_TO_VALUE.Add(names[i], values[i]);
-			}
 		}
 	}
 
