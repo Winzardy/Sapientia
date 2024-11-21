@@ -174,6 +174,12 @@ namespace Sapientia.Collections.Archetypes
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref readonly TValue ReadElementNoCheck(Entity entity)
+		{
+			return ref _elements.Get(entity.id).value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SimpleList<TValue> ReadElements(SimpleList<Entity> entities)
 		{
 			var result = new SimpleList<TValue>(entities.Count);
