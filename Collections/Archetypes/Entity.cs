@@ -14,7 +14,7 @@ namespace Sapientia.Collections.Archetypes
 		public readonly ushort generation;
 
 #if UNITY_EDITOR
-		public string Name => id >= 0 ? ServiceLocator<EntitiesState>.Instance.entitiesNames[id] : string.Empty;
+		public string Name => id >= 0 ? (ServiceLocator<EntitiesState>.Instance.entitiesNames[id] + (this.IsExist() ? string.Empty : " [NotExist]")) : string.Empty;
 #endif
 
 		internal Entity(ushort id, ushort generation)
