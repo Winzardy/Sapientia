@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
@@ -19,7 +20,7 @@ namespace Sapientia.Extensions
 #if UNITY_5_3_OR_NEWER
 			return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<byte>(), Unity.Collections.Allocator.Persistent);
 #else
-			return (void*)Marshal.AllocHGlobal(size);
+			return (void*)Marshal.AllocHGlobal((int)size);
 #endif
 		}
 
@@ -29,7 +30,7 @@ namespace Sapientia.Extensions
 #if UNITY_5_3_OR_NEWER
 			return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, Unity.Collections.Allocator.Persistent);
 #else
-			return (void*)Marshal.AllocHGlobal(size);
+			return (void*)Marshal.AllocHGlobal((int)size);
 #endif
 		}
 
@@ -39,7 +40,7 @@ namespace Sapientia.Extensions
 #if UNITY_5_3_OR_NEWER
 			return (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
 #else
-			return (T*)Marshal.AllocHGlobal(size);
+			return (T*)Marshal.AllocHGlobal((int)size);
 #endif
 		}
 
@@ -152,6 +153,7 @@ namespace Sapientia.Extensions
 			return tPtr;
 		}
 
+#if UNITY_5_3_OR_NEWER
 		[INLINE(256)]
 		public static T* MakeArray<T>(int length, bool clearMemory = true) where T : unmanaged
 		{
@@ -162,6 +164,18 @@ namespace Sapientia.Extensions
 
 			return (T*)ptr;
 		}
+#else
+		[INLINE(256)]
+		public static T* MakeArray<T>(int length, bool clearMemory = true) where T : unmanaged
+		{
+			var size = TSize<T>.size * length;
+			var ptr = MemAlloc(size, TAlign<T>.align);
+			if (clearMemory)
+				new Span<byte>(ptr, size).Clear();
+
+			return (T*)ptr;
+		}
+#endif
 
 		[INLINE(256)]
 		public static void ResizeArray<T>(ref T** arr, int length, int newLength) where T : unmanaged

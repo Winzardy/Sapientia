@@ -1,9 +1,5 @@
 namespace Sapientia.MemoryAllocator
 {
-	using System.Diagnostics;
-	using BURST_DISCARD = Unity.Burst.BurstDiscardAttribute;
-	using HIDE_CALLSTACK = UnityEngine.HideInCallstackAttribute;
-
 	public static class COND
 	{
 		public const string EXCEPTIONS = "EXCEPTIONS";

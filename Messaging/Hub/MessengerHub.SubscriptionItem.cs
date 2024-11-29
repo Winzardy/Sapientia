@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Sapientia.Extensions;
 
 namespace Sapientia.Messaging
@@ -26,10 +25,9 @@ namespace Sapientia.Messaging
 		{
 			private Receiver<TMessage> _receiver;
 
-			[CanBeNull]
-			private Filter<TMessage> _filter;
+			private Filter<TMessage>? _filter;
 
-			public StrongMessageSubscription(Receiver<TMessage> receiver, [CanBeNull] Filter<TMessage> filter)
+			public StrongMessageSubscription(Receiver<TMessage> receiver, Filter<TMessage>? filter)
 			{
 				_receiver = receiver;
 				_filter = filter;
@@ -48,10 +46,9 @@ namespace Sapientia.Messaging
 		{
 			private WeakReference<Receiver<TMessage>> _weakReceiver;
 
-			[CanBeNull]
-			private WeakReference<Filter<TMessage>> _weakFilter;
+			private WeakReference<Filter<TMessage>>? _weakFilter;
 
-			public WeakMessageSubscription(Receiver<TMessage> receiver, [CanBeNull] Filter<TMessage> filter)
+			public WeakMessageSubscription(Receiver<TMessage> receiver, Filter<TMessage>? filter)
 			{
 				_weakReceiver = new(receiver);
 				_weakFilter = filter == null ? null : new(filter);

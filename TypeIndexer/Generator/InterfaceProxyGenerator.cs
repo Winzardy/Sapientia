@@ -299,8 +299,8 @@ namespace Sapientia.TypeIndexer
 				sourceBuilder.AppendLine("#if BURST");
 				sourceBuilder.AppendLine($"		{BurstAttribute}");
 				sourceBuilder.AppendLine("#endif");
+				sourceBuilder.AppendLine($"		[AOT.MonoPInvokeCallbackAttribute(typeof({baseType.Name}Proxy.{methodInfo.Name}Delegate))]");
 				sourceBuilder.AppendLine("#endif");
-				sourceBuilder.AppendLine($"		[{typeof(AOT.MonoPInvokeCallbackAttribute).FullName}(typeof({baseType.Name}Proxy.{methodInfo.Name}Delegate))]");
 				sourceBuilder.AppendLine($"		private static {returnTypeString} {methodInfo.Name}{genericParametersString}{parametersString}");
 				sourceBuilder.AppendLine("		{");
 				sourceBuilder.AppendLine($"			ref var __source = ref {typeof(UnsafeExt).FullName}.AsRef<TSource>(executorPtr);");

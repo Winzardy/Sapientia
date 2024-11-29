@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using Sapientia.Extensions;
-using Unity.Collections.LowLevel.Unsafe;
 
 namespace Sapientia.Collections.Fixed
 {
@@ -487,15 +486,27 @@ namespace Sapientia.Collections.Fixed
 #if BURST
 		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
 #endif
+#if UNITY_5_3_OR_NEWER
 		public unsafe static FormatError Append<T>(ref this T fs, byte* utf8Bytes, int utf8BytesLength)
 			where T : struct, IFixedString
 		{
 			var origLength = fs.Length;
 			if (!fs.TryResize(origLength + utf8BytesLength, ClearOptions.UninitializedMemory))
 				return FormatError.Overflow;
-			UnsafeUtility.MemCpy(fs.GetUnsafePtr() + origLength, utf8Bytes, utf8BytesLength);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(fs.GetUnsafePtr() + origLength, utf8Bytes, utf8BytesLength);
 			return FormatError.None;
 		}
+#else
+		public unsafe static FormatError Append<T>(ref this T fs, byte* utf8Bytes, int utf8BytesLength)
+			where T : struct, IFixedString
+		{
+			var origLength = fs.Length;
+			if (!fs.TryResize(origLength + utf8BytesLength, ClearOptions.UninitializedMemory))
+				return FormatError.Overflow;
+			Buffer.MemoryCopy(utf8Bytes, fs.GetUnsafePtr() + origLength, utf8BytesLength, utf8BytesLength);
+			return FormatError.None;
+		}
+#endif
 
 		/// <summary>
 		/// Appends another string to this string.

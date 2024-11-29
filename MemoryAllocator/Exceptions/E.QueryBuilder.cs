@@ -1,43 +1,52 @@
-namespace Sapientia.MemoryAllocator {
+namespace Sapientia.MemoryAllocator
+{
+	using System.Diagnostics;
+#if UNITY_EDITOR
+	using BURST_DISCARD = Unity.Burst.BurstDiscardAttribute;
+	using HIDE_CALLSTACK = UnityEngine.HideInCallstackAttribute;
+#else
+	using BURST_DISCARD = PlaceholderAttribute;
+	using HIDE_CALLSTACK = PlaceholderAttribute1;
+#endif
 
-    using System.Diagnostics;
-    using BURST_DISCARD = Unity.Burst.BurstDiscardAttribute;
-    using HIDE_CALLSTACK = UnityEngine.HideInCallstackAttribute;
+	public partial class E
+	{
+		public class QueryBuilderException : System.Exception
+		{
+			public QueryBuilderException(string str) : base(str)
+			{
+			}
 
-    public partial class E {
+			[HIDE_CALLSTACK]
+			public static void Throw(string str)
+			{
+				ThrowNotBurst(str);
+				throw new QueryBuilderException("Internal collection exception");
+			}
 
-        public class QueryBuilderException : System.Exception {
+			[BURST_DISCARD]
+			[HIDE_CALLSTACK]
+			private static void ThrowNotBurst(string str) =>
+				throw new QueryBuilderException($"{Exception.Format(str)}");
+		}
+	}
 
-            public QueryBuilderException(string str) : base(str) { }
+	public static partial class E
+	{
+		[Conditional(COND.EXCEPTIONS_QUERY_BUILDER)]
+		[HIDE_CALLSTACK]
+		public static void QUERY_BUILDER_AS_JOB(bool asJob)
+		{
+			if (asJob == true)
+				QueryBuilderException.Throw("Query Builder can't use this method because it is in AsJob mode");
+		}
 
-            [HIDE_CALLSTACK]
-            public static void Throw(string str) {
-                ThrowNotBurst(str);
-                throw new QueryBuilderException("Internal collection exception");
-            }
-
-            [BURST_DISCARD]
-            [HIDE_CALLSTACK]
-            private static void ThrowNotBurst(string str) => throw new QueryBuilderException($"{Exception.Format(str)}");
-
-        }
-
-    }
-
-    public static partial class E {
-
-        [Conditional(COND.EXCEPTIONS_QUERY_BUILDER)]
-        [HIDE_CALLSTACK]
-        public static void QUERY_BUILDER_AS_JOB(bool asJob) {
-            if (asJob == true) QueryBuilderException.Throw("Query Builder can't use this method because it is in AsJob mode");
-        }
-
-        [Conditional(COND.EXCEPTIONS_QUERY_BUILDER)]
-        [HIDE_CALLSTACK]
-        public static void QUERY_BUILDER_PARALLEL_FOR(uint parallelForBatch) {
-            if (parallelForBatch > 0u) QueryBuilderException.Throw("Query Builder can't use this method because it is in ParallelFor mode");
-        }
-
-    }
-
+		[Conditional(COND.EXCEPTIONS_QUERY_BUILDER)]
+		[HIDE_CALLSTACK]
+		public static void QUERY_BUILDER_PARALLEL_FOR(uint parallelForBatch)
+		{
+			if (parallelForBatch > 0u)
+				QueryBuilderException.Throw("Query Builder can't use this method because it is in ParallelFor mode");
+		}
+	}
 }

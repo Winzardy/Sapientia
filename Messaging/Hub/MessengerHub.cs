@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Data;
 
@@ -61,7 +60,7 @@ namespace Sapientia.Messaging
 		/// <param name="receiver">Action to invoke when message is delivered</param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, [CanBeNull] Filter<TMessage> filter)
+		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, Filter<TMessage>? filter)
 			where TMessage : struct
 		{
 			return AddSubscriptionInternal<TMessage>(receiver, filter, true);
@@ -78,7 +77,7 @@ namespace Sapientia.Messaging
 		/// <param name="useStrongReferences">Use strong references to destination and receiver </param>
 		/// <returns>MessageSubscription used to unsubscribing</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, [CanBeNull] Filter<TMessage> filter,
+		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, Filter<TMessage>? filter,
 			bool useStrongReferences)
 			where TMessage : struct
 		{
@@ -132,7 +131,7 @@ namespace Sapientia.Messaging
 		}
 
 		private MessageSubscriptionToken<TMessage> AddSubscriptionInternal<TMessage>(Receiver<TMessage> receiver,
-			[CanBeNull] Filter<TMessage> filter,
+			Filter<TMessage>? filter,
 			bool strongReference)
 			where TMessage : struct
 		{

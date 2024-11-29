@@ -74,8 +74,8 @@ namespace Sapientia.TypeIndexer
 #if BURST
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
-#endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IActionProxy.InvokeDelegate))]
+#endif
 		private static void Invoke(void* executorPtr)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
