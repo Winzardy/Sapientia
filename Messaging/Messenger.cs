@@ -21,8 +21,11 @@ namespace Sapientia.Messaging
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Send<TMessage>(ref TMessage msg)
-			where TMessage : struct =>
-			instance.Send(ref msg);
+			where TMessage : struct
+		{
+			if (IsInitialized)
+				instance.Send(ref msg);
+		}
 
 		/// <summary>
 		/// Подписаться на сообщения

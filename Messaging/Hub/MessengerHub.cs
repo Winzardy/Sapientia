@@ -7,6 +7,7 @@ using Sapientia.Data;
 namespace Sapientia.Messaging
 {
 	public delegate void Receiver<T>(in T msg);
+
 	public delegate bool Filter<T>(in T msg);
 
 	/// <summary>
@@ -91,7 +92,7 @@ namespace Sapientia.Messaging
 		/// </summary>
 		/// <param name="subscriptionToken">Subscription token received from Subscribe</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Unsubscribe<TMessage>(MessageSubscriptionToken<TMessage> subscriptionToken) where TMessage: struct
+		public void Unsubscribe<TMessage>(MessageSubscriptionToken<TMessage> subscriptionToken) where TMessage : struct
 		{
 			RemoveSubscriptionInternal(subscriptionToken);
 		}
@@ -101,7 +102,7 @@ namespace Sapientia.Messaging
 		/// </summary>
 		/// <param name="subscriptionToken">Subscription token received from Subscribe</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void UnsubscribeAll<TMessage>() where TMessage: struct
+		public void UnsubscribeAll<TMessage>() where TMessage : struct
 		{
 			RemoveAllSubscriptionInternal<TMessage>();
 		}
@@ -151,17 +152,16 @@ namespace Sapientia.Messaging
 
 			if (!_typeToSubscriptionGroup.TryGetValue(messageType, out var subscriptionGroup))
 			{
-				subscriptionGroup.tokenToSubscription = new ();
+				subscriptionGroup.tokenToSubscription = new();
 				_typeToSubscriptionGroup[messageType] = subscriptionGroup;
 			}
 
 			subscriptionGroup.tokenToSubscription.Add(subscriptionToken, subscription);
 
-
 			return subscriptionToken;
 		}
 
-		private void RemoveSubscriptionInternal<TMessage>(MessageSubscriptionToken<TMessage> subscriptionToken) where TMessage: struct
+		private void RemoveSubscriptionInternal<TMessage>(MessageSubscriptionToken<TMessage> subscriptionToken) where TMessage : struct
 		{
 			if (subscriptionToken == null)
 				throw new ArgumentNullException(nameof(subscriptionToken));
@@ -174,7 +174,7 @@ namespace Sapientia.Messaging
 			subscriptionGroup.tokenToSubscription.Remove(subscriptionToken);
 		}
 
-		private void RemoveAllSubscriptionInternal<TMessage>() where TMessage: struct
+		private void RemoveAllSubscriptionInternal<TMessage>() where TMessage : struct
 		{
 			using var scope = GetBusyScope();
 
