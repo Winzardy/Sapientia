@@ -23,7 +23,9 @@ namespace Sapientia.Messaging
 		public static void Send<TMessage>(ref TMessage msg)
 			where TMessage : struct
 		{
+#if UNITY_EDITOR
 			if (IsInitialized)
+#endif
 				instance.Send(ref msg);
 		}
 
