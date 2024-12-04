@@ -255,6 +255,12 @@ namespace Sapientia.Collections.Archetypes
 			_elements.RemoveSwapBack(entity.id);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryRemoveSwapBackElement(Entity entity, out ArchetypeElement<TValue> value)
+		{
+			return _elements.TryRemoveSwapBack(entity.id, out value);
+		}
+
 		private void OnEntityDestroy(Entity entity)
 		{
 			if (!_elements.Has(entity.id))
