@@ -102,26 +102,6 @@ namespace Sapientia.Collections
 			return ref _values[denseId];
 		}
 
-		public bool TryRemoveSwapBack(int id, out T value)
-		{
-			value = default;
-			if (id >= _sparseCapacity)
-				return false;
-			var denseId = _sparse[id];
-			if (denseId >= _count || _dense[denseId] != id)
-				return false;
-
-			var sparseId = _dense[denseId] = _dense[--_count];
-			_sparse[sparseId] = denseId;
-
-			value = _values[denseId];
-
-			_values[denseId] = _values[_count];
-			_values[_count] = default;
-
-			return true;
-		}
-
 		public void RemoveSwapBack(int id)
 		{
 			if (id >= _sparseCapacity)
