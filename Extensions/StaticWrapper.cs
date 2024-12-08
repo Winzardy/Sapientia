@@ -14,7 +14,7 @@ namespace Sapientia.Extensions
 
 		public static bool IsInitialized => _instance != null;
 
-		protected static T Instance
+		protected static T instance
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get

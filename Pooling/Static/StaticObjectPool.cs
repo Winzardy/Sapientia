@@ -4,11 +4,11 @@ namespace Sapientia.Pooling
 {
 	public sealed class StaticObjectPool<T> : StaticWrapper<ObjectPool<T>>
 	{
-		internal static T Get() => Instance.Get();
+		internal static T Get() => instance.Get();
 
-		internal static PooledObject<T> Get(out T result) => Instance.Get(out result);
+		internal static PooledObject<T> Get(out T result) => instance.Get(out result);
 
-		internal static void Release(T obj) => Instance.Release(obj);
+		internal static void Release(T obj) => instance.Release(obj);
 	}
 
 	public static class StaticObjectPool

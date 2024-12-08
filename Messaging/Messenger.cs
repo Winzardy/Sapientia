@@ -13,7 +13,7 @@ namespace Sapientia.Messaging
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SendAndUnsubscribeAll<TMessage>(ref TMessage msg)
 			where TMessage : struct =>
-			Instance.SendAndUnsubscribeAll(ref msg);
+			instance.SendAndUnsubscribeAll(ref msg);
 
 		/// <summary>
 		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(System.Action{TMessage})"/>
@@ -26,7 +26,7 @@ namespace Sapientia.Messaging
 #if UNITY_EDITOR
 			if (IsInitialized)
 #endif
-				Instance.Send(ref msg);
+				instance.Send(ref msg);
 		}
 
 		/// <summary>
@@ -38,7 +38,7 @@ namespace Sapientia.Messaging
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver)
 			where TMessage : struct =>
-			Instance.Subscribe(receiver);
+			instance.Subscribe(receiver);
 
 		/// <summary>
 		/// Подписаться на сообщения с фильтром
@@ -51,13 +51,13 @@ namespace Sapientia.Messaging
 		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver,
 			Filter<TMessage> filter)
 			where TMessage : struct =>
-			Instance.Subscribe(receiver, filter);
+			instance.Subscribe(receiver, filter);
 
 		/// <summary>
 		/// Отписывает всех подписчиков от сообщения
 		/// </summary>
 		/// <typeparam name="TMessage"></typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void UnsubscribeAll<TMessage>() where TMessage : struct => Instance.UnsubscribeAll<TMessage>();
+		public static void UnsubscribeAll<TMessage>() where TMessage : struct => instance.UnsubscribeAll<TMessage>();
 	}
 }
