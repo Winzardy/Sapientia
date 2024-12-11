@@ -22,7 +22,7 @@ namespace Sapientia.Collections.Archetypes
 	{
 		public static EntitiesState Instance => ServiceLocator<EntitiesState>.Instance;
 
-		public Entity SharedEntity { get; private set; }
+		public Entity WorldEntity { get; private set; }
 
 		public event Action<Entity> EntityDestroyEvent;
 
@@ -66,7 +66,7 @@ namespace Sapientia.Collections.Archetypes
 			}
 
 #if UNITY_EDITOR
-			SharedEntity = CreateEntity("SHARED");
+			WorldEntity = CreateEntity("SHARED");
 #else
 			SharedEntity = CreateEntity();
 #endif
