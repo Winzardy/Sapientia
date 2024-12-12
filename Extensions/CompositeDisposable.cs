@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Sapientia.Extensions;
 using Sapientia.Pooling;
 
-namespace Generic
+namespace Sapientia.Extensions
 {
 	public class CompositeDisposable : IDisposable
 	{
