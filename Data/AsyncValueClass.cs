@@ -6,112 +6,63 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Data
 {
-	public class AsyncValueClass<T>
+	public class AsyncValueClass<T> : AsyncClass
 	{
 		public T value;
 
-		private int _millisecondsTimeout;
-
-		private volatile int _threadId;
-		private volatile int _count;
-
-		public AsyncValueClass(T value, int millisecondsTimeout = 1)
+		public AsyncValueClass(T value, int millisecondsTimeout = 1) : base(millisecondsTimeout)
 		{
 			this.value = value;
-
-			_millisecondsTimeout = millisecondsTimeout;
-			_threadId = -1;
-			_count = 0;
 		}
 
-		public void SetMillisecondsTimeout(int millisecondsTimeout)
+		public T ReadValue(bool ignoreThreadId = false)
 		{
-			SetBusy();
-			_millisecondsTimeout = millisecondsTimeout;
-			SetFree();
-		}
-
-		public T ReadValue()
-		{
-			SetBusy();
+			SetBusy(ignoreThreadId);
 			var result = value;
 			SetFree();
 			return result;
 		}
 
-		public void SetValue(in T newValue)
+		public void SetValue(in T newValue, bool ignoreThreadId = false)
 		{
-			SetBusy();
+			SetBusy(ignoreThreadId);
 			value = newValue;
 			SetFree();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TrySetBusy()
+		public AsyncValueClassBusyScope<T> GetValueBusyScope(bool ignoreThreadId = false, bool isDisposed = false)
 		{
-			var currentThreadId = Environment.CurrentManagedThreadId;
-			if (_count == 0 || _threadId == currentThreadId)
-			{
-				Interlocked.Increment(ref _count);
-				Interlocked.Exchange(ref _threadId, currentThreadId);
-				return true;
-			}
-			return false;
+			return new AsyncValueClassBusyScope<T>(this, ignoreThreadId, isDisposed);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetBusy()
+		public AsyncValueClassBusyScope<T> GetValueBusyScope(out T result, bool ignoreThreadId = false, bool isDisposed = false)
 		{
-			var currentThreadId = Environment.CurrentManagedThreadId;
-			while (_count > 0 && _threadId != currentThreadId)
-			{
-				Thread.Sleep(_millisecondsTimeout);
-			}
-			Interlocked.Increment(ref _count);
-			Interlocked.Exchange(ref _threadId, currentThreadId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetFree()
-		{
-			Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
-			Debug.Assert(_count > 0);
-			Interlocked.Decrement(ref _count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassBusyScope<T> GetBusyScope(bool isDisposed = false)
-		{
-			return new AsyncValueClassBusyScope<T>(this, isDisposed);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassBusyScope<T> GetBusyScope(out T value, bool isDisposed = false)
-		{
-			var scope = new AsyncValueClassBusyScope<T>(this, isDisposed);
-			value = this.value;
+			var scope = new AsyncValueClassBusyScope<T>(this, ignoreThreadId, isDisposed);
+			result = value;
 			return scope;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassAsyncBusyScope<T> GetAsyncBusyScope(bool isDisposed = false)
+		public AsyncValueClassAsyncBusyScope<T> GetAsyncValueBusyScope(bool ignoreThreadId = false, bool isDisposed = false)
 		{
-			return new AsyncValueClassAsyncBusyScope<T>(this, isDisposed);
+			return new AsyncValueClassAsyncBusyScope<T>(this, ignoreThreadId, isDisposed);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public AsyncValueClassAsyncBusyScope<T> GetAsyncBusyScope(out T value, bool isDisposed = false)
+		public AsyncValueClassAsyncBusyScope<T> GetAsyncValueBusyScope(out T result, bool ignoreThreadId = false, bool isDisposed = false)
 		{
-			var scope = new AsyncValueClassAsyncBusyScope<T>(this, isDisposed);
-			value = this.value;
+			var scope = new AsyncValueClassAsyncBusyScope<T>(this, ignoreThreadId, isDisposed);
+			result = value;
 			return scope;
 		}
 
-		public bool TryGetBusyScope(out AsyncValueClassBusyScope<T> result, bool isDisposed = false)
+		public bool TryGetBusyScope(out AsyncValueClassBusyScope<T> result, bool ignoreThreadId = false, bool isDisposed = false)
 		{
 			if (TrySetBusy())
 			{
-				result = new AsyncValueClassBusyScope<T>(this, isDisposed);
+				result = new AsyncValueClassBusyScope<T>(this, ignoreThreadId, isDisposed);
 				return true;
 			}
 
@@ -119,11 +70,11 @@ namespace Sapientia.Data
 			return false;
 		}
 
-		public bool TryGetBusyScopeAsync(out AsyncValueClassAsyncBusyScope<T> result, bool isDisposed = false)
+		public bool TryGetBusyScopeAsync(out AsyncValueClassAsyncBusyScope<T> result, bool ignoreThreadId = false, bool isDisposed = false)
 		{
 			if (TrySetBusy())
 			{
-				result = new AsyncValueClassAsyncBusyScope<T>(this, isDisposed);
+				result = new AsyncValueClassAsyncBusyScope<T>(this, ignoreThreadId, isDisposed);
 				return true;
 			}
 
@@ -139,10 +90,10 @@ namespace Sapientia.Data
 
 		public T Value => _asyncValue.value;
 
-		public AsyncValueClassBusyScope(AsyncValueClass<T> asyncValue, bool isDisposed = false)
+		public AsyncValueClassBusyScope(AsyncValueClass<T> asyncValue, bool ignoreThreadId = false, bool isDisposed = false)
 		{
 			if (!isDisposed)
-				asyncValue.SetBusy();
+				asyncValue.SetBusy(ignoreThreadId);
 			_asyncValue = asyncValue;
 			_isDisposed = isDisposed;
 		}
@@ -164,10 +115,10 @@ namespace Sapientia.Data
 
 		public T Value => _asyncValue.value;
 
-		public AsyncValueClassAsyncBusyScope(AsyncValueClass<T> asyncValue, bool isDisposed = false)
+		public AsyncValueClassAsyncBusyScope(AsyncValueClass<T> asyncValue, bool ignoreThreadId = false, bool isDisposed = false)
 		{
 			if (!isDisposed)
-				asyncValue.SetBusy();
+				asyncValue.SetBusy(ignoreThreadId);
 			_asyncValue = asyncValue;
 			_isDisposed = isDisposed;
 		}
