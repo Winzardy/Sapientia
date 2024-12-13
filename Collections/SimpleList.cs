@@ -172,6 +172,7 @@ namespace Sapientia.Collections
 		public void SetCount(int count)
 		{
 			_count = count;
+			Expand(count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
