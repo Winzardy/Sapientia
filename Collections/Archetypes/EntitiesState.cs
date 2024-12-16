@@ -68,7 +68,7 @@ namespace Sapientia.Collections.Archetypes
 #if UNITY_EDITOR
 			WorldEntity = CreateEntity("SHARED");
 #else
-			SharedEntity = CreateEntity();
+			WorldEntity = CreateEntity();
 #endif
 		}
 
