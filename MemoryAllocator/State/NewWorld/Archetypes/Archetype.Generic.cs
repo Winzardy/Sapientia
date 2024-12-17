@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
-using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
@@ -36,15 +34,15 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref readonly T ReadElement(Entity entity)
-		{
-			return ref innerArchetype.ReadElement<T>(entity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement(Allocator* allocator, Entity entity)
 		{
 			return ref innerArchetype.ReadElement<T>(allocator, entity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref readonly T ReadElementNoCheck(Allocator* allocator, Entity entity)
+		{
+			return ref innerArchetype.ReadElementNoCheck<T>(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

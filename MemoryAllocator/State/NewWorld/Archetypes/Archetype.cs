@@ -217,6 +217,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref readonly T ReadElementNoCheck<T>(Allocator* allocator, Entity entity) where T : unmanaged
+		{
+			return ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id).value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SimpleList<T> ReadElements<T>(IEnumerable<Entity> entities) where T : unmanaged
 		{
 			return ReadElements<T, IEnumerable<Entity>>(entities);
