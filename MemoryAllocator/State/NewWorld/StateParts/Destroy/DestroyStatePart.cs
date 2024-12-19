@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 	public unsafe struct KillElementDestroyHandler : IElementDestroyHandler<KillElement>
 	{
-		public void EntityDestroyed(Allocator* allocator, ref Archetype<KillElement> archetype, ref ArchetypeElement<KillElement> element)
+		public void EntityDestroyed(Allocator* allocator, ref ArchetypeElement<KillElement> element)
 		{
 			element.value.children.Clear();
 			element.value.parents.Clear();
@@ -54,7 +54,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			element.value.killCallbacks.Clear();
 		}
 
-		public void EntityArrayDestroyed(Allocator* allocator, ref Archetype<KillElement> archetype, ArchetypeElement<KillElement>* elementsPtr, int count)
+		public void EntityArrayDestroyed(Allocator* allocator, ArchetypeElement<KillElement>* elementsPtr, int count)
 		{
 			for (var i = 0u; i < count; i++)
 			{

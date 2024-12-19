@@ -96,6 +96,8 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 				return;
 			AllowLateUpdate = false;
 
+			using var scope = allocatorId.GetAllocatorScope(out var allocator);
+
 			SendLateUpdateMessage();
 			SendLateUpdateOnceMessage();
 		}

@@ -107,5 +107,11 @@ namespace Sapientia.MemoryAllocator
 		{
 			return allocatorId.GetAllocator().serviceLocator.GetServiceAsPtr<TBase, T>();
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GetLocalService<T>(this ref AllocatorId allocatorId)
+		{
+			return ServiceManagement.ServiceLocator<T>.GetService(allocatorId);
+		}
 	}
 }

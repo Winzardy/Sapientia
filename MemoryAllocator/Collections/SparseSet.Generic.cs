@@ -45,6 +45,12 @@ namespace Sapientia.MemoryAllocator
 			get => _innerSet.ElementSize;
 		}
 
+		public int ExpandStep
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _innerSet.expandStep;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Allocator* GetAllocatorPtr()
 		{

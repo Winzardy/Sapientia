@@ -7,19 +7,19 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	{
 		private readonly Allocator* _allocator;
 		private readonly EntityStatePart* _entitiesStatePart;
-		private readonly Archetype<DestroyRequest>* _destroyRequestArchetype;
-		private readonly Archetype<KillRequest>* _killRequestArchetype;
-		private readonly Archetype<DelayKillRequest>* _delayKillRequestArchetype;
-		private readonly Archetype<KillElement>* _killElementsArchetype;
+		private readonly ArchetypeContext<DestroyRequest> _destroyRequestArchetype;
+		private readonly ArchetypeContext<KillRequest> _killRequestArchetype;
+		private readonly ArchetypeContext<DelayKillRequest> _delayKillRequestArchetype;
+		private readonly ArchetypeContext<KillElement> _killElementsArchetype;
 
 		public DestroyUpdater(Allocator* allocator)
 		{
 			_allocator = allocator;
 			_entitiesStatePart = _allocator->GetServicePtr<EntityStatePart>();
-			_destroyRequestArchetype = _allocator->GetArchetypePtr<DestroyRequest>();
-			_killRequestArchetype = _allocator->GetArchetypePtr<KillRequest>();
-			_delayKillRequestArchetype = _allocator->GetArchetypePtr<DelayKillRequest>();
-			_killElementsArchetype = _allocator->GetArchetypePtr<KillElement>();
+			_destroyRequestArchetype = new (_allocator);
+			_killRequestArchetype = new (_allocator);
+			_delayKillRequestArchetype = new (_allocator);
+			_killElementsArchetype = new (_allocator);
 		}
 
 		public void Update(float deltaTime)
@@ -33,15 +33,15 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		/// </summary>
 		private void DestroyEntities()
 		{
-			var count = _destroyRequestArchetype->Count;
+			var count = _destroyRequestArchetype.Count;
 			if (count < 1)
 				return;
 
-			var destroyRequests = _destroyRequestArchetype->GetRawElements(_allocator);
+			var destroyRequests = _destroyRequestArchetype.GetRawElements();
 			var elementsToDestroy = stackalloc ArchetypeElement<DestroyRequest>[(int)count];
 
 			MemoryExt.MemCopy(destroyRequests, elementsToDestroy, TSize<ArchetypeElement<DestroyRequest>>.uSize * count);
-			_destroyRequestArchetype->ClearFast();
+			_destroyRequestArchetype.ClearFast();
 
 			for (var i = 0; i < count; i++)
 			{
@@ -56,20 +56,20 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		/// </summary>
 		private void KillEntities(float deltaTime)
 		{
-			var delayKillRequests = _delayKillRequestArchetype->GetRawElements();
+			var delayKillRequests = _delayKillRequestArchetype.GetRawElements();
 
-			for (var i = 0; i < _delayKillRequestArchetype->Count; i++)
+			for (var i = 0; i < _delayKillRequestArchetype.Count; i++)
 			{
 				ref var request = ref delayKillRequests[i];
 				if (request.value.delay <= 0)
-					_delayKillRequestArchetype->GetElement(request.entity);
+					_delayKillRequestArchetype.GetElement(request.entity);
 				else
 					request.value.delay -= deltaTime;
 			}
 
-			var killRequests = _killRequestArchetype->GetRawElements();
+			var killRequests = _killRequestArchetype.GetRawElements();
 
-			for (var i = 0; i < _killRequestArchetype->Count; i++)
+			for (var i = 0; i < _killRequestArchetype.Count; i++)
 			{
 				var entity = killRequests[i].entity;
 
@@ -77,11 +77,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 				KillChild(entity);
 				KillParent(entity);
 
-				_delayKillRequestArchetype->RemoveSwapBackElement(entity);
-				_destroyRequestArchetype->GetElement(entity);
+				_delayKillRequestArchetype.RemoveSwapBackElement(entity);
+				_destroyRequestArchetype.GetElement(entity);
 			}
 
-			_killRequestArchetype->Clear();
+			_killRequestArchetype.Clear();
 		}
 
 		/// <summary>
@@ -90,9 +90,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		/// </summary>
 		private void ExecuteKillCallback(in Entity entity)
 		{
-			if (!_killElementsArchetype->HasElement(entity))
+			if (!_killElementsArchetype.HasElement(entity))
 				return;
-			ref var destroyElement = ref _killElementsArchetype->GetElement(entity);
+			ref var destroyElement = ref _killElementsArchetype.GetElement(entity);
 
 			if (destroyElement.killCallbacks.IsCreated)
 			{
@@ -106,9 +106,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 						killCallback.callback.Dispose(_allocator);
 					}
 
-					if (!_killElementsArchetype->HasElement(killCallback.target) || !_entitiesStatePart->IsEntityExist(_allocator, killCallback.target))
+					if (!_killElementsArchetype.HasElement(killCallback.target) || !_entitiesStatePart->IsEntityExist(_allocator, killCallback.target))
 						continue;
-					ref var targetElement = ref _killElementsArchetype->GetElement(killCallback.target);
+					ref var targetElement = ref _killElementsArchetype.GetElement(killCallback.target);
 					if (targetElement.killCallbackHolders.IsCreated)
 						continue;
 
@@ -126,9 +126,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 				for (var i = 0; i < destroyElement.killCallbackHolders.Count; i++)
 				{
 					var holder = destroyElement.killCallbackHolders[_allocator, i];
-					if (!_killElementsArchetype->HasElement(holder) || !_entitiesStatePart->IsEntityExist(_allocator, holder))
+					if (!_killElementsArchetype.HasElement(holder) || !_entitiesStatePart->IsEntityExist(_allocator, holder))
 						continue;
-					ref var holderElement = ref _killElementsArchetype->GetElement(holder);
+					ref var holderElement = ref _killElementsArchetype.GetElement(holder);
 					for (var j = 0; j < holderElement.killCallbacks.Count; j++)
 					{
 						if (holderElement.killCallbacks[_allocator, j].target.id == entity.id)
@@ -149,9 +149,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		/// </summary>
 		private void KillChild(in Entity entity)
 		{
-			if (!_killElementsArchetype->HasElement(entity))
+			if (!_killElementsArchetype.HasElement(entity))
 				return;
-			ref var destroyElement = ref _killElementsArchetype->GetElement(entity);
+			ref var destroyElement = ref _killElementsArchetype.GetElement(entity);
 
 			if (!destroyElement.parents.IsCreated)
 				return;
@@ -159,9 +159,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			for (var i = 0; i < destroyElement.parents.Count; i++)
 			{
 				var parent = destroyElement.parents[_allocator, i];
-				if (!_killElementsArchetype->HasElement(parent) || !_entitiesStatePart->IsEntityExist(_allocator, parent))
+				if (!_killElementsArchetype.HasElement(parent) || !_entitiesStatePart->IsEntityExist(_allocator, parent))
 					continue;
-				ref var parentElement = ref _killElementsArchetype->GetElement(_allocator, parent);
+				ref var parentElement = ref _killElementsArchetype.GetElement(parent);
 				for (var j = 0; j < parentElement.children.Count; j++)
 				{
 					if (parentElement.children[_allocator, j].id == entity.id)
@@ -180,18 +180,18 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		/// </summary>
 		private void KillParent(in Entity entity)
 		{
-			if (!_killElementsArchetype->HasElement(entity))
+			if (!_killElementsArchetype.HasElement(entity))
 				return;
-			ref var destroyElement = ref _killElementsArchetype->GetElement(entity);
+			ref var destroyElement = ref _killElementsArchetype.GetElement(entity);
 
 			if (!destroyElement.children.IsCreated)
 				return;
 			for (var i = 0; i < destroyElement.children.Count; i++)
 			{
 				var child = destroyElement.children[_allocator, i];
-				if (_killRequestArchetype->HasElement(child) || !_entitiesStatePart->IsEntityExist(child))
+				if (_killRequestArchetype.HasElement(child) || !_entitiesStatePart->IsEntityExist(child))
 					continue;
-				_killRequestArchetype->GetElement(child);
+				_killRequestArchetype.GetElement(child);
 				KillParent(child);
 			}
 			destroyElement.children.Clear();

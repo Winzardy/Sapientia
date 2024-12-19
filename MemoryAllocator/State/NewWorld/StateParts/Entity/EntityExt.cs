@@ -37,7 +37,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>(this Entity entity, Allocator* allocator) where T: unmanaged, IComponent
 		{
-			return allocator->GetArchetype<T>().HasElement(allocator, entity);
+			return allocator->GetArchetype<T>().HasElement(entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this Entity entity, Allocator* allocator) where T: unmanaged, IComponent
 		{
-			return ref allocator->GetArchetype<T>().ReadElement(allocator, entity);
+			return ref allocator->GetArchetype<T>().ReadElement<T>(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T Get<T>(this Entity entity, Allocator* allocator) where T: unmanaged, IComponent
 		{
-			return ref allocator->GetArchetype<T>().GetElement(allocator, entity);
+			return ref allocator->GetArchetype<T>().GetElement<T>(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T Get<T>(this Entity entity, Allocator* allocator, out bool isCreated) where T: unmanaged, IComponent
 		{
-			return ref allocator->GetArchetype<T>().GetElement(allocator, entity, out isCreated);
+			return ref allocator->GetArchetype<T>().GetElement<T>(allocator, entity, out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -89,9 +89,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype<T> GetArchetype<T>(this ref Entity entity) where T: unmanaged, IComponent
+		public static ArchetypeContext<T> GetArchetype<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
-			return ref entity.allocatorId.GetArchetype<T>();
+			return new ArchetypeContext<T>(entity.allocatorId.GetAllocatorPtr());
 		}
 	}
 }

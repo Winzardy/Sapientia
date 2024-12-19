@@ -23,9 +23,19 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)] get => _count;
 		}
 
+		public readonly int Capacity
+		{
+			[INLINE(256)] get => _array.Length;
+		}
+
 		public int ElementSize
 		{
 			[INLINE(256)] get => _array.ElementSize;
+		}
+
+		public bool IsFull
+		{
+			[INLINE(256)] get => _array.Length <= _count;
 		}
 
 		[INLINE(256)]
@@ -54,6 +64,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void Dispose()
+		{
+			Dispose(GetAllocatorPtr());
+		}
+
+		[INLINE(256)]
 		public void Dispose(Allocator* allocator)
 		{
 			_array.Dispose(allocator);
@@ -67,7 +83,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Contains<TU>(Allocator* allocator, TU item) where TU : System.IEquatable<T>
+		public bool Contains<TU>(Allocator* allocator, TU item) where TU : IEquatable<T>
 		{
 			var count = _count;
 			while (count-- > 0)

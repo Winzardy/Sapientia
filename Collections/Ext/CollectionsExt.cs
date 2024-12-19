@@ -24,7 +24,7 @@ namespace Sapientia.Extensions
 			}
 		}
 
-		public static void SetCount<T>(this List<T> list, int targetCount, in T defaultValue)
+		public static void SetCount<T>(this List<T> list, int targetCount, in T defaultValue = default)
 		{
 			if (list.Count > targetCount)
 				list.RemoveRange(targetCount, list.Count - targetCount);

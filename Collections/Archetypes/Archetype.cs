@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Sapientia.Extensions;
 using Sapientia.ServiceManagement;
 
 namespace Sapientia.Collections.Archetypes

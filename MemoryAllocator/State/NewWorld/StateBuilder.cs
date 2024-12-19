@@ -21,7 +21,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		private readonly SimpleList<ProxyPtr<IWorldStatePartProxy>> _stateParts = new();
 		private readonly SimpleList<ProxyPtr<IWorldSystemProxy>> _systems = new();
 
-		public AllocatorId Build(int initialSize = -1, int maxSize = -1)
+		public State Build(int initialSize = -1, int maxSize = -1)
 		{
 			AddStateParts();
 			AddSystems();
@@ -30,7 +30,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			var world = World.Create(_allocator);
 			world->Initialize(_stateParts, _systems);
 
-			return _allocator->allocatorId;
+			return new State(_allocator->allocatorId);
 		}
 
 		protected virtual void AddStateParts()
@@ -51,6 +51,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
 		{
 			LocalStatePartService.AddStatePart(value);
+			ServiceManagement.ServiceContext<AllocatorId>.SetService(value);
 		}
 
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart

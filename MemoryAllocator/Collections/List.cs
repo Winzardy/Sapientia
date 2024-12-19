@@ -13,7 +13,7 @@ namespace Sapientia.MemoryAllocator
 		private MemArray<T> _arr;
 		private int _count;
 
-		public int Count
+		public readonly int Count
 		{
 			[INLINE(256)] get => _count;
 		}
@@ -100,7 +100,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public T* GetValuePtr(Allocator* allocator)
+		public readonly T* GetValuePtr(Allocator* allocator)
 		{
 			return _arr.GetValuePtr(allocator);
 		}
@@ -164,7 +164,14 @@ namespace Sapientia.MemoryAllocator
 			if (_count < count)
 			{
 				_arr.Fill(allocator, defaultValue, _count, count - 1);
+				_count = count;
 			}
+		}
+
+		[INLINE(256)]
+		public void SetCountNoCheck(int count)
+		{
+			_count = count;
 		}
 
 		[INLINE(256)]
@@ -431,7 +438,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator* allocator)
+		public readonly Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator* allocator)
 		{
 			return new (new (GetValuePtr(allocator), Count));
 		}
