@@ -209,6 +209,18 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryReadElement<T>(Allocator* allocator, Entity entity, out T result) where T : unmanaged
+		{
+			if (!_elements.Has(allocator, entity.id))
+			{
+				result = default;
+				return false;
+			}
+			result = _elements.Get<ArchetypeElement<T>>(allocator, entity.id).value;
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement<T>(Entity entity) where T : unmanaged
 		{
 			return ref ReadElement<T>(entity.GetAllocatorPtr(), entity);
