@@ -33,21 +33,43 @@ namespace Sapientia.Extensions
 		/// <summary>
 		/// Создать и добавить в disposable список
 		/// </summary>
-		protected void Create<T>(out T instance)
+		protected T Create<T>(out T instance)
 			where T : IDisposable, new()
 		{
-			instance = new T();
-			AddDisposable(instance);
+			instance = Create<T>();
+			return instance;
 		}
 
 		/// <summary>
 		/// Создать и добавить в disposable список
 		/// </summary>
-		protected void Create<T>(out T instance, params object[] args)
+		protected T Create<T>(out T instance, params object[] args)
 			where T : IDisposable
 		{
-			instance = (T) Activator.CreateInstance(typeof(T), args);
+			instance = Create<T>(args);
+			return instance;
+		}
+
+		/// <summary>
+		/// Создать и добавить в disposable список
+		/// </summary>
+		protected T Create<T>()
+			where T : IDisposable, new()
+		{
+			var instance = new T();
 			AddDisposable(instance);
+			return instance;
+		}
+
+		/// <summary>
+		/// Создать и добавить в disposable список
+		/// </summary>
+		protected T Create<T>(params object[] args)
+			where T : IDisposable
+		{
+			var instance = (T) Activator.CreateInstance(typeof(T), args);
+			AddDisposable(instance);
+			return instance;
 		}
 	}
 }
