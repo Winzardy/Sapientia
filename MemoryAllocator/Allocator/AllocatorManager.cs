@@ -20,6 +20,18 @@ namespace Sapientia.MemoryAllocator
 			get => _currentAllocator;
 		}
 
+		public static ref Allocator CurrentAllocator
+		{
+			[INLINE(256)]
+			get => ref *_currentAllocator;
+		}
+
+		public static AllocatorId CurrentAllocatorId
+		{
+			[INLINE(256)]
+			get => _currentAllocator->allocatorId;
+		}
+
 		[INLINE(256)]
 		public static AllocatorScope GetAllocatorScope(this ref AllocatorId allocatorId, out Allocator* allocator)
 		{

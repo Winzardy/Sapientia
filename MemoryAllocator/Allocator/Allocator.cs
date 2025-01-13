@@ -27,7 +27,7 @@ namespace Sapientia.MemoryAllocator
 		internal int zonesListCapacity;
 		internal int initialSize;
 		internal int maxSize;
-		public ServiceLocator serviceLocator;
+		public ServiceRegistry serviceRegistry;
 
 		public AllocatorId allocatorId;
 		public ushort version;
@@ -126,7 +126,7 @@ namespace Sapientia.MemoryAllocator
 			threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 			version = 1;
 
-			serviceLocator = ServiceLocator.Create((Allocator*)this.AsPointer());
+			serviceRegistry = ServiceRegistry.Create((Allocator*)this.AsPointer());
 
 			return this;
 		}
@@ -227,7 +227,7 @@ namespace Sapientia.MemoryAllocator
 			threadId = other->threadId;
 			initialSize = other->initialSize;
 			maxSize = other->maxSize;
-			serviceLocator = other->serviceLocator;
+			serviceRegistry = other->serviceRegistry;
 
 			version = (ushort)(other->version + 1);
 		}
@@ -325,7 +325,7 @@ namespace Sapientia.MemoryAllocator
 			threadId = other->threadId;
 			initialSize = other->initialSize;
 			maxSize = other->maxSize;
-			serviceLocator = other->serviceLocator;
+			serviceRegistry = other->serviceRegistry;
 
 			version = (ushort)(other->version + 1);
 		}

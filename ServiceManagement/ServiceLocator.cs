@@ -1,394 +1,201 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Sapientia.Collections;
 using Sapientia.Data;
 
 namespace Sapientia.ServiceManagement
 {
-	public static class ServiceLocator<TContext, TService>
+	public static partial class ServiceLocator<TService>
 	{
-		private struct ContextSubscriber : IContextSubscriber<TContext>
+		private static AsyncValue<TService> _instance = new (default);
+
+		public static TService Instance
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			void IContextSubscriber<TContext>.SetContext(in TContext context)
-			{
-				ServiceLocator<TContext, TService>.SetContext(context);
-			}
-
+			get => _instance.ReadValue();
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			void IContextSubscriber<TContext>.ReplaceContext(in TContext oldContext, in TContext newContext)
-			{
-				ServiceLocator<TContext, TService>.ReplaceContext(oldContext, newContext);
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			void IContextSubscriber<TContext>.RemoveContext(in TContext oldContext)
-			{
-				ServiceLocator<TContext, TService>.RemoveContext(oldContext);
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			void IContextSubscriber<TContext>.RemoveAllContext()
-			{
-				ServiceLocator<TContext, TService>.RemoveAllContext();
-			}
+			private set => _instance.SetValue(value);
 		}
 
-		/// <summary>
-		/// For cases if TContext is a class
-		/// </summary>
-		private struct ContextContainer : IEquatable<ContextContainer>
+		public static bool HasInstance()
 		{
-			public TContext context;
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public bool Equals(ContextContainer other)
-			{
-				return Equals(context, other.context);
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public static implicit operator ContextContainer(in TContext context)
-			{
-				return new ContextContainer { context = context };
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public static implicit operator TContext(in ContextContainer contextContainer)
-			{
-				return contextContainer.context;
-			}
-		}
-
-		private static readonly AsyncClass _asyncClass = new ();
-		private static readonly Dictionary<ContextContainer, TService> _contextToService = new ();
-
-		private static TService _currentService = default;
-		private static ContextContainer _currentContext = default;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static ServiceLocator()
-		{
-			ServiceContext<TContext>.AddSubscriber<ContextSubscriber>();
-			SetContext(ServiceContext<TContext>.CurrentContext);
+			return Instance != null;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void SetContext(in TContext context)
+		public static bool IsRegistered(TService service)
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			_contextToService.TryGetValue(context, out var service);
-			_contextToService[_currentContext] = _currentService;
-			_currentService = service;
+			return Instance != null && Instance.Equals(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RemoveContext(in TContext oldContext)
+		public static TService Get<T>() where T: TService, new()
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			_contextToService.Remove(oldContext);
-
-			if (Equals(_currentContext.context, oldContext))
-			{
-				_currentContext = default;
-				_contextToService.TryGetValue(_currentContext, out _currentService);
-			}
+			if (Instance == null)
+				return Create<T>();
+			return Instance;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool HasContext(in TContext context)
+		public static bool TryGet(out TService service)
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			return _contextToService.ContainsKey(context);
+			service = Instance;
+			return Instance != null;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ReplaceContext(in TContext oldContext, in TContext newContext)
+		public static TService Create<T>() where T: TService, new()
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			_contextToService.Remove(oldContext, out var value);
-			_contextToService[newContext] = value;
-
-			if (Equals(_currentContext.context, oldContext))
-			{
-				_currentContext = newContext;
-				_currentService = value;
-			}
+			var value = new T();
+			Register(value);
+			return value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryReplaceContext(in TContext oldContext, in TContext newContext)
+		public static bool TryRegister(TService service)
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			if (!_contextToService.Remove(oldContext, out var value))
+			if (Instance != null)
 				return false;
-			_contextToService[newContext] = value;
-
-			if (Equals(_currentContext.context, oldContext))
-			{
-				_currentContext = newContext;
-				_currentService = value;
-			}
-
+			Instance = service;
 			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void RemoveAllContext()
+		public static TService Register(TService service)
 		{
-			using var scope = _asyncClass.GetBusyScope();
+			Debug.Assert(Instance == null);
+			Instance = service;
 
-			_contextToService.Clear();
-			_currentContext = default;
-			_currentService = default;
+			return Instance;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetService<T>(in TContext context, in T service) where T: TService
+		public static bool TryUnRegister(TService service)
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			if (Equals(_currentContext.context, context))
-			{
-				_currentService = service;
-			}
-			else
-				_contextToService[context] = service;
+			if (Instance == null || !Instance.Equals(service))
+				return false;
+			Instance = default;
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetService<T>(in T service) where T: TService
+		public static TService ReplaceService(TService service)
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			_currentService = service;
+			var result = Instance;
+			Instance = service;
+			return result;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool HasService(TContext context)
+		public static void UnRegister()
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			return Equals(_currentContext.context, context) || _contextToService.ContainsKey(context);
+			Instance = default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryGetService(TContext context, out TService service)
+		public static void UnRegister(TService service)
 		{
-			using var scope = _asyncClass.GetBusyScope();
-			if (Equals(_currentContext.context, context))
-			{
-				service = _currentService;
-				return true;
-			}
-			if (_contextToService.TryGetValue(context, out var value))
-			{
-				service = value;
-				return true;
-			}
-			service = default;
-			return false;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService GetService()
-		{
-			using var scope = _asyncClass.GetBusyScope();
-			return _currentService;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService GetService(TContext context)
-		{
-			using var scope = _asyncClass.GetBusyScope();
-			if (Equals(_currentContext.context, context))
-				return _currentService;
-			return _contextToService.GetValueOrDefault(context);
-		}
-
-		public static bool TryGetServiceScope(TContext context, out ServiceScope<TService> serviceScope)
-		{
-			using var scope = _asyncClass.GetBusyScope();
-			if (Equals(_currentContext.context, context))
-			{
-				serviceScope = new ServiceScope<TService>(_asyncClass, _currentService);
-				return true;
-			}
-			if (_contextToService.TryGetValue(context, out var value))
-			{
-				serviceScope = new ServiceScope<TService>(_asyncClass, value);
-				return true;
-			}
-			serviceScope = default;
-			return false;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServiceScope<TService> GetServiceScope()
-		{
-			using var scope = _asyncClass.GetBusyScope();
-			return new ServiceScope<TService>(_asyncClass, _currentService);;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServiceScope<TService> GetServiceScope(TContext context)
-		{
-			using var scope = _asyncClass.GetBusyScope();
-			if (Equals(_currentContext.context, context))
-			{
-				return new ServiceScope<TService>(_asyncClass, _currentService);
-			}
-			if (_contextToService.TryGetValue(context, out var value))
-			{
-				return new ServiceScope<TService>(_asyncClass, value);
-			}
-			return default;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServicesEnumerable GetServicesEnumerable() => default;
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServicesEnumerator GetServicesEnumerator() => ServicesEnumerator.Create();
-
-		public struct ServicesEnumerable : IEnumerable<TService>
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public IEnumerator<TService> GetEnumerator()
-			{
-				return ServicesEnumerator.Create();
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			IEnumerator IEnumerable.GetEnumerator()
-			{
-				return GetEnumerator();
-			}
-		}
-
-		public struct ServicesEnumerator : IEnumerator<TService>
-		{
-			private SimpleList<TService>.Enumerator _enumerator;
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public static ServicesEnumerator Create()
-			{
-				using var scope = _asyncClass.GetBusyScope();
-				return new ServicesEnumerator
-				{
-					_enumerator = new SimpleList<TService>(_contextToService.Values).GetEnumerator(),
-				};
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public bool MoveNext()
-			{
-				return _enumerator.MoveNext();
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public void Reset()
-			{
-				_enumerator.Reset();
-			}
-
-			public TService Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => _enumerator.Current;
-			}
-
-			object IEnumerator.Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => Current;
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public void Dispose()
-			{
-				_enumerator.Dispose();
-			}
+			if (Instance == null || !Instance.Equals(service))
+				return;
+			Instance = default;
 		}
 	}
 
-	public static partial class ServiceLocator<TService>
+	public static class ServiceLocator
 	{
+		#region Get
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetService<TContext>(in TService service)
+		public static TService Get<TService>() where TService : new()
 		{
-			ServiceLocator<TContext, TService>.SetService(service);
+			return ServiceLocator<TService>.Get<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetService<TContext>(in TContext context, in TService service)
+		public static TService Get<TService, TConcrete>() where TConcrete : TService, new()
 		{
-			ServiceLocator<TContext, TService>.SetService(context, service);
+			return ServiceLocator<TService>.Get<TConcrete>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService GetService<TContext>()
+		public static void Get<TService>(out TService service)
 		{
-			return ServiceLocator<TContext, TService>.GetService();
+			var result = ServiceLocator<TService>.TryGet(out service);
+
+			if (!result)
+				throw new Exception($"Not have target service [ {typeof(TService)} ]");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService GetService<TContext>(in TContext context)
+		public static void GetOrCreate<TService>(out TService service) where TService : new()
 		{
-			return ServiceLocator<TContext, TService>.GetService(context);
+			service = ServiceLocator<TService>.Get<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool HasService<TContext>(in TContext context)
+		public static bool TryGet<TService>(out TService service)
 		{
-			return ServiceLocator<TContext, TService>.HasService(context);
+			return ServiceLocator<TService>.TryGet(out service);
+		}
+
+		#endregion
+
+		#region Create
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TService Create<TService>() where TService : new()
+		{
+			return ServiceLocator<TService>.Create<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ReplaceContext<TContext>(in TContext oldContext, in TContext newContext)
+		public static TService Create<TService, TConcrete>() where TConcrete : TService, new()
 		{
-			ServiceLocator<TContext, TService>.ReplaceContext(oldContext, newContext);
+			return ServiceLocator<TService>.Create<TConcrete>();
+		}
+
+		#endregion
+
+		#region Register
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryRegisterAsService<TService>(this TService service)
+		{
+			return ServiceLocator<TService>.TryRegister(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryReplaceContext<TContext>(in TContext oldContext, in TContext newContext)
+		public static TService RegisterAsService<TService>(this TService service)
 		{
-			return ServiceLocator<TContext, TService>.TryReplaceContext(oldContext, newContext);
+			return ServiceLocator<TService>.Register(service);
+		}
+
+		#endregion
+
+		#region Unregister
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryUnRegisterAsService<TService>(this TService service)
+		{
+			return ServiceLocator<TService>.TryUnRegister(service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool HasContext<TContext>(in TContext context)
+		public static void UnRegisterAsService<TService>(this TService service)
 		{
-			return ServiceLocator<TContext, TService>.HasContext(context);
+			ServiceLocator<TService>.UnRegister(service);
 		}
+
+		#endregion
+
+		#region Replace
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServiceScope<TService> GetServiceScope<TContext>(in TContext context)
+		public static TService ReplaceService<TService>(this TService service)
 		{
-			return ServiceLocator<TContext, TService>.GetServiceScope(context);
+			return ServiceLocator<TService>.ReplaceService(service);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServiceScope<TService> GetServiceScope<TContext>()
-		{
-			return ServiceLocator<TContext, TService>.GetServiceScope();
-		}
-	}
-
-	public readonly ref struct ServiceScope<TService>
-	{
-		private readonly AsyncClassBusyScope _busyScope;
-		public readonly TService service;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ServiceScope(AsyncClass _asyncClass, in TService service)
-		{
-			_busyScope = _asyncClass.GetBusyScope();
-			this.service = service;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			_busyScope.Dispose();
-		}
+		#endregion
 	}
 }
