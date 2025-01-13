@@ -124,6 +124,12 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
+		public static void MemMove<T>(T* source, T* destination, int count) where T: unmanaged
+		{
+			MemMove((void*)source, destination, count * TSize<T>.size);
+		}
+
+		[INLINE(256)]
 		public static void MemMove(void* source, void* destination, long size)
 		{
 #if UNITY_5_3_OR_NEWER

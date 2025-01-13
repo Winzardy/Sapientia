@@ -149,7 +149,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public T* GetValuePtr(Allocator* allocator)
+		public readonly T* GetValuePtr(Allocator* allocator)
 		{
 			return innerArray.GetValuePtr<T>(allocator);
 		}

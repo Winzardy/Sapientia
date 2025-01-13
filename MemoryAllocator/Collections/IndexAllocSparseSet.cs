@@ -49,6 +49,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetValuePtr(Allocator* allocator)
+		{
+			return _sparseSet.GetValuePtr(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Get(Allocator* allocator, int id)
 		{
 			return ref _sparseSet.Get(allocator, id);

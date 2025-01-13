@@ -196,6 +196,18 @@ namespace Sapientia.MemoryAllocator
 			_arr[allocator, _count - 1] = obj;
 		}
 
+		public void Insert(Allocator* allocator, int index, T value)
+		{
+			++_count;
+			EnsureCapacity(allocator, _count);
+
+			var source = GetValuePtr(allocator) + index;
+			var destination = source + 1;
+			MemoryExt.MemMove<T>(source, destination, _count - index);
+
+			source[0] = value;
+		}
+
 		[INLINE(256)]
 		public readonly bool Contains<TU>(Allocator* allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
