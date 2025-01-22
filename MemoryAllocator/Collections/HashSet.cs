@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator* allocator, int capacity)
+		public HashSet(Allocator* allocator, int capacity = 8)
 		{
 			this = default;
 			Initialize(allocator, capacity);
