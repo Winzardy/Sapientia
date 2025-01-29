@@ -62,6 +62,15 @@ namespace Sapientia.MemoryAllocator
 			slots = new MemArray<Slot>(allocator, other.slots);
 		}
 
+		[INLINE(256)]
+		public HashSet(Allocator* allocator, in ICollection<T> other) : this(allocator, other.Count)
+		{
+			foreach (var value in other)
+			{
+				Add(allocator, value);
+			}
+		}
+
 		/// <summary>
 		/// Initializes buckets and slots arrays. Uses suggested capacity by finding next prime
 		/// greater than or equal to capacity.

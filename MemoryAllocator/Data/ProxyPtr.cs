@@ -47,6 +47,12 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Ptr<T1> ToPtr<T1>() where T1: unmanaged
+		{
+			return new Ptr<T1>(indexedPtr.GetMemPtr());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void* GetPtr(Allocator* allocator)
 		{
 			return indexedPtr.GetPtr(allocator);

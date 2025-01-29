@@ -203,10 +203,27 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
+		public Ptr(Allocator* allocator, T* cachedPtr, MemPtr memPtr, in T value)
+		{
+			_version = allocator->version;
+			_cachedPtr = cachedPtr;
+			this.memPtr = memPtr;
+
+			cachedPtr[0] = value;
+		}
+
+		[INLINE(256)]
 		public static Ptr<T> Create(Allocator* allocator)
 		{
 			var memPtr = allocator->Alloc<T>(out var cachedPtr);
 			return new Ptr<T>(allocator, cachedPtr, memPtr);
+		}
+
+		[INLINE(256)]
+		public static Ptr<T> Create(Allocator* allocator, in T value)
+		{
+			var memPtr = allocator->Alloc<T>(out var cachedPtr);
+			return new Ptr<T>(allocator, cachedPtr, memPtr, value);
 		}
 
 		[INLINE(256)]
