@@ -6,7 +6,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
-	public static unsafe class DestroyExt
+	/*public static unsafe class DestroyExt
 	{
 		public static void RequestDestroy(this Entity entity, Allocator* allocator)
 		{
@@ -185,5 +185,5 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			return IsDead(entity, entity.GetAllocatorPtr());
 		}
-	}
+	}*/
 }

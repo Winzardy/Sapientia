@@ -142,14 +142,4 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	public interface IWorldStatePart : IWorldElement
 	{
 	}
-
-	public abstract unsafe class WorldLocalStatePart
-	{
-		public void Initialize(Allocator* allocator)
-		{
-
-		}
-
-		public virtual void InternalInitialize(Allocator* allocator) {}
-	}
 }

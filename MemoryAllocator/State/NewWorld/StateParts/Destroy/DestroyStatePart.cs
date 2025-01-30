@@ -4,9 +4,9 @@ using Sapientia.TypeIndexer;
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
 	[InterfaceProxy]
-	public interface IKillSubscriber
+	public unsafe interface IKillSubscriber
 	{
-		public void EntityKilled(in Entity entity);
+		public void EntityKilled(Allocator* allocator, in Entity entity);
 	}
 
 	public struct KillCallback
