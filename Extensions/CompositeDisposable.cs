@@ -33,42 +33,44 @@ namespace Sapientia.Extensions
 		/// <summary>
 		/// Создать и добавить в disposable список
 		/// </summary>
-		protected T Create<T>(out T instance)
+		protected T Create<T>(out T instance, bool autoDispose = true)
 			where T : IDisposable, new()
 		{
-			instance = Create<T>();
+			instance = Create<T>(autoDispose);
 			return instance;
 		}
 
 		/// <summary>
 		/// Создать и добавить в disposable список
 		/// </summary>
-		protected T Create<T>(out T instance, params object[] args)
+		protected T Create<T>(out T instance, bool autoDispose = true, params object[] args)
 			where T : IDisposable
 		{
-			instance = Create<T>(args);
+			instance = Create<T>(autoDispose, args);
 			return instance;
 		}
 
 		/// <summary>
 		/// Создать и добавить в disposable список
 		/// </summary>
-		protected T Create<T>()
+		protected T Create<T>(bool autoDispose = true)
 			where T : IDisposable, new()
 		{
 			var instance = new T();
-			AddDisposable(instance);
+			if (autoDispose)
+				AddDisposable(instance);
 			return instance;
 		}
 
 		/// <summary>
 		/// Создать и добавить в disposable список
 		/// </summary>
-		protected T Create<T>(params object[] args)
+		protected T Create<T>(bool autoDispose = true, params object[] args)
 			where T : IDisposable
 		{
 			var instance = (T) Activator.CreateInstance(typeof(T), args);
-			AddDisposable(instance);
+			if (autoDispose)
+				AddDisposable(instance);
 			return instance;
 		}
 	}

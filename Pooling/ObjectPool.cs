@@ -5,7 +5,9 @@ namespace Sapientia.Pooling
 {
 	public class ObjectPool<T> : IObjectPool<T>, IDisposable
 	{
-		private readonly Queue<T> _items;
+		private readonly HashSet<T> _used;
+
+		private readonly Queue<T> _queue;
 		private readonly IObjectPoolPolicy<T> _policy;
 
 		private readonly bool _collectionCheck;
@@ -17,7 +19,8 @@ namespace Sapientia.Pooling
 			int capacity = 0,
 			int maxSize = 0)
 		{
-			_items = capacity > 0 ? new Queue<T>(capacity) : new Queue<T>();
+			_used = capacity > 0 ? new HashSet<T>(capacity) : new HashSet<T>();
+			_queue = capacity > 0 ? new Queue<T>(capacity) : new Queue<T>();
 			_policy = policy;
 			_collectionCheck = collectionCheck;
 			_maxSize = maxSize;
@@ -32,19 +35,19 @@ namespace Sapientia.Pooling
 
 		public void Dispose()
 		{
-			while (_items.Count > 0)
-			{
-				_policy.OnDispose(_items.Dequeue());
-			}
+			Clear(false);
+
+			while (_queue.Count > 0)
+				_policy.OnDispose(_queue.Dequeue());
 		}
 
 		public T Get()
 		{
 			T item;
 
-			if (_items.Count > 0)
+			if (_queue.Count > 0)
 			{
-				item = _items.Dequeue();
+				item = _queue.Dequeue();
 			}
 			else
 			{
@@ -52,22 +55,29 @@ namespace Sapientia.Pooling
 			}
 
 			_policy.OnGet(item);
+			_used.Add(item);
 
 			return item;
 		}
 
-		public void Release(T obj)
+		public void Release(T obj) => Push(obj, true);
+
+		public void Push(T obj, bool removeFromUsed, bool release = true)
 		{
 #if DEBUG
 			if (_collectionCheck)
 			{
-				if (_items.Contains(obj))
+				if (_queue.Contains(obj))
 					throw new ArgumentException("The specified instance is already held by the pool.", nameof(obj));
 			}
 #endif
-			_policy.OnRelease(obj);
+			if (release)
+				_policy.OnRelease(obj);
 
-			if (_maxSize > 0 && _items.Count >= _maxSize)
+			if (removeFromUsed)
+				_used.Remove(obj);
+
+			if (_maxSize > 0 && _queue.Count >= _maxSize)
 			{
 				_policy.OnDispose(obj);
 			}
@@ -77,6 +87,14 @@ namespace Sapientia.Pooling
 			}
 		}
 
-		private void Push(T obj) => _items.Enqueue(obj);
+		public void Clear(bool release = true)
+		{
+			foreach (var obj in _used)
+				Push(obj, false, release);
+
+			_used.Clear();
+		}
+
+		private void Push(T obj) => _queue.Enqueue(obj);
 	}
 }
