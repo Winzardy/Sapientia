@@ -169,6 +169,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void SetCount(Allocator* allocator, int count)
+		{
+			EnsureCount(allocator, count);
+			_count = count;
+		}
+
+		[INLINE(256)]
 		public void SetCountNoCheck(int count)
 		{
 			_count = count;
