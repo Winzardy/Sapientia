@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
-	public readonly unsafe ref struct DestroyContext
+	public readonly unsafe ref struct DestroyLogic
 	{
 		public readonly Allocator* allocator;
 
@@ -15,7 +15,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public readonly ArchetypeContext<DestroyRequest> destroyRequestArchetype;
 		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
 
-		public DestroyContext(Allocator* allocator)
+		public DestroyLogic(Allocator* allocator)
 		{
 			this.allocator = allocator;
 			entityStatePart = allocator->GetServicePtr<EntityStatePart>();
@@ -135,21 +135,19 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			return !destroyRequestArchetype.HasElement(entity) &&
 					!killRequestArchetype.HasElement(entity) &&
-					entityStatePart->IsEntityExist(entity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsDead(Entity entity)
-		{
-			return destroyRequestArchetype.HasElement(entity) ||
-					killRequestArchetype.HasElement(entity) ||
-					!entityStatePart->IsEntityExist(entity);
+					entityStatePart->IsEntityExist(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsExist(Entity entity)
 		{
-			return entityStatePart->IsEntityExist(entity);
+			return entityStatePart->IsEntityExist(allocator, entity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void DestroyImmediately(Entity entity)
+		{
+			entityStatePart->DestroyEntity(allocator, entity);
 		}
 	}
 }
