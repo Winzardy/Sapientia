@@ -69,12 +69,22 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T1 As<T, T1>(this ref T value) where T : struct where T1 : struct
+		public static ref T1 As<T, T1>(ref T value)
 		{
 #if UNITY_5_3_OR_NEWER
 			return ref UnsafeUtility.As<T, T1>(ref value);
 #else
 			return ref Unsafe.As<T, T1>(ref value);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T1 As<T, T1>(T value) where T: class where T1: class
+		{
+#if UNITY_5_3_OR_NEWER
+			return UnsafeUtility.As<T, T1>(ref value);
+#else
+			return Unsafe.As<T, T1>(ref value);
 #endif
 		}
 
@@ -147,6 +157,22 @@ namespace Sapientia.Extensions
 				hash = ((hash << 5) + hash) + c;
 			}
 			return (uint)hash;
+		}
+	}
+
+	/// <summary>
+	/// Класс расширений для работы с this, дабы избежать конфликтов с другими методами.
+	/// </summary>
+	public static class UnsafeExtExt
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T1 As<T, T1>(this ref T value) where T : struct where T1 : struct
+		{
+#if UNITY_5_3_OR_NEWER
+			return ref UnsafeUtility.As<T, T1>(ref value);
+#else
+			return ref Unsafe.As<T, T1>(ref value);
+#endif
 		}
 	}
 }
