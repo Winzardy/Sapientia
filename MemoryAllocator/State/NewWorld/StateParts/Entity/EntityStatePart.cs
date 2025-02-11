@@ -14,7 +14,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 	public unsafe struct EntityStatePart : IWorldStatePart
 	{
-		public Entity SharedEntity { get; private set; }
+		public Entity WorldEntity { get; private set; }
 		public int EntitiesCount { get; private set; }
 		public int EntitiesCapacity { get; private set; }
 		public int ExpandStep { get; private set; }
@@ -30,7 +30,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public EntityStatePart(int entitiesCapacity, int expandStep = 512)
 		{
-			SharedEntity = default;
+			WorldEntity = default;
 			EntitiesCount = 0;
 			EntitiesCapacity = entitiesCapacity;
 			ExpandStep = expandStep;
@@ -59,7 +59,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			}
 
 #if UNITY_EDITOR
-			SharedEntity = CreateEntity(allocator, "SHARED");
+			WorldEntity = CreateEntity(allocator, "SHARED");
 #else
 			SharedEntity = CreateEntity(allocator);
 #endif

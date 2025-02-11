@@ -45,6 +45,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref readonly T ReadElement(Entity entity, out bool isExist)
+		{
+			return ref innerArchetype->ReadElement<T>(allocator, entity, out isExist);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElementNoCheck(Entity entity)
 		{
 			return ref innerArchetype->ReadElementNoCheck<T>(allocator, entity);

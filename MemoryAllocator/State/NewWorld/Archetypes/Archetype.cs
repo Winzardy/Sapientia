@@ -11,6 +11,10 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
+	public interface IGlobalSettings : IIndexedType
+	{
+	}
+
 	public interface IComponent : IIndexedType
 	{
 	}
@@ -230,6 +234,15 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public ref readonly T ReadElement<T>(Allocator* allocator, Entity entity) where T : unmanaged
 		{
 			if (!_elements.Has(allocator, entity.id))
+				return ref DefaultValue<T>.DEFAULT;
+			return ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id).value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref readonly T ReadElement<T>(Allocator* allocator, Entity entity, out bool isExist) where T : unmanaged
+		{
+			isExist = _elements.Has(allocator, entity.id);
+			if (!isExist)
 				return ref DefaultValue<T>.DEFAULT;
 			return ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id).value;
 		}

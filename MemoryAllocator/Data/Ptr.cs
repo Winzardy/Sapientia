@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using Sapientia.Extensions;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
@@ -169,7 +170,7 @@ namespace Sapientia.MemoryAllocator.Data
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe struct Ptr<T> where T : unmanaged
+	public unsafe struct Ptr<T> : IEquatable<Ptr<T>> where T : unmanaged
 	{
 		public static readonly Ptr<T> Invalid = new (MemPtr.Invalid);
 
@@ -363,6 +364,11 @@ namespace Sapientia.MemoryAllocator.Data
 		public static bool operator !=(Ptr<T> a, Ptr<T> b)
 		{
 			return a.memPtr != b.memPtr;
+		}
+
+		public bool Equals(Ptr<T> other)
+		{
+			return memPtr == other.memPtr;
 		}
 	}
 }

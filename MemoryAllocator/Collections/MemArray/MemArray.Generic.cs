@@ -77,6 +77,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public MemArray(Allocator* allocator, ReadOnlySpan<T> arr)
+		{
+			innerArray = new MemArray(allocator, TSize<T>.size, arr.Length, ClearOptions.UninitializedMemory);
+			arr.CopyTo(new Span<T>(innerArray.GetValuePtr(), arr.Length));
+		}
+
+		[INLINE(256)]
 		public MemArray(MemPtr memPtr, int length, int growFactor)
 		{
 			innerArray = new MemArray(memPtr, TSize<T>.size, length, growFactor);

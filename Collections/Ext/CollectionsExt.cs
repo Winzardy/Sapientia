@@ -92,7 +92,7 @@ namespace Sapientia.Extensions
 			}
 		}
 
-		public static void Shuffle<T>(this System.Collections.Generic.List<T> list)
+		public static void Shuffle<T>(this List<T> list)
 		{
 			var length = list.Count;
 			for (var i = 0; i < length; i++)
