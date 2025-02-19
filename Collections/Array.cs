@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
@@ -54,5 +55,9 @@ namespace Sapientia.Collections
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+		public bool Any() => _length > 0;
+
+		public static implicit operator bool(Array<T> array) => array.Any();
 	}
 }

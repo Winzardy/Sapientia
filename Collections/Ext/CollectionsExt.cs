@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Sapientia.Collections;
@@ -108,12 +109,22 @@ namespace Sapientia.Extensions
 
 		public static bool IsNullOrEmpty<T>(this ICollection<T> collection)
 		{
-			return collection == null || collection.Count == 0;
+			return collection == null || IsEmpty(collection);
+		}
+
+		public static bool IsEmpty<T>(this ICollection<T> collection)
+		{
+			return collection.Count == 0;
 		}
 
 		public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
 		{
-			return enumerable == null || !enumerable.Any();
+			return enumerable == null || IsEmpty(enumerable);
+		}
+
+		public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
+		{
+			return !enumerable.Any();
 		}
 
 		public static List<T> AddRangeRepeated<T>(this List<T> list, T repeatedItem, int count)
