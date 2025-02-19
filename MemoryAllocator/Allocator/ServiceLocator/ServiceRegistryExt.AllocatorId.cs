@@ -57,7 +57,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this ref AllocatorId allocatorId, out bool exist) where T: unmanaged, IIndexedType
 		{
-			return ref allocatorId.GetAllocator().GetService<T>(out exist);
+			return ref allocatorId.GetAllocator().TryGetService<T>(out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -106,6 +106,12 @@ namespace Sapientia.MemoryAllocator
 		public static T* GetServiceAsPtr<TBase, T>(this ref AllocatorId allocatorId) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			return allocatorId.GetAllocator().GetServiceAsPtr<TBase, T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasService<T>(this ref AllocatorId allocatorId) where T: unmanaged, IIndexedType
+		{
+			return allocatorId.GetAllocator().HasService<T>();
 		}
 	}
 }

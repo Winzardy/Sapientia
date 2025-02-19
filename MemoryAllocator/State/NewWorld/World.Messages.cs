@@ -19,7 +19,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			new StartedMessage(allocatorId).Send();
 		}
 
-		public struct LateUpdateMessage
+		/*public struct LateUpdateMessage
 		{
 			public readonly AllocatorId allocatorId;
 
@@ -32,9 +32,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		private void SendLateUpdateMessage()
 		{
 			new LateUpdateMessage(allocatorId).Send();
-		}
+		}*/
 
-		public struct LateUpdateOnceMessage
+		/*public struct LateUpdateOnceMessage
 		{
 			public readonly AllocatorId allocatorId;
 
@@ -47,7 +47,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		private void SendLateUpdateOnceMessage()
 		{
 			new LateUpdateOnceMessage(allocatorId).SendAndUnsubscribeAll();
-		}
+		}*/
 
 		public struct BeginDisposeMessage
 		{

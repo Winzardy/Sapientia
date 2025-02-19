@@ -11,6 +11,9 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
+	/// <summary>
+	/// Если настройки есть, то они будут доступны через `allocator.GetService<TGlobalSettings>()`
+	/// </summary>
 	public interface IGlobalSettings : IIndexedType
 	{
 	}

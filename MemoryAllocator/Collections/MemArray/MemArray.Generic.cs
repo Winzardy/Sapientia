@@ -156,9 +156,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly T* GetValuePtr(Allocator* allocator)
+		public T* GetValuePtr(Allocator* allocator)
 		{
 			return innerArray.GetValuePtr<T>(allocator);
+		}
+
+		[INLINE(256)]
+		public Span<T> GetSpan(Allocator* allocator)
+		{
+			return innerArray.GetSpan<T>(allocator);
 		}
 
 		[INLINE(256)]

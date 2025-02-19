@@ -399,6 +399,49 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public MemPtr Alloc(int size, out void* ptr)
+		{
+			size = Align(size);
+
+			this.ValidateConsistency();
+
+			for (int i = 0, cnt = zonesListCount; i < cnt; ++i)
+			{
+				var zone = zonesList[i];
+				if (zone == null)
+					continue;
+
+				ptr = MzMalloc(zone, (int)size);
+				if (ptr != null)
+				{
+					var memPtr = GetSafePtr(ptr, i);
+#if LOGS_ENABLED
+					LogAdd(memPtr, size);
+#endif
+					this.ValidateConsistency();
+
+					return memPtr;
+				}
+
+			}
+
+			{
+				var zone = MzCreateZone((int)FloatMathExt.Max(size, initialSize));
+				var zoneIndex = AddZone(zone);
+				ptr = MzMalloc(zone, (int)size);
+				var memPtr = GetSafePtr(ptr, zoneIndex);
+#if LOGS_ENABLED
+				LogAdd(memPtr, size);
+#endif
+
+				this.ValidateConsistency();
+
+				return memPtr;
+			}
+
+		}
+
+		[INLINE(256)]
 		public MemPtr Alloc<T>(T data) where T : unmanaged
 		{
 			var ptr = Alloc<T>();
@@ -418,16 +461,14 @@ namespace Sapientia.MemoryAllocator
 		public MemPtr Alloc<T>() where T : unmanaged
 		{
 			var size = TSize<T>.size;
-			var alignOf = TAlign<T>.align;
-			return Alloc(size + alignOf);
+			return Alloc(size, out _);
 		}
 
 		[INLINE(256)]
 		public MemPtr Alloc<T>(out T* rawTPtr) where T : unmanaged
 		{
 			var size = TSize<T>.size;
-			var alignOf = TAlign<T>.align;
-			var memPtr = Alloc(size + alignOf, out var rawPtr);
+			var memPtr = Alloc(size, out var rawPtr);
 
 			rawTPtr = (T*)rawPtr;
 			return memPtr;

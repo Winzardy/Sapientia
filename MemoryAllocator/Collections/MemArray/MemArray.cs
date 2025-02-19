@@ -184,9 +184,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly T* GetValuePtr<T>(Allocator* allocator) where T: unmanaged
+		public T* GetValuePtr<T>(Allocator* allocator) where T: unmanaged
 		{
 			return (T*)GetPtr(allocator);
+		}
+
+		public Span<T> GetSpan<T>(Allocator* allocator) where T: unmanaged
+		{
+			return new Span<T>(GetValuePtr<T>(allocator), Length);
 		}
 
 		[INLINE(256)]

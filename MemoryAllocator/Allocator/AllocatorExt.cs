@@ -267,5 +267,22 @@ namespace Sapientia.MemoryAllocator
 
 			return success;
 		}
+
+		[INLINE(256)]
+		public static MemPtr CopyPtrTo(this ref Allocator srcAllocator, Allocator* dstAllocator, in MemPtr ptr)
+		{
+			if (!ptr.IsValid())
+				return MemPtr.Invalid;
+
+			var size = srcAllocator.GetSize(ptr);
+			var dstPtr = dstAllocator->Alloc(size);
+
+			var srcData = srcAllocator.GetUnsafePtr(ptr);
+			var dstData = dstAllocator->GetUnsafePtr(dstPtr);
+
+			MemoryExt.MemCopy(srcData, dstData, size);
+
+			return dstPtr;
+		}
 	}
 }

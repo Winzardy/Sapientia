@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 
@@ -29,26 +30,35 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(Allocator* allocator, ServiceRegistryContext context, out bool exist) where T: unmanaged
+		public ref T TryGetService<T>(Allocator* allocator, ServiceRegistryContext context, out bool isExist) where T: unmanaged
 		{
-			return ref _typeToPtr.GetValue(allocator, context, out exist).GetValue<T>(allocator);
+			ref var ptr = ref _typeToPtr.TryGetValue(allocator, context, out isExist);
+			if (isExist)
+				return ref ptr.GetValue<T>(allocator);
+			return ref TDefaultValue<T>.value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(Allocator* allocator, out bool exist) where T: unmanaged, IIndexedType
+		public ref T TryGetService<T>(Allocator* allocator, out bool isExist) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
 
-			return ref _typeToPtr.GetValue(allocator, typeIndex, out exist).GetValue<T>(allocator);
+			ref var ptr = ref _typeToPtr.TryGetValue(allocator, typeIndex, out isExist);
+			if (isExist)
+				return ref ptr.GetValue<T>(allocator);
+			return ref TDefaultValue<T>.value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(out bool exist) where T: unmanaged, IIndexedType
+		public ref T TryGetService<T>(out bool isExist) where T: unmanaged, IIndexedType
 		{
 			var allocator = _typeToPtr.GetAllocatorPtr();
 			var typeIndex = TypeIndex.Create<T>();
 
-			return ref _typeToPtr.GetValue(allocator, typeIndex, out exist).GetValue<T>(allocator);
+			ref var ptr = ref _typeToPtr.TryGetValue(allocator, typeIndex, out isExist);
+			if (isExist)
+				return ref ptr.GetValue<T>(allocator);
+			return ref TDefaultValue<T>.value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,16 +75,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(Allocator* allocator, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
+		public ref T TryGetService<T>(Allocator* allocator, ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
 		{
-			return ref _typeToPtr.GetValue(allocator, proxyPtr.indexedPtr.typeIndex, out exist).GetValue<T>(allocator);
+			ref var ptr = ref _typeToPtr.TryGetValue(allocator, proxyPtr.indexedPtr.typeIndex, out isExist);
+			if (isExist)
+				return ref ptr.GetValue<T>(allocator);
+			return ref TDefaultValue<T>.value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
+		public ref T TryGetService<T>(ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
 		{
 			var allocator = _typeToPtr.GetAllocatorPtr();
-			return ref _typeToPtr.GetValue(allocator, proxyPtr.indexedPtr.typeIndex, out exist).GetValue<T>(allocator);
+			ref var ptr = ref _typeToPtr.TryGetValue(allocator, proxyPtr.indexedPtr.typeIndex, out isExist);
+			if (isExist)
+				return ref ptr.GetValue<T>(allocator);
+			return ref TDefaultValue<T>.value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -164,6 +180,16 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* TryGetServicePtr<T>(Allocator* allocator, out bool isExist) where T: unmanaged, IIndexedType
+		{
+			var typeIndex = TypeIndex.Create<T>();
+			ref var ptr = ref _typeToPtr.TryGetValue(allocator, typeIndex, out isExist);
+			if (isExist)
+				return ptr.GetPtr<T>(allocator);
+			return null;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T* GetServiceAsPtr<TBase, T>(Allocator* allocator) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			var typeIndex = TypeIndex.Create<TBase>();
@@ -178,6 +204,13 @@ namespace Sapientia.MemoryAllocator
 			var typeIndex = TypeIndex.Create<TBase>();
 
 			return _typeToPtr.GetValue(allocator, typeIndex).GetPtr<T>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasService<T>(Allocator* allocator) where T: unmanaged, IIndexedType
+		{
+			var typeIndex = TypeIndex.Create<T>();
+			return _typeToPtr.ContainsKey(allocator, typeIndex);
 		}
 	}
 }

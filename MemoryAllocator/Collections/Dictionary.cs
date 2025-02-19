@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -177,25 +178,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref TValue GetValue(Allocator* allocator, TKey key, out bool exist)
+		public ref TValue TryGetValue(Allocator* allocator, TKey key, out bool success)
 		{
 			var entry = FindEntry(allocator, key);
 			if (entry >= 0)
 			{
-				exist = true;
+				success = true;
 				return ref entries[allocator, entry].value;
 			}
 
-			exist = false;
-			TryInsert(allocator, key, default, InsertionBehavior.overwriteExisting);
-			return ref entries[allocator, FindEntry(allocator, key)].value;
-		}
-
-		[INLINE(256)]
-		public TValue GetValueAndRemove(Allocator* allocator, TKey key)
-		{
-			Remove(allocator, key, out var value);
-			return value;
+			success = false;
+			return ref TDefaultValue<TValue>.value;
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
@@ -505,24 +498,6 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			value = default;
-			return false;
-		}
-
-		/// <summary>To be added.</summary>
-		/// <param name="allocator"></param>
-		/// <param name="key">To be added.</param>
-		/// <param name="value"></param>
-		[INLINE(256)]
-		public readonly bool TryGetValue(Allocator* allocator, TKey key, out TValue value)
-		{
-			var entry = FindEntry(allocator, key);
-			if (entry >= 0)
-			{
-				value = entries[allocator, entry].value;
-				return true;
-			}
-
-			value = default(TValue);
 			return false;
 		}
 

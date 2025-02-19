@@ -79,6 +79,11 @@ namespace Sapientia.MemoryAllocator
 			this = Invalid;
 		}
 
+		public MemPtr CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
+		{
+			return srsAllocator->CopyPtrTo(dstAllocator, this);
+		}
+
 		public override string ToString() => $"zoneId: {zoneId}, offset: {offset}, allocatorId: [{allocatorId}]";
 	}
 }

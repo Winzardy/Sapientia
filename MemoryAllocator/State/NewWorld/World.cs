@@ -98,8 +98,13 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 
-			SendLateUpdateMessage();
-			SendLateUpdateOnceMessage();
+
+			foreach (ProxyPtr<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable(allocator))
+			{
+				system->Update(allocator, allocator, system->indexedPtr, 0f);
+			}
+			/*SendLateUpdateMessage();
+			SendLateUpdateOnceMessage();*/
 		}
 
 		public void Dispose()
@@ -137,6 +142,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	public unsafe interface IWorldSystem : IWorldElement
 	{
 		public virtual void Update(Allocator* allocator, IndexedPtr elementPtr, float deltaTime) {}
+		public virtual void LateUpdate(Allocator* allocator, IndexedPtr elementPtr) {}
 	}
 
 	public interface IWorldStatePart : IWorldElement

@@ -24,7 +24,7 @@ namespace Sapientia.MemoryAllocator
 		internal int freeList;
 		internal int hash;
 
-		public bool IsCreated
+		public readonly bool IsCreated
 		{
 			[INLINE(256)] get => buckets.IsCreated;
 		}
@@ -71,6 +71,15 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
+		[INLINE(256)]
+		public HashSet(Allocator* allocator, in IEnumerable<T> other, int capacity) : this(allocator, capacity)
+		{
+			foreach (var value in other)
+			{
+				Add(allocator, value);
+			}
+		}
+
 		/// <summary>
 		/// Initializes buckets and slots arrays. Uses suggested capacity by finding next prime
 		/// greater than or equal to capacity.
@@ -99,7 +108,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Slot* GetSlotPtr(Allocator* allocator)
+		public readonly Slot* GetSlotPtr(Allocator* allocator)
 		{
 			return slots.GetValuePtr(allocator);
 		}
@@ -206,13 +215,13 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="item">item to check for containment</param>
 		/// <returns>true if item contained; false if not</returns>
 		[INLINE(256)]
-		public bool Contains(Allocator* allocator, in T item)
+		public readonly bool Contains(Allocator* allocator, in T item)
 		{
 			return Contains(item, slots.GetValuePtr(allocator), buckets.GetValuePtr(allocator));
 		}
 
 		[INLINE(256)]
-		private bool Contains(in T item, Slot* slotsPtr, int* bucketsPtr)
+		private readonly bool Contains(in T item, Slot* slotsPtr, int* bucketsPtr)
 		{
 			Debug.Assert(IsCreated);
 			// see note at "HashSet" level describing why "- 1" appears in for loop
@@ -542,7 +551,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(Allocator* allocator)
+		public readonly Enumerable<T, HashSetEnumerator<T>> GetEnumerable(Allocator* allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}

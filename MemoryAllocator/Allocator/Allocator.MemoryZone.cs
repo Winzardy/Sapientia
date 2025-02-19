@@ -178,7 +178,8 @@ namespace Sapientia.MemoryAllocator
 					other->next = block->next;
 					other->next.Ptr(zone)->prev = otherOffset;
 
-					if (blockOffset == zone->rover) zone->rover = otherOffset;
+					if (blockOffset == zone->rover)
+						zone->rover = otherOffset;
 
 					block = other;
 					blockOffset = otherOffset;
@@ -195,7 +196,8 @@ namespace Sapientia.MemoryAllocator
 					block->next = other->next;
 					block->next.Ptr(zone)->prev = blockOffset;
 
-					if (otherOffset == zone->rover) zone->rover = blockOffset;
+					if (otherOffset == zone->rover)
+						zone->rover = blockOffset;
 				}
 			}
 

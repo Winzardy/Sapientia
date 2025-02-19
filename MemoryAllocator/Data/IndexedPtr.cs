@@ -146,6 +146,12 @@ namespace Sapientia.MemoryAllocator.Data
 			this = default;
 		}
 
+		[INLINE(256)]
+		public IndexedPtr CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
+		{
+			return new IndexedPtr(_ptr.CopyTo(srsAllocator, dstAllocator), typeIndex);
+		}
+
 		public static bool operator ==(IndexedPtr a, IndexedPtr b)
 		{
 			return a.typeIndex == b.typeIndex && a._ptr == b._ptr;

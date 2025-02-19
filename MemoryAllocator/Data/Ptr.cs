@@ -152,6 +152,11 @@ namespace Sapientia.MemoryAllocator.Data
 			this = Invalid;
 		}
 
+		public Ptr CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
+		{
+			return new Ptr(memPtr.CopyTo(srsAllocator, dstAllocator));
+		}
+
 		[INLINE(256)]
 		public static implicit operator Ptr(MemPtr value)
 		{
@@ -328,6 +333,17 @@ namespace Sapientia.MemoryAllocator.Data
 			}
 
 			return ref *(_cachedPtr + index);
+		}
+
+		public Ptr<T> CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
+		{
+			return new Ptr<T>(memPtr.CopyTo(srsAllocator, dstAllocator));
+		}
+
+		public void Dispose(Allocator* allocator)
+		{
+			memPtr.Dispose(allocator);
+			this = Invalid;
 		}
 
 		[INLINE(256)]

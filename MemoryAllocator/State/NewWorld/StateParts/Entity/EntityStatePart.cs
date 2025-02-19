@@ -24,7 +24,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		private ProxyEvent<IEntityDestroySubscriberProxy> _entityDestroySubscribers;
 
 #if UNITY_EDITOR
-		public List<FixedString32Bytes> entityIdToName;
+		public List<FixedString64Bytes> entityIdToName;
 		public int MaxEntitiesCount { get; private set; }
 #endif
 
@@ -86,7 +86,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 #if UNITY_EDITOR
-		public Entity CreateEntity(Allocator* allocator, string name = null)
+		public Entity CreateEntity(Allocator* allocator, in FixedString64Bytes name = default)
 #else
 		public Entity CreateEntity(Allocator* allocator)
 

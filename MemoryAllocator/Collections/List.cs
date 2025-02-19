@@ -56,6 +56,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public List(Allocator* allocator, IEnumerable<T> enumerable, int capacity) : this(allocator, capacity)
+		{
+			AddRange(allocator, enumerable);
+		}
+
+		[INLINE(256)]
 		public void ReplaceWith(Allocator* allocator, in List<T> other)
 		{
 			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
@@ -100,9 +106,16 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly T* GetValuePtr(Allocator* allocator)
+		public T* GetValuePtr(Allocator* allocator)
 		{
 			return _arr.GetValuePtr(allocator);
+		}
+
+		[INLINE(256)]
+		public Span<T> GetSpan(Allocator* allocator)
+		{
+			var span = _arr.GetSpan(allocator);
+			return span[.._count];
 		}
 
 		[INLINE(256)]

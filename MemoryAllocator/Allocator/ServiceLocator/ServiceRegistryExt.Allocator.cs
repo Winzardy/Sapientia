@@ -62,9 +62,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T GetService<T>(this ref Allocator allocator, out bool exist) where T: unmanaged, IIndexedType
+		public static ref T TryGetService<T>(this ref Allocator allocator, out bool exist) where T: unmanaged, IIndexedType
 		{
-			return ref allocator.serviceRegistry.GetService<T>((Allocator*)allocator.AsPointer(), out exist);
+			return ref allocator.serviceRegistry.TryGetService<T>((Allocator*)allocator.AsPointer(), out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this ref Allocator allocator, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
 		{
-			return ref allocator.serviceRegistry.GetService((Allocator*)allocator.AsPointer(), proxyPtr, out exist);
+			return ref allocator.serviceRegistry.TryGetService((Allocator*)allocator.AsPointer(), proxyPtr, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -113,6 +113,18 @@ namespace Sapientia.MemoryAllocator
 		public static T* GetServiceAsPtr<TBase, T>(this ref Allocator allocator) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			return allocator.serviceRegistry.GetServiceAsPtr<TBase, T>((Allocator*)allocator.AsPointer());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasService<T>(this ref Allocator allocator) where T: unmanaged, IIndexedType
+		{
+			return allocator.serviceRegistry.HasService<T>((Allocator*)allocator.AsPointer());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T* TryGetServicePtr<T>(this ref Allocator allocator, out bool isExist) where T: unmanaged, IIndexedType
+		{
+			return allocator.serviceRegistry.TryGetServicePtr<T>((Allocator*)allocator.AsPointer(), out isExist);
 		}
 	}
 }

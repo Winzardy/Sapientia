@@ -47,6 +47,12 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T1 GetValue<T1>() where T1: unmanaged
+		{
+			return ref indexedPtr.GetValue<T1>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Ptr<T1> ToPtr<T1>() where T1: unmanaged
 		{
 			return new Ptr<T1>(indexedPtr.GetMemPtr());
@@ -92,6 +98,11 @@ namespace Sapientia.MemoryAllocator.Data
 		public bool Equals(ProxyPtr<T> other)
 		{
 			return indexedPtr == other.indexedPtr && proxy.FirstDelegateIndex.index == other.proxy.FirstDelegateIndex.index;
+		}
+
+		public ProxyPtr<T> CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
+		{
+			return new ProxyPtr<T>(indexedPtr.CopyTo(srsAllocator, dstAllocator));
 		}
 	}
 }
