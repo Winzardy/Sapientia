@@ -117,6 +117,9 @@ namespace Sapientia.Extensions
 			return collection.Count == 0;
 		}
 
+		public static bool Any<T>(this ICollection<T> collection)
+			=> !collection.IsNullOrEmpty();
+
 		public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
 		{
 			return enumerable == null || IsEmpty(enumerable);
