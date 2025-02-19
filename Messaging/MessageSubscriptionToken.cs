@@ -17,7 +17,7 @@ namespace Sapientia.Messaging
 		/// <summary>
 		/// Initializes a new instance of the MessageSubscriptionToken class.
 		/// </summary>
-		public MessageSubscriptionToken(MessengerHub hub)
+		internal MessageSubscriptionToken(MessengerHub hub)
 		{
 			if (hub == null)
 				throw new ArgumentNullException(nameof(hub));

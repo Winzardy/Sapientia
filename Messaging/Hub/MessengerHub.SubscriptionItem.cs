@@ -7,7 +7,7 @@ namespace Sapientia.Messaging
 	/// <summary>
 	/// Messenger hub responsible for taking subscriptions/publications and delivering of messages.
 	/// </summary>
-	public sealed partial class MessengerHub
+	internal sealed partial class MessengerHub
 	{
 		/// <summary>
 		/// Represents a message subscription

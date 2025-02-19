@@ -15,9 +15,9 @@ namespace Sapientia.Messaging
 
 		private TMessage _last;
 
-		public Mailer(MessengerHub hub = null) : this() => Setup(hub);
+		internal Mailer(MessengerHub hub = null) : this() => Setup(hub);
 
-		public void Setup(MessengerHub hub) => _hub = hub;
+		internal void Setup(MessengerHub hub) => _hub = hub;
 
 		public void Subscribe(Receiver<TMessage> receiver) => _receiver += receiver;
 		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;
@@ -112,7 +112,7 @@ namespace Sapientia.Messaging
 
 		private TMessage _last;
 
-		public Mailer(ToMessageDelegate toMsg,
+		internal Mailer(ToMessageDelegate toMsg,
 			ToValueDelegate toValue,
 			MessengerHub hub = null)
 		{
@@ -125,7 +125,7 @@ namespace Sapientia.Messaging
 			_receiver = null;
 		}
 
-		public void Setup(MessengerHub hub) => _hub = hub;
+		internal void Setup(MessengerHub hub) => _hub = hub;
 
 		public void Subscribe(Receiver<TMessage> receiver) => _receiver += receiver;
 		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;
@@ -225,7 +225,7 @@ namespace Sapientia.Messaging
 
 		private TMessage _last;
 
-		public Mailer(ToMessageDelegate toMsg,
+		internal Mailer(ToMessageDelegate toMsg,
 			ToValueDelegate toValue,
 			MessengerHub hub = null)
 		{
@@ -238,7 +238,7 @@ namespace Sapientia.Messaging
 			_receiver = null;
 		}
 
-		public void Setup(MessengerHub hub) => _hub = hub;
+		internal void Setup(MessengerHub hub) => _hub = hub;
 
 		public void Subscribe(Receiver<TMessage> receiver) => _receiver += receiver;
 		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;
@@ -340,7 +340,7 @@ namespace Sapientia.Messaging
 
 		private TMessage _last;
 
-		public Mailer(ToMessageDelegate toMsg,
+		internal Mailer(ToMessageDelegate toMsg,
 			ToValueDelegate toValue,
 			MessengerHub hub = null)
 		{
@@ -353,7 +353,7 @@ namespace Sapientia.Messaging
 			_receiver = null;
 		}
 
-		public void Setup(MessengerHub hub) => _hub = hub;
+		internal void Setup(MessengerHub hub) => _hub = hub;
 
 		public void Subscribe(Receiver<TMessage> receiver) => _receiver += receiver;
 		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;

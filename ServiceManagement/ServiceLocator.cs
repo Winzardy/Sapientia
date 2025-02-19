@@ -1,12 +1,15 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Sapientia.Collections;
 using Sapientia.Data;
 
 namespace Sapientia.ServiceManagement
 {
 	public static partial class ServiceLocator<TService>
 	{
+		internal static readonly SimpleList<IContextSubscriber> contextSubscribers = new ();
+
 		private static AsyncValue<TService> _instance = new (default);
 
 		public static TService Instance
@@ -98,6 +101,14 @@ namespace Sapientia.ServiceManagement
 			if (Instance == null || !Instance.Equals(service))
 				return;
 			Instance = default;
+		}
+
+		public static void RemoveAllContext(bool dispose = false)
+		{
+			foreach (var subscriber in contextSubscribers)
+			{
+				subscriber.RemoveAllContext(dispose);
+			}
 		}
 	}
 

@@ -3,42 +3,29 @@ using Sapientia.ServiceManagement;
 
 namespace Sapientia.Messaging
 {
-	public class Messenger
+	public class Messenger<TContext>
 	{
-		public static void Initialize()
-		{
-			Terminate();
-
-			ServiceLocator<MessengerHub>.Create<MessengerHub>();
-		}
-
-		public static void Terminate()
-		{
-			ServiceLocator<MessengerHub>.UnRegister();
-			ServiceLocator<MessengerHub>.RemoveAllContext();
-		}
-
 		/// <summary>
 		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(System.Action{TMessage})"/>
 		/// </summary>
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SendAndUnsubscribeAll<TMessage>(ref TMessage msg)
+		public static void SendAndUnsubscribeAll<TMessage>(in TContext context, ref TMessage msg)
 			where TMessage : struct =>
-			ServiceLocator<MessengerHub>.Instance.SendAndUnsubscribeAll(ref msg);
+			ServiceContext<TContext>.GetOrCreateService<MessengerHub>(context).SendAndUnsubscribeAll(ref msg);
 
 		/// <summary>
 		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(System.Action{TMessage})"/>
 		/// </summary>
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Send<TMessage>(ref TMessage msg)
+		public static void Send<TMessage>(in TContext context, ref TMessage msg)
 			where TMessage : struct
 		{
 #if UNITY_EDITOR
-			if (ServiceLocator<MessengerHub>.HasInstance())
+			if (ServiceLocator<TContext, MessengerHub>.TryGetService(context, out var messengerHub))
 #endif
-				ServiceLocator<MessengerHub>.Instance.Send(ref msg);
+				messengerHub.Send(ref msg);
 		}
 
 		/// <summary>
@@ -48,9 +35,9 @@ namespace Sapientia.Messaging
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		/// <returns>Возвращает токен по которому нужно отписаться</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver)
+		public static IMessageSubscriptionToken Subscribe<TMessage>(in TContext context, Receiver<TMessage> receiver)
 			where TMessage : struct =>
-			ServiceLocator<MessengerHub>.Instance.Subscribe(receiver);
+			ServiceContext<TContext>.GetOrCreateService<MessengerHub>(context).Subscribe(receiver);
 
 		/// <summary>
 		/// Подписаться на сообщения с фильтром
@@ -60,18 +47,18 @@ namespace Sapientia.Messaging
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		/// <returns>Возвращает токен по которому нужно отписаться</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver,
+		public static IMessageSubscriptionToken Subscribe<TMessage>(in TContext context, Receiver<TMessage> receiver,
 			Filter<TMessage> filter)
 			where TMessage : struct =>
-			ServiceLocator<MessengerHub>.Instance.Subscribe(receiver, filter);
+			ServiceContext<TContext>.GetOrCreateService<MessengerHub>(context).Subscribe(receiver, filter);
 
 		/// <summary>
 		/// Отписывает всех подписчиков от сообщения
 		/// </summary>
 		/// <typeparam name="TMessage"></typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void UnsubscribeAll<TMessage>()
+		public static void UnsubscribeAll<TMessage>(in TContext context)
 			where TMessage : struct =>
-			ServiceLocator<MessengerHub>.Instance.UnsubscribeAll<TMessage>();
+			ServiceContext<TContext>.GetOrCreateService<MessengerHub>(context).UnsubscribeAll<TMessage>();
 	}
 }

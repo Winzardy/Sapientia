@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Data;
+using Sapientia.Extensions;
 
 namespace Sapientia.ServiceManagement
 {
@@ -30,9 +31,9 @@ namespace Sapientia.ServiceManagement
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			void IContextSubscriber<TContext>.RemoveAllContext()
+			void IContextSubscriber.RemoveAllContext(bool dispose)
 			{
-				ServiceLocator<TContext, TService>.RemoveAllContext();
+				ServiceLocator<TContext, TService>.RemoveAllContext(dispose);
 			}
 		}
 
@@ -136,10 +137,17 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void RemoveAllContext()
+		private static void RemoveAllContext(bool dispose)
 		{
 			using var scope = _asyncClass.GetBusyScope();
 
+			if (dispose)
+			{
+				foreach (var (context, service) in _contextToService)
+				{
+					(service as IDisposable)?.Dispose();
+				}
+			}
 			_contextToService.Clear();
 			_currentContext = default;
 			_currentService = default;

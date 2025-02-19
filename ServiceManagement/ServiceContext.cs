@@ -27,13 +27,17 @@ namespace Sapientia.ServiceManagement
 		{
 			using var scope = _asyncClass.GetBusyScope();
 			_subscribers.Add(subscriber);
+			ServiceLocator<T>.contextSubscribers.Add(subscriber);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void AddSubscriber<T>() where T: IContextSubscriber<TContext>, new()
 		{
 			using var scope = _asyncClass.GetBusyScope();
-			_subscribers.Add(new T());
+
+			var subscriber = new T();
+			_subscribers.Add(subscriber);
+			ServiceLocator<T>.contextSubscribers.Add(subscriber);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,14 +81,14 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RemoveAllContext()
+		public static void RemoveAllContext(bool dispose = false)
 		{
 			using var scope = _asyncClass.GetBusyScope();
 			_currentContext = default;
 
 			foreach (var subscriber in _subscribers)
 			{
-				subscriber.RemoveAllContext();
+				subscriber.RemoveAllContext(dispose);
 			}
 		}
 
@@ -98,6 +102,17 @@ namespace Sapientia.ServiceManagement
 		public static TService GetService<TService>()
 		{
 			return ServiceLocator<TContext, TService>.GetService();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TService GetOrCreateService<TService>(in TContext context) where TService: new()
+		{
+			if (!ServiceLocator<TContext, TService>.TryGetService(context, out var result))
+			{
+				result = new TService();
+				ServiceLocator<TContext, TService>.SetService(context, result);
+			}
+			return result;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,11 +138,15 @@ namespace Sapientia.ServiceManagement
 		}
 	}
 
-	public interface IContextSubscriber<TContext>
+	public interface IContextSubscriber<TContext> : IContextSubscriber
 	{
 		public void SetContext(in TContext context);
 		public void ReplaceContext(in TContext oldContext, in TContext newContext);
 		public void RemoveContext(in TContext oldContext);
-		public void RemoveAllContext();
+	}
+
+	public interface IContextSubscriber
+	{
+		public void RemoveAllContext(bool dispose);
 	}
 }
