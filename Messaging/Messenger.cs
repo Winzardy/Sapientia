@@ -3,7 +3,7 @@ using Sapientia.ServiceManagement;
 
 namespace Sapientia.Messaging
 {
-	public class Messenger
+	public static class Messenger
 	{
 		public static void Initialize()
 		{

@@ -3,7 +3,7 @@ using Sapientia.ServiceManagement;
 
 namespace Sapientia.Messaging
 {
-	public class Messenger<TContext>
+	public static class Messenger<TContext>
 	{
 		/// <summary>
 		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(System.Action{TMessage})"/>

@@ -65,6 +65,12 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref readonly T Read<T>(this Entity entity, Allocator* allocator, out bool isExist) where T: unmanaged, IComponent
+		{
+			return ref allocator->GetArchetype<T>().ReadElement<T>(allocator, entity, out isExist);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T Get<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
 			return ref entity.Get<T>(entity.GetAllocatorPtr());
