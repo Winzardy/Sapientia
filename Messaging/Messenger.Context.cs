@@ -24,6 +24,8 @@ namespace Sapientia.Messaging
 		{
 #if UNITY_EDITOR
 			if (ServiceLocator<TContext, MessengerHub>.TryGetService(context, out var messengerHub))
+#else
+				var messengerHub = ServiceLocator<TContext, MessengerHub>.GetService(context);
 #endif
 				messengerHub.Send(ref msg);
 		}
