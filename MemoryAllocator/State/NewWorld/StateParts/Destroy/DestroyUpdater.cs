@@ -38,16 +38,13 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 				return;
 
 			var destroyRequests = _destroyRequestArchetype.GetRawElements();
-			var elementsToDestroy = stackalloc ArchetypeElement<DestroyRequest>[(int)count];
-
-			MemoryExt.MemCopy(destroyRequests, elementsToDestroy, TSize<ArchetypeElement<DestroyRequest>>.uSize * count);
-			_destroyRequestArchetype.ClearFast();
+			var elementsToDestroy = stackalloc Entity[count];
 
 			for (var i = 0; i < count; i++)
-			{
-				var entity = elementsToDestroy[i].entity;
-				_entitiesStatePart->DestroyEntity(_allocator, entity);
-			}
+				elementsToDestroy[i] = destroyRequests[i].entity;
+
+			_destroyRequestArchetype.ClearFast();
+			_entitiesStatePart->DestroyEntities(_allocator, elementsToDestroy, count);
 		}
 
 		/// <summary>
@@ -102,7 +99,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 					if (killCallback.callback.IsCreated)
 					{
-						killCallback.callback.EntityKilled(killCallback.target);
+						killCallback.callback.EntityKilled(_allocator, _allocator, killCallback.target);
 						killCallback.callback.Dispose(_allocator);
 					}
 

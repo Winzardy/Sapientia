@@ -6,7 +6,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IKillSubscriberProxy : IProxy
 	{
-		public static readonly ProxyIndex ProxyIndex = 2;
+		public static readonly ProxyIndex ProxyIndex = 1;
 		ProxyIndex IProxy.ProxyIndex
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -22,13 +22,13 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		internal delegate void EntityKilledDelegate(void* __executorPtr, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity);
+		internal delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void EntityKilled(void* __executorPtr, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		public readonly void EntityKilled(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 0);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityKilledDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, in entity);
+			__method.Invoke(__executorPtr, allocator, in entity);
 		}
 
 	}
@@ -36,32 +36,32 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IKillSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(), in entity);
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(), allocator, in entity);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__allocator), in entity);
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__allocator), allocator, in entity);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
 			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(), in entity);
+				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(), allocator, in entity);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
 			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__allocator), in entity);
+				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__allocator), allocator, in entity);
 			}
 		}
 
@@ -76,12 +76,12 @@ namespace Sapientia.TypeIndexer
 #endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IKillSubscriberProxy.EntityKilledDelegate))]
 #endif
-		private static void EntityKilled(void* executorPtr, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
+		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.NewWorld.Entity entity)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.EntityKilled(in entity);
+			__source.EntityKilled(allocator, in entity);
 #endif
 		}
 

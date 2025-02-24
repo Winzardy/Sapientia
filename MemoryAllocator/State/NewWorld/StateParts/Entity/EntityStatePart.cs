@@ -9,7 +9,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	[InterfaceProxy]
 	public unsafe interface IEntityDestroySubscriber
 	{
-		public void EntityDestroyed(Allocator* allocator, in Entity entity);
+		public void EntityArrayDestroyed(Allocator* allocator, Entity* entities, int count);
 	}
 
 	public unsafe struct EntityStatePart : IWorldStatePart
@@ -118,21 +118,24 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DestroyEntity(ref Entity entity)
+		public void DestroyEntities(Allocator* allocator, Entity* entities, int count)
 		{
-			var allocator = entity.GetAllocatorPtr();
-			DestroyEntity(allocator, entity);
-		}
+#if DEBUG
+			for (var i = 0; i < count; i++)
+			{
+				Debug.Assert(IsEntityExist(allocator, entities[i]));
+			}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DestroyEntity(Allocator* allocator, in Entity entity)
-		{
-			Debug.Assert(IsEntityExist(allocator, entity));
+#endif
+			_entityDestroySubscribers.EntityArrayDestroyed(allocator, allocator, entities, count);
 
-			_entityDestroySubscribers.EntityDestroyed(allocator, allocator, entity);
+			for (var i = 0; i < count; i++)
+			{
+				var entityId = entities[i].id;
 
-			_entityIdToGeneration[allocator, entity.id]++;
-			_freeEntitiesIds[allocator, --EntitiesCount] = entity.id;
+				_entityIdToGeneration[allocator, entityId]++;
+				_freeEntitiesIds[allocator, --EntitiesCount] = entityId;
+			}
 		}
 
 		private void EnsureCapacity(int index)

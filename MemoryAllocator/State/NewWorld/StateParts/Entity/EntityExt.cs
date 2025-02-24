@@ -17,18 +17,6 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Destroy(this Entity entity, Allocator* allocator)
-		{
-			allocator->GetService<EntityStatePart>().DestroyEntity(allocator, entity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Destroy(this ref Entity entity)
-		{
-			entity.Destroy(entity.GetAllocatorPtr());
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
 			return entity.Has<T>(entity.GetAllocatorPtr());

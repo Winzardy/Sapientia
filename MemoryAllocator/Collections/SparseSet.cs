@@ -123,6 +123,18 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void* GetValuePtrByDenseId(Allocator* allocator, int denseId)
+		{
+			return _values.GetValuePtr(allocator, denseId);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetValuePtrByDenseId<T>(Allocator* allocator, int denseId) where T: unmanaged
+		{
+			return _values.GetValuePtr<T>(allocator, denseId);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Get<T>(Allocator* allocator, int id) where T: unmanaged
 		{
 			return ref _values.GetValue<T>(allocator, _sparse[allocator, id]);
@@ -132,6 +144,24 @@ namespace Sapientia.MemoryAllocator
 		public ref T Get<T>(int id) where T: unmanaged
 		{
 			return ref Get<T>(GetAllocatorPtr(), id);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetByDenseId<T>(Allocator* allocator, int denseId) where T: unmanaged
+		{
+			return ref _values.GetValue<T>(allocator, denseId);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetDenseId(Allocator* allocator, int id, out int denseId)
+		{
+			if (_sparseCapacity <= id)
+			{
+				denseId = 0;
+				return false;
+			}
+			denseId = _sparse[allocator, id];
+			return denseId < _count && _dense[allocator, denseId] == id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -178,44 +208,58 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBack(int id)
+		public bool RemoveSwapBack(int id)
 		{
 			if (id >= _sparseCapacity)
-				return;
+				return false;
 			var allocator = GetAllocatorPtr();
 			var denseId = _sparse[allocator, id];
 			if (denseId >= _count || _dense[allocator, denseId] != id)
-				return;
+				return false;
 
 			var sparseId = _dense[allocator, denseId] = _dense[allocator, --_count];
 			_sparse[allocator, sparseId] = denseId;
 
 			var valueA = _values.GetValuePtr(allocator, denseId);
-			var valueB = _values.GetValuePtr(allocator, _count);
 			var size = _values.ElementSize;
 
-			MemoryExt.MemCopy(valueB, valueA, size);
-			MemoryExt.MemClear(valueB, size);
+			MemoryExt.MemClear(valueA, size);
+
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBack(Allocator* allocator, int id)
+		public bool RemoveSwapBack(Allocator* allocator, int id)
 		{
 			if (id >= _sparseCapacity)
-				return;
+				return false;
 			var denseId = _sparse[allocator, id];
 			if (denseId >= _count || _dense[allocator, denseId] != id)
-				return;
+				return false;
 
 			var sparseId = _dense[allocator, denseId] = _dense[allocator, --_count];
 			_sparse[allocator, sparseId] = denseId;
 
 			var valueA = _values.GetValuePtr(allocator, denseId);
-			var valueB = _values.GetValuePtr(allocator, _count);
 			var size = _values.ElementSize;
 
-			MemoryExt.MemCopy(valueB, valueA, size);
-			MemoryExt.MemClear(valueB, size);
+			MemoryExt.MemClear(valueA, size);
+
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool RemoveSwapBackByDenseId(Allocator* allocator, int denseId)
+		{
+			var sparseId = _dense[allocator, denseId] = _dense[allocator, --_count];
+			_sparse[allocator, sparseId] = denseId;
+
+			var valueA = _values.GetValuePtr(allocator, denseId);
+			var size = _values.ElementSize;
+
+			MemoryExt.MemClear(valueA, size);
+
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

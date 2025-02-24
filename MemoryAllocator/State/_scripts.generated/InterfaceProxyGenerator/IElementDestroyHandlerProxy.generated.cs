@@ -6,7 +6,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IElementDestroyHandlerProxy : IProxy
 	{
-		public static readonly ProxyIndex ProxyIndex = 1;
+		public static readonly ProxyIndex ProxyIndex = 3;
 		ProxyIndex IProxy.ProxyIndex
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -22,22 +22,22 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		internal delegate void EntityDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element);
+		internal delegate void EntityPtrArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void EntityDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public readonly void EntityPtrArrayDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 0);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityDestroyedDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, allocator, element);
+			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityPtrArrayDestroyedDelegate>(__compiledMethod.functionPointer);
+			__method.Invoke(__executorPtr, allocator, elementsPtr, count);
 		}
 
-		internal delegate void EntityArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count);
+		internal delegate void EntityArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void EntityArrayDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public readonly void EntityArrayDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count)
 		{
 			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 1);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityArrayDestroyedDelegate>(__compiledMethod.functionPointer);
-			__method.Invoke(__executorPtr, allocator, element, count);
+			__method.Invoke(__executorPtr, allocator, elementsPtr, count);
 		}
 
 	}
@@ -45,62 +45,62 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IElementDestroyHandlerProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public static void EntityPtrArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count)
 		{
-			__proxyPtr.proxy.EntityDestroyed(__proxyPtr.GetPtr(), allocator, element);
+			__proxyPtr.proxy.EntityPtrArrayDestroyed(__proxyPtr.GetPtr(), allocator, elementsPtr, count);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public static void EntityPtrArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count)
 		{
-			__proxyPtr.proxy.EntityDestroyed(__proxyPtr.GetPtr(__allocator), allocator, element);
+			__proxyPtr.proxy.EntityPtrArrayDestroyed(__proxyPtr.GetPtr(__allocator), allocator, elementsPtr, count);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public static void EntityPtrArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count)
 		{
 			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.EntityDestroyed(__proxyPtr->GetPtr(), allocator, element);
+				__proxyPtr->proxy.EntityPtrArrayDestroyed(__proxyPtr->GetPtr(), allocator, elementsPtr, count);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		public static void EntityPtrArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count)
 		{
 			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.EntityDestroyed(__proxyPtr->GetPtr(__allocator), allocator, element);
+				__proxyPtr->proxy.EntityPtrArrayDestroyed(__proxyPtr->GetPtr(__allocator), allocator, elementsPtr, count);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count)
 		{
-			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(), allocator, element, count);
+			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(), allocator, elementsPtr, count);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count)
 		{
-			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(__allocator), allocator, element, count);
+			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(__allocator), allocator, elementsPtr, count);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count)
 		{
 			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(), allocator, element, count);
+				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(), allocator, elementsPtr, count);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count)
 		{
 			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
-				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(__allocator), allocator, element, count);
+				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(__allocator), allocator, elementsPtr, count);
 			}
 		}
 
@@ -113,14 +113,14 @@ namespace Sapientia.TypeIndexer
 #if BURST
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
-		[AOT.MonoPInvokeCallbackAttribute(typeof(IElementDestroyHandlerProxy.EntityDestroyedDelegate))]
+		[AOT.MonoPInvokeCallbackAttribute(typeof(IElementDestroyHandlerProxy.EntityPtrArrayDestroyedDelegate))]
 #endif
-		private static void EntityDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element)
+		private static void EntityPtrArrayDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.EntityDestroyed(allocator, element);
+			__source.EntityPtrArrayDestroyed(allocator, elementsPtr, count);
 #endif
 		}
 
@@ -128,9 +128,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileEntityDestroyed()
+		public static CompiledMethod CompileEntityPtrArrayDestroyed()
 		{
-			return CompiledMethod.Create<IElementDestroyHandlerProxy.EntityDestroyedDelegate>(EntityDestroyed);
+			return CompiledMethod.Create<IElementDestroyHandlerProxy.EntityPtrArrayDestroyedDelegate>(EntityPtrArrayDestroyed);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
@@ -139,12 +139,12 @@ namespace Sapientia.TypeIndexer
 #endif
 		[AOT.MonoPInvokeCallbackAttribute(typeof(IElementDestroyHandlerProxy.EntityArrayDestroyedDelegate))]
 #endif
-		private static void EntityArrayDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* element, System.Int32 count)
+		private static void EntityArrayDestroyed(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.EntityArrayDestroyed(allocator, element, count);
+			__source.EntityArrayDestroyed(allocator, elementsPtr, count);
 #endif
 		}
 

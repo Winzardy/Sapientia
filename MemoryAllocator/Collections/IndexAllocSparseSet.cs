@@ -92,7 +92,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReleaseId(Allocator* allocator, int id)
 		{
-			_sparseSet.RemoveSwapBack(id);
+			_sparseSet.RemoveSwapBack(allocator, id);
 			_indexes.Push(allocator, id);
 		}
 

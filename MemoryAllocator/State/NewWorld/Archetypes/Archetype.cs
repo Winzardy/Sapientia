@@ -46,13 +46,13 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 	public unsafe interface IElementDestroyHandler<T> : IElementDestroyHandler where T: unmanaged, IComponent
 	{
-		public void EntityDestroyed(Allocator* allocator, ref ArchetypeElement<T> element);
+		public void EntityPtrArrayDestroyed(Allocator* allocator, ArchetypeElement<T>** elementsPtr, int count);
 		public void EntityArrayDestroyed(Allocator* allocator, ArchetypeElement<T>* elementsPtr, int count);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void IElementDestroyHandler.EntityDestroyed(Allocator* allocator, void* elementPtr)
+		void IElementDestroyHandler.EntityPtrArrayDestroyed(Allocator* allocator, void** elementsPtr, int count)
 		{
-			EntityDestroyed(allocator, ref UnsafeExt.AsRef<ArchetypeElement<T>>(elementPtr));
+			EntityPtrArrayDestroyed(allocator, (ArchetypeElement<T>**)elementsPtr, count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,9 +67,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	public unsafe interface IElementDestroyHandler
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityDestroyed(Allocator* allocator, void* element);
+		public void EntityPtrArrayDestroyed(Allocator* allocator, void** elementsPtr, int count);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityArrayDestroyed(Allocator* allocator, void* element, int count);
+		public void EntityArrayDestroyed(Allocator* allocator, void* elementsPtr, int count);
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -420,32 +420,47 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBackElement(Allocator* allocator, Entity entity)
-		{
-			_elements.RemoveSwapBack(allocator, entity.id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveSwapBackElement(Entity entity)
 		{
-			_elements.RemoveSwapBack(entity.id);
+			RemoveSwapBackElement(_elements.GetAllocatorPtr(), entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityDestroyed(Allocator* allocator, in Entity entity)
+		public void RemoveSwapBackElement(Allocator* allocator, Entity entity)
 		{
-			if (!_elements.Has(allocator, entity.id))
-				return;
+			if (_elements.TryGetDenseId(allocator, entity.id, out var denseId))
+			{
+				if (_destroyHandlerProxy.IsCreated)
+				{
+					_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, _elements.GetValuePtrByDenseId(allocator, entity.id), 1);
+				}
+				_elements.RemoveSwapBackByDenseId(allocator, denseId);
+			}
+		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void EntityArrayDestroyed(Allocator* allocator, Entity* entities, int count)
+		{
 			if (_destroyHandlerProxy.IsCreated)
 			{
-				var value = _elements.GetValuePtr(allocator, entity.id);
-				_destroyHandlerProxy.EntityDestroyed(allocator, allocator, value);
+				var archetypeEntities = stackalloc void*[_elements.Count.Min(count)];
+				var archetypeEntitiesCount = 0;
 
-				if (!_elements.Has(allocator, entity.id))
-					return;
+				for (var i = 0; i < count; i++)
+				{
+					var entityId = entities[i].id;
+					if (!_elements.Has(allocator, entityId))
+						return;
+					archetypeEntities[archetypeEntitiesCount++] = _elements.GetValuePtr(allocator, entityId);
+				}
+
+				_destroyHandlerProxy.EntityPtrArrayDestroyed(allocator, allocator, archetypeEntities, archetypeEntitiesCount);
 			}
-			_elements.RemoveSwapBack(allocator, entity.id);
+
+			for (var i = 0; i < count; i++)
+			{
+				_elements.RemoveSwapBack(allocator, entities[i].id);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

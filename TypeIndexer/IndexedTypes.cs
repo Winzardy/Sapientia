@@ -14,6 +14,9 @@ namespace Sapientia.TypeIndexer
 	[IndexedType]
 	public interface IIndexedType {}
 
+	[InterfaceProxy]
+	public interface IInterfaceProxyType {}
+
 	public static unsafe class IndexedTypes
 	{
 		private static Dictionary<Type, TypeIndex> _typeToIndex = new();

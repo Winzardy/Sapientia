@@ -3,8 +3,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
-	[InterfaceProxy]
-	public unsafe interface IKillSubscriber
+	public unsafe interface IKillSubscriber : IInterfaceProxyType
 	{
 		public void EntityKilled(Allocator* allocator, in Entity entity);
 	}
@@ -46,26 +45,35 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 	public unsafe struct KillElementDestroyHandler : IElementDestroyHandler<KillElement>
 	{
-		public void EntityDestroyed(Allocator* allocator, ref ArchetypeElement<KillElement> element)
+		public void EntityPtrArrayDestroyed(Allocator* allocator, ArchetypeElement<KillElement>** elementsPtr, int count)
 		{
-			element.value.children.Clear();
-			element.value.parents.Clear();
-			element.value.killCallbackHolders.Clear();
-			element.value.killCallbacks.Clear();
+			for (var i = 0; i < count; i++)
+			{
+				ref var value = ref elementsPtr[i]->value;
+				value.children.Clear();
+				value.parents.Clear();
+				value.killCallbackHolders.Clear();
+				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(allocator))
+				{
+					component->callback.Dispose(allocator);
+				}
+				value.killCallbacks.Clear();
+			}
 		}
 
 		public void EntityArrayDestroyed(Allocator* allocator, ArchetypeElement<KillElement>* elementsPtr, int count)
 		{
-			for (var i = 0u; i < count; i++)
+			for (var i = 0; i < count; i++)
 			{
-				elementsPtr[i].value.children.Clear();
-				elementsPtr[i].value.parents.Clear();
-				elementsPtr[i].value.killCallbackHolders.Clear();
-				foreach (KillCallback* component in elementsPtr[i].value.killCallbacks.GetPtrEnumerable(allocator))
+				ref var value = ref elementsPtr[i].value;
+				value.children.Clear();
+				value.parents.Clear();
+				value.killCallbackHolders.Clear();
+				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(allocator))
 				{
 					component->callback.Dispose(allocator);
 				}
-				elementsPtr[i].value.killCallbacks.Clear();
+				value.killCallbacks.Clear();
 			}
 		}
 	}

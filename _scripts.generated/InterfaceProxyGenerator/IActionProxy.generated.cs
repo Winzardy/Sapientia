@@ -6,7 +6,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IActionProxy : IProxy
 	{
-		public static readonly ProxyIndex ProxyIndex = 0;
+		public static readonly ProxyIndex ProxyIndex = 2;
 		ProxyIndex IProxy.ProxyIndex
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]

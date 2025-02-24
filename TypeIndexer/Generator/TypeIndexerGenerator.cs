@@ -83,14 +83,14 @@ namespace Sapientia.TypeIndexer
 
 			for (var i = 0; i < types.Length; i++)
 			{
-				sourceBuilder.AppendLine($"				{{ Type.GetType(\"{types[i].FullName}\"), {i} }},");
+				sourceBuilder.AppendLine($"				{{ Type.GetType(\"{types[i].GetFullName()}\"), {i} }},");
 			}
 
 			sourceBuilder.AppendLine("#else");
 
 			for (var i = 0; i < types.Length; i++)
 			{
-				sourceBuilder.AppendLine($"				{{ typeof({types[i].FullName}), {i} }},");
+				sourceBuilder.AppendLine($"				{{ typeof({types[i].GetFullName()}), {i} }},");
 			}
 
 			sourceBuilder.AppendLine("#endif");
@@ -103,14 +103,14 @@ namespace Sapientia.TypeIndexer
 
 			for (var i = 0; i < types.Length; i++)
 			{
-				sourceBuilder.AppendLine($"				Type.GetType(\"{types[i].FullName}\"),");
+				sourceBuilder.AppendLine($"				Type.GetType(\"{types[i].GetFullName()}\"),");
 			}
 
 			sourceBuilder.AppendLine("#else");
 
 			for (var i = 0; i < types.Length; i++)
 			{
-				sourceBuilder.AppendLine($"				typeof({types[i].FullName}),");
+				sourceBuilder.AppendLine($"				typeof({types[i].GetFullName()}),");
 			}
 
 			sourceBuilder.AppendLine("#endif");
@@ -132,7 +132,7 @@ namespace Sapientia.TypeIndexer
 							continue;
 						var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
 
-						sourceBuilder.AppendLine($"				{baseType.Name}Proxy<{child.FullName}>.Compile{methodInfo.Name}{genericParametersString}(),");
+						sourceBuilder.AppendLine($"				{baseType.Name}Proxy<{child.GetFullName()}>.Compile{methodInfo.Name}{genericParametersString}(),");
 					}
 				}
 			}
@@ -178,9 +178,9 @@ namespace Sapientia.TypeIndexer
 				foreach (var child in children)
 				{
 					if (isDebug)
-						sourceBuilder.AppendLine($"				{{ (typeToIndex[Type.GetType(\"{child.FullName}\")], {i}), {delegateIndex}}},");
+						sourceBuilder.AppendLine($"				{{ (typeToIndex[Type.GetType(\"{child.GetFullName()}\")], {i}), {delegateIndex}}},");
 					else
-						sourceBuilder.AppendLine($"				{{ (typeToIndex[typeof({child.FullName})], {i}), {delegateIndex}}},");
+						sourceBuilder.AppendLine($"				{{ (typeToIndex[typeof({child.GetFullName()})], {i}), {delegateIndex}}},");
 					delegateIndex += methodsCount;
 				}
 			}

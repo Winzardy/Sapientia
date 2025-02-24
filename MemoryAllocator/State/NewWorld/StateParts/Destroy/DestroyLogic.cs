@@ -143,11 +143,5 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			return entityStatePart->IsEntityExist(allocator, entity);
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DestroyImmediately(Entity entity)
-		{
-			entityStatePart->DestroyEntity(allocator, entity);
-		}
 	}
 }
