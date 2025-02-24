@@ -1,8 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-using Sapientia.Collections.Archetypes;
 using Sapientia.Extensions;
-using Sapientia.ServiceManagement;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
@@ -15,10 +13,6 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		public readonly ushort id;
 		public readonly ushort generation;
 		public AllocatorId allocatorId;
-
-#if UNITY_EDITOR
-		public string Name => id >= 0 ? ServiceLocator<EntitiesState>.Instance.entitiesNames[id] : string.Empty;
-#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Allocator* GetAllocatorPtr()
