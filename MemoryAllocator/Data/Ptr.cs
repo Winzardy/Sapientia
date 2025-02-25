@@ -371,6 +371,12 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
+		public static implicit operator Ptr<T>(IndexedPtr value)
+		{
+			return value.GetCachedPtr();
+		}
+
+		[INLINE(256)]
 		public static bool operator ==(Ptr<T> a, Ptr<T> b)
 		{
 			return a.memPtr == b.memPtr;

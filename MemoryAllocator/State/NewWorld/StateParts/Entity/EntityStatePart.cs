@@ -6,8 +6,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
 {
-	[InterfaceProxy]
-	public unsafe interface IEntityDestroySubscriber
+	public unsafe interface IEntityDestroySubscriber : IInterfaceProxyType
 	{
 		public void EntityArrayDestroyed(Allocator* allocator, Entity* entities, int count);
 	}

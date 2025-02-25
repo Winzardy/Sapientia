@@ -71,15 +71,25 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Allocator* GetAllocatorPtr()
+		{
+			return indexedPtr.GetAllocatorPtr();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			indexedPtr.Dispose();
+			Dispose(GetAllocatorPtr());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(Allocator* allocator)
 		{
-			indexedPtr.Dispose(allocator);
+			if (IsCreated)
+			{
+				proxy.ProxyDispose(GetPtr(allocator), allocator);
+				indexedPtr.Dispose(allocator);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

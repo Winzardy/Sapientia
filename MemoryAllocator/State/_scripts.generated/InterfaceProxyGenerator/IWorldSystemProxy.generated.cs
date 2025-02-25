@@ -6,7 +6,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IWorldSystemProxy : IProxy
 	{
-		public static readonly ProxyIndex ProxyIndex = 6;
+		public static readonly ProxyIndex ProxyIndex = 27;
 		ProxyIndex IProxy.ProxyIndex
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -40,11 +40,20 @@ namespace Sapientia.TypeIndexer
 			__method.Invoke(__executorPtr, allocator, elementPtr);
 		}
 
+		internal delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		{
+			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 2);
+			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<ProxyDisposeDelegate>(__compiledMethod.functionPointer);
+			__method.Invoke(__executorPtr, allocator);
+		}
+
 		internal delegate void InitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr elementPtr);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Initialize(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr elementPtr)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 2);
+			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 3);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<InitializeDelegate>(__compiledMethod.functionPointer);
 			__method.Invoke(__executorPtr, allocator, elementPtr);
 		}
@@ -53,7 +62,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void LateInitialize(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr elementPtr)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 3);
+			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 4);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<LateInitializeDelegate>(__compiledMethod.functionPointer);
 			__method.Invoke(__executorPtr, allocator, elementPtr);
 		}
@@ -62,7 +71,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Start(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr elementPtr)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 4);
+			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 5);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<StartDelegate>(__compiledMethod.functionPointer);
 			__method.Invoke(__executorPtr, allocator, elementPtr);
 		}
@@ -71,7 +80,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr elementPtr)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 5);
+			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 6);
 			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<DisposeDelegate>(__compiledMethod.functionPointer);
 			__method.Invoke(__executorPtr, allocator, elementPtr);
 		}
@@ -137,6 +146,36 @@ namespace Sapientia.TypeIndexer
 			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
 			{
 				__proxyPtr->proxy.LateUpdate(__proxyPtr->GetPtr(__allocator), allocator, elementPtr);
+			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(), allocator);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__allocator), allocator);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* allocator)
+		{
+			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
+			{
+				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(), allocator);
+			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator* __allocator, Sapientia.MemoryAllocator.Allocator* allocator)
+		{
+			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
+			{
+				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__allocator), allocator);
 			}
 		}
 
@@ -311,6 +350,30 @@ namespace Sapientia.TypeIndexer
 		public static CompiledMethod CompileLateUpdate()
 		{
 			return CompiledMethod.Create<IWorldSystemProxy.LateUpdateDelegate>(LateUpdate);
+		}
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#if BURST
+		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
+#endif
+		[AOT.MonoPInvokeCallbackAttribute(typeof(IWorldSystemProxy.ProxyDisposeDelegate))]
+#endif
+		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
+		{
+			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
+			__source.ProxyDispose(allocator);
+#endif
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static CompiledMethod CompileProxyDispose()
+		{
+			return CompiledMethod.Create<IWorldSystemProxy.ProxyDisposeDelegate>(ProxyDispose);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]

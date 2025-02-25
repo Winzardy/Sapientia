@@ -85,14 +85,21 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
+		public void Dispose(bool disposeProxies = true)
 		{
-			_proxies.Dispose();
+			Dispose(_proxies.GetAllocatorPtr(), disposeProxies);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose(Allocator* allocator, bool disposeProxies = true)
 		{
+			if (disposeProxies)
+			{
+				foreach (ProxyPtr<T>* proxy in _proxies.GetPtrEnumerable(allocator))
+				{
+					proxy->Dispose(allocator);
+				}
+			}
 			_proxies.Dispose(allocator);
 		}
 	}

@@ -1,25 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.MemoryAllocator;
 
 namespace Sapientia.TypeIndexer
 {
-	public interface IProxy
+	public unsafe interface IProxy
 	{
 		ProxyIndex ProxyIndex { get; }
 
 		DelegateIndex FirstDelegateIndex { get; set; }
+
+		public void ProxyDispose(void* executorPtr, Allocator* allocator) {}
 	}
 
 	[IndexedType]
 	public interface IIndexedType {}
 
-	[InterfaceProxy]
-	public interface IInterfaceProxyType {}
+	public unsafe interface IInterfaceProxyType : IIndexedType
+	{
+		public virtual void ProxyDispose(Allocator* allocator) {}
+	}
 
 	public static unsafe class IndexedTypes
 	{
-		private static Dictionary<Type, TypeIndex> _typeToIndex = new();
+		private static System.Collections.Generic.Dictionary<Type, TypeIndex> _typeToIndex = new();
 		private static Type[] _indexToType = Array.Empty<Type>();
 
 		/// <summary>
@@ -31,13 +36,11 @@ namespace Sapientia.TypeIndexer
 		/// <summary>
 		/// Получаем индекс первого метода для интерфейса (ProxyIndex) и его наследника (TypeIndex).
 		/// </summary>
-		private static Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> _typeToDelegateIndex = new();
+		private static System.Collections.Generic.Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> _typeToDelegateIndex = new();
 
-		public static void Initialize(
-			Dictionary<Type, TypeIndex> typeToIndex,
+		public static void Initialize(System.Collections.Generic.Dictionary<Type, TypeIndex> typeToIndex,
 			Type[] indexToType,
-			CompiledMethod[] delegateIndexToCompiledMethod,
-			Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> typeToDelegateIndex)
+			CompiledMethod[] delegateIndexToCompiledMethod, System.Collections.Generic.Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> typeToDelegateIndex)
 		{
 			_typeToIndex = typeToIndex;
 			_indexToType = indexToType;

@@ -2,7 +2,7 @@ using System;
 
 namespace Sapientia.TypeIndexer
 {
-	[AttributeUsage(AttributeTargets.Interface)]
+	/*[AttributeUsage(AttributeTargets.Interface)]
 	public class InterfaceProxyAttribute : Attribute
 	{
 		public bool withBurst = false;
@@ -11,5 +11,5 @@ namespace Sapientia.TypeIndexer
 		{
 			this.withBurst = withBurst;
 		}
-	}
+	}*/
 }

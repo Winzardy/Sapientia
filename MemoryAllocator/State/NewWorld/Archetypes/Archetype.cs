@@ -63,8 +63,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 	}
 
-	[InterfaceProxy]
-	public unsafe interface IElementDestroyHandler
+	public unsafe interface IElementDestroyHandler : IInterfaceProxyType
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EntityPtrArrayDestroyed(Allocator* allocator, void** elementsPtr, int count);
@@ -303,18 +302,16 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		{
 			if (_elements.Has(allocator, entity.id))
 				return false;
-			else
-			{
+
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
-				var oldCapacity = _elements.Capacity;
-				_elements.EnsureGet<ArchetypeElement>(allocator, entity.id);
-				if (oldCapacity != _elements.Capacity)
-					UnityEngine.Debug.LogWarning($"Archetype was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
-#else
-				_elements.EnsureGet<ArchetypeElement>(allocator, entity.id);
+			var oldCapacity = _elements.Capacity;
 #endif
-				return true;
-			}
+			_elements.EnsureGet<ArchetypeElement>(allocator, entity.id);
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
+			if (oldCapacity != _elements.Capacity)
+				UnityEngine.Debug.LogWarning($"Archetype was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+#endif
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -332,11 +329,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			{
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				var oldCapacity = _elements.Capacity;
+#endif
 				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				if (oldCapacity != _elements.Capacity)
 					UnityEngine.Debug.LogWarning($"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
-#else
-				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
 #endif
 				element = new ArchetypeElement<T>(entity, default);
 
@@ -376,11 +373,11 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			{
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				var oldCapacity = _elements.Capacity;
+#endif
 				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				if (oldCapacity != _elements.Capacity)
 					UnityEngine.Debug.LogWarning($"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
-#else
-				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(allocator, entity.id);
 #endif
 				element = new ArchetypeElement<T>(entity, default);
 

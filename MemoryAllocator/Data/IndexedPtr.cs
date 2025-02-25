@@ -1,10 +1,11 @@
+using System;
 using System.Diagnostics;
 using Sapientia.TypeIndexer;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator.Data
 {
-	public unsafe struct IndexedPtr : IIsCreated
+	public unsafe struct IndexedPtr : IIsCreated, IEquatable<IndexedPtr>
 	{
 		private Ptr _ptr;
 		public readonly TypeIndex typeIndex;
@@ -133,6 +134,12 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
+		public Allocator* GetAllocatorPtr()
+		{
+			return _ptr.GetAllocatorPtr();
+		}
+
+		[INLINE(256)]
 		public void Dispose(Allocator* allocator)
 		{
 			_ptr.Dispose(allocator);
@@ -160,6 +167,21 @@ namespace Sapientia.MemoryAllocator.Data
 		public static bool operator !=(IndexedPtr a, IndexedPtr b)
 		{
 			return a.typeIndex != b.typeIndex || a._ptr != b._ptr;
+		}
+
+		public bool Equals(IndexedPtr other)
+		{
+			return this == other;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return obj is IndexedPtr other && this == other;
+		}
+
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(_ptr, typeIndex);
 		}
 	}
 }

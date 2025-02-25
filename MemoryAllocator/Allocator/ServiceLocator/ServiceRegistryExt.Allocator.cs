@@ -64,7 +64,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T TryGetService<T>(this ref Allocator allocator, out bool exist) where T: unmanaged, IIndexedType
 		{
-			return ref allocator.serviceRegistry.TryGetService<T>((Allocator*)allocator.AsPointer(), out exist);
+			return ref allocator.serviceRegistry.GetService<T>((Allocator*)allocator.AsPointer(), out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this ref Allocator allocator, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
 		{
-			return ref allocator.serviceRegistry.TryGetService((Allocator*)allocator.AsPointer(), proxyPtr, out exist);
+			return ref allocator.serviceRegistry.GetService((Allocator*)allocator.AsPointer(), proxyPtr, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

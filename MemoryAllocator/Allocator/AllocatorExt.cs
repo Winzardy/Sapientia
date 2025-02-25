@@ -1,11 +1,9 @@
 using System;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-
 #if BURST
 	[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
 #endif
@@ -52,10 +50,13 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public static MemPtr ReAlloc(this ref Allocator allocator, in MemPtr ptr, int size, out void* voidPtr)
 		{
-			size = Allocator.Align(size);
-
 			if (!ptr.IsValid())
-				return Alloc(ref allocator, size, out voidPtr);
+				return allocator.Alloc(size, out voidPtr);
+			if (ptr.IsZeroSized())
+			{
+				voidPtr = allocator.zonesList;
+				return ptr;
+			}
 
 			ValidateConsistency(ref allocator);
 			allocator.locker.SetBusyIgnoreThread();
@@ -122,7 +123,7 @@ namespace Sapientia.MemoryAllocator
 			ValidateConsistency(ref allocator);
 
 			{
-				var newPtr = Alloc(ref allocator, size, out voidPtr);
+				var newPtr = allocator.Alloc(size, out voidPtr);
 				allocator.MemMove(newPtr, 0, ptr, 0, blockDataSize);
 				allocator.Free(ptr);
 
@@ -136,7 +137,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public static MemPtr Alloc(this ref Allocator allocator, long size)
 		{
-			return Alloc(ref allocator, size, out _);
+			return allocator.Alloc(size, out _);
 		}
 
 		[System.Diagnostics.ConditionalAttribute(COND.ALLOCATOR_VALIDATION)]
@@ -174,58 +175,12 @@ namespace Sapientia.MemoryAllocator
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
 #endif
 		[INLINE(256)]
-		public static MemPtr Alloc(this ref Allocator allocator, long size, out void* ptr)
-		{
-			size = Allocator.Align(size);
-
-			ValidateConsistency(ref allocator);
-
-			allocator.locker.SetBusyIgnoreThread();
-
-			for (int i = 0, cnt = allocator.zonesListCount; i < cnt; ++i)
-			{
-				var zone = allocator.zonesList[i];
-				if (zone == null)
-					continue;
-
-				ptr = Allocator.MzMalloc(zone, (int)size);
-				if (ptr != null)
-				{
-					var memPtr = allocator.GetSafePtr(ptr, i);
-#if LOGS_ENABLED
-					Allocator.LogAdd(memPtr, size);
-#endif
-					allocator.locker.SetFreeIgnoreThread();
-					ValidateConsistency(ref allocator);
-
-					return memPtr;
-				}
-			}
-
-			{
-				var zone = Allocator.MzCreateZone((int)Math.Max(size, allocator.initialSize));
-				var zoneIndex = allocator.AddZone(zone);
-				ptr = Allocator.MzMalloc(zone, (int)size);
-				var memPtr = allocator.GetSafePtr(ptr, zoneIndex);
-#if LOGS_ENABLED
-				Allocator.LogAdd(memPtr, size);
-#endif
-
-				allocator.locker.SetFreeIgnoreThread();
-				ValidateConsistency(ref allocator);
-
-				return memPtr;
-			}
-		}
-
-#if BURST
-		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
-#endif
-		[INLINE(256)]
 		public static bool Free(this ref Allocator allocator, in MemPtr ptr)
 		{
 			if (!ptr.IsValid())
 				return false;
+			if (ptr.IsZeroSized())
+				return true;
 
 			ValidateConsistency(ref allocator);
 
@@ -273,6 +228,8 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!ptr.IsValid())
 				return MemPtr.Invalid;
+			if (ptr.IsZeroSized())
+				return ptr;
 
 			var size = srcAllocator.GetSize(ptr);
 			var dstPtr = dstAllocator->Alloc(size);

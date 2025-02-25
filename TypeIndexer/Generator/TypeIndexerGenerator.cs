@@ -32,8 +32,6 @@ namespace Sapientia.TypeIndexer
 						return false;
 					if (type.GetCustomAttribute<IndexedTypeAttribute>(true) != null)
 						return true;
-					if (type.GetCustomAttribute<InterfaceProxyAttribute>(true) != null)
-						return true;
 					return false;
 				});
 

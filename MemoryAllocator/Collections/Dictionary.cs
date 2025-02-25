@@ -178,7 +178,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref TValue TryGetValue(Allocator* allocator, TKey key, out bool success)
+		public ref TValue GetValue(Allocator* allocator, TKey key, out bool success)
 		{
 			var entry = FindEntry(allocator, key);
 			if (entry >= 0)
@@ -189,6 +189,20 @@ namespace Sapientia.MemoryAllocator
 
 			success = false;
 			return ref TDefaultValue<TValue>.value;
+		}
+
+		[INLINE(256)]
+		public bool TryGetValue(Allocator* allocator, TKey key, out TValue value)
+		{
+			var entry = FindEntry(allocator, key);
+			if (entry >= 0)
+			{
+				value = entries[allocator, entry].value;
+				return true;
+			}
+
+			value = TDefaultValue<TValue>.value;
+			return false;
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>

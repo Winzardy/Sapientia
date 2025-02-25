@@ -55,7 +55,7 @@ namespace Sapientia.TypeIndexer
 				.SelectMany(assembly => assembly.GetTypes())
 				.Where(type =>
 				{
-					if (type.IsInterface && !type.IsGenericType && type.HasAttribute<InterfaceProxyAttribute>())
+					if (type.IsInterface && !type.IsGenericType && type.InheritsFrom(typeof(IInterfaceProxyType)))
 						return true;
 					return false;
 				});
@@ -194,6 +194,7 @@ namespace Sapientia.TypeIndexer
 				var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
 				var parametersString = CodeGenExt.GetParametersString(parameters, false);
 				var parametersWithoutTypeString = CodeGenExt.GetParametersString(parameters, true);
+
 				{
 					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr" + (parameters.Length > 0 ? ", " : string.Empty));
 					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr()" + (parameters.Length > 0 ? ", " : string.Empty));

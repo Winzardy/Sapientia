@@ -1,8 +1,9 @@
+using Sapientia.MemoryAllocator;
+
 namespace Sapientia.TypeIndexer.BaseProxies
 {
-	[InterfaceProxy]
-	public interface IAction
+	public unsafe interface IAction : IInterfaceProxyType
 	{
-		public void Invoke();
+		public void Invoke(Allocator* allocator);
 	}
 }

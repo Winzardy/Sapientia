@@ -98,13 +98,13 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 
-
 			foreach (ProxyPtr<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable(allocator))
 			{
-				system->Update(allocator, allocator, system->indexedPtr, 0f);
+				system->LateUpdate(allocator, allocator, system->indexedPtr);
 			}
-			/*SendLateUpdateMessage();
-			SendLateUpdateOnceMessage();*/
+
+			// TODO: TASK-1379 SendLateUpdateMessage();
+			// TODO: TASK-1379 SendLateUpdateOnceMessage();
 		}
 
 		public void Dispose()
@@ -124,25 +124,24 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 		}
 	}
 
-	[InterfaceProxy]
-	public unsafe interface IWorldElement : IIndexedType
+	public unsafe interface IWorldElement : IInterfaceProxyType
 	{
-		public virtual void Initialize(Allocator* allocator, IndexedPtr elementPtr) {}
+		public virtual void Initialize(Allocator* allocator, IndexedPtr self) {}
 
-		public virtual void LateInitialize(Allocator* allocator, IndexedPtr elementPtr) {}
+		public virtual void LateInitialize(Allocator* allocator, IndexedPtr self) {}
 
 		/// <summary>
 		/// Right before first world update
 		/// </summary>
-		public virtual void Start(Allocator* allocator, IndexedPtr elementPtr) {}
+		public virtual void Start(Allocator* allocator, IndexedPtr self) {}
 
-		public virtual void Dispose(Allocator* allocator, IndexedPtr elementPtr) {}
+		public virtual void Dispose(Allocator* allocator, IndexedPtr self) {}
 	}
 
 	public unsafe interface IWorldSystem : IWorldElement
 	{
-		public virtual void Update(Allocator* allocator, IndexedPtr elementPtr, float deltaTime) {}
-		public virtual void LateUpdate(Allocator* allocator, IndexedPtr elementPtr) {}
+		public virtual void Update(Allocator* allocator, IndexedPtr self, float deltaTime) {}
+		public virtual void LateUpdate(Allocator* allocator, IndexedPtr self) {}
 	}
 
 	public interface IWorldStatePart : IWorldElement

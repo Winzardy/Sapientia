@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using Sapientia.MemoryAllocator.Data;
-using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {

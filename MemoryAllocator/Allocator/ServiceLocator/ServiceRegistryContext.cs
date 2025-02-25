@@ -134,7 +134,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(Allocator* allocator, out bool exist) where T: unmanaged
 		{
-			return ref allocator->serviceRegistry.TryGetService<T>(allocator, this, out exist);
+			return ref allocator->serviceRegistry.GetService<T>(allocator, this, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

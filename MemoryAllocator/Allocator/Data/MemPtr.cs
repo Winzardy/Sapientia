@@ -20,8 +20,15 @@ namespace Sapientia.MemoryAllocator
 			this.allocatorId = allocatorId;
 		}
 
+		public static MemPtr CreateZeroSized(AllocatorId allocatorId)
+		{
+			return new MemPtr(0, -1, allocatorId);
+		}
+
 		[INLINE(256)]
-		public readonly bool IsValid() => offset > 0u;
+		public readonly bool IsValid() => offset != 0;
+		[INLINE(256)]
+		public readonly bool IsZeroSized() => offset < 0;
 
 		[INLINE(256)]
 		public static bool operator ==(in MemPtr m1, in MemPtr m2)

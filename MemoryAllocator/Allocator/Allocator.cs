@@ -5,7 +5,6 @@ using System;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
-using Sapientia.MemoryAllocator.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
@@ -178,7 +177,7 @@ namespace Sapientia.MemoryAllocator
 				{
 					for (var i = 0; i < other->zonesListCount; ++i)
 					{
-						ref var curZone = ref zonesList[i];
+						ref var curZone = ref zonesList![i];
 						var otherZone = other->zonesList[i];
 						{
 							if (curZone == null && otherZone == null) continue;
@@ -280,7 +279,7 @@ namespace Sapientia.MemoryAllocator
 				{
 					for (var i = 0; i < other->zonesListCount; ++i)
 					{
-						ref var curZone = ref zonesList[i];
+						ref var curZone = ref zonesList![i];
 						var otherZone = other->zonesList![i];
 						{
 							if (curZone == null && otherZone == null) continue;
@@ -349,7 +348,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		internal int AddZone(MemZone* zone, bool lookUpNull = true)
+		private int AddZone(MemZone* zone, bool lookUpNull = true)
 		{
 			if (lookUpNull)
 			{
@@ -401,6 +400,12 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public MemPtr Alloc(int size, out void* ptr)
 		{
+			if (size == 0)
+			{
+				ptr = zonesList;
+				return MemPtr.CreateZeroSized(allocatorId);
+			}
+
 			size = Align(size);
 
 			this.ValidateConsistency();
@@ -478,20 +483,19 @@ namespace Sapientia.MemoryAllocator
 		public readonly void MemSwap(in MemPtr a, long aOffset, in MemPtr b, long bOffset, long length)
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
+			if (a.IsZeroSized() || b.IsZeroSized())
+				throw new System.Exception();
+
 			var aZoneIndex = a.zoneId;
 			var bZoneIndex = b.zoneId;
 			var aMaxOffset = a.offset + aOffset + length;
 			var bMaxOffset = b.offset + bOffset + length;
 
 			if (aZoneIndex >= zonesListCount || bZoneIndex >= zonesListCount)
-			{
 				throw new System.Exception();
-			}
 
 			if (zonesList[aZoneIndex]->size < aMaxOffset || zonesList[bZoneIndex]->size < bMaxOffset)
-			{
 				throw new System.Exception();
-			}
 #endif
 
 			var aRawPtr = this.GetUnsafePtr(a, aOffset);
@@ -504,20 +508,19 @@ namespace Sapientia.MemoryAllocator
 		public readonly void MemCopy(in MemPtr dest, long destOffset, in MemPtr source, long sourceOffset, long length)
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
+			if (dest.IsZeroSized() || source.IsZeroSized())
+				throw new System.Exception();
+
 			var destZoneIndex = dest.zoneId;
 			var sourceZoneIndex = source.zoneId;
 			var destMaxOffset = dest.offset + destOffset + length;
 			var sourceMaxOffset = source.offset + sourceOffset + length;
 
 			if (destZoneIndex >= zonesListCount || sourceZoneIndex >= zonesListCount)
-			{
 				throw new System.Exception();
-			}
 
 			if (zonesList[destZoneIndex]->size < destMaxOffset || zonesList[sourceZoneIndex]->size < sourceMaxOffset)
-			{
 				throw new System.Exception();
-			}
 #endif
 
 			var sourceRawPtr = this.GetUnsafePtr(source, sourceOffset);
@@ -529,20 +532,19 @@ namespace Sapientia.MemoryAllocator
 		public readonly void MemMove(in MemPtr dest, long destOffset, in MemPtr source, long sourceOffset, long length)
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
+			if (dest.IsZeroSized() || source.IsZeroSized())
+				throw new System.Exception();
+
 			var destZoneIndex = dest.zoneId;
 			var sourceZoneIndex = source.zoneId;
 			var destMaxOffset = dest.offset + destOffset + length;
 			var sourceMaxOffset = source.offset + sourceOffset + length;
 
 			if (destZoneIndex >= zonesListCount || sourceZoneIndex >= zonesListCount)
-			{
 				throw new System.Exception();
-			}
 
 			if (zonesList[destZoneIndex]->size < destMaxOffset || zonesList[sourceZoneIndex]->size < sourceMaxOffset)
-			{
 				throw new System.Exception();
-			}
 #endif
 
 			var sourceRawPtr = this.GetUnsafePtr(source, sourceOffset);
@@ -554,12 +556,13 @@ namespace Sapientia.MemoryAllocator
 		public readonly void MemFill<T>(in MemPtr dest, T value, long destOffset, int length) where T: unmanaged
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
+			if (dest.IsZeroSized())
+				throw new System.Exception();
+
 			var zoneIndex = dest.zoneId;
 
 			if (zoneIndex >= zonesListCount || zonesList[zoneIndex]->size < (dest.offset + destOffset + length))
-			{
 				throw new System.Exception();
-			}
 #endif
 
 			MemoryExt.MemFill((T*)value.AsPointer(), this.GetUnsafePtr(dest, destOffset), (int)length);
@@ -569,12 +572,13 @@ namespace Sapientia.MemoryAllocator
 		public readonly void MemClear(in MemPtr dest, long destOffset, long length)
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
+			if (dest.IsZeroSized())
+				throw new System.Exception();
+
 			var zoneIndex = dest.zoneId;
 
 			if (zoneIndex >= zonesListCount || zonesList[zoneIndex]->size < (dest.offset + destOffset + length))
-			{
 				throw new System.Exception();
-			}
 #endif
 
 			MemoryExt.MemClear(this.GetUnsafePtr(dest, destOffset), length);
@@ -599,7 +603,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		internal readonly MemPtr GetSafePtr(void* ptr, int zoneIndex)
+		private readonly MemPtr GetSafePtr(void* ptr, int zoneIndex)
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
 			if (zoneIndex >= zonesListCount || zonesList[zoneIndex] == null)

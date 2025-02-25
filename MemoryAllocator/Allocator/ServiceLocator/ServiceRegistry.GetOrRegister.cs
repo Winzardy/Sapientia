@@ -9,7 +9,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(Allocator* allocator, ServiceRegistryContext context) where T: unmanaged
 		{
-			ref var result = ref _typeToPtr.TryGetValue(allocator, context, out var exist);
+			ref var result = ref _typeToPtr.GetValue(allocator, context, out var exist);
 			if (!exist)
 			{
 				result = new IndexedPtr(Ptr<T>.Create(allocator), context.typeIndex);
@@ -21,7 +21,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(Allocator* allocator, ServiceRegistryContext context, out bool exist) where T: unmanaged
 		{
-			ref var result = ref _typeToPtr.TryGetValue(allocator, context, out exist);
+			ref var result = ref _typeToPtr.GetValue(allocator, context, out exist);
 			if (!exist)
 			{
 				result = new IndexedPtr(Ptr<T>.Create(allocator), context.typeIndex);

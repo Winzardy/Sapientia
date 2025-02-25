@@ -2,8 +2,6 @@
 
 #if LOGS_ENABLED && UNITY_EDITOR
 
-using Sapientia.MemoryAllocator.Data;
-
 namespace Sapientia.MemoryAllocator
 {
 	public partial struct Allocator

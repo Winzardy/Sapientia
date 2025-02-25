@@ -34,7 +34,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 	public struct DestroyStatePart : IWorldStatePart
 	{
-		public unsafe void Initialize(Allocator* allocator, IndexedPtr statePartPtr)
+		public unsafe void Initialize(Allocator* allocator, IndexedPtr self)
 		{
 			Archetype.RegisterArchetype<KillElement>(allocator, 512).SetDestroyHandler<KillElementDestroyHandler>();
 			Archetype.RegisterArchetype<KillRequest>(allocator, 64);
