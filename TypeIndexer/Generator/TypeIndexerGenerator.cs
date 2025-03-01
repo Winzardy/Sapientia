@@ -116,6 +116,7 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			var delegateIndexToCompiledMethod = new {nameof(CompiledMethod)}[]");
 			sourceBuilder.AppendLine("			{");
+			sourceBuilder.AppendLine("#if PROXY_REFACTORING");
 
 			foreach (var (baseType, children) in proxyTypes)
 			{
@@ -135,6 +136,7 @@ namespace Sapientia.TypeIndexer
 				}
 			}
 
+			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			var typeToDelegateIndex = new Dictionary<({nameof(TypeIndex)}, {nameof(ProxyIndex)}), {nameof(DelegateIndex)}>");
