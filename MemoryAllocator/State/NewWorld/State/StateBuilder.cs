@@ -1,5 +1,6 @@
 using Sapientia.Collections;
 using Sapientia.MemoryAllocator.Data;
+using Sapientia.ServiceManagement;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State.NewWorld
@@ -8,18 +9,33 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	{
 		public int EntitiesCapacity { get; protected set; }
 
+		public EntityStateBuilder(StateUpdateData stateUpdateData, int entitiesCapacity) : base(stateUpdateData)
+		{
+			EntitiesCapacity = entitiesCapacity;
+		}
+
 		protected override void AddStateParts()
 		{
+			base.AddStateParts();
+
 			AddStatePart(new EntityStatePart(EntitiesCapacity));
+			AddStatePart<DestroyStatePart>();
 		}
 	}
 
-	public unsafe class StateBuilder
+	public abstract unsafe class StateBuilder
 	{
 		protected Allocator* _allocator;
 
 		private readonly SimpleList<ProxyPtr<IWorldStatePartProxy>> _stateParts = new();
 		private readonly SimpleList<ProxyPtr<IWorldSystemProxy>> _systems = new();
+
+		private readonly StateUpdateData _stateUpdateData;
+
+		public StateBuilder(StateUpdateData stateUpdateData)
+		{
+			_stateUpdateData = stateUpdateData;
+		}
 
 		public State Build(int initialSize = -1, int maxSize = -1)
 		{
@@ -27,15 +43,21 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 			AddSystems();
 
 			_allocator = AllocatorManager.CreateAllocator(initialSize, maxSize);
+
 			var world = World.Create(_allocator);
-			world->Initialize(_stateParts, _systems);
+			InitializeWorld(world);
 
 			return new State(_allocator->allocatorId);
 		}
 
+		protected virtual void InitializeWorld(World* world)
+		{
+			world->Initialize(_stateParts, _systems);
+		}
+
 		protected virtual void AddStateParts()
 		{
-
+			AddLocalStatePart(new UpdateLocalStatePart(_stateUpdateData));
 		}
 
 		protected virtual void AddSystems()
@@ -50,8 +72,8 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
 		{
-			LocalStatePartService.AddStatePart(value);
-			ServiceManagement.ServiceContext<AllocatorId>.SetService(value);
+			LocalStatePartService.AddStatePart(_allocator, value);
+			ServiceContext<AllocatorId>.SetService(_allocator->allocatorId, value);
 		}
 
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart

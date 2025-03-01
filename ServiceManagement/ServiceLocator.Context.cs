@@ -173,6 +173,19 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryRemoveService(in TContext context, out TService service)
+		{
+			using var scope = _asyncClass.GetBusyScope();
+			if (Equals(_currentContext.context, context))
+			{
+				service = _currentService;
+				_currentService = default;
+				return true;
+			}
+			return _contextToService.Remove(context, out service);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryRemoveService<T>(in TContext context, in T service) where T: TService
 		{
 			using var scope = _asyncClass.GetBusyScope();
@@ -185,7 +198,10 @@ namespace Sapientia.ServiceManagement
 				}
 			}
 			else if (_contextToService.TryGetValue(context, out var currentService) && Equals(currentService, service))
-				_contextToService[context] = default;
+			{
+				_contextToService.Remove(context);
+				return true;
+			}
 
 			return false;
 		}

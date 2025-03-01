@@ -59,6 +59,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T* GetOrRegisterServicePtr<T>(Allocator* allocator) where T: unmanaged, IIndexedType
+		{
+			var typeIndex = TypeIndex.Create<T>();
+			return GetOrRegisterServicePtr<T>(allocator, typeIndex);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrRegisterService<T>(Allocator* allocator, out bool exist) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();

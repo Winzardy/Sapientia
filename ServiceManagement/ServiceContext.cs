@@ -93,6 +93,12 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void SetService<TService>(in TContext context, in TService service)
+		{
+			ServiceLocator<TContext, TService>.SetService(context, service);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetService<TService>(in TService service)
 		{
 			ServiceLocator<TContext, TService>.SetService(service);
@@ -102,6 +108,12 @@ namespace Sapientia.ServiceManagement
 		public static TService GetService<TService>()
 		{
 			return ServiceLocator<TContext, TService>.GetService();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGetService<TService>(in TContext context, out TService service)
+		{
+			return ServiceLocator<TContext, TService>.TryGetService(context, out service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

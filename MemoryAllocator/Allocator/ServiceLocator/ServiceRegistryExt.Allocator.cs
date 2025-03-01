@@ -56,6 +56,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T* GetOrRegisterServicePtr<T>(this ref Allocator allocator) where T: unmanaged, IIndexedType
+		{
+			return allocator.serviceRegistry.GetOrRegisterServicePtr<T>((Allocator*)allocator.AsPointer());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this ref Allocator allocator) where T: unmanaged, IIndexedType
 		{
 			return ref allocator.serviceRegistry.GetService<T>((Allocator*)allocator.AsPointer());

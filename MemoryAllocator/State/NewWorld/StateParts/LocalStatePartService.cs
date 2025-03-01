@@ -15,9 +15,9 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 	{
 		public readonly SimpleList<IWoldLocalStatePart> localStateParts = new();
 
-		public static void AddStatePart(IWoldLocalStatePart statePart)
+		public static void AddStatePart(Allocator* allocator, IWoldLocalStatePart statePart)
 		{
-			var service = ServiceContext<AllocatorId>.GetService<LocalStatePartService>();
+			var service = ServiceContext<AllocatorId>.GetOrCreateService<LocalStatePartService>(allocator->allocatorId);
 			if (service == null)
 			{
 				service = new LocalStatePartService();
@@ -28,8 +28,7 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public static void Initialize(Allocator* allocator)
 		{
-			var service = ServiceContext<AllocatorId>.GetService<LocalStatePartService>();
-			Debug.Assert(service != null);
+			var service = ServiceContext<AllocatorId>.GetOrCreateService<LocalStatePartService>(allocator->allocatorId);
 
 			foreach (var statePart in service.localStateParts)
 			{
@@ -39,16 +38,14 @@ namespace Sapientia.MemoryAllocator.State.NewWorld
 
 		public static void Dispose(Allocator* allocator)
 		{
-			var service = ServiceContext<AllocatorId>.GetService<LocalStatePartService>();
-			Debug.Assert(service != null);
+			if (!ServiceLocator<AllocatorId, LocalStatePartService>.TryRemoveService(allocator->allocatorId, out var service))
+				return;
 
 			foreach (var statePart in service.localStateParts)
 			{
 				statePart.Dispose(allocator);
 			}
 			service.localStateParts.Dispose();
-
-			ServiceContext<AllocatorId>.SetService<LocalStatePartService>(null);
 		}
 	}
 }

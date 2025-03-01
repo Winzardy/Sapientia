@@ -12,7 +12,7 @@ namespace Sapientia.MemoryAllocator
 		private static Allocator** _allocators = null;
 		private static ushort _count = 0;
 		private static ushort _capacity = 0;
-		private static ushort _nextId = 0;
+		private static ushort _currentId = 0;
 
 		public static Allocator* CurrentAllocatorPtr
 		{
@@ -71,7 +71,7 @@ namespace Sapientia.MemoryAllocator
 			allocatorId.index = _count++;
 
 			_allocators[allocatorId.index] = allocator;
-			_nextId = _nextId.Max(allocatorId.id + 1);
+			_currentId = _currentId.Max(allocatorId.id + 1);
 
 			return allocator;
 		}
@@ -80,7 +80,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			Prewarm(_count);
 
-			var allocatorId = new AllocatorId(_count++, _nextId++);
+			var allocatorId = new AllocatorId(_count++, ++_currentId);
 
 			var allocator = MemoryExt.MemAlloc<Allocator>();
 			_allocators[allocatorId.index] = allocator;
