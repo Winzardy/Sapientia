@@ -58,7 +58,10 @@ namespace Sapientia.Data
 		///		if (something)
 		///			Test1(); // Deadlock
 		///		if (somethingElse)
+		///		{
 		///			new Task(Test1).Start(); // Lock, but not deadlock
+		///			new Thread(Test1).Start(); // Lock, but not deadlock
+		///		}
 		///		async.SetFree();
 		/// }
 		/// void Test2()
@@ -67,7 +70,10 @@ namespace Sapientia.Data
 		///		if (something)
 		///			Test2(); // No lock
 		///		if (somethingElse)
-		///			new Task(Test2).Start(); // No lock
+		///		{
+		///			new Task(Test1).Start(); // No lock
+		///			new Thread(Test1).Start(); // Lock, but not deadlock
+		///		}
 		///		async.SetFree();
 		/// }
 		/// </param>
