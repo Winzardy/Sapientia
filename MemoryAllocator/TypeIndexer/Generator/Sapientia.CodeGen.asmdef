@@ -1,0 +1,19 @@
+{
+    "name": "Sapientia.MemoryAllocator.CodeGen",
+    "rootNamespace": "",
+    "references": [
+        "GUID:bd10b8cc39d09ac4e9c31728752096c0",
+        "GUID:2ba5007401ed6e84b83507a013917614"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
