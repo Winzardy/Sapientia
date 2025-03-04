@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
-
-namespace Sapientia.Extensions
+namespace Sapientia
 {
 	/// <summary>
 	/// Use it to implement static wrapper for features.

@@ -1,9 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Sapientia.Collections;
 using Sapientia.Collections.Archetypes;
+using Random = UnityEngine.Random;
 
 namespace Sapientia.Extensions
 {
@@ -71,7 +71,7 @@ namespace Sapientia.Extensions
 			for (var i = 0; i < length; i++)
 			{
 #if UNITY_5_3_OR_NEWER
-				var indexToSwap = UnityEngine.Random.Range(i, length);
+				var indexToSwap = Random.Range(i, length);
 #else
 				var indexToSwap = System.Random.Shared.Next(i, length);
 #endif
@@ -85,7 +85,7 @@ namespace Sapientia.Extensions
 			for (var i = 0; i < length; i++)
 			{
 #if UNITY_5_3_OR_NEWER
-				var indexToSwap = UnityEngine.Random.Range(i, length);
+				var indexToSwap = Random.Range(i, length);
 #else
 				var indexToSwap = System.Random.Shared.Next(i, length);
 #endif
@@ -93,13 +93,13 @@ namespace Sapientia.Extensions
 			}
 		}
 
-		public static void Shuffle<T>(this System.Collections.Generic.List<T> list)
+		public static void Shuffle<T>(this List<T> list)
 		{
 			var length = list.Count;
 			for (var i = 0; i < length; i++)
 			{
 #if UNITY_5_3_OR_NEWER
-				var indexToSwap = UnityEngine.Random.Range(i, length);
+				var indexToSwap = Random.Range(i, length);
 #else
 				var indexToSwap = System.Random.Shared.Next(i, length);
 #endif
@@ -125,10 +125,47 @@ namespace Sapientia.Extensions
 			return enumerable == null || IsEmpty(enumerable);
 		}
 
-		public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
+		public static T First<T>(this IList<T> list) => list[0];
+
+		public static T FirstOrDefault<T>(this IList<T> list)
 		{
-			return !enumerable.Any();
+			if (list == null || list.Count < 1)
+				return default;
+
+			return First(list);
 		}
+
+		public static T Second<T>(this IList<T> list) => list[1];
+
+		public static T SecondOrDefault<T>(this IList<T> list)
+		{
+			if (list == null || list.Count < 2)
+				return default;
+
+			return Second(list);
+		}
+
+		public static T Third<T>(this IList<T> list) => list[2];
+
+		public static T ThirdOrDefault<T>(this IList<T> list)
+		{
+			if (list == null || list.Count < 3)
+				return default;
+
+			return Third(list);
+		}
+
+		public static T Last<T>(this IList<T> list) => list[^1];
+
+		public static T LastOrDefault<T>(this IList<T> list)
+		{
+			if (IsNullOrEmpty(list))
+				return default;
+
+			return Last(list);
+		}
+
+		public static bool IsEmpty<T>(this IEnumerable<T> enumerable) => !enumerable.Any();
 
 		public static List<T> AddRangeRepeated<T>(this List<T> list, T repeatedItem, int count)
 		{
