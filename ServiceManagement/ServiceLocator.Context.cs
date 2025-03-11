@@ -433,9 +433,9 @@ namespace Sapientia.ServiceManagement
 		public readonly TService service;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ServiceScope(AsyncClass _asyncClass, in TService service)
+		public ServiceScope(AsyncClass asyncClass, in TService service)
 		{
-			_busyScope = _asyncClass.GetBusyScope();
+			_busyScope = asyncClass.GetBusyScope();
 			this.service = service;
 		}
 
