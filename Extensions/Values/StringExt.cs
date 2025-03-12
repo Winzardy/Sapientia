@@ -19,9 +19,9 @@ namespace Sapientia.Extensions
 			return string.IsNullOrEmpty(str);
 		}
 
-		public static string Format(this string str, params object[] args)
+		public static string Format(this string format, params object[] args)
 		{
-			return string.Format(str, args);
+			return string.Format(format, args);
 		}
 
 		public static bool IsNullOrWhiteSpace(this string? str)
