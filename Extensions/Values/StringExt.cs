@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Sapientia.Pooling;
 
 namespace Sapientia.Extensions
@@ -14,7 +15,7 @@ namespace Sapientia.Extensions
 			return str.Replace(value, string.Empty);
 		}
 
-		public static bool IsNullOrEmpty(this string? str)
+		public static bool IsNullOrEmpty([NotNullWhen(false)] this string? str)
 		{
 			return string.IsNullOrEmpty(str);
 		}
