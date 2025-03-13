@@ -75,14 +75,14 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Dispose(Allocator* allocator)
 		{
-			allocator->Free(this);
+			allocator->MemFree(this);
 			this = Invalid;
 		}
 
 		[INLINE(256)]
 		public void Dispose()
 		{
-			GetAllocatorPtr()->Free(this);
+			GetAllocatorPtr()->MemFree(this);
 			this = Invalid;
 		}
 

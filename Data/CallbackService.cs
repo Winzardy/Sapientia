@@ -1,5 +1,4 @@
 using System;
-using Sapientia.Extensions;
 using Sapientia.ServiceManagement;
 
 namespace Sapientia.Data

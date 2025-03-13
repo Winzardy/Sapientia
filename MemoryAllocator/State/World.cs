@@ -19,7 +19,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public static World* Create(Allocator* allocator, int elementsCount = 64)
 		{
-			var worldPtr = allocator->Alloc<World>(out var world);
+			var worldPtr = allocator->MemAlloc<World>(out var world);
 			world->Tick = 0u;
 			world->Time = 0f;
 			world->AllowLateUpdate = false;

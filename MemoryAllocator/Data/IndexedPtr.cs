@@ -51,14 +51,14 @@ namespace Sapientia.MemoryAllocator.Data
 		[INLINE(256)]
 		public static IndexedPtr Create<T>(Allocator* allocator) where T : unmanaged
 		{
-			var memPtr = allocator->Alloc<T>(out var rawPtr);
+			var memPtr = allocator->MemAlloc<T>(out var rawPtr);
 			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
 		public static IndexedPtr Create<T>(Allocator* allocator, in T value) where T : unmanaged
 		{
-			var memPtr = allocator->Alloc<T>(value, out var rawPtr);
+			var memPtr = allocator->MemAlloc<T>(value, out var rawPtr);
 			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
@@ -66,7 +66,7 @@ namespace Sapientia.MemoryAllocator.Data
 		public static IndexedPtr Create<T>(in T value) where T : unmanaged
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
-			var memPtr = allocator->Alloc<T>(value, out var rawPtr);
+			var memPtr = allocator->MemAlloc<T>(value, out var rawPtr);
 			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 

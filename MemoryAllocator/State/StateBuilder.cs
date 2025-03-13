@@ -37,14 +37,14 @@ namespace Sapientia.MemoryAllocator.State
 			_stateUpdateData = stateUpdateData;
 		}
 
-		public State Build(int initialSize = -1, int maxSize = -1)
+		public State Build(int initialSize = -1)
 		{
+			_allocator = AllocatorManager.CreateAllocator(initialSize);
+			var world = World.Create(_allocator);
+
 			AddStateParts();
 			AddSystems();
 
-			_allocator = AllocatorManager.CreateAllocator(initialSize, maxSize);
-
-			var world = World.Create(_allocator);
 			InitializeWorld(world);
 
 			return new State(_allocator->allocatorId);

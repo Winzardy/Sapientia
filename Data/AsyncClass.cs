@@ -111,9 +111,10 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetFree()
+		public void SetFree(bool ignoreThreadId = false)
 		{
-			Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
+			if (!ignoreThreadId)
+				Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
 			Debug.Assert(_count > 0);
 			Interlocked.Decrement(ref _count);
 		}

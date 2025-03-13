@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator
 			return allocator;
 		}
 
-		public static Allocator* CreateAllocator(int initialSize = -1, int maxSize = -1)
+		public static Allocator* CreateAllocator(int initialSize = -1)
 		{
 			Prewarm(_count);
 
@@ -85,7 +85,7 @@ namespace Sapientia.MemoryAllocator
 			var allocator = MemoryExt.MemAlloc<Allocator>();
 			_allocators[allocatorId.index] = allocator;
 
-			allocator->Initialize(allocatorId, initialSize, maxSize);
+			allocator->Initialize(allocatorId, initialSize);
 			return allocator;
 		}
 

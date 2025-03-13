@@ -221,21 +221,21 @@ namespace Sapientia.MemoryAllocator.Data
 		[INLINE(256)]
 		public static Ptr<T> Create(Allocator* allocator)
 		{
-			var memPtr = allocator->Alloc<T>(out var cachedPtr);
+			var memPtr = allocator->MemAlloc<T>(out var cachedPtr);
 			return new Ptr<T>(allocator, cachedPtr, memPtr);
 		}
 
 		[INLINE(256)]
 		public static Ptr<T> Create(Allocator* allocator, in T value)
 		{
-			var memPtr = allocator->Alloc<T>(out var cachedPtr);
+			var memPtr = allocator->MemAlloc<T>(out var cachedPtr);
 			return new Ptr<T>(allocator, cachedPtr, memPtr, value);
 		}
 
 		[INLINE(256)]
 		public static T* Create(Allocator* allocator, out Ptr<T> ptr)
 		{
-			var memPtr = allocator->Alloc<T>(out var cachedPtr);
+			var memPtr = allocator->MemAlloc<T>(out var cachedPtr);
 			ptr = new Ptr<T>(allocator, cachedPtr, memPtr);
 			return cachedPtr;
 		}
@@ -244,7 +244,7 @@ namespace Sapientia.MemoryAllocator.Data
 		public static Ptr<T> Create()
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
-			var memPtr = allocator->Alloc<T>(out var cachedPtr);
+			var memPtr = allocator->MemAlloc<T>(out var cachedPtr);
 			return new Ptr<T>(allocator, cachedPtr, memPtr);
 		}
 

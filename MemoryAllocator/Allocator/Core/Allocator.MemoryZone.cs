@@ -13,18 +13,64 @@ namespace Sapientia.MemoryAllocator
 #endif
 	public unsafe partial struct Allocator
 	{
-		private const int ZONE_ID = 0x1d4a11;
+		[INLINE(256)]
+		private void FreeZones()
+		{
+			if (zonesListCount > 0 && zonesList != null)
+			{
+				for (var i = 0; i < zonesListCount; i++)
+				{
+					var zone = zonesList[i];
+					if (zone != null)
+					{
+						MzFreeZone(zone);
+					}
+				}
+			}
 
-		private const int MIN_FRAGMENT = 64;
+			zonesListCount = 0;
+		}
 
-		public const byte BLOCK_STATE_FREE = 0;
-		public const byte BLOCK_STATE_USED = 1;
+		[INLINE(256)]
+		private int AddZone(MemZone* zone, bool lookUpNull = true)
+		{
+			if (lookUpNull)
+			{
+				for (var i = 0; i < zonesListCount; ++i)
+				{
+					if (zonesList[i] == null)
+					{
+						zonesList[i] = zone;
+						return i;
+					}
+				}
+			}
+
+			if (zonesListCapacity <= zonesListCount)
+			{
+				var capacity = Math.Max(MIN_ZONES_LIST_CAPACITY, zonesListCapacity * 2);
+				var list = (MemZone**)MemoryExt.MemAlloc(capacity * (uint)sizeof(MemZone*), TAlign<IntPtr>.align);
+
+				if (zonesList != null)
+				{
+					MemoryExt.MemCopy(zonesList, list, (uint)sizeof(MemZone*) * zonesListCount);
+					MemoryExt.MemFree(zonesList);
+				}
+
+				zonesList = list;
+				zonesListCapacity = capacity;
+			}
+
+			zonesList[zonesListCount++] = zone;
+
+			return zonesListCount - 1;
+		}
 
 #if BURST
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
 #endif
 		[INLINE(256)]
-		public static void MzClearZone(MemZone* zone)
+		private static void MzClearZone(MemZone* zone)
 		{
 			var block = (MemBlock*)((byte*)zone + sizeof(MemZone));
 			var blockOffset = new MemBlockOffset(block, zone);
@@ -44,7 +90,7 @@ namespace Sapientia.MemoryAllocator
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
 #endif
 		[INLINE(256)]
-		public static MemZone* MzCreateZoneEmpty(int size)
+		private static MemZone* MzCreateZoneEmpty(int size)
 		{
 			size = MzGetMemBlockSize(size) + TSize<MemZone>.size;
 			var zone = (MemZone*)MemoryExt.MemAlloc(size);
@@ -55,7 +101,7 @@ namespace Sapientia.MemoryAllocator
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
 #endif
 		[INLINE(256)]
-		public static MemZone* MzCreateZone(int size)
+		private static MemZone* MzCreateZone(int size)
 		{
 			size = MzGetMemBlockSize(size) + TSize<MemZone>.size;
 			var zone = (MemZone*)MemoryExt.MemAlloc(size);
@@ -69,7 +115,7 @@ namespace Sapientia.MemoryAllocator
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
 #endif
 		[INLINE(256)]
-		public static MemZone* MzReallocZone(MemZone* zone, int newSize)
+		private static MemZone* MzReallocZone(MemZone* zone, int newSize)
 		{
 			if (zone->size >= newSize)
 				return zone;
@@ -122,13 +168,13 @@ namespace Sapientia.MemoryAllocator
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
 #endif
 		[INLINE(256)]
-		public static void MzFreeZone(MemZone* zone)
+		internal static void MzFreeZone(MemZone* zone)
 		{
 			MemoryExt.MemFree(zone);
 		}
 
 		[System.Diagnostics.ConditionalAttribute("MEMORY_ALLOCATOR_BOUNDS_CHECK")]
-		public static void CHECK_PTR(void* ptr)
+		private static void CHECK_PTR(void* ptr)
 		{
 			if (ptr == null)
 			{
@@ -459,7 +505,8 @@ namespace Sapientia.MemoryAllocator
 
 			for (var block = zone->blocklist.next.Ptr(zone); block != &zone->blocklist; block = block->next.Ptr(zone))
 			{
-				if (block->state == BLOCK_STATE_FREE) free += block->size;
+				if (block->state == BLOCK_STATE_FREE)
+					free += block->size;
 			}
 
 			return free;

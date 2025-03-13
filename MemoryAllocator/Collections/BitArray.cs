@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(length);
 			_cachedPtr = null;
-			this.ptr = allocator->Alloc(sizeInBytes, out var ptr);
+			this.ptr = allocator->MemAlloc(sizeInBytes, out var ptr);
 			_cachedPtr = (ulong*)ptr;
 			this.length = length;
 
@@ -38,7 +38,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(source.length);
 			_cachedPtr = null;
-			this.ptr = allocator->Alloc(sizeInBytes, out var ptr);
+			this.ptr = allocator->MemAlloc(sizeInBytes, out var ptr);
 			_cachedPtr = (ulong*)ptr;
 			length = source.length;
 			var sourcePtr = allocator->GetUnsafePtr(source.ptr);
@@ -271,7 +271,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Dispose(Allocator* allocator)
 		{
-			allocator->Free(ptr);
+			allocator->MemFree(ptr);
 			this = default;
 		}
 

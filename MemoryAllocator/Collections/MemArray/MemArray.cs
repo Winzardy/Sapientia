@@ -134,7 +134,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (ptr.memPtr.IsValid())
 			{
-				allocator->Free(ptr.memPtr);
+				allocator->MemFree(ptr.memPtr);
 			}
 
 			this = default;
@@ -155,14 +155,14 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public MemPtr GetAllocPtr(Allocator* allocator, int index)
 		{
-			return allocator->RefArrayPtr(ptr.memPtr, ElementSize, index);
+			return allocator->GetArrayElementPtr(ptr.memPtr, ElementSize, index);
 		}
 
 		[INLINE(256)]
 		public MemPtr GetAllocPtr(int index)
 		{
 			var allocator = ptr.memPtr.GetAllocatorPtr();
-			return allocator->RefArrayPtr(ptr.memPtr, ElementSize, index);
+			return allocator->GetArrayElementPtr(ptr.memPtr, ElementSize, index);
 		}
 
 		[INLINE(256)]

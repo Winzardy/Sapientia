@@ -553,7 +553,7 @@ namespace Sapientia.MemoryAllocator
 		public MemBitArray(Allocator* allocator, int numBits, ClearOptions options = ClearOptions.ClearMemory)
 		{
 			var sizeInBytes = Bitwise.AlignUp(numBits, 64) / 8;
-			ptr = allocator->Alloc(sizeInBytes);
+			ptr = allocator->MemAlloc(sizeInBytes);
 			length = numBits;
 
 			if (options == ClearOptions.ClearMemory)
@@ -586,7 +586,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Dispose(Allocator* allocator)
 		{
-			allocator->Free(ptr);
+			allocator->MemFree(ptr);
 			this = default;
 		}
 
