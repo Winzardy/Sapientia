@@ -70,38 +70,18 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("");
 			sourceBuilder.AppendLine("namespace Sapientia.TypeIndexer");
 			sourceBuilder.AppendLine("{");
-			sourceBuilder.AppendLine($"	public static class IndexedTypesInitializer");
+			sourceBuilder.AppendLine("	public static class IndexedTypesInitializer");
 			sourceBuilder.AppendLine("	{");
+			sourceBuilder.AppendLine("		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]");
 			sourceBuilder.AppendLine("		public static void Initialize()");
 			sourceBuilder.AppendLine("		{");
-
-			sourceBuilder.AppendLine($"			var typeToIndex = new Dictionary<Type, {nameof(TypeIndex)}>");
-			sourceBuilder.AppendLine("			{");
-			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");
-
-			for (var i = 0; i < types.Length; i++)
-			{
-				sourceBuilder.AppendLine($"				{{ Type.GetType(\"{types[i].GetFullName()}\"), {i} }},");
-			}
-
-			sourceBuilder.AppendLine("#else");
-
-			for (var i = 0; i < types.Length; i++)
-			{
-				sourceBuilder.AppendLine($"				{{ typeof({types[i].GetFullName()}), {i} }},");
-			}
-
-			sourceBuilder.AppendLine("#endif");
-			sourceBuilder.AppendLine("			};");
-
-			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine("			var indexToType = new Type[]");
 			sourceBuilder.AppendLine("			{");
 			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");
 
 			for (var i = 0; i < types.Length; i++)
 			{
-				sourceBuilder.AppendLine($"				Type.GetType(\"{types[i].GetFullName()}\"),");
+				sourceBuilder.AppendLine($"				Type.GetType(\"{types[i].AssemblyQualifiedName}\"),");
 			}
 
 			sourceBuilder.AppendLine("#else");
@@ -114,27 +94,16 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
+			sourceBuilder.AppendLine($"			var typeToIndex = new Dictionary<Type, {nameof(TypeIndex)}>(indexToType.Length);");
+			sourceBuilder.AppendLine("			for (var i = 0; i < indexToType.Length; i++)");
+			sourceBuilder.AppendLine("			{");
+			sourceBuilder.AppendLine("				typeToIndex.Add(indexToType[i], i);");
+			sourceBuilder.AppendLine("			}");
+			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			var delegateIndexToCompiledMethod = new {nameof(CompiledMethod)}[]");
 			sourceBuilder.AppendLine("			{");
 			sourceBuilder.AppendLine("#if PROXY_REFACTORING");
 
-			foreach (var (baseType, children) in proxyTypes)
-			{
-				var methods = baseType.GetAllInstanceMethods();
-
-				foreach (var child in children)
-				{
-					foreach (var methodInfo in methods)
-					{
-						var genericArguments = methodInfo.GetGenericArguments();
-						if (genericArguments.Length > 0) // We don't support generic methods now
-							continue;
-						var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
-
-						sourceBuilder.AppendLine($"				{baseType.Name}Proxy<{child.GetFullName()}>.Compile{methodInfo.Name}{genericParametersString}(),");
-					}
-				}
-			}
 
 			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
@@ -158,8 +127,37 @@ namespace Sapientia.TypeIndexer
 			return sourceBuilder.ToString();
 		}
 
+		private static string GenerateDelegateIndexBody(List<(Type baseType, List<Type> children)> proxyTypes, bool isDebug)
+		{
+			var includedTypes = new HashSet<Type>();
+			var sourceBuilder = new StringBuilder();
+
+			foreach (var (baseType, children) in proxyTypes)
+			{
+				var methods = baseType.GetAllInstanceMethods();
+
+				foreach (var child in children)
+				{
+					if (!includedTypes.Add(child))
+						continue;
+					foreach (var methodInfo in methods)
+					{
+						var genericArguments = methodInfo.GetGenericArguments();
+						if (genericArguments.Length > 0) // We don't support generic methods now
+							continue;
+						var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
+
+						sourceBuilder.AppendLine($"				{baseType.Name}Proxy<{child.GetFullName()}>.Compile{methodInfo.Name}{genericParametersString}(),");
+					}
+				}
+			}
+
+			return sourceBuilder.ToString();
+		}
+
 		private static string GenerateTypeToDelegateIndexBody(List<(Type baseType, List<Type> children)> proxyTypes, bool isDebug)
 		{
+			var includedTypes = new HashSet<Type>();
 			var sourceBuilder = new StringBuilder();
 			for (int i = 0, delegateIndex = 0; i < proxyTypes.Count; i++)
 			{
@@ -177,8 +175,10 @@ namespace Sapientia.TypeIndexer
 
 				foreach (var child in children)
 				{
+					if (!includedTypes.Add(child))
+						continue;
 					if (isDebug)
-						sourceBuilder.AppendLine($"				{{ (typeToIndex[Type.GetType(\"{child.GetFullName()}\")], {i}), {delegateIndex}}},");
+						sourceBuilder.AppendLine($"				{{ (typeToIndex[Type.GetType(\"{child.AssemblyQualifiedName}\")], {i}), {delegateIndex}}},");
 					else
 						sourceBuilder.AppendLine($"				{{ (typeToIndex[typeof({child.GetFullName()})], {i}), {delegateIndex}}},");
 					delegateIndex += methodsCount;
