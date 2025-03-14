@@ -62,7 +62,6 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			zonesList[zonesListCount++] = zone;
-
 			return zonesListCount - 1;
 		}
 

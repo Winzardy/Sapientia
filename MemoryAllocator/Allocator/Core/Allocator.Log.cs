@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator
 	public partial struct Allocator
 	{
 		public static bool startLog;
-		public static System.Collections.Generic.Dictionary<MemPtr, string> logList = new ();
+		public static readonly System.Collections.Generic.Dictionary<MemPtr, string> logList = new ();
 
 		[Unity.Burst.BurstDiscardAttribute]
 		public static void LogAdd(in MemPtr memPtr, long size)

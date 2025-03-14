@@ -82,7 +82,7 @@ namespace Sapientia.MemoryAllocator
 
 			var allocatorId = new AllocatorId(_count++, ++_currentId);
 
-			var allocator = MemoryExt.MemAlloc<Allocator>();
+			var allocator = MemoryExt.MemAllocAndClear<Allocator>();
 			_allocators[allocatorId.index] = allocator;
 
 			allocator->Initialize(allocatorId, initialSize);

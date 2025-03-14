@@ -55,6 +55,19 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
+		public static T* MemAllocAndClear<T>() where T : unmanaged
+		{
+			var size = TSize<T>.size;
+#if UNITY_5_3_OR_NEWER
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
+#else
+			var ptr = (void*)Marshal.AllocHGlobal(size);
+#endif
+			MemClear(ptr, size);
+			return (T*)ptr;
+		}
+
+		[INLINE(256)]
 		public static void MemFree(void* memory)
 		{
 #if UNITY_5_3_OR_NEWER
