@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -103,8 +104,8 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine($"			var delegateIndexToCompiledMethod = new {nameof(CompiledMethod)}[]");
 			sourceBuilder.AppendLine("			{");
 			sourceBuilder.AppendLine("#if PROXY_REFACTORING");
-
-
+			sourceBuilder.AppendLine("#else");
+			sourceBuilder.AppendLine(GenerateDelegateIndexBody(proxyTypes));
 			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
@@ -127,9 +128,9 @@ namespace Sapientia.TypeIndexer
 			return sourceBuilder.ToString();
 		}
 
-		private static string GenerateDelegateIndexBody(List<(Type baseType, List<Type> children)> proxyTypes, bool isDebug)
+		private static string GenerateDelegateIndexBody(List<(Type baseType, HashSet<Type> children)> proxyTypes)
 		{
-			var includedTypes = new HashSet<Type>();
+			var duplicates = new HashSet<string>();
 			var sourceBuilder = new StringBuilder();
 
 			foreach (var (baseType, children) in proxyTypes)
@@ -138,8 +139,6 @@ namespace Sapientia.TypeIndexer
 
 				foreach (var child in children)
 				{
-					if (!includedTypes.Add(child))
-						continue;
 					foreach (var methodInfo in methods)
 					{
 						var genericArguments = methodInfo.GetGenericArguments();
@@ -147,7 +146,9 @@ namespace Sapientia.TypeIndexer
 							continue;
 						var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
 
-						sourceBuilder.AppendLine($"				{baseType.Name}Proxy<{child.GetFullName()}>.Compile{methodInfo.Name}{genericParametersString}(),");
+						var body = $"				{baseType.Name}Proxy<{child.GetFullName()}>.Compile{methodInfo.Name}{genericParametersString}(),";
+						Debug.Assert(duplicates.Add(body));
+						sourceBuilder.AppendLine(body);
 					}
 				}
 			}
@@ -155,9 +156,9 @@ namespace Sapientia.TypeIndexer
 			return sourceBuilder.ToString();
 		}
 
-		private static string GenerateTypeToDelegateIndexBody(List<(Type baseType, List<Type> children)> proxyTypes, bool isDebug)
+		private static string GenerateTypeToDelegateIndexBody(List<(Type baseType, HashSet<Type> children)> proxyTypes, bool isDebug)
 		{
-			var includedTypes = new HashSet<Type>();
+			var duplicates = new HashSet<string>();
 			var sourceBuilder = new StringBuilder();
 			for (int i = 0, delegateIndex = 0; i < proxyTypes.Count; i++)
 			{
@@ -175,12 +176,12 @@ namespace Sapientia.TypeIndexer
 
 				foreach (var child in children)
 				{
-					if (!includedTypes.Add(child))
-						continue;
-					if (isDebug)
-						sourceBuilder.AppendLine($"				{{ (typeToIndex[Type.GetType(\"{child.AssemblyQualifiedName}\")], {i}), {delegateIndex}}},");
-					else
-						sourceBuilder.AppendLine($"				{{ (typeToIndex[typeof({child.GetFullName()})], {i}), {delegateIndex}}},");
+					var body = isDebug
+						? $"				{{ (typeToIndex[Type.GetType(\"{child.AssemblyQualifiedName}\")], {i}), {delegateIndex}}},"
+						: $"				{{ (typeToIndex[typeof({child.GetFullName()})], {i}), {delegateIndex}}},";
+
+					Debug.Assert(duplicates.Add(body));
+					sourceBuilder.AppendLine(body);
 					delegateIndex += methodsCount;
 				}
 			}

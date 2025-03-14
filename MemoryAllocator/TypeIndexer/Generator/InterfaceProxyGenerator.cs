@@ -47,9 +47,9 @@ namespace Sapientia.TypeIndexer
 			}
 		}
 
-		public static System.Collections.Generic.List<(Type baseType, System.Collections.Generic.List<Type> children)> GetProxyTypes()
+		public static System.Collections.Generic.List<(Type baseType, System.Collections.Generic.HashSet<Type> children)> GetProxyTypes()
 		{
-			var result = new System.Collections.Generic.List<(Type baseType, System.Collections.Generic.List<Type> children)>();
+			var result = new System.Collections.Generic.List<(Type baseType, System.Collections.Generic.HashSet<Type> children)>();
 
 			var typesWithAttribute = AppDomain.CurrentDomain.GetAssemblies()
 				.SelectMany(assembly => assembly.GetTypes())
@@ -62,7 +62,7 @@ namespace Sapientia.TypeIndexer
 
 			foreach (var baseType in typesWithAttribute)
 			{
-				var children = new System.Collections.Generic.List<Type>();
+				var children = new System.Collections.Generic.HashSet<Type>();
 
 				baseType.GetChildrenTypes(out var childrenTypes, out var interfaceTypes);
 				foreach (var child in childrenTypes)
@@ -78,7 +78,7 @@ namespace Sapientia.TypeIndexer
 					if (newBaseType.IsGenericType)
 						continue;
 
-					var newChildren = new System.Collections.Generic.List<Type>();
+					var newChildren = new System.Collections.Generic.HashSet<Type>();
 					newBaseType.GetChildrenTypes(out childrenTypes, out _);
 					foreach (var child in childrenTypes)
 					{
