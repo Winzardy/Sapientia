@@ -93,17 +93,11 @@ namespace Sapientia.MemoryAllocator
 		{
 			while (_index < _lastIndex)
 			{
-				var slot = _slots + _index;
-				if (slot->hashCode >= 0)
-				{
-					++_index;
+				if (_slots[_index++].hashCode >= 0)
 					return true;
-				}
-
-				++_index;
 			}
-
 			_index = _lastIndex + 1;
+
 			return false;
 		}
 
@@ -122,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 		public IntPtr Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (IntPtr)(_slots + _index - 1);
+			get => (IntPtr)(&(_slots + _index - 1)->value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -152,14 +146,8 @@ namespace Sapientia.MemoryAllocator
 		{
 			while (_index < _lastIndex)
 			{
-				var v = _slots + _index;
-				if (v->hashCode >= 0)
-				{
-					++_index;
+				if (_slots[_index++].hashCode >= 0)
 					return true;
-				}
-
-				++_index;
 			}
 
 			_index = _lastIndex + 1;

@@ -10,7 +10,7 @@ namespace Sapientia.TypeIndexer
 
 	public struct TypeIndex : IEquatable<TypeIndex>
 	{
-		internal int index;
+		internal ushort index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TypeIndex Create<T>()
@@ -32,6 +32,12 @@ namespace Sapientia.TypeIndexer
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator TypeIndex(int index)
+		{
+			return new TypeIndex{ index = (ushort)index, };
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator TypeIndex(ushort index)
 		{
 			return new TypeIndex{ index = index, };
 		}

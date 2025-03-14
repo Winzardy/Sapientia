@@ -21,9 +21,11 @@ namespace Sapientia.MemoryAllocator
 			public TValue value; // Value of entry
 		}
 
+		private const int _hashCodeMask = 0x7FFFFFFF;
+
 		internal MemArray<int> buckets;
 		internal MemArray<Entry> entries;
-		internal int lastIndex;
+		internal int count;
 		internal int freeList;
 		internal int freeCount;
 
@@ -34,12 +36,12 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly int Count
 		{
-			[INLINE(256)] get => lastIndex - freeCount;
+			[INLINE(256)] get => count - freeCount;
 		}
 
 		public readonly int LastIndex
 		{
-			[INLINE(256)] get => lastIndex;
+			[INLINE(256)] get => count;
 		}
 
 		[INLINE(256)]
@@ -56,6 +58,24 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		private int Initialize(Allocator* allocator, int capacity)
+		{
+			var prime = HashHelpers.GetPrime(capacity);
+			freeList = -1;
+			buckets = new MemArray<int>(allocator, prime, -1);
+			entries = new MemArray<Entry>(allocator, prime);
+			return prime;
+		}
+
+		[INLINE(256)]
+		public void Dispose(Allocator* allocator)
+		{
+			buckets.Dispose(allocator);
+			entries.Dispose(allocator);
+			this = default;
+		}
+
+		[INLINE(256)]
 		public Entry* GetEntryPtr()
 		{
 			return entries.GetValuePtr();
@@ -65,14 +85,6 @@ namespace Sapientia.MemoryAllocator
 		public Entry* GetEntryPtr(Allocator* allocator)
 		{
 			return entries.GetValuePtr(allocator);
-		}
-
-		[INLINE(256)]
-		public void Dispose(Allocator* allocator)
-		{
-			buckets.Dispose(allocator);
-			entries.Dispose(allocator);
-			this = default;
 		}
 
 		[INLINE(256)]
@@ -108,7 +120,7 @@ namespace Sapientia.MemoryAllocator
 
 			MemArrayExt.CopyExact(allocator, other.buckets, ref buckets);
 			MemArrayExt.CopyExact(allocator, other.entries, ref entries);
-			lastIndex = other.lastIndex;
+			count = other.count;
 			freeCount = other.freeCount;
 			freeList = other.freeList;
 		}
@@ -116,7 +128,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
 		/// <param name="allocator"></param>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public readonly ref TValue this[Allocator* allocator, in TKey key]
+		public ref TValue this[Allocator* allocator, in TKey key]
 		{
 			[INLINE(256)]
 			get
@@ -127,7 +139,7 @@ namespace Sapientia.MemoryAllocator
 					return ref entries[allocator, entry].value;
 				}
 
-				throw new System.Collections.Generic.KeyNotFoundException();
+				throw new KeyNotFoundException();
 			}
 		}
 
@@ -145,7 +157,7 @@ namespace Sapientia.MemoryAllocator
 					return ref entries[allocator, entry].value;
 				}
 
-				throw new System.Collections.Generic.KeyNotFoundException();
+				throw new KeyNotFoundException();
 			}
 		}
 
@@ -153,15 +165,7 @@ namespace Sapientia.MemoryAllocator
 		public ref TValue GetValue(TKey key)
 		{
 			var allocator = GetAllocatorPtr();
-
-			var entry = FindEntry(allocator, key);
-			if (entry >= 0)
-			{
-				return ref entries[allocator, entry].value;
-			}
-
-			TryInsert(allocator, key, default, InsertionBehavior.overwriteExisting);
-			return ref entries[allocator, FindEntry(allocator, key)].value;
+			return ref GetValue(allocator, key);
 		}
 
 		[INLINE(256)]
@@ -173,8 +177,7 @@ namespace Sapientia.MemoryAllocator
 				return ref entries[allocator, entry].value;
 			}
 
-			TryInsert(allocator, key, default, InsertionBehavior.overwriteExisting);
-			return ref entries[allocator, FindEntry(allocator, key)].value;
+			return ref TDefaultValue<TValue>.value;
 		}
 
 		[INLINE(256)]
@@ -205,6 +208,20 @@ namespace Sapientia.MemoryAllocator
 			return false;
 		}
 
+		[INLINE(256)]
+		public bool TryGetValuePtr(Allocator* allocator, TKey key, out TValue* value)
+		{
+			var entry = FindEntry(allocator, key);
+			if (entry >= 0)
+			{
+				value = (TValue*)entries[allocator, entry].value.AsPointer();
+				return true;
+			}
+
+			value = null;
+			return false;
+		}
+
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
 		/// <param name="key">The key of the element to add to the dictionary.</param>
 		/// <param name="value"></param>
@@ -228,11 +245,11 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Clear(Allocator* allocator)
 		{
-			var clearCount = lastIndex;
+			var clearCount = count;
 			if (clearCount > 0)
 			{
 				buckets.Clear(allocator);
-				lastIndex = 0;
+				count = 0;
 				freeList = -1;
 				freeCount = 0;
 				entries.Clear(allocator, 0, clearCount);
@@ -243,7 +260,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="allocator"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
 		[INLINE(256)]
-		public readonly bool ContainsKey(Allocator* allocator, TKey key)
+		public bool ContainsKey(Allocator* allocator, TKey key)
 		{
 			return FindEntry(allocator, key) >= 0;
 		}
@@ -252,51 +269,37 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="allocator"></param>
 		/// <param name="value">The value to locate in the dictionary.</param>
 		[INLINE(256)]
-		public readonly bool ContainsValue(Allocator* allocator, TValue value)
+		public bool ContainsValue(Allocator* allocator, TValue value)
 		{
-			for (var index = 0; index < lastIndex; ++index)
+			var rawEntries = entries.GetValuePtr(allocator);
+			for (var i = 0; i < count; i++)
 			{
-				if (entries[allocator, index].hashCode >= 0 && System.Collections.Generic.EqualityComparer<TValue>.Default.Equals(entries[allocator, index].value, value))
-				{
+				if (rawEntries[i].hashCode >= 0 && value.Equals(rawEntries[i].value))
 					return true;
-				}
 			}
 
 			return false;
 		}
 
 		[INLINE(256)]
-		private readonly int FindEntry(Allocator* allocator, in TKey key)
+		private int FindEntry(Allocator* allocator, in TKey key)
 		{
-			var index = -1;
-			var num1 = 0;
 			if (buckets.IsCreated)
 			{
-				var num2 = key.GetHashCode() & int.MaxValue;
-				index = buckets[allocator, (num2 % buckets.Length)] - 1;
-				while (index < entries.Length && (entries[allocator, index].hashCode != num2 || !entries[allocator, index].key.Equals(key)))
-				{
-					index = entries[allocator, index].next;
-					Debug.Assert(num1 < entries.Length);
+				var hashCode = key.GetHashCode() & _hashCodeMask;
+				var rawBuckets = buckets.GetValuePtr(allocator);
+				var rawEntries = entries.GetValuePtr(allocator);
 
-					++num1;
+				for (var i = rawBuckets[hashCode % buckets.Length]; i >= 0; i = rawEntries[i].next)
+				{
+					if (rawEntries[i].hashCode == hashCode && rawEntries[i].key.Equals(key))
+						return i;
 				}
 			}
 
-			return index;
+			return -1;
 		}
 
-		[INLINE(256)]
-		private int Initialize(Allocator* allocator, int capacity)
-		{
-			var prime = HashHelpers.GetPrime(capacity);
-			freeList = -1;
-			buckets = new MemArray<int>(allocator, prime);
-			entries = new MemArray<Entry>(allocator, prime);
-			return prime;
-		}
-
-		[INLINE(256)]
 		private bool TryInsert(Allocator* allocator, TKey key, TValue value, InsertionBehavior behavior)
 		{
 			if (!buckets.IsCreated)
@@ -304,73 +307,58 @@ namespace Sapientia.MemoryAllocator
 				Initialize(allocator, 0);
 			}
 
-			var num1 = key.GetHashCode() & int.MaxValue;
-			var num2 = 0u;
-			ref var local1 = ref buckets[allocator, (num1 % buckets.Length)];
-			var index1 = local1 - 1;
-			if (index1 >= 0)
+			var hashCode = key.GetHashCode() & _hashCodeMask;
+			var targetBucket = hashCode % buckets.Length;
+
+			var rawBuckets = buckets.GetValuePtr(allocator);
+			var rawEntries = entries.GetValuePtr(allocator);
+
+			for (var i = rawBuckets[targetBucket]; i >= 0; i = rawEntries[i].next)
 			{
-				while (index1 < entries.Length)
+				if (rawEntries[i].hashCode == hashCode && rawEntries[i].key.Equals(key))
 				{
-					if (entries[allocator, index1].hashCode == num1 && entries[allocator, index1].key.Equals(key))
+					switch (behavior)
 					{
-						switch (behavior)
-						{
-							case InsertionBehavior.overwriteExisting:
-								entries[allocator, index1].value = value;
-								return true;
+						case InsertionBehavior.overwriteExisting:
+							rawEntries[i].value = value;
+							return true;
 
-							case InsertionBehavior.throwOnExisting:
-								E.ADDING_DUPLICATE();
-								break;
-						}
-
-						return false;
+						case InsertionBehavior.throwOnExisting:
+							E.ADDING_DUPLICATE();
+							break;
 					}
 
-					index1 = entries[allocator, index1].next;
-					if (num2 >= entries.Length)
-					{
-						E.OUT_OF_RANGE();
-					}
-
-					++num2;
+					return false;
 				}
 			}
-			var flag1 = false;
-			var flag2 = false;
-			int index2;
+
+			int index;
 			if (freeCount > 0)
 			{
-				index2 = freeList;
-				flag2 = true;
-				--freeCount;
+				index = freeList;
+				freeList = rawEntries[index].next;
+				freeCount--;
 			}
 			else
 			{
-				var count = this.lastIndex;
 				if (count == entries.Length)
 				{
 					Resize(allocator);
-					flag1 = true;
+					targetBucket = hashCode % buckets.Length;
+
+					rawBuckets = buckets.GetValuePtr(allocator);
+					rawEntries = entries.GetValuePtr(allocator);
 				}
 
-				index2 = count;
-				this.lastIndex = count + 1;
+				index = count;
+				count++;
 			}
 
-			ref var local2 = ref (flag1 ? ref buckets[allocator, (num1 % buckets.Length)] : ref local1);
-			ref var local3 = ref entries[allocator, index2];
-			if (flag2)
-			{
-				freeList = local3.next;
-			}
-
-			local3.hashCode = num1;
-			local3.next = (int)local2 - 1;
-			local3.key = key;
-			local3.value = value;
-			local2 = index2 + 1;
+			rawEntries[index].hashCode = hashCode;
+			rawEntries[index].next = buckets[targetBucket];
+			rawEntries[index].key = key;
+			rawEntries[index].value = value;
+			rawBuckets[targetBucket] = index;
 
 			return true;
 		}
@@ -378,37 +366,34 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		private void Resize(Allocator* allocator)
 		{
-			Resize(allocator, HashHelpers.ExpandPrime(lastIndex));
+			Resize(allocator, HashHelpers.ExpandPrime(count));
 		}
 
 		[INLINE(256)]
 		private void Resize(Allocator* allocator, int newSize)
 		{
-			var numArray = new MemArray<int>(allocator, newSize);
+			var bucketsArray = new MemArray<int>(allocator, newSize, -1);
 			var entryArray = new MemArray<Entry>(allocator, newSize);
 
-			MemArrayExt.CopyNoChecks(allocator, entries, 0, ref entryArray, 0, lastIndex);
-			for (var index1 = 0; index1 < lastIndex; ++index1)
+			MemArrayExt.CopyNoChecks(allocator, entries, 0, ref entryArray, 0, count);
+
+			var rawBuckets = bucketsArray.GetValuePtr(allocator);
+			var rawEntries = entryArray.GetValuePtr(allocator);
+
+			for (var i = 0; i < count; i++)
 			{
-				if (entryArray[allocator, index1].hashCode >= 0)
+				if (rawEntries[i].hashCode >= 0)
 				{
-					var index2 = (entryArray[allocator, index1].hashCode % newSize);
-					entryArray[allocator, index1].next = numArray[allocator, index2] - 1;
-					numArray[allocator, index2] = index1 + 1;
+					var bucket = rawEntries[i].hashCode % newSize;
+					rawEntries[i].next = rawBuckets[bucket];
+					rawBuckets[bucket] = i;
 				}
 			}
 
-			if (buckets.IsCreated)
-			{
-				buckets.Dispose(allocator);
-			}
+			buckets.Dispose(allocator);
+			entries.Dispose(allocator);
 
-			if (entries.IsCreated)
-			{
-				entries.Dispose(allocator);
-			}
-
-			buckets = numArray;
+			buckets = bucketsArray;
 			entries = entryArray;
 		}
 
@@ -424,46 +409,11 @@ namespace Sapientia.MemoryAllocator
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
 		/// <param name="allocator"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
+		/// <param name="value"></param>
 		[INLINE(256)]
 		public bool Remove(Allocator* allocator, TKey key)
 		{
-			if (!buckets.IsCreated)
-				return false;
-
-			var hashCode = key.GetHashCode() & int.MaxValue;
-			var buckedIndex = (hashCode % buckets.Length);
-			var previousIndex = -1;
-
-			var nextIndex = buckets[allocator, buckedIndex] - 1;
-			while (nextIndex >= 0)
-			{
-				ref var local = ref entries[allocator, nextIndex];
-				nextIndex = local.next;
-
-				if (local.hashCode == hashCode && local.key.Equals(key))
-				{
-					if (previousIndex < 0)
-					{
-						buckets[allocator, buckedIndex] = (local.next + 1);
-					}
-					else
-					{
-						entries[allocator, previousIndex].next = local.next;
-					}
-
-					local.hashCode = -1;
-					local.next = freeList;
-
-					freeList = nextIndex;
-					freeCount++;
-
-					return true;
-				}
-
-				previousIndex = nextIndex;
-			}
-
-			return false;
+			return Remove(allocator, key, out _);
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
@@ -473,45 +423,45 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Remove(Allocator* allocator, TKey key, out TValue value)
 		{
-			if (buckets.IsCreated)
+			value = default;
+
+			if (!buckets.IsCreated)
+				return false;
+
+			var hashCode = key.GetHashCode() & _hashCodeMask;
+			var bucket = hashCode % buckets.Length;
+			var last = -1;
+
+			var rawBuckets = buckets.GetValuePtr(allocator);
+			var rawEntries = entries.GetValuePtr(allocator);
+
+			for (var i = rawBuckets[bucket]; i >= 0; last = i, i = rawEntries[i].next)
 			{
-				var num = key.GetHashCode() & int.MaxValue;
-				var index1 = (int)(num % buckets.Length);
-				var index2 = -1;
-				// ISSUE: variable of a reference type
-				var next = 0;
-				for (var index3 = (int)buckets[allocator, index1] - 1; index3 >= 0; index3 = next)
+				if (rawEntries[i].hashCode == hashCode && rawEntries[i].key.Equals(key))
 				{
-					ref var local = ref entries[allocator, index3];
-					next = local.next;
-					if (local.hashCode == num)
+					if (last < 0)
 					{
-						if ((local.key.Equals(key) ? 1 : 0) != 0)
-						{
-							if (index2 < 0)
-							{
-								buckets[allocator, index1] = (local.next + 1);
-							}
-							else
-							{
-								entries[allocator, index2].next = local.next;
-							}
-
-							value = local.value;
-							local.hashCode = -1;
-							local.next = freeList;
-
-							freeList = index3;
-							++freeCount;
-							return true;
-						}
+						rawBuckets[bucket] = rawEntries[i].next;
+					}
+					else
+					{
+						entries[last].next = rawEntries[i].next;
 					}
 
-					index2 = index3;
+					value = rawEntries[i].value;
+
+					rawEntries[i].hashCode = -1;
+					rawEntries[i].next = freeList;
+					rawEntries[i].key = default(TKey);
+					rawEntries[i].value = default(TValue);
+
+					freeList = i;
+					freeCount++;
+
+					return true;
 				}
 			}
 
-			value = default;
 			return false;
 		}
 
@@ -567,31 +517,31 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(Allocator* allocator)
+		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(Allocator* allocator)
 		{
-			return new (new (GetEntryPtr(allocator), LastIndex));
+			return new(new(GetEntryPtr(allocator), LastIndex));
 		}
 
 		[INLINE(256)]
-		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable()
+		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable()
 		{
-			return new (new (GetEntryPtr(), LastIndex));
+			return new(new(GetEntryPtr(), LastIndex));
 		}
 
 		[INLINE(256)]
 		public Enumerable<IntPtr, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(Allocator* allocator)
 		{
-			return new (new (GetEntryPtr(allocator), LastIndex));
+			return new(new(GetEntryPtr(allocator), LastIndex));
 		}
 
 		[INLINE(256)]
 		public Enumerable<IntPtr, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable()
 		{
-			return new (new (GetEntryPtr(), LastIndex));
+			return new(new(GetEntryPtr(), LastIndex));
 		}
 
 		[INLINE(256)]
-		IEnumerator<Dictionary<TKey, TValue>.Entry> IEnumerable<Dictionary<TKey, TValue>.Entry>.GetEnumerator()
+		IEnumerator<Entry> IEnumerable<Entry>.GetEnumerator()
 		{
 			return GetEnumerator();
 		}

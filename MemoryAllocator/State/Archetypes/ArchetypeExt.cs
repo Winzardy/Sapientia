@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.MemoryAllocator.State
@@ -18,27 +19,39 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref Archetype GetArchetype<TComponent>(Allocator* allocator) where TComponent : unmanaged, IComponent
+		{
+			return ref ServiceRegistryContext.Create<TComponent, Archetype>().GetService<Archetype>(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Archetype* GetArchetypePtr<TComponent>(Allocator* allocator) where TComponent : unmanaged, IComponent
+		{
+			return ServiceRegistryContext.Create<TComponent, Archetype>().GetServicePtr<Archetype>(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype GetArchetype<TComponent>(this ref Allocator allocator) where TComponent : unmanaged, IComponent
 		{
-			return ref allocator.GetServiceAs<TComponent, Archetype>();
+			return ref GetArchetype<TComponent>((Allocator*)allocator.AsPointer());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Archetype* GetArchetypePtr<TComponent>(this ref Allocator allocator) where TComponent : unmanaged, IComponent
 		{
-			return allocator.GetServiceAsPtr<TComponent, Archetype>();
+			return GetArchetypePtr<TComponent>((Allocator*)allocator.AsPointer());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype GetArchetype<TComponent>(this ref AllocatorId allocatorId) where TComponent : unmanaged, IComponent
 		{
-			return ref allocatorId.GetServiceAs<TComponent, Archetype>();
+			return ref GetArchetype<TComponent>(allocatorId.GetAllocatorPtr());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Archetype* GetArchetypePtr<TComponent>(this ref AllocatorId allocatorId) where TComponent : unmanaged, IComponent
 		{
-			return allocatorId.GetServiceAsPtr<TComponent, Archetype>();
+			return GetArchetypePtr<TComponent>(allocatorId.GetAllocatorPtr());
 		}
 	}
 }

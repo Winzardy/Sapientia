@@ -8,7 +8,7 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public uint Tick { get; private set; }
 		public float Time { get; private set; }
-		public bool AllowLateUpdate { get; private set; }
+		public bool ScheduleLateUpdate { get; private set; }
 
 		public AllocatorId allocatorId;
 
@@ -17,16 +17,16 @@ namespace Sapientia.MemoryAllocator.State
 
 		public bool IsStarted => Tick > 0u;
 
-		public static World* Create(Allocator* allocator, int elementsCount = 64)
+		public static World* Create(Allocator* allocator, int elementsCapacity = 64)
 		{
 			var worldPtr = allocator->MemAlloc<World>(out var world);
 			world->Tick = 0u;
 			world->Time = 0f;
-			world->AllowLateUpdate = false;
+			world->ScheduleLateUpdate = false;
 
 			world->allocatorId = allocator->allocatorId;
-			world->worldElements = new (allocator, elementsCount);
-			world->worldSystems = new (allocator, elementsCount);
+			world->worldElements = new (allocator, elementsCapacity);
+			world->worldSystems = new (allocator, elementsCapacity);
 
 			allocator->RegisterService<World>(worldPtr);
 
@@ -46,14 +46,14 @@ namespace Sapientia.MemoryAllocator.State
 				AddWorldElement(allocator, system.ToProxy<IWorldElementProxy>());
 			}
 
-			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
+			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
 			{
 				element->Initialize(allocator, allocator, element->indexedPtr);
 			}
 
 			LocalStatePartService.Initialize(allocator);
 
-			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable())
+			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
 			{
 				element->LateInitialize(allocator, allocator, element->indexedPtr);
 			}
@@ -87,14 +87,14 @@ namespace Sapientia.MemoryAllocator.State
 				system->Update(allocator, allocator, system->indexedPtr, deltaTime);
 			}
 
-			AllowLateUpdate = true;
+			ScheduleLateUpdate = true;
 		}
 
 		public void LateUpdate()
 		{
-			if (!AllowLateUpdate)
+			if (!ScheduleLateUpdate)
 				return;
-			AllowLateUpdate = false;
+			ScheduleLateUpdate = false;
 
 			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 

@@ -42,27 +42,36 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemArray(int length, ClearOptions clearOptions = ClearOptions.ClearMemory, int growFactor = 1) : this(AllocatorManager.CurrentAllocatorPtr, length, clearOptions, growFactor)
+		public MemArray(int length, ClearOptions clearOptions = ClearOptions.ClearMemory) :
+			this(AllocatorManager.CurrentAllocatorPtr, length, clearOptions)
 		{
 
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator* allocator, int length, ClearOptions clearOptions = ClearOptions.ClearMemory, int growFactor = 1)
+		public MemArray(Allocator* allocator, int length, T defaultValue)
 		{
-			innerArray = new MemArray(allocator, TSize<T>.size, length, clearOptions, growFactor);
+			innerArray = new MemArray(allocator, TSize<T>.size, length, ClearOptions.UninitializedMemory);
+			innerArray.Fill(allocator, defaultValue, 0, length);
 		}
 
 		[INLINE(256)]
-		public MemArray(int elementSize, int length, ClearOptions clearOptions, int growFactor = 1) : this(AllocatorManager.CurrentAllocatorPtr, elementSize, length, clearOptions, growFactor)
+		public MemArray(Allocator* allocator, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
+		{
+			innerArray = new MemArray(allocator, TSize<T>.size, length, clearOptions);
+		}
+
+		[INLINE(256)]
+		public MemArray(int elementSize, int length, ClearOptions clearOptions) :
+			this(AllocatorManager.CurrentAllocatorPtr, elementSize, length, clearOptions)
 		{
 
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator* allocator, int elementSize, int length, ClearOptions clearOptions, int growFactor = 1)
+		public MemArray(Allocator* allocator, int elementSize, int length, ClearOptions clearOptions)
 		{
-			innerArray = new MemArray(allocator, elementSize, length, clearOptions, growFactor);
+			innerArray = new MemArray(allocator, elementSize, length, clearOptions);
 		}
 
 		[INLINE(256)]
@@ -84,9 +93,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemArray(MemPtr memPtr, int length, int growFactor)
+		public MemArray(MemPtr memPtr, int length)
 		{
-			innerArray = new MemArray(memPtr, TSize<T>.size, length, growFactor);
+			innerArray = new MemArray(memPtr, TSize<T>.size, length);
 		}
 
 		[INLINE(256)]
@@ -146,7 +155,12 @@ namespace Sapientia.MemoryAllocator
 		public ref T this[Allocator* allocator, int index]
 		{
 			[INLINE(256)]
-			get => ref innerArray.GetValue<T>(allocator, index);
+			get
+			{
+				E.IS_CREATED(this);
+				E.RANGE(index, 0, this.Length);
+				return ref innerArray.GetValue<T> (allocator, index);
+			}
 		}
 
 		[INLINE(256)]
@@ -158,6 +172,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public T* GetValuePtr(Allocator* allocator)
 		{
+			E.IS_CREATED(this);
 			return innerArray.GetValuePtr<T>(allocator);
 		}
 
@@ -180,16 +195,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Resize(Allocator* allocator, int newLength,
-			ClearOptions options = ClearOptions.ClearMemory)
+		public bool Resize(Allocator* allocator, int newLength, ClearOptions options = ClearOptions.ClearMemory)
 		{
-			return innerArray.Resize(allocator, newLength, options);
-		}
-
-		[INLINE(256)]
-		public bool Resize(Allocator* allocator, int newLength, int growFactor, ClearOptions options = ClearOptions.ClearMemory)
-		{
-			return innerArray.Resize(allocator, newLength, growFactor, options);
+			return innerArray.Resize<T>(allocator, newLength, options);
 		}
 
 		[INLINE(256)]

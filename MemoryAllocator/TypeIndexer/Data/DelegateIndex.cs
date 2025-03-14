@@ -4,7 +4,7 @@ namespace Sapientia.TypeIndexer
 {
 	public struct DelegateIndex
 	{
-		internal int index;
+		internal ushort index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator int(DelegateIndex typeIndex)
@@ -13,9 +13,15 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator DelegateIndex(int index)
+		public static implicit operator DelegateIndex(ushort index)
 		{
 			return new DelegateIndex{ index = index, };
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator DelegateIndex(int index)
+		{
+			return new DelegateIndex{ index = (ushort)index, };
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

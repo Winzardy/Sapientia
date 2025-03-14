@@ -128,9 +128,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T* TryGetServicePtr<T>(this ref Allocator allocator, out bool isExist) where T: unmanaged, IIndexedType
+		public static bool TryGetServicePtr<T>(this ref Allocator allocator, out T* ptr) where T: unmanaged, IIndexedType
 		{
-			return allocator.serviceRegistry.TryGetServicePtr<T>((Allocator*)allocator.AsPointer(), out isExist);
+			return allocator.serviceRegistry.TryGetServicePtr<T>((Allocator*)allocator.AsPointer(), out ptr);
 		}
 	}
 }

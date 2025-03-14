@@ -6,6 +6,8 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe struct State : IDisposable
 	{
+		public const int MAX_TICKS_PER_FRAME = 5;
+
 		private AllocatorId _allocatorId;
 
 		public AllocatorId AllocatorId => _allocatorId;
@@ -40,16 +42,18 @@ namespace Sapientia.MemoryAllocator.State
 				return;
 
 			var ticksToUpdate = (updateStatePart.worldTimeDebt / tickTime).FloorToInt_Positive();
+			Debug.Assert(ticksToUpdate <= MAX_TICKS_PER_FRAME, $"{ticksToUpdate} ticks was scheduled in this frame.");
+
 			if (ticksToUpdate > 0)
 			{
+				// Если тиков больше, чем максимально допустимо, то отбрасываем лишние
+				ticksToUpdate = ticksToUpdate.Min(MAX_TICKS_PER_FRAME);
+
 				var logicDeltaTime = ticksToUpdate * tickTime;
 				updateStatePart.worldTimeDebt -= logicDeltaTime;
 
 				GetWorld()->Update(logicDeltaTime);
 			}
-			Debug.Assert(ticksToUpdate <= 5, $"{ticksToUpdate} ticks was processed in this frame.");
-
-			updateStatePart.scheduleLateGameUpdate = true;
 		}
 
 		public void LateUpdate()
@@ -59,7 +63,6 @@ namespace Sapientia.MemoryAllocator.State
 			var updateStatePart = _allocatorId.GetLocalService<UpdateLocalStatePart>();
 			if (!updateStatePart.CanLateUpdate())
 				return;
-			updateStatePart.scheduleLateGameUpdate = false;
 
 			GetWorld()->LateUpdate();
 		}

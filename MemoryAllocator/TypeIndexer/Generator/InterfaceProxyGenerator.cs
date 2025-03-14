@@ -72,23 +72,6 @@ namespace Sapientia.TypeIndexer
 					children.Add(child);
 				}
 				result.Add((baseType, children));
-
-				foreach (var newBaseType in interfaceTypes)
-				{
-					if (newBaseType.IsGenericType)
-						continue;
-
-					var newChildren = new System.Collections.Generic.HashSet<Type>();
-					newBaseType.GetChildrenTypes(out childrenTypes, out _);
-					foreach (var child in childrenTypes)
-					{
-						if (child.IsGenericType || !child.IsBlittable())
-							continue;
-						children.Add(child);
-					}
-
-					result.Add((newBaseType, newChildren));
-				}
 			}
 
 			return result;

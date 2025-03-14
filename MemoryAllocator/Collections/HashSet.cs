@@ -91,11 +91,12 @@ namespace Sapientia.MemoryAllocator
 		{
 			var size = HashHelpers.GetPrime(capacity);
 			buckets = new MemArray<int>(allocator, size);
-			this.slots = new MemArray<Slot>(allocator, size);
-			var slots = (Slot*)this.slots.GetPtr(allocator);
-			for (var i = 0; i < this.slots.Length; ++i)
+			slots = new MemArray<Slot>(allocator, size);
+
+			var rawSlots = (Slot*)slots.GetPtr(allocator);
+			for (var i = 0; i < slots.Length; ++i)
 			{
-				(*(slots + i)).hashCode = -1;
+				(*(rawSlots + i)).hashCode = -1;
 			}
 
 			freeList = -1;
@@ -104,20 +105,22 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public Slot* GetSlotPtr()
 		{
+			E.IS_CREATED(this);
 			return slots.GetValuePtr();
 		}
 
 		[INLINE(256)]
-		public readonly Slot* GetSlotPtr(Allocator* allocator)
+		public Slot* GetSlotPtr(Allocator* allocator)
 		{
+			E.IS_CREATED(this);
 			return slots.GetValuePtr(allocator);
 		}
 
 		[INLINE(256)]
 		public bool Equals(Allocator* allocator, ref HashSet<T> other)
 		{
-			Debug.Assert(IsCreated);
-			Debug.Assert(other.IsCreated);
+			E.IS_CREATED(this);
+			E.IS_CREATED(other);
 
 			if (count != other.count)
 				return false;
@@ -148,14 +151,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Set(Allocator* allocator, in HashSet<T> other)
-		{
-			this = other;
-			buckets = new MemArray<int>(allocator, other.buckets);
-			slots = new MemArray<Slot>(allocator, other.slots);
-		}
-
-		[INLINE(256)]
 		public void Dispose(Allocator* allocator)
 		{
 			buckets.Dispose(allocator);
@@ -172,6 +167,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public MemPtr GetMemPtr()
 		{
+			E.IS_CREATED(this);
 			return buckets.innerArray.ptr.memPtr;
 		}
 
@@ -215,7 +211,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="item">item to check for containment</param>
 		/// <returns>true if item contained; false if not</returns>
 		[INLINE(256)]
-		public readonly bool Contains(Allocator* allocator, in T item)
+		public bool Contains(Allocator* allocator, in T item)
 		{
 			return Contains(item, slots.GetValuePtr(allocator), buckets.GetValuePtr(allocator));
 		}
@@ -223,7 +219,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		private readonly bool Contains(in T item, Slot* slotsPtr, int* bucketsPtr)
 		{
-			Debug.Assert(IsCreated);
+			E.IS_CREATED(this);
 			// see note at "HashSet" level describing why "- 1" appears in for loop
 			var hashCode = GetHashCode(item) & lower31BITMask;
 			for (var i = bucketsPtr[hashCode % buckets.Length] - 1; i >= 0; i = (slotsPtr + i)->next)
@@ -374,7 +370,7 @@ namespace Sapientia.MemoryAllocator
 			var newSize = HashHelpers.ExpandPrime(count);
 
 			// Able to increase capacity; copy elements to larger array and rehash
-			SetCapacity(allocator, newSize, false);
+			SetCapacity(allocator, newSize);
 		}
 
 		/// <summary>
@@ -383,23 +379,12 @@ namespace Sapientia.MemoryAllocator
 		/// instead of this method.
 		/// </summary>
 		[INLINE(256)]
-		private void SetCapacity(Allocator* allocator, int newSize, bool forceNewHashCodes)
+		private void SetCapacity(Allocator* allocator, int newSize)
 		{
 			var newSlots = new MemArray<Slot>(allocator, newSize);
 			if (slots.IsCreated)
 			{
 				MemArrayExt.CopyNoChecks(allocator, slots, 0, ref newSlots, 0, lastIndex);
-			}
-
-			if (forceNewHashCodes)
-			{
-				for (var i = 0; i < lastIndex; i++)
-				{
-					if (newSlots[allocator, i].hashCode != -1)
-					{
-						newSlots[allocator, i].hashCode = GetHashCode(newSlots[allocator, i].value);
-					}
-				}
 			}
 
 			var newBuckets = new MemArray<int>(allocator, newSize);

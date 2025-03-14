@@ -43,7 +43,7 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 		}
 
-		public void Initialize(Allocator* allocator)
+		public void Initialize(Allocator* allocator, IndexedPtr self)
 		{
 			_freeEntitiesIds = new (allocator, EntitiesCapacity);
 			_entityIdToGeneration = new(allocator, EntitiesCapacity);

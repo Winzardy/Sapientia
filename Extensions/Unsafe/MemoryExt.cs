@@ -89,10 +89,22 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
+		public static void MemFill<T>(T source, void* destination, int count) where T: unmanaged
+		{
+			var sourcePtr = &source;
+#if UNITY_5_3_OR_NEWER
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(destination, sourcePtr, TSize<T>.size, count);
+#else
+			var span = new Span<T>(destination, count);
+			span.Fill(*source);
+#endif
+		}
+
+		[INLINE(256)]
 		public static void MemFill<T>(T* source, void* destination, int count) where T: unmanaged
 		{
 #if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(source, destination, TSize<T>.size, count);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(destination, source, TSize<T>.size, count);
 #else
 			var span = new Span<T>(destination, count);
 			span.Fill(*source);

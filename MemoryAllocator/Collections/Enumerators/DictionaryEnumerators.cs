@@ -93,10 +93,9 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool MoveNext()
 		{
-			while (++_index < _count)
+			while (_index < _count)
 			{
-				ref var local = ref _entries[_index];
-				if (local.hashCode >= 0)
+				if (_entries[_index++].hashCode >= 0)
 					return true;
 			}
 
@@ -119,7 +118,7 @@ namespace Sapientia.MemoryAllocator
 		public IntPtr Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (IntPtr)(_entries + _index);
+			get => (IntPtr)(&(_entries + _index - 1)->value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,28 +133,27 @@ namespace Sapientia.MemoryAllocator
 		where TValue: unmanaged
 	{
 		private readonly Dictionary<TKey, TValue>.Entry* _entries;
-		private readonly int _lastIndex;
+		private readonly int _count;
 		private int _index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal DictionaryEnumerator(Dictionary<TKey, TValue>.Entry* entries, int lastIndex)
+		internal DictionaryEnumerator(Dictionary<TKey, TValue>.Entry* entries, int count)
 		{
 			_entries = entries;
-			_lastIndex = lastIndex;
+			_count = count;
 			_index = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool MoveNext()
 		{
-			while (_index < _lastIndex)
+			while (_index < _count)
 			{
-				ref var local = ref _entries[_index++];
-				if (local.hashCode >= 0)
+				if (_entries[_index++].hashCode >= 0)
 					return true;
 			}
 
-			_index = _lastIndex + 1;
+			_index = _count + 1;
 			return false;
 		}
 
@@ -174,7 +172,7 @@ namespace Sapientia.MemoryAllocator
 		public Dictionary<TKey, TValue>.Entry Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => *(_entries + _index - 1);
+			get => *(_entries + _index);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

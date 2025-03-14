@@ -151,7 +151,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemArray<int> Buckets => _arr.buckets;
 		public MemArray<Dictionary<TK, TV>.Entry> Entries => _arr.entries;
-		public int LastIndex => _arr.lastIndex;
+		public int Count => _arr.count;
 		public int FreeList => _arr.freeList;
 		public int FreeCount => _arr.freeCount;
 

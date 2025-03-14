@@ -21,7 +21,7 @@ namespace Sapientia.MemoryAllocator
 	{
 		public static string Format(string str)
 		{
-			return $"[ Sapientia.MemoryAllocator ] {str}";
+			return $"[Sapientia.MemoryAllocator] {str}";
 		}
 	}
 }

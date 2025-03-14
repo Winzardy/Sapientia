@@ -159,8 +159,6 @@ namespace Sapientia.MemoryAllocator
 		public bool EnsureCapacity(Allocator* allocator, int capacity)
 		{
 			capacity = Helpers.NextPot(capacity);
-			if (_arr.IsCreated == false)
-				_arr.innerArray.GrowFactor = 1;
 			return _arr.Resize(allocator, capacity, ClearOptions.UninitializedMemory);
 		}
 
@@ -210,16 +208,16 @@ namespace Sapientia.MemoryAllocator
 		public void Add(Allocator* allocator, in T obj)
 		{
 			Debug.Assert(IsCreated);
-			++_count;
-			EnsureCapacity(allocator, _count);
+			EnsureCapacity(allocator, _count + 1);
 
-			_arr[allocator, _count - 1] = obj;
+			_arr[allocator, _count] = obj;
+			_count++;
 		}
 
 		public void Insert(Allocator* allocator, int index, T value)
 		{
-			++_count;
-			EnsureCapacity(allocator, _count);
+			EnsureCapacity(allocator, _count + 1);
+			_count++;
 
 			var source = GetValuePtr(allocator) + index;
 			var destination = source + 1;

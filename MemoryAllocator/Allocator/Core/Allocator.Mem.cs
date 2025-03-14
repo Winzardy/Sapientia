@@ -23,15 +23,22 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!ptr.IsValid())
 				return MemAlloc(size, out voidPtr);
-			size = Align(size);
 
 			ValidateConsistency();
 			locker.SetBusy(true);
 
 			voidPtr = GetUnsafePtr(ptr);
+			if (ptr.IsZeroSized())
+			{
+				locker.SetFree(true);
+				ValidateConsistency();
+				return ptr;
+			}
+
 			var block = (MemBlock*)((byte*)voidPtr - TSize<MemBlock>.size);
 			var blockSize = block->size;
 			var blockDataSize = blockSize - TSize<MemBlock>.size;
+			size = Align(size);
 			if (blockDataSize > size)
 			{
 				locker.SetFree(true);
@@ -316,7 +323,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly void MemFill<T>(in MemPtr dest, T value, long destOffset, int length) where T: unmanaged
+		public readonly void MemFill<T>(in MemPtr dest, in T value, long destOffset, int length) where T: unmanaged
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
 			if (dest.IsZeroSized())
@@ -328,7 +335,7 @@ namespace Sapientia.MemoryAllocator
 				throw new System.Exception();
 #endif
 
-			MemoryExt.MemFill((T*)value.AsPointer(), GetUnsafePtr(dest, destOffset), (int)length);
+			MemoryExt.MemFill(value, GetUnsafePtr(dest, destOffset), length);
 		}
 
 		[INLINE(256)]

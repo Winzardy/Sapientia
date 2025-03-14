@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ProxyEvent(Allocator* allocator, int capacity)
+		public ProxyEvent(Allocator* allocator, int capacity = 8)
 		{
 			_proxies = new HashSet<ProxyPtr<T>>(allocator, capacity);
 		}

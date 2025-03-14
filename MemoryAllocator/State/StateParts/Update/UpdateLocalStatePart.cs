@@ -7,7 +7,6 @@ namespace Sapientia.MemoryAllocator.State
 		public StateUpdateData stateUpdateData;
 
 		public float worldTimeDebt = 0;
-		public bool scheduleLateGameUpdate = false;
 
 		private int _pauseCount = 0;
 
@@ -35,7 +34,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public bool CanLateUpdate()
 		{
-			return scheduleLateGameUpdate;
+			return true;
 		}
 	}
 }

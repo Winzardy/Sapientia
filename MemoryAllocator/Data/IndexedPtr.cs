@@ -7,8 +7,8 @@ namespace Sapientia.MemoryAllocator.Data
 {
 	public unsafe struct IndexedPtr : IIsCreated, IEquatable<IndexedPtr>
 	{
-		private Ptr _ptr;
 		public readonly TypeIndex typeIndex;
+		private Ptr _ptr;
 
 		public readonly bool IsCreated
 		{

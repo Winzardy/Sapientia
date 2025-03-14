@@ -13,10 +13,9 @@ namespace Sapientia.MemoryAllocator
 	[DebuggerTypeProxy(typeof(MemArrayProxy<>))]
 	public unsafe struct MemArray : IIsCreated, IListEnumerable
 	{
-		public static readonly MemArray Empty = new () { ptr = Ptr.Invalid, Length = 0, GrowFactor = 0, };
+		public static readonly MemArray Empty = new () { ptr = Ptr.Invalid, Length = 0, };
 
 		public Ptr ptr;
-		public int GrowFactor { get; set; }
 		public int Length { get; private set; }
 		public int ElementSize { get; private set; }
 
@@ -37,13 +36,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemArray(int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory, int growFactor = 1) : this(AllocatorManager.CurrentAllocatorPtr, elementSize, length, clearOptions, growFactor)
+		public MemArray(int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory) : this(AllocatorManager.CurrentAllocatorPtr, elementSize, length, clearOptions)
 		{
 
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator* allocator, int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory, int growFactor = 1)
+		public MemArray(Allocator* allocator, int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			if (length == 0u)
 			{
@@ -57,7 +56,6 @@ namespace Sapientia.MemoryAllocator
 			ptr = new Ptr(allocator, tPtr, memPtr);
 			ElementSize = elementSize;
 			Length = length;
-			GrowFactor = growFactor;
 
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
@@ -82,7 +80,6 @@ namespace Sapientia.MemoryAllocator
 			ptr = default;
 			Length = arr.Length;
 			ElementSize = arr.ElementSize;
-			GrowFactor = arr.GrowFactor;
 
 			var memPtr = allocator->AllocArray(arr.ElementSize, arr.Length, out var tPtr);
 			ptr = new Ptr(allocator, tPtr, memPtr);
@@ -90,12 +87,11 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemArray(MemPtr memPtr, int elementSize, int length, int growFactor)
+		public MemArray(MemPtr memPtr, int elementSize, int length)
 		{
 			ptr = new Ptr(memPtr);
 			Length = length;
 			ElementSize = elementSize;
-			GrowFactor = growFactor;
 			ptr = default;
 		}
 
@@ -230,18 +226,11 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Resize(Allocator* allocator, int newLength,
-			ClearOptions options = ClearOptions.ClearMemory)
-		{
-			return Resize(allocator, newLength, GrowFactor, options);
-		}
-
-		[INLINE(256)]
-		public bool Resize(Allocator* allocator, int newLength, int growFactor, ClearOptions options = ClearOptions.ClearMemory)
+		public bool Resize(Allocator* allocator, int newLength, int elementSize, ClearOptions options = ClearOptions.ClearMemory)
 		{
 			if (!IsCreated)
 			{
-				this = new MemArray(allocator, ElementSize, newLength, options, growFactor);
+				this = new MemArray(allocator, elementSize, newLength, options);
 				return true;
 			}
 
@@ -250,11 +239,11 @@ namespace Sapientia.MemoryAllocator
 				return false;
 			}
 
-			newLength *= growFactor;
+			Debug.Assert(elementSize == ElementSize);
 
 			var prevLength = Length;
-			var arrPtr = allocator->ReAllocArray(this.ptr.memPtr, ElementSize, newLength, out void* ptr);
-			this.ptr = new Ptr(allocator, ptr, arrPtr);
+			var arrPtr = allocator->ReAllocArray(ptr.memPtr, elementSize, newLength, out void* rawPtr);
+			ptr = new Ptr(allocator, rawPtr, arrPtr);
 			if (options == ClearOptions.ClearMemory)
 			{
 				Clear(allocator, prevLength, newLength - prevLength);
@@ -262,6 +251,14 @@ namespace Sapientia.MemoryAllocator
 
 			Length = newLength;
 			return true;
+		}
+
+		[INLINE(256)]
+		public bool Resize<T>(Allocator* allocator, int newLength, ClearOptions options = ClearOptions.ClearMemory)
+			where T : unmanaged
+		{
+			var elementSize = TSize<T>.size;
+			return Resize(allocator, newLength, elementSize, options);
 		}
 
 		[INLINE(256)]

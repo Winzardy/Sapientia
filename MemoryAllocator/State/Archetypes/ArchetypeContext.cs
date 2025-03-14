@@ -10,7 +10,7 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly Allocator* allocator;
 		public readonly Archetype* innerArchetype;
 
-		public ArchetypeContext(Allocator* allocator) : this(allocator, allocator->GetArchetypePtr<T>())
+		public ArchetypeContext(Allocator* allocator) : this(allocator, ArchetypeExt.GetArchetypePtr<T>(allocator))
 		{
 		}
 

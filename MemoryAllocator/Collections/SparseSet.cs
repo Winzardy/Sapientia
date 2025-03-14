@@ -293,7 +293,7 @@ namespace Sapientia.MemoryAllocator
 		private void Expand(Allocator* allocator, int newCapacity)
 		{
 			_dense.Resize(allocator, newCapacity, ClearOptions.ClearMemory);
-			_values.Resize(allocator, newCapacity, ClearOptions.ClearMemory);
+			_values.Resize(allocator, newCapacity, ElementSize, ClearOptions.ClearMemory);
 
 			_capacity = _dense.Length.Min(_values.Length);
 		}

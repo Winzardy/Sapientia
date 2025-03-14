@@ -45,10 +45,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Stack(Allocator* allocator, int capacity, byte growFactor = 1)
+		public Stack(Allocator* allocator, int capacity)
 		{
 			this = default;
-			_array = new MemArray<T>(allocator, capacity, growFactor: growFactor);
+			_array = new MemArray<T>(allocator, capacity);
 		}
 
 		[INLINE(256)]
