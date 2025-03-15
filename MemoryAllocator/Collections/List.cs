@@ -174,7 +174,7 @@ namespace Sapientia.MemoryAllocator
 			EnsureCapacity(allocator, count);
 			if (_count < count)
 			{
-				_arr.Fill(allocator, defaultValue, _count, count - 1);
+				_arr.Fill(allocator, defaultValue, _count, count - _count);
 				_count = count;
 			}
 		}

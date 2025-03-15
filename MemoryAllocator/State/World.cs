@@ -44,6 +44,7 @@ namespace Sapientia.MemoryAllocator.State
 			foreach (var system in systems)
 			{
 				AddWorldElement(allocator, system.ToProxy<IWorldElementProxy>());
+				worldSystems.Add(allocator, system.ToProxy<IWorldSystemProxy>());
 			}
 
 			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))

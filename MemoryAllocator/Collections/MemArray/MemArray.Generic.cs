@@ -207,9 +207,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Fill(Allocator* allocator, in T value, int from, int to)
+		public void Fill(Allocator* allocator, in T value, int fromIndex, int count)
 		{
-			innerArray.Fill(allocator, value, from, to);
+			innerArray.Fill(allocator, value, fromIndex, count);
 		}
 
 		[INLINE(256)]

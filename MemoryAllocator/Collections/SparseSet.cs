@@ -210,22 +210,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveSwapBack(int id)
 		{
-			if (id >= _sparseCapacity)
-				return false;
 			var allocator = GetAllocatorPtr();
-			var denseId = _sparse[allocator, id];
-			if (denseId >= _count || _dense[allocator, denseId] != id)
-				return false;
-
-			var sparseId = _dense[allocator, denseId] = _dense[allocator, --_count];
-			_sparse[allocator, sparseId] = denseId;
-
-			var valueA = _values.GetValuePtr(allocator, denseId);
-			var size = _values.ElementSize;
-
-			MemoryExt.MemClear(valueA, size);
-
-			return true;
+			return RemoveSwapBack(allocator, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -234,31 +220,43 @@ namespace Sapientia.MemoryAllocator
 			if (id >= _sparseCapacity)
 				return false;
 			var denseId = _sparse[allocator, id];
-			if (denseId >= _count || _dense[allocator, denseId] != id)
+			if (denseId >= _count)
 				return false;
 
-			var sparseId = _dense[allocator, denseId] = _dense[allocator, --_count];
+			var denseRaw = _dense.GetValuePtr(allocator);
+			if (denseRaw[denseId] != id)
+				return false;
+
+			var sparseId = denseRaw[denseId] = denseRaw[--_count];
 			_sparse[allocator, sparseId] = denseId;
 
 			var valueA = _values.GetValuePtr(allocator, denseId);
+			var valueB = _values.GetValuePtr(allocator, _count);
 			var size = _values.ElementSize;
 
-			MemoryExt.MemClear(valueA, size);
+			MemoryExt.MemMove(valueB, valueA, size);
+			MemoryExt.MemClear(valueB, size);
 
+			E.ASSERT(_count >= 0);
 			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveSwapBackByDenseId(Allocator* allocator, int denseId)
 		{
-			var sparseId = _dense[allocator, denseId] = _dense[allocator, --_count];
+			var denseRaw = _dense.GetValuePtr(allocator);
+
+			var sparseId = denseRaw[denseId] = denseRaw[--_count];
 			_sparse[allocator, sparseId] = denseId;
 
 			var valueA = _values.GetValuePtr(allocator, denseId);
+			var valueB = _values.GetValuePtr(allocator, _count);
 			var size = _values.ElementSize;
 
-			MemoryExt.MemClear(valueA, size);
+			MemoryExt.MemMove(valueB, valueA, size);
+			MemoryExt.MemClear(valueB, size);
 
+			E.ASSERT(_count >= 0);
 			return true;
 		}
 

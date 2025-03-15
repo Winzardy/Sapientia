@@ -262,9 +262,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Fill<T>(Allocator* allocator, in T value, int from, int to) where T: unmanaged
+		public void Fill<T>(Allocator* allocator, in T value, int fromIndex, int count) where T: unmanaged
 		{
-			allocator->MemFill(ptr.memPtr, value, from, to - from);
+			allocator->MemFill(ptr.memPtr, value, fromIndex, count);
 		}
 
 		[INLINE(256)]
