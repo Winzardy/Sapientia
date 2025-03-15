@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using Sapientia.Extensions;
 using Sapientia.Extensions.Reflection;
@@ -84,6 +83,7 @@ namespace Sapientia.TypeIndexer
 			var sourceBuilder = new StringBuilder();
 			sourceBuilder.AppendLine("using System;");
 			sourceBuilder.AppendLine("using System.Collections.Generic;");
+			sourceBuilder.AppendLine("using Sapientia.Extensions;");
 			sourceBuilder.AppendLine("using Sapientia.MemoryAllocator.Data;");
 			sourceBuilder.AppendLine("");
 			sourceBuilder.AppendLine("namespace Sapientia.TypeIndexer");
@@ -138,12 +138,12 @@ namespace Sapientia.TypeIndexer
 				parametersString = parametersString.Replace("(", "(void* __executorPtr" + (parameters.Length > 0 ? ", " : string.Empty));
 				parametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__executorPtr" + (parameters.Length > 0 ? ", " : string.Empty));
 
-				sourceBuilder.AppendLine($"		internal delegate {returnTypeString} {methodInfo.Name}Delegate{genericParametersString}{parametersString};");
+				sourceBuilder.AppendLine($"		public delegate {returnTypeString} {methodInfo.Name}Delegate{genericParametersString}{parametersString};");
 				sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 				sourceBuilder.AppendLine($"		public readonly {returnTypeString} {methodInfo.Name}{genericParametersString}{parametersString}");
 				sourceBuilder.AppendLine($"		{{");
-				sourceBuilder.AppendLine($"			var __compiledMethod = {nameof(IndexedTypes)}.{nameof(IndexedTypes.GetCompiledMethod)}(this._firstDelegateIndex + {delegateIndex});");
-				sourceBuilder.AppendLine($"			var __method = {typeof(Marshal).FullName}.{nameof(Marshal.GetDelegateForFunctionPointer)}<{methodInfo.Name}Delegate{genericParametersString}>(__compiledMethod.functionPointer);");
+				sourceBuilder.AppendLine($"			var __delegate = {nameof(IndexedTypes)}.{nameof(IndexedTypes.GetDelegate)}(this._firstDelegateIndex + {delegateIndex});");
+				sourceBuilder.AppendLine($"			var __method = UnsafeExt.As<{nameof(Delegate)}, {methodInfo.Name}Delegate{genericParametersString}>(__delegate);");
 				if (returnType.IsVoid())
 					sourceBuilder.AppendLine($"			__method.Invoke{genericParametersString}{parametersWithoutTypeString};");
 				else
@@ -303,9 +303,9 @@ namespace Sapientia.TypeIndexer
 				sourceBuilder.AppendLine("		[UnityEngine.Scripting.Preserve]");
 				sourceBuilder.AppendLine("#endif");
 				sourceBuilder.AppendLine($"		{MethodImplAttribute}");
-				sourceBuilder.AppendLine($"		public static {nameof(CompiledMethod)} Compile{methodInfo.Name}{genericParametersString}()");
+				sourceBuilder.AppendLine($"		public static {nameof(Delegate)} Create{methodInfo.Name}Delegate{genericParametersString}()");
 				sourceBuilder.AppendLine($"		{{");
-				sourceBuilder.AppendLine($"			return {nameof(CompiledMethod)}.Create<{baseType.Name}Proxy.{methodInfo.Name}Delegate>({methodInfo.Name}{genericParametersString});");
+				sourceBuilder.AppendLine($"			return new {baseType.Name}Proxy.{methodInfo.Name}Delegate({methodInfo.Name}{genericParametersString});");
 				sourceBuilder.AppendLine($"		}}");
 			}
 

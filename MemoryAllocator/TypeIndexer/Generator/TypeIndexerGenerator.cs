@@ -101,7 +101,7 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("				typeToIndex.Add(indexToType[i], i);");
 			sourceBuilder.AppendLine("			}");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine($"			var delegateIndexToCompiledMethod = new {nameof(CompiledMethod)}[]");
+			sourceBuilder.AppendLine($"			var delegateIndexToDelegate = new {nameof(Delegate)}[]");
 			sourceBuilder.AppendLine("			{");
 			sourceBuilder.AppendLine("#if PROXY_REFACTORING");
 			sourceBuilder.AppendLine("#else");
@@ -120,7 +120,7 @@ namespace Sapientia.TypeIndexer
 
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.Initialize)}(typeToIndex, indexToType, delegateIndexToCompiledMethod, typeToDelegateIndex);");
+			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.Initialize)}(typeToIndex, indexToType, delegateIndexToDelegate, typeToDelegateIndex);");
 			sourceBuilder.AppendLine("		}");
 			sourceBuilder.AppendLine("	}");
 			sourceBuilder.AppendLine("}");
@@ -146,7 +146,7 @@ namespace Sapientia.TypeIndexer
 							continue;
 						var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
 
-						var body = $"				{baseType.Name}Proxy<{child.GetFullName()}>.Compile{methodInfo.Name}{genericParametersString}(),";
+						var body = $"				{baseType.Name}Proxy<{child.GetFullName()}>.Create{methodInfo.Name}Delegate{genericParametersString}(),";
 						Debug.Assert(duplicates.Add(body));
 						sourceBuilder.AppendLine(body);
 					}

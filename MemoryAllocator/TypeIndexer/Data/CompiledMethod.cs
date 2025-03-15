@@ -26,7 +26,7 @@ namespace Sapientia.TypeIndexer
 			return new CompiledMethod
 			{
 				handle = handle,
-				functionPointer = Marshal.GetFunctionPointerForDelegate(call),
+				functionPointer = Marshal.GetFunctionPointerForDelegate<TDelegate>(call),
 			};
 		}
 

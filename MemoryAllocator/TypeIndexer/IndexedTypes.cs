@@ -32,15 +32,15 @@ namespace Sapientia.TypeIndexer
 		/// Причём, методы создаются пачками для каждого конкретного наследника интерфейса.
 		/// Поэтому зная индекс первого метода, можно получить все остальные методы для конкретного наследника интерфейса.
 		/// </summary>
-		private static CompiledMethod[] _delegateIndexToCompiledMethod = Array.Empty<CompiledMethod>();
+		private static Delegate[] _delegateIndexToCompiledMethod;
 		/// <summary>
 		/// Получаем индекс первого метода для интерфейса (ProxyIndex) и его наследника (TypeIndex).
 		/// </summary>
-		private static System.Collections.Generic.Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> _typeToDelegateIndex = new();
+		private static System.Collections.Generic.Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> _typeToDelegateIndex;
 
 		public static void Initialize(System.Collections.Generic.Dictionary<Type, TypeIndex> typeToIndex,
 			Type[] indexToType,
-			CompiledMethod[] delegateIndexToCompiledMethod, System.Collections.Generic.Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> typeToDelegateIndex)
+			Delegate[] delegateIndexToCompiledMethod, System.Collections.Generic.Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> typeToDelegateIndex)
 		{
 			_typeToIndex = typeToIndex;
 			_indexToType = indexToType;
@@ -67,11 +67,11 @@ namespace Sapientia.TypeIndexer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CompiledMethod GetCompiledMethod(DelegateIndex delegateIndex)
 		{
-			return _delegateIndexToCompiledMethod[delegateIndex];
+			return default;// _delegateIndexToCompiledMethod[delegateIndex];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CompiledMethod GetCompiledMethod(int delegateIndex)
+		public static Delegate GetDelegate(int delegateIndex)
 		{
 			return _delegateIndexToCompiledMethod[delegateIndex];
 		}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.TypeIndexer
@@ -22,30 +23,30 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		internal delegate void EntityPtrArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count);
+		public delegate void EntityPtrArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void EntityPtrArrayDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void** elementsPtr, System.Int32 count)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 0);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityPtrArrayDestroyedDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
+			var __method = UnsafeExt.As<Delegate, EntityPtrArrayDestroyedDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator, elementsPtr, count);
 		}
 
-		internal delegate void EntityArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count);
+		public delegate void EntityArrayDestroyedDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void EntityArrayDestroyed(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, void* elementsPtr, System.Int32 count)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 1);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityArrayDestroyedDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 1);
+			var __method = UnsafeExt.As<Delegate, EntityArrayDestroyedDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator, elementsPtr, count);
 		}
 
-		internal delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
+		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 2);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<ProxyDisposeDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 2);
+			var __method = UnsafeExt.As<Delegate, ProxyDisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator);
 		}
 
@@ -167,9 +168,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileEntityPtrArrayDestroyed()
+		public static Delegate CreateEntityPtrArrayDestroyedDelegate()
 		{
-			return CompiledMethod.Create<IElementDestroyHandlerProxy.EntityPtrArrayDestroyedDelegate>(EntityPtrArrayDestroyed);
+			return new IElementDestroyHandlerProxy.EntityPtrArrayDestroyedDelegate(EntityPtrArrayDestroyed);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
@@ -191,9 +192,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileEntityArrayDestroyed()
+		public static Delegate CreateEntityArrayDestroyedDelegate()
 		{
-			return CompiledMethod.Create<IElementDestroyHandlerProxy.EntityArrayDestroyedDelegate>(EntityArrayDestroyed);
+			return new IElementDestroyHandlerProxy.EntityArrayDestroyedDelegate(EntityArrayDestroyed);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
@@ -215,9 +216,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileProxyDispose()
+		public static Delegate CreateProxyDisposeDelegate()
 		{
-			return CompiledMethod.Create<IElementDestroyHandlerProxy.ProxyDisposeDelegate>(ProxyDispose);
+			return new IElementDestroyHandlerProxy.ProxyDisposeDelegate(ProxyDispose);
 		}
 	}
 }

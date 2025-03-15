@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.TypeIndexer
@@ -22,48 +23,48 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		internal delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
+		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 0);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<ProxyDisposeDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
+			var __method = UnsafeExt.As<Delegate, ProxyDisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator);
 		}
 
-		internal delegate void InitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self);
+		public delegate void InitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Initialize(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 1);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<InitializeDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 1);
+			var __method = UnsafeExt.As<Delegate, InitializeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator, self);
 		}
 
-		internal delegate void LateInitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self);
+		public delegate void LateInitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void LateInitialize(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 2);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<LateInitializeDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 2);
+			var __method = UnsafeExt.As<Delegate, LateInitializeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator, self);
 		}
 
-		internal delegate void StartDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self);
+		public delegate void StartDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Start(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 3);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<StartDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 3);
+			var __method = UnsafeExt.As<Delegate, StartDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator, self);
 		}
 
-		internal delegate void DisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self);
+		public delegate void DisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, Sapientia.MemoryAllocator.Data.IndexedPtr self)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 4);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<DisposeDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 4);
+			var __method = UnsafeExt.As<Delegate, DisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator, self);
 		}
 
@@ -245,9 +246,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileProxyDispose()
+		public static Delegate CreateProxyDisposeDelegate()
 		{
-			return CompiledMethod.Create<IWorldStatePartProxy.ProxyDisposeDelegate>(ProxyDispose);
+			return new IWorldStatePartProxy.ProxyDisposeDelegate(ProxyDispose);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
@@ -269,9 +270,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileInitialize()
+		public static Delegate CreateInitializeDelegate()
 		{
-			return CompiledMethod.Create<IWorldStatePartProxy.InitializeDelegate>(Initialize);
+			return new IWorldStatePartProxy.InitializeDelegate(Initialize);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
@@ -293,9 +294,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileLateInitialize()
+		public static Delegate CreateLateInitializeDelegate()
 		{
-			return CompiledMethod.Create<IWorldStatePartProxy.LateInitializeDelegate>(LateInitialize);
+			return new IWorldStatePartProxy.LateInitializeDelegate(LateInitialize);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
@@ -317,9 +318,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileStart()
+		public static Delegate CreateStartDelegate()
 		{
-			return CompiledMethod.Create<IWorldStatePartProxy.StartDelegate>(Start);
+			return new IWorldStatePartProxy.StartDelegate(Start);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
@@ -341,9 +342,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileDispose()
+		public static Delegate CreateDisposeDelegate()
 		{
-			return CompiledMethod.Create<IWorldStatePartProxy.DisposeDelegate>(Dispose);
+			return new IWorldStatePartProxy.DisposeDelegate(Dispose);
 		}
 	}
 }

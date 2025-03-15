@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.TypeIndexer
@@ -22,21 +23,21 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		internal delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.Entity entity);
+		public delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.Entity entity);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void EntityKilled(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 0);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<EntityKilledDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
+			var __method = UnsafeExt.As<Delegate, EntityKilledDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator, in entity);
 		}
 
-		internal delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
+		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator* allocator)
 		{
-			var __compiledMethod = IndexedTypes.GetCompiledMethod(this._firstDelegateIndex + 1);
-			var __method = System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<ProxyDisposeDelegate>(__compiledMethod.functionPointer);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 1);
+			var __method = UnsafeExt.As<Delegate, ProxyDisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, allocator);
 		}
 
@@ -128,9 +129,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileEntityKilled()
+		public static Delegate CreateEntityKilledDelegate()
 		{
-			return CompiledMethod.Create<IKillSubscriberProxy.EntityKilledDelegate>(EntityKilled);
+			return new IKillSubscriberProxy.EntityKilledDelegate(EntityKilled);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
@@ -152,9 +153,9 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static CompiledMethod CompileProxyDispose()
+		public static Delegate CreateProxyDisposeDelegate()
 		{
-			return CompiledMethod.Create<IKillSubscriberProxy.ProxyDisposeDelegate>(ProxyDispose);
+			return new IKillSubscriberProxy.ProxyDisposeDelegate(ProxyDispose);
 		}
 	}
 }

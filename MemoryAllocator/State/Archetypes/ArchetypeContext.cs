@@ -65,7 +65,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasElement(Entity entity)
 		{
-			return innerArchetype->HasElement(entity);
+			return innerArchetype->HasElement(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
