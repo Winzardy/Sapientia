@@ -195,6 +195,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public bool Resize(int newLength, ClearOptions options = ClearOptions.ClearMemory)
+		{
+			return innerArray.Resize<T>(GetAllocatorPtr(), newLength, options);
+		}
+
+		[INLINE(256)]
 		public bool Resize(Allocator* allocator, int newLength, ClearOptions options = ClearOptions.ClearMemory)
 		{
 			return innerArray.Resize<T>(allocator, newLength, options);

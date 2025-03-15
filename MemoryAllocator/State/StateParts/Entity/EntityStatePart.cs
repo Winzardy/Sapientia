@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections.Fixed;
+using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 
@@ -18,12 +19,12 @@ namespace Sapientia.MemoryAllocator.State
 		public int EntitiesCapacity { get; private set; }
 		public int ExpandStep { get; private set; }
 
-		private List<ushort> _freeEntitiesIds;
-		private List<ushort> _entityIdToGeneration;
+		private MemArray<ushort> _freeEntitiesIds;
+		private MemArray<ushort> _entityIdToGeneration;
 		private ProxyEvent<IEntityDestroySubscriberProxy> _entityDestroySubscribers;
 
 #if UNITY_EDITOR
-		public List<FixedString64Bytes> entityIdToName;
+		public MemArray<FixedString64Bytes> entityIdToName;
 		public int MaxEntitiesCount { get; private set; }
 #endif
 
@@ -45,11 +46,11 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void Initialize(Allocator* allocator, IndexedPtr self)
 		{
-			_freeEntitiesIds = new (allocator, EntitiesCapacity);
-			_entityIdToGeneration = new(allocator, EntitiesCapacity);
-			_entityDestroySubscribers = new(allocator, 128);
+			_freeEntitiesIds = new MemArray<ushort>(allocator, EntitiesCapacity, ClearOptions.UninitializedMemory);
+			_entityIdToGeneration = new MemArray<ushort>(allocator, EntitiesCapacity);
+			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(allocator, 128);
 #if UNITY_EDITOR
-			entityIdToName = new (allocator, EntitiesCapacity);
+			entityIdToName = new MemArray<FixedString64Bytes>(allocator, EntitiesCapacity);
 #endif
 
 			for (ushort i = 0; i < EntitiesCapacity; i++)
@@ -91,7 +92,7 @@ namespace Sapientia.MemoryAllocator.State
 
 #endif
 		{
-			EnsureCapacity(EntitiesCount);
+			EnsureCapacity(allocator, EntitiesCount);
 
 			var id = _freeEntitiesIds[allocator, EntitiesCount++];
 			var generation = ++_entityIdToGeneration[allocator, id];
@@ -137,7 +138,7 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		private void EnsureCapacity(int index)
+		private void EnsureCapacity(Allocator* allocator, int index)
 		{
 			if (index < EntitiesCapacity)
 				return;
@@ -146,10 +147,10 @@ namespace Sapientia.MemoryAllocator.State
 				EntitiesCapacity += ExpandStep;
 			while (index >= EntitiesCapacity);
 
-			_freeEntitiesIds.EnsureCapacity(EntitiesCapacity);
-			_entityIdToGeneration.EnsureCapacity(EntitiesCapacity);
+			_freeEntitiesIds.Resize(allocator, EntitiesCapacity);
+			_entityIdToGeneration.Resize(allocator, EntitiesCapacity);
 #if UNITY_EDITOR
-			entityIdToName.EnsureCapacity(EntitiesCapacity);
+			entityIdToName.Resize(allocator, EntitiesCapacity);
 #endif
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && ARCHETYPES_DEBUG)
 			UnityEngine.Debug.LogWarning($"Entities Capacity was expanded to {EntitiesCapacity}");
