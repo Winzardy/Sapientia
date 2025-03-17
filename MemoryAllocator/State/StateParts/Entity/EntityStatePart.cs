@@ -59,7 +59,7 @@ namespace Sapientia.MemoryAllocator.State
 			}
 
 #if UNITY_EDITOR
-			WorldEntity = CreateEntity(allocator, "SHARED");
+			WorldEntity = CreateEntity(allocator, "World");
 #else
 			WorldEntity = CreateEntity(allocator);
 #endif

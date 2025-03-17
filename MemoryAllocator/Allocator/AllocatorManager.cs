@@ -107,9 +107,9 @@ namespace Sapientia.MemoryAllocator
 			if (!allocatorId.IsValid())
 				throw new ArgumentException($"{nameof(AllocatorId)} with such Id [id: {allocatorId.id}] doesn't exist.");
 
-			_allocators[allocatorId.index]->Dispose();
 			if (_currentAllocator == _allocators[allocatorId.index])
 				SetCurrentAllocator(null);
+			_allocators[allocatorId.index]->Dispose();
 
 			_allocators[allocatorId.index] = _allocators[_count - 1];
 			_count--;
