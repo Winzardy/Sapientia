@@ -14,6 +14,17 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly ushort generation;
 		public AllocatorId allocatorId;
 
+#if UNITY_EDITOR
+		public string Name
+		{
+			get
+			{
+				var allocator = allocatorId.GetAllocatorPtr();
+				return allocator->GetService<EntityStatePart>().entityIdToName[allocator, id].ToString();
+			}
+		}
+#endif
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Allocator* GetAllocatorPtr()
 		{

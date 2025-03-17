@@ -315,6 +315,21 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T TryGetElement<T>(Allocator* allocator, Entity entity, out bool isExist) where T : unmanaged
+		{
+			if (_elements.Has(allocator, entity.id))
+			{
+				ref var element = ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id);
+				Debug.Assert(element.entity == entity);
+
+				isExist = true;
+				return ref element.value;
+			}
+			isExist = false;
+			return ref TDefaultValue<T>.value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement<T>(Allocator* allocator, Entity entity, out bool isCreated) where T : unmanaged
 		{
 			if (_elements.Has(allocator, entity.id))

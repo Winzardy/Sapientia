@@ -81,6 +81,12 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T TryGetElement(Entity entity, out bool isExist)
+		{
+			return ref innerArchetype->TryGetElement<T>(allocator, entity, out isExist);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
 			innerArchetype->Clear<T>();
