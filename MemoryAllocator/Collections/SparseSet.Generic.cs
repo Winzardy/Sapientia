@@ -91,6 +91,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int GetIdByIndex(Allocator* allocator, int denseId)
+		{
+			return _innerSet.GetIdByIndex(allocator, denseId);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(Allocator* allocator, int id)
 		{
 			return _innerSet.Has(allocator, id);

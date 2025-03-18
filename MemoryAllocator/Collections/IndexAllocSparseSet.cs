@@ -6,7 +6,7 @@ namespace Sapientia.MemoryAllocator
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct IndexAllocSparseSet<T> where T: unmanaged
 	{
-		private Stack<int> _indexes;
+		private Stack<int> _ids;
 		private SparseSet<T> _sparseSet;
 
 		private int _count;
@@ -31,7 +31,7 @@ namespace Sapientia.MemoryAllocator
 
 		public IndexAllocSparseSet(Allocator* allocator, int capacity, int sparseCapacity, int expandStep = 0)
 		{
-			_indexes = new Stack<int>(allocator, capacity);
+			_ids = new Stack<int>(allocator, capacity);
 			_sparseSet = new SparseSet<T>(allocator, capacity, sparseCapacity, expandStep);
 			_count = 0;
 		}
@@ -39,7 +39,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Allocator* GetAllocatorPtr()
 		{
-			return _indexes.GetAllocatorPtr();
+			return _ids.GetAllocatorPtr();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,19 +81,27 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int AllocateId(Allocator* allocator)
 		{
-			if (_indexes.Count <= 0)
-				_indexes.Push(allocator, _count + 1);
+			if (_ids.Count <= 0)
+				_ids.Push(allocator, _count + 1);
 
-			var id = _indexes.Pop(allocator);
+			var id = _ids.Pop(allocator);
 			_count++;
 			return id;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ReleaseIndex(Allocator* allocator, int index)
+		{
+			var id = _sparseSet.GetIdByIndex(allocator, index);
+			ReleaseId(allocator, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReleaseId(Allocator* allocator, int id)
 		{
 			_sparseSet.RemoveSwapBack(allocator, id);
-			_indexes.Push(allocator, id);
+			_ids.Push(allocator, id);
+			_count--;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -105,7 +113,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(Allocator* allocator)
 		{
-			_indexes.Dispose(allocator);
+			_ids.Dispose(allocator);
 			_sparseSet.Dispose(allocator);
 			_count = 0;
 		}
@@ -113,7 +121,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
-			_indexes.Clear();
+			_ids.Clear();
 			_sparseSet.Clear();
 			_count = 0;
 		}
@@ -121,7 +129,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ClearFast()
 		{
-			_indexes.Clear();
+			_ids.Clear();
 			_sparseSet.ClearFast();
 			_count = 0;
 		}

@@ -135,6 +135,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int GetIdByIndex(Allocator* allocator, int denseId)
+		{
+			return _sparse[allocator, denseId];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Get<T>(Allocator* allocator, int id) where T: unmanaged
 		{
 			return ref _values.GetValue<T>(allocator, _sparse[allocator, id]);
