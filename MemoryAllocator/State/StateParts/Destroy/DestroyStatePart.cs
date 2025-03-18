@@ -53,6 +53,9 @@ namespace Sapientia.MemoryAllocator.State
 				value.children.Clear();
 				value.parents.Clear();
 				value.killCallbackHolders.Clear();
+
+				if (!value.killCallbacks.IsCreated)
+					continue;
 				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(allocator))
 				{
 					component->callback.Dispose(allocator);

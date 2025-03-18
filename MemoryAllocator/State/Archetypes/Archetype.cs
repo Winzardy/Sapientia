@@ -462,7 +462,7 @@ namespace Sapientia.MemoryAllocator.State
 				{
 					var entityId = entities[i].id;
 					if (!_elements.Has(allocator, entityId))
-						return;
+						continue;
 					archetypeEntities[archetypeEntitiesCount++] = _elements.GetValuePtr(allocator, entityId);
 				}
 

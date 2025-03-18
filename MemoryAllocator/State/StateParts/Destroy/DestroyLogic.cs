@@ -133,9 +133,11 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsAlive(Entity entity)
 		{
-			return !destroyRequestArchetype.HasElement(entity) &&
-					!killRequestArchetype.HasElement(entity) &&
-					entityStatePart->IsEntityExist(allocator, entity);
+			if (destroyRequestArchetype.HasElement(entity))
+				return false;
+			if (killRequestArchetype.HasElement(entity))
+				return false;
+			return entityStatePart->IsEntityExist(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
