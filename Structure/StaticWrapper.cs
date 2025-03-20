@@ -3,7 +3,7 @@
 namespace Sapientia
 {
 	/// <summary>
-	/// Смесь двух паттернов Provider и Strategy. Используется для инфраструктурных сервисов, минуя ServiceLocator/DI
+	/// Статический сервис, cмесь двух паттернов Provider и Strategy. Используется для инфраструктурных сервисов, минуя ServiceLocator/DI
 	/// </summary>
 	public abstract class StaticWrapper<T> where T : class
 	{
