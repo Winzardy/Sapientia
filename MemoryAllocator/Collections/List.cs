@@ -49,8 +49,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public List(Allocator* allocator, int capacity = 8)
 		{
-			Debug.Assert(capacity > 0u);
-
 			this = default;
 			EnsureCapacity(allocator, capacity);
 		}

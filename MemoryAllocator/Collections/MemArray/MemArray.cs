@@ -44,12 +44,6 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public MemArray(Allocator* allocator, int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
-			if (length == 0u)
-			{
-				this = Empty;
-				return;
-			}
-
 			this = default;
 			ptr = default;
 			var memPtr = allocator->AllocArray(elementSize, length, out var tPtr);
