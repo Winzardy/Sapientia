@@ -34,23 +34,30 @@ namespace Sapientia.MemoryAllocator.State
 				return;
 
 			var tickTime = updateStatePart.stateUpdateData.tickTime;
-			deltaTime *= updateStatePart.stateUpdateData.gameSpeed;
-
-			updateStatePart.worldTimeDebt += deltaTime;
 
 			if (tickTime <= 0f)
 				return;
+
+			deltaTime *= updateStatePart.stateUpdateData.gameSpeed;
+			updateStatePart.worldTimeDebt += deltaTime;
 
 			var ticksToUpdate = (updateStatePart.worldTimeDebt / tickTime).FloorToInt_Positive();
 			Debug.Assert(ticksToUpdate <= MAX_TICKS_PER_FRAME, $"{ticksToUpdate} ticks was scheduled in this frame.");
 
 			if (ticksToUpdate > 0)
 			{
-				// Если тиков больше, чем максимально допустимо, то отбрасываем лишние
-				ticksToUpdate = ticksToUpdate.Min(MAX_TICKS_PER_FRAME);
-
 				var logicDeltaTime = ticksToUpdate * tickTime;
-				updateStatePart.worldTimeDebt -= logicDeltaTime;
+
+				// Если тиков больше, чем максимально допустимо, то отбрасываем лишние
+				if (MAX_TICKS_PER_FRAME < ticksToUpdate)
+				{
+					ticksToUpdate = MAX_TICKS_PER_FRAME;
+					logicDeltaTime = ticksToUpdate * tickTime;
+
+					updateStatePart.worldTimeDebt = 0;
+				}
+				else
+					updateStatePart.worldTimeDebt -= logicDeltaTime;
 
 				GetWorld()->Update(logicDeltaTime);
 			}

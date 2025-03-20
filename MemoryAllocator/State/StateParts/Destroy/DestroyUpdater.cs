@@ -102,9 +102,9 @@ namespace Sapientia.MemoryAllocator.State
 						killCallback.callback.Dispose(_allocator);
 					}
 
-					if (!_killElementsArchetype.HasElement(killCallback.target) || !_entitiesStatePart->IsEntityExist(_allocator, killCallback.target))
+					ref var targetElement = ref _killElementsArchetype.TryGetElement(killCallback.target, out var isExist);
+					if (!isExist || !_entitiesStatePart->IsEntityExist(_allocator, killCallback.target))
 						continue;
-					ref var targetElement = ref _killElementsArchetype.GetElement(killCallback.target);
 					if (targetElement.killCallbackHolders.IsCreated)
 						continue;
 
@@ -145,9 +145,9 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		private void KillChild(in Entity entity)
 		{
-			if (!_killElementsArchetype.HasElement(entity))
+			ref var destroyElement = ref _killElementsArchetype.TryGetElement(entity, out var isExist);
+			if (!isExist)
 				return;
-			ref var destroyElement = ref _killElementsArchetype.GetElement(entity);
 
 			if (!destroyElement.parents.IsCreated)
 				return;
@@ -155,9 +155,9 @@ namespace Sapientia.MemoryAllocator.State
 			for (var i = 0; i < destroyElement.parents.Count; i++)
 			{
 				var parent = destroyElement.parents[_allocator, i];
-				if (!_killElementsArchetype.HasElement(parent) || !_entitiesStatePart->IsEntityExist(_allocator, parent))
+				ref var parentElement = ref _killElementsArchetype.TryGetElement(parent, out var isParentExist);
+				if (!isParentExist || !_entitiesStatePart->IsEntityExist(_allocator, parent))
 					continue;
-				ref var parentElement = ref _killElementsArchetype.GetElement(parent);
 				for (var j = 0; j < parentElement.children.Count; j++)
 				{
 					if (parentElement.children[_allocator, j].id == entity.id)
@@ -176,18 +176,20 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		private void KillParent(in Entity entity)
 		{
-			if (!_killElementsArchetype.HasElement(entity))
+			ref var destroyElement = ref _killElementsArchetype.TryGetElement(entity, out var isExist);
+			if (!isExist)
 				return;
-			ref var destroyElement = ref _killElementsArchetype.GetElement(entity);
 
 			if (!destroyElement.children.IsCreated)
 				return;
 			for (var i = 0; i < destroyElement.children.Count; i++)
 			{
 				var child = destroyElement.children[_allocator, i];
-				if (_killRequestArchetype.HasElement(child) || !_entitiesStatePart->IsEntityExist(child))
+
+				_killRequestArchetype.GetElement(child, out var isChildExist);
+				if (isChildExist || !_entitiesStatePart->IsEntityExist(child))
 					continue;
-				_killRequestArchetype.GetElement(child);
+
 				KillParent(child);
 			}
 			destroyElement.children.Clear();

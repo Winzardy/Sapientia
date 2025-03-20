@@ -26,6 +26,11 @@ namespace Sapientia.MemoryAllocator.State
 #if UNITY_EDITOR
 		public MemArray<FixedString64Bytes> entityIdToName;
 		public int MaxEntitiesCount { get; private set; }
+
+		public string GetEntityName(Allocator* allocator, in Entity entity)
+		{
+			return entityIdToName[allocator, entity.id].ToString();
+		}
 #endif
 
 		public EntityStatePart(int entitiesCapacity, int expandStep = 512)

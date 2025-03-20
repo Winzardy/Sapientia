@@ -28,10 +28,9 @@ namespace Sapientia.MemoryAllocator.State
 		public void RequestDestroy(Entity entity)
 		{
 			Debug.Assert(IsAlive(entity));
+			Debug.Assert(!killRequestArchetype.HasElement(entity));
 
 			destroyRequestArchetype.GetElement(entity);
-
-			Debug.Assert(!killElementArchetype.HasElement(entity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

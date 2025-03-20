@@ -20,7 +20,7 @@ namespace Sapientia.MemoryAllocator.State
 			get
 			{
 				var allocator = allocatorId.GetAllocatorPtr();
-				return allocator->GetService<EntityStatePart>().entityIdToName[allocator, id].ToString();
+				return allocator->GetService<EntityStatePart>().GetEntityName(allocator, this);
 			}
 		}
 #endif

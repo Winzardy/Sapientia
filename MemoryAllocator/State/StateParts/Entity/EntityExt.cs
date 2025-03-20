@@ -13,6 +13,8 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsExist(this ref Entity entity)
 		{
+			if (!entity.allocatorId.IsValid())
+				return false;
 			return !entity.IsEmpty() && entity.IsExist(entity.GetAllocatorPtr());
 		}
 
