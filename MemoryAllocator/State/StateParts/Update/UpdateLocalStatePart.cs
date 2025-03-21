@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace Sapientia.MemoryAllocator.State
 {
 	public class UpdateLocalStatePart : IWoldLocalStatePart
@@ -17,13 +15,12 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void ResumeSimulation()
 		{
-			Debug.Assert(_pauseCount > 0);
-			_pauseCount--;
+			if (_pauseCount > 0)
+				_pauseCount--;
 		}
 
 		public void PauseSimulation()
 		{
-			Debug.Assert(_pauseCount >= 0);
 			_pauseCount++;
 		}
 
