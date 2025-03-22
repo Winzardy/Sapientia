@@ -24,6 +24,11 @@ namespace Sapientia.MemoryAllocator.State
 			return _allocatorId.GetAllocatorPtr()->GetServicePtr<World>();
 		}
 
+		public void Start()
+		{
+			GetWorld()->Start();
+		}
+
 		public void Update(float deltaTime)
 		{
 			if (!IsValid)

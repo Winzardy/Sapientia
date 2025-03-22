@@ -15,7 +15,7 @@ namespace Sapientia.MemoryAllocator.State
 		public List<ProxyPtr<IWorldElementProxy>> worldElements;
 		public List<ProxyPtr<IWorldSystemProxy>> worldSystems;
 
-		public bool IsStarted => Tick > 0u;
+		public bool IsStarted { get; private set; }
 
 		public static World* Create(Allocator* allocator, int elementsCapacity = 64)
 		{
@@ -23,6 +23,7 @@ namespace Sapientia.MemoryAllocator.State
 			world->Tick = 0u;
 			world->Time = 0f;
 			world->ScheduleLateUpdate = false;
+			world->IsStarted = false;
 
 			world->allocatorId = allocator->allocatorId;
 			world->worldElements = new (allocator, elementsCapacity);
@@ -66,19 +67,26 @@ namespace Sapientia.MemoryAllocator.State
 			allocator->RegisterService(element);
 		}
 
-		public void Update(float deltaTime)
+		public void Start()
 		{
+			E.ASSERT(!IsStarted);
+
 			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 
-			if (!IsStarted)
+			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
 			{
-				foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
-				{
-					element->Start(allocator, allocator, element->indexedPtr);
-				}
-
-				SendStartedMessage();
+				element->Start(allocator, allocator, element->indexedPtr);
 			}
+			IsStarted = true;
+
+			SendStartedMessage();
+		}
+
+		public void Update(float deltaTime)
+		{
+			E.ASSERT(IsStarted);
+
+			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 
 			Tick++;
 			Time += deltaTime;

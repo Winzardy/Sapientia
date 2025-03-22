@@ -65,12 +65,6 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CompiledMethod GetCompiledMethod(DelegateIndex delegateIndex)
-		{
-			return default;// _delegateIndexToCompiledMethod[delegateIndex];
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Delegate GetDelegate(int delegateIndex)
 		{
 			return _delegateIndexToCompiledMethod[delegateIndex];
