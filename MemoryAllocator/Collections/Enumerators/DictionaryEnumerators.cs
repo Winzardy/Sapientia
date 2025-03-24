@@ -93,9 +93,9 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool MoveNext()
 		{
-			while (_index < _count)
+			while (++_index < _count)
 			{
-				if (_entries[_index++].hashCode >= 0)
+				if (_entries[_index].hashCode >= 0)
 					return true;
 			}
 
@@ -106,7 +106,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Reset()
 		{
-			_index = 0;
+			_index = -1;
 		}
 
 		object IEnumerator.Current
@@ -118,7 +118,7 @@ namespace Sapientia.MemoryAllocator
 		public IntPtr Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (IntPtr)(&(_entries + _index - 1)->value);
+			get => (IntPtr)(&(_entries + _index)->value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -141,26 +141,26 @@ namespace Sapientia.MemoryAllocator
 		{
 			_entries = entries;
 			_count = count;
-			_index = 0;
+			_index = -1;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool MoveNext()
 		{
-			while (_index < _count)
+			while (++_index < _count)
 			{
-				if (_entries[_index++].hashCode >= 0)
+				if (_entries[_index].hashCode >= 0)
 					return true;
 			}
 
-			_index = _count + 1;
+			_index = _count;
 			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Reset()
 		{
-			_index = 0;
+			_index = -1;
 		}
 
 		object IEnumerator.Current

@@ -8,7 +8,7 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 namespace Sapientia.MemoryAllocator
 {
 	[DebuggerTypeProxy(typeof(ListProxy<>))]
-	public unsafe struct List<T> : IIsCreated, IListEnumerable<T> where T : unmanaged
+	public unsafe struct List<T> : IListEnumerable<T> where T : unmanaged
 	{
 		private MemArray<T> _arr;
 		private int _count;
@@ -41,13 +41,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public List(int capacity = 8) : this(AllocatorManager.CurrentAllocatorPtr, capacity)
+		public List(int capacity = 0) : this(AllocatorManager.CurrentAllocatorPtr, capacity)
 		{
 
 		}
 
 		[INLINE(256)]
-		public List(Allocator* allocator, int capacity = 8)
+		public List(Allocator* allocator, int capacity = 0)
 		{
 			this = default;
 			EnsureCapacity(allocator, capacity);
@@ -156,7 +156,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool EnsureCapacity(Allocator* allocator, int capacity)
 		{
-			capacity = Helpers.NextPot(capacity);
+			capacity = capacity.NextPowerOfTwo();
 			return _arr.Resize(allocator, capacity, ClearOptions.UninitializedMemory);
 		}
 
@@ -466,7 +466,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator* allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator* allocator)
 		{
 			return new (new (GetValuePtr(allocator), Count));
 		}

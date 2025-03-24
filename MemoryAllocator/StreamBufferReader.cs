@@ -6,8 +6,8 @@ namespace Sapientia.MemoryAllocator.Core
 	public unsafe struct StreamBufferReader
 	{
 		private readonly byte* arr;
-		private readonly uint arrSize;
-		private uint position;
+		private readonly int arrSize;
+		private int position;
 
 		[INLINE(256)]
 		public StreamBufferReader(byte[] bytes)
@@ -20,7 +20,7 @@ namespace Sapientia.MemoryAllocator.Core
 				MemoryExt.MemCopy(ptr, arr, size);
 			}
 
-			arrSize = (uint)size;
+			arrSize = size;
 			position = 0;
 		}
 
@@ -32,14 +32,14 @@ namespace Sapientia.MemoryAllocator.Core
 		}
 
 		[INLINE(256)]
-		public void ReadBlittable<T>(ref T value, uint size) where T : unmanaged
+		public void ReadBlittable<T>(ref T value, int size) where T : unmanaged
 		{
 			var ptr = GetPointerAndMove(size);
 			value = *(T*)ptr;
 		}
 
 		[INLINE(256)]
-		public ref T ReadBlittable<T>(uint size) where T : unmanaged
+		public ref T ReadBlittable<T>(int size) where T : unmanaged
 		{
 			var ptr = GetPointerAndMove(size);
 			return ref *(T*)ptr;
@@ -48,7 +48,7 @@ namespace Sapientia.MemoryAllocator.Core
 		[INLINE(256)]
 		public ref T ReadBlittable<T>() where T : unmanaged
 		{
-			var ptr = GetPointerAndMove(TSize<T>.uSize);
+			var ptr = GetPointerAndMove(TSize<T>.size);
 			return ref *(T*)ptr;
 		}
 
@@ -56,7 +56,7 @@ namespace Sapientia.MemoryAllocator.Core
 		public byte* GetPointer() => arr + position;
 
 		[INLINE(256)]
-		public byte* GetPointerAndMove(uint size)
+		public byte* GetPointerAndMove(int size)
 		{
 			if (position + size > arrSize)
 				throw new System.Exception();
@@ -67,16 +67,16 @@ namespace Sapientia.MemoryAllocator.Core
 		}
 
 		[INLINE(256)]
-		public void Read(ref byte* value, uint length)
+		public void Read(ref byte* value, int length)
 		{
 			var ptr = GetPointerAndMove(length);
 			MemoryExt.MemCopy(ptr, value, length);
 		}
 
 		[INLINE(256)]
-		public void Read<T>(ref T* value, uint length) where T : unmanaged
+		public void Read<T>(ref T* value, int length) where T : unmanaged
 		{
-			var size = TSize<T>.uSize * length;
+			var size = TSize<T>.size * length;
 			var ptr = GetPointerAndMove(size);
 			MemoryExt.MemCopy(ptr, (byte*)value, size);
 		}
@@ -84,7 +84,7 @@ namespace Sapientia.MemoryAllocator.Core
 		[INLINE(256)]
 		public void Read<T>(ref T value) where T : unmanaged
 		{
-			ReadBlittable(ref value, TSize<T>.uSize);
+			ReadBlittable(ref value, TSize<T>.size);
 		}
 
 		[INLINE(256)]
@@ -111,11 +111,11 @@ namespace Sapientia.MemoryAllocator.Core
 	public unsafe struct StreamBufferWriter
 	{
 		private byte* arr;
-		private uint arrSize;
-		private uint position;
+		private int arrSize;
+		private int position;
 
 		[INLINE(256)]
-		public StreamBufferWriter(uint capacity)
+		public StreamBufferWriter(int capacity)
 		{
 			arr = default;
 			arrSize = 0;
@@ -154,7 +154,7 @@ namespace Sapientia.MemoryAllocator.Core
 		}
 
 		[INLINE(256)]
-		private void SetCapacity(uint size)
+		private void SetCapacity(int size)
 		{
 			if (size >= arrSize)
 			{
@@ -166,7 +166,7 @@ namespace Sapientia.MemoryAllocator.Core
 		public byte* GetPointer() => arr + position;
 
 		[INLINE(256)]
-		public byte* GetPointerAndMove(uint size)
+		public byte* GetPointerAndMove(int size)
 		{
 			var pos = position;
 			SetCapacity(position + size);
@@ -176,23 +176,23 @@ namespace Sapientia.MemoryAllocator.Core
 		}
 
 		[INLINE(256)]
-		public void WriteBlittable<T>(T value, uint size) where T : unmanaged
+		public void WriteBlittable<T>(T value, int size) where T : unmanaged
 		{
 			var ptr = GetPointerAndMove(size);
 			*(T*)ptr = value;
 		}
 
 		[INLINE(256)]
-		public void Write(byte* arrBytes, uint length)
+		public void Write(byte* arrBytes, int length)
 		{
 			var ptr = GetPointerAndMove(length);
 			MemoryExt.MemCopy(arrBytes, ptr, length);
 		}
 
 		[INLINE(256)]
-		public void Write<T>(T* arrBytes, uint length) where T : unmanaged
+		public void Write<T>(T* arrBytes, int length) where T : unmanaged
 		{
-			var size = TSize<T>.uSize * length;
+			var size = TSize<T>.size * length;
 			var ptr = GetPointerAndMove(size);
 			MemoryExt.MemCopy((byte*)arrBytes, ptr, size);
 		}
@@ -200,7 +200,7 @@ namespace Sapientia.MemoryAllocator.Core
 		[INLINE(256)]
 		public void Write<T>(T value) where T : unmanaged
 		{
-			WriteBlittable(value, TSize<T>.uSize);
+			WriteBlittable(value, TSize<T>.size);
 		}
 
 		[INLINE(256)]

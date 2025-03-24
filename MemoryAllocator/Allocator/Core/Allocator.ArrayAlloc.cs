@@ -9,13 +9,13 @@ namespace Sapientia.MemoryAllocator
 		public readonly MemPtr GetArrayElementPtr<T>(in MemPtr ptr, int index) where T : unmanaged
 		{
 			var size = TSize<T>.size;
-			return new MemPtr(ptr.zoneId, ptr.offset + index * size, allocatorId);
+			return new MemPtr(ptr.zoneId, ptr.zoneOffset + index * size, allocatorId);
 		}
 
 		[INLINE(256)]
 		public readonly MemPtr GetArrayElementPtr(in MemPtr ptr, int size, int index)
 		{
-			return new MemPtr(ptr.zoneId, ptr.offset + index * size, allocatorId);
+			return new MemPtr(ptr.zoneId, ptr.zoneOffset + index * size, allocatorId);
 		}
 
 		[INLINE(256)]

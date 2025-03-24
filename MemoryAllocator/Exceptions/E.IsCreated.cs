@@ -43,17 +43,6 @@ namespace Sapientia.MemoryAllocator
 	{
 		[Conditional(COND.EXCEPTIONS)]
 		[HIDE_CALLSTACK]
-		public static void IS_CREATED<T>(T obj) where T : unmanaged, IIsCreated
-		{
-			if (obj.IsCreated) return;
-			NotCreatedException.Throw(obj);
-		}
-	}
-
-	public static partial class E
-	{
-		[Conditional(COND.EXCEPTIONS)]
-		[HIDE_CALLSTACK]
 		public static void IS_CREATED<K, V>(Dictionary<K, V> dic) where K : unmanaged, System.IEquatable<K> where V : unmanaged
 		{
 			if (dic.IsCreated)

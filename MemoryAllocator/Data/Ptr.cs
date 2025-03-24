@@ -172,6 +172,11 @@ namespace Sapientia.MemoryAllocator.Data
 		{
 			return a.memPtr != b.memPtr;
 		}
+
+		public override int GetHashCode()
+		{
+			return memPtr.GetHashCode();
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -391,6 +396,11 @@ namespace Sapientia.MemoryAllocator.Data
 		public bool Equals(Ptr<T> other)
 		{
 			return memPtr == other.memPtr;
+		}
+
+		public override int GetHashCode()
+		{
+			return memPtr.GetHashCode();
 		}
 	}
 }

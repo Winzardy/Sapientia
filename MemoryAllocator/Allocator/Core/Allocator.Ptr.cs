@@ -1,5 +1,4 @@
-﻿using Sapientia.Extensions;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
+﻿using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -12,38 +11,32 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly ref T Ref<T>(MemPtr ptr) where T : unmanaged
-		{
-			return ref *(T*)GetUnsafePtr(ptr);
-		}
-
-		[INLINE(256)]
 		public readonly byte* GetUnsafePtr(in MemPtr ptr)
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
-			if (ptr.zoneId < zonesListCount && zonesList[ptr.zoneId] != null && zonesList[ptr.zoneId]->size < ptr.offset)
+			if (ptr.zoneId < zonesListCount && zonesList[ptr.zoneId] != null && zonesList[ptr.zoneId]->size < ptr.zoneOffset)
 			{
 				throw new System.Exception();
 			}
 #endif
 
-			return (byte*)zonesList[ptr.zoneId] + ptr.offset;
+			return (byte*)zonesList[ptr.zoneId] + ptr.zoneOffset;
 		}
 
 		[INLINE(256)]
 		private byte* GetUnsafePtr(in MemPtr ptr, uint offset)
 		{
-			return (byte*)zonesList[ptr.zoneId] + ptr.offset + offset;
+			return (byte*)zonesList[ptr.zoneId] + ptr.zoneOffset + offset;
 		}
 
 		[INLINE(256)]
 		private readonly byte* GetUnsafePtr(in MemPtr ptr, long offset)
 		{
-			return (byte*)zonesList[ptr.zoneId] + ptr.offset + offset;
+			return (byte*)zonesList[ptr.zoneId] + ptr.zoneOffset + offset;
 		}
 
 		[INLINE(256)]
-		private readonly MemPtr GetMemPtr(void* ptr, int zoneIndex)
+		private readonly MemPtr CreateMemPtr(void* ptr, int zoneIndex)
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
 			if (zoneIndex >= zonesListCount || zonesList[zoneIndex] == null)

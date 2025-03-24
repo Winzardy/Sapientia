@@ -9,14 +9,14 @@ namespace Sapientia.MemoryAllocator
 		public static readonly MemPtr Invalid = new (0, 0, default);
 
 		public int zoneId;
-		public int offset;
+		public int zoneOffset;
 		public AllocatorId allocatorId;
 
 		[INLINE(256)]
-		public MemPtr(int zoneId, int offset, AllocatorId allocatorId)
+		public MemPtr(int zoneId, int zoneOffset, AllocatorId allocatorId)
 		{
 			this.zoneId = zoneId;
-			this.offset = offset;
+			this.zoneOffset = zoneOffset;
 			this.allocatorId = allocatorId;
 		}
 
@@ -26,14 +26,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly bool IsValid() => offset != 0;
+		public readonly bool IsValid() => zoneOffset != 0;
 		[INLINE(256)]
-		public readonly bool IsZeroSized() => offset < 0;
+		public readonly bool IsZeroSized() => zoneOffset < 0;
 
 		[INLINE(256)]
 		public static bool operator ==(in MemPtr m1, in MemPtr m2)
 		{
-			return m1.zoneId == m2.zoneId && m1.offset == m2.offset;
+			return m1.zoneId == m2.zoneId && m1.zoneOffset == m2.zoneOffset;
 		}
 
 		[INLINE(256)]
@@ -45,7 +45,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Equals(MemPtr other)
 		{
-			return zoneId == other.zoneId && offset == other.offset;
+			return zoneId == other.zoneId && zoneOffset == other.zoneOffset;
 		}
 
 		[INLINE(256)]
@@ -57,7 +57,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public override int GetHashCode()
 		{
-			return System.HashCode.Combine(zoneId, offset);
+			return System.HashCode.Combine(zoneId, zoneOffset);
 		}
 
 		[INLINE(256)]
@@ -91,6 +91,6 @@ namespace Sapientia.MemoryAllocator
 			return srsAllocator->CopyPtrTo(dstAllocator, this);
 		}
 
-		public override string ToString() => $"zoneId: {zoneId}, offset: {offset}, allocatorId: [{allocatorId}]";
+		public override string ToString() => $"zoneId: {zoneId}, offset: {zoneOffset}, allocatorId: [{allocatorId}]";
 	}
 }

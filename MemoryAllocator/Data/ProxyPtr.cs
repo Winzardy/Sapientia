@@ -47,6 +47,12 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T1 GetValue<T1>(Allocator* allocator) where T1: unmanaged
+		{
+			return ref indexedPtr.GetValue<T1>(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T1 GetValue<T1>() where T1: unmanaged
 		{
 			return ref indexedPtr.GetValue<T1>();
@@ -113,6 +119,11 @@ namespace Sapientia.MemoryAllocator.Data
 		public ProxyPtr<T> CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
 		{
 			return new ProxyPtr<T>(indexedPtr.CopyTo(srsAllocator, dstAllocator));
+		}
+
+		public override int GetHashCode()
+		{
+			return indexedPtr.GetHashCode();
 		}
 	}
 }

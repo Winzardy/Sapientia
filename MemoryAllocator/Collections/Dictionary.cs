@@ -3,10 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Sapientia.Extensions;
+using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-	using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
+	public enum InsertionBehavior
+	{
+		None = 0,
+		OverwriteExisting,
+		ThrowOnExisting,
+	}
 
 	[DebuggerTypeProxy(typeof(EquatableDictionaryProxy<,>))]
 	public unsafe struct Dictionary<TKey, TValue> : IDictionaryEnumerable<TKey, TValue>
@@ -60,7 +66,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		private int Initialize(Allocator* allocator, int capacity)
 		{
-			var prime = HashHelpers.GetPrime(capacity);
+			var prime = capacity.GetPrime();
 			freeList = -1;
 			buckets = new MemArray<int>(allocator, prime, -1);
 			entries = new MemArray<Entry>(allocator, prime);
@@ -228,7 +234,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Add(TKey key, TValue value)
 		{
-			TryInsert(GetAllocatorPtr(), key, value, InsertionBehavior.throwOnExisting);
+			TryInsert(GetAllocatorPtr(), key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
@@ -238,7 +244,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Add(Allocator* allocator, TKey key, TValue value)
 		{
-			TryInsert(allocator, key, value, InsertionBehavior.throwOnExisting);
+			TryInsert(allocator, key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
@@ -319,11 +325,11 @@ namespace Sapientia.MemoryAllocator
 				{
 					switch (behavior)
 					{
-						case InsertionBehavior.overwriteExisting:
+						case InsertionBehavior.OverwriteExisting:
 							rawEntries[i].value = value;
 							return true;
 
-						case InsertionBehavior.throwOnExisting:
+						case InsertionBehavior.ThrowOnExisting:
 							E.ADDING_DUPLICATE();
 							break;
 					}
@@ -366,7 +372,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		private void Resize(Allocator* allocator)
 		{
-			Resize(allocator, HashHelpers.ExpandPrime(count));
+			Resize(allocator, count.ExpandPrime());
 		}
 
 		[INLINE(256)]
@@ -468,7 +474,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool TryAdd(Allocator* allocator, TKey key, TValue value)
 		{
-			return TryInsert(allocator, key, value, InsertionBehavior.none);
+			return TryInsert(allocator, key, value, InsertionBehavior.None);
 		}
 
 		[INLINE(256)]
@@ -487,7 +493,7 @@ namespace Sapientia.MemoryAllocator
 				return Initialize(allocator, capacity);
 			}
 
-			var prime = HashHelpers.GetPrime(capacity);
+			var prime = capacity.GetPrime();
 			Resize(allocator, prime);
 			return prime;
 		}

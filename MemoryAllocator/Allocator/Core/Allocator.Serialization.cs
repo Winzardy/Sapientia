@@ -2,11 +2,8 @@
 //#define BURST
 
 using System;
-using System.Runtime.InteropServices;
-using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -39,7 +36,7 @@ namespace Sapientia.MemoryAllocator
 				var readSize = length;
 				var zoneRaw = (byte*)zone;
 
-				stream.Read(ref zoneRaw, (uint)readSize);
+				stream.Read(ref zoneRaw, readSize);
 			}
 
 			return allocator;
@@ -68,7 +65,7 @@ namespace Sapientia.MemoryAllocator
 					continue;
 
 				var writeSize = zone->size;
-				stream.Write((byte*)zone, (uint)writeSize);
+				stream.Write((byte*)zone, writeSize);
 			}
 		}
 	}

@@ -87,12 +87,15 @@ namespace Sapientia.MemoryAllocator
 			version = (ushort)(other->version + 1);
 		}
 
-		public MemPtr CopyPtrTo(Allocator* dstAllocator, in MemPtr ptr)
+		public MemPtr CopyPtrTo(Allocator* dstAllocator, MemPtr ptr)
 		{
 			if (!ptr.IsValid())
 				return MemPtr.Invalid;
 			if (ptr.IsZeroSized())
+			{
+				ptr.allocatorId = dstAllocator->allocatorId;
 				return ptr;
+			}
 
 			var size = GetSize(ptr);
 			var dstPtr = dstAllocator->MemAlloc(size);

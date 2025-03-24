@@ -142,20 +142,20 @@ namespace Sapientia.MemoryAllocator
 			}
 			else
 			{
-				var newblock = (MemBlock*)((byte*)top + top->size);
-				var newblockOffset = new MemBlockOffset(newblock, newZone);
-				newblock->size = extra;
+				var newBlock = (MemBlock*)((byte*)top + top->size);
+				var newBlockOffset = new MemBlockOffset(newBlock, newZone);
+				newBlock->size = extra;
 
-				newblock->state = BLOCK_STATE_FREE;
+				newBlock->state = BLOCK_STATE_FREE;
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
-				newblock->id = ZONE_ID;
+				newBlock->id = ZONE_ID;
 #endif
-				newblock->prev = new MemBlockOffset(top, newZone);
-				newblock->next = top->next;
-				newblock->next.Ptr(newZone)->prev = newblockOffset;
+				newBlock->prev = new MemBlockOffset(top, newZone);
+				newBlock->next = top->next;
+				newBlock->next.Ptr(newZone)->prev = newBlockOffset;
 
-				top->next = newblockOffset;
-				newZone->rover = newblockOffset;
+				top->next = newBlockOffset;
+				newZone->rover = newBlockOffset;
 			}
 
 			MzFreeZone(zone);
@@ -197,12 +197,18 @@ namespace Sapientia.MemoryAllocator
 		public static bool MzFree(MemZone* zone, void* ptr, bool freePrev = true)
 		{
 			CHECK_PTR(ptr);
+
 			var block = (MemBlock*)((byte*)ptr - TSize<MemBlock>.size);
 			var blockOffset = new MemBlockOffset(block, zone);
 
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
 			CHECK_ZONE_ID(block->id);
 #endif
+
+			if (block->state == BLOCK_STATE_FREE)
+			{
+				throw new System.Exception("Seems like ptr is free already");
+			}
 
 			// mark as free
 			block->state = BLOCK_STATE_FREE;
@@ -255,14 +261,11 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		private static int MzGetMemBlockSize(int size)
 		{
-			return Align(size) + TSize<MemBlock>.size;
+			return size + TSize<MemBlock>.size;
 		}
 
 		[INLINE(256)]
 		internal static int Align(int size) => ((size + 3) & ~3);
-
-		[INLINE(256)]
-		internal static long Align(long size) => ((size + 3) & ~3);
 
 #if BURST
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
@@ -281,7 +284,8 @@ namespace Sapientia.MemoryAllocator
 			//  back up over them
 			var baseBlock = zone->rover.Ptr(zone);
 
-			if (baseBlock->prev.Ptr(zone)->state != BLOCK_STATE_FREE) baseBlock = baseBlock->prev.Ptr(zone);
+			if (baseBlock->prev.Ptr(zone)->state != BLOCK_STATE_FREE)
+				baseBlock = baseBlock->prev.Ptr(zone);
 
 			var rover = baseBlock;
 			var start = baseBlock->prev.Ptr(zone);
@@ -334,7 +338,7 @@ namespace Sapientia.MemoryAllocator
 			// next allocation will start looking here
 			zone->rover = baseBlock->next;
 
-			return ((byte*)baseBlock + TSize<MemBlock>.size);
+			return (void*)((byte*)baseBlock + TSize<MemBlock>.size);
 		}
 
 		[INLINE(256)]
@@ -367,7 +371,7 @@ namespace Sapientia.MemoryAllocator
 			// next allocation will start looking here
 			zone->rover = baseBlock->next;
 
-			return ((byte*)baseBlock + TSize<MemBlock>.size);
+			return (byte*)baseBlock + TSize<MemBlock>.size;
 		}
 
 #if BURST
@@ -376,11 +380,15 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public static bool IsEmptyZone(MemZone* zone)
 		{
-			for (var block = zone->blocklist.next.Ptr(zone); block != &zone->blocklist; block = block->next.Ptr(zone))
+			var block = zone->blocklist.next.Ptr(zone);
+			while (block != &zone->blocklist)
 			{
 				if (block->state != BLOCK_STATE_FREE)
 					return false;
+				E.ASSERT(block->next.value != 0);
+				block = block->next.Ptr(zone);
 			}
+
 			return true;
 		}
 
@@ -402,15 +410,11 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public static void MzCheckHeap(MemZone* zone, System.Collections.Generic.List<string> results)
 		{
-			for (var block = zone->blocklist.next.Ptr(zone); ; block = block->next.Ptr(zone))
+			var block = zone->blocklist.next.Ptr(zone);
+			while (block->next.Ptr(zone) != &zone->blocklist)
 			{
-				if (block->next.Ptr(zone) == &zone->blocklist)
-				{
-					// all blocks have been hit
-					break;
-				}
-
 				MzCheckBlock(zone, block, results);
+				block = block->next.Ptr(zone);
 			}
 		}
 

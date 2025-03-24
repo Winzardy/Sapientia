@@ -1,8 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using Sapientia.Data;
-using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Core;
+﻿using Sapientia.Extensions;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
@@ -21,28 +17,21 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public MemPtr MemReAlloc(in MemPtr ptr, int size, out void* voidPtr)
 		{
-			if (!ptr.IsValid())
+			if (!ptr.IsValid() || ptr.IsZeroSized())
 				return MemAlloc(size, out voidPtr);
 
 			ValidateConsistency();
 			locker.SetBusy(true);
 
 			voidPtr = GetUnsafePtr(ptr);
-			if (ptr.IsZeroSized())
-			{
-				locker.SetFree(true);
-				ValidateConsistency();
-				return ptr;
-			}
-
 			var block = (MemBlock*)((byte*)voidPtr - TSize<MemBlock>.size);
 			var blockSize = block->size;
 			var blockDataSize = blockSize - TSize<MemBlock>.size;
-			size = Align(size);
 			if (blockDataSize > size)
 			{
 				locker.SetFree(true);
 				ValidateConsistency();
+
 				return ptr;
 			}
 
@@ -50,6 +39,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				locker.SetFree(true);
 				ValidateConsistency();
+
 				throw new System.Exception();
 			}
 
@@ -59,8 +49,8 @@ namespace Sapientia.MemoryAllocator
 				var requiredSize = size - blockDataSize;
 				// next block is free and its size is enough for current size
 				if (nextBlock != null &&
-				    nextBlock->state == BLOCK_STATE_FREE &&
-				    nextBlock->size - TSize<MemBlock>.size > requiredSize)
+					nextBlock->state == BLOCK_STATE_FREE &&
+					nextBlock->size - TSize<MemBlock>.size > requiredSize)
 				{
 					// mark current block as free
 					// freePrev is false because it must not collapse block with previous one
@@ -74,22 +64,22 @@ namespace Sapientia.MemoryAllocator
 					}
 
 					// alloc block again
-					voidPtr = MzAlloc(zone, block, size + TSize<MemBlock>.size);
+					var newPtr = MzAlloc(zone, block, size + TSize<MemBlock>.size);
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
 					{
-						var memPtr = GetMemPtr(voidPtr, ptr.zoneId);
+						var memPtr = CreateMemPtr(newPtr, ptr.zoneId);
 						if (memPtr != ptr)
 						{
 							// Something went wrong
 							locker.SetFree(true);
-							this.ValidateConsistency();
+							ValidateConsistency();
 							throw new System.Exception();
 						}
 					}
 #endif
+					voidPtr = newPtr;
 					locker.SetFree(true);
 					ValidateConsistency();
-
 					return ptr;
 				}
 			}
@@ -97,11 +87,13 @@ namespace Sapientia.MemoryAllocator
 			locker.SetFree(true);
 			ValidateConsistency();
 
-			var newPtr = MemAlloc(size, out voidPtr);
-			MemMove(newPtr, 0, ptr, 0, blockDataSize);
-			MemFree(ptr);
+			{
+				var newPtr = MemAlloc(size, out voidPtr);
+				MemMove(newPtr, 0, ptr, 0, blockDataSize);
+				MemFree(ptr);
 
-			return newPtr;
+				return newPtr;
+			}
 		}
 
 #if BURST
@@ -129,16 +121,16 @@ namespace Sapientia.MemoryAllocator
 
 			ValidateConsistency();
 
-			for (int i = 0, cnt = zonesListCount; i < cnt; ++i)
+			for (int i = 0, count = zonesListCount; i < count; ++i)
 			{
 				var zone = zonesList[i];
 				if (zone == null)
 					continue;
 
-				ptr = MzMalloc(zone, (int)size);
+				ptr = MzMalloc(zone, size);
 				if (ptr != null)
 				{
-					var memPtr = GetMemPtr(ptr, i);
+					var memPtr = CreateMemPtr(ptr, i);
 #if LOGS_ENABLED
 					LogAdd(memPtr, size);
 #endif
@@ -149,10 +141,10 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			{
-				var zone = MzCreateZone((int)FloatMathExt.Max(size, initialSize));
+				var zone = MzCreateZone(size.Max(initialSize));
 				var zoneIndex = AddZone(zone);
-				ptr = MzMalloc(zone, (int)size);
-				var memPtr = GetMemPtr(ptr, zoneIndex);
+				ptr = MzMalloc(zone, size);
+				var memPtr = CreateMemPtr(ptr, zoneIndex);
 #if LOGS_ENABLED
 				LogAdd(memPtr, size);
 #endif
@@ -196,7 +188,6 @@ namespace Sapientia.MemoryAllocator
 			return memPtr;
 		}
 
-
 #if BURST
 		[Unity.Burst.BurstCompileAttribute.BURST(CompileSynchronously = true)]
 #endif
@@ -233,7 +224,8 @@ namespace Sapientia.MemoryAllocator
 			var success = false;
 			if (zone != null)
 			{
-				success = MzFree(zone, GetUnsafePtr(ptr));
+				var sourcePtr = GetUnsafePtr(ptr);
+				success = MzFree(zone, sourcePtr);
 
 				if (IsEmptyZone(zone))
 				{
@@ -258,8 +250,8 @@ namespace Sapientia.MemoryAllocator
 
 			var aZoneIndex = a.zoneId;
 			var bZoneIndex = b.zoneId;
-			var aMaxOffset = a.offset + aOffset + length;
-			var bMaxOffset = b.offset + bOffset + length;
+			var aMaxOffset = a.zoneOffset + aOffset + length;
+			var bMaxOffset = b.zoneOffset + bOffset + length;
 
 			if (aZoneIndex >= zonesListCount || bZoneIndex >= zonesListCount)
 				throw new System.Exception();
@@ -283,8 +275,8 @@ namespace Sapientia.MemoryAllocator
 
 			var destZoneIndex = dest.zoneId;
 			var sourceZoneIndex = source.zoneId;
-			var destMaxOffset = dest.offset + destOffset + length;
-			var sourceMaxOffset = source.offset + sourceOffset + length;
+			var destMaxOffset = dest.zoneOffset + destOffset + length;
+			var sourceMaxOffset = source.zoneOffset + sourceOffset + length;
 
 			if (destZoneIndex >= zonesListCount || sourceZoneIndex >= zonesListCount)
 				throw new System.Exception();
@@ -307,8 +299,8 @@ namespace Sapientia.MemoryAllocator
 
 			var destZoneIndex = dest.zoneId;
 			var sourceZoneIndex = source.zoneId;
-			var destMaxOffset = dest.offset + destOffset + length;
-			var sourceMaxOffset = source.offset + sourceOffset + length;
+			var destMaxOffset = dest.zoneOffset + destOffset + length;
+			var sourceMaxOffset = source.zoneOffset + sourceOffset + length;
 
 			if (destZoneIndex >= zonesListCount || sourceZoneIndex >= zonesListCount)
 				throw new System.Exception();
@@ -323,7 +315,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly void MemFill<T>(in MemPtr dest, in T value, long destOffset, int length) where T: unmanaged
+		public readonly void MemFill<T>(in MemPtr dest, in T value, long destOffset, int length) where T : unmanaged
 		{
 #if MEMORY_ALLOCATOR_BOUNDS_CHECK
 			if (dest.IsZeroSized())
@@ -331,7 +323,7 @@ namespace Sapientia.MemoryAllocator
 
 			var zoneIndex = dest.zoneId;
 
-			if (zoneIndex >= zonesListCount || zonesList[zoneIndex]->size < (dest.offset + destOffset + length))
+			if (zoneIndex >= zonesListCount || zonesList[zoneIndex]->size < (dest.zoneOffset + destOffset + length))
 				throw new System.Exception();
 #endif
 
@@ -347,30 +339,11 @@ namespace Sapientia.MemoryAllocator
 
 			var zoneIndex = dest.zoneId;
 
-			if (zoneIndex >= zonesListCount || zonesList[zoneIndex]->size < (dest.offset + destOffset + length))
+			if (zoneIndex >= zonesListCount || zonesList[zoneIndex]->size < (dest.zoneOffset + destOffset + length))
 				throw new System.Exception();
 #endif
 
 			MemoryExt.MemClear(GetUnsafePtr(dest, destOffset), length);
-		}
-
-		[INLINE(256)]
-		public void MemPrepare(long size)
-		{
-			for (var i = 0; i < zonesListCount; i++)
-			{
-				var zone = zonesList[i];
-
-				if (zone == null)
-					continue;
-
-				if (MzHasFreeBlock(zone, (int)size))
-				{
-					return;
-				}
-			}
-
-			AddZone(MzCreateZone((int)Math.Max(size, initialSize)));
 		}
 	}
 }

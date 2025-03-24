@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public uint GetSize(in MemPtr ptr)
 		{
-			var block = (MemBlock*)((byte*)zonesList[ptr.zoneId] + ptr.offset - sizeof(MemBlock));
+			var block = (MemBlock*)((byte*)zonesList[ptr.zoneId] + ptr.zoneOffset - sizeof(MemBlock));
 			return (uint)block->size;
 		}
 

@@ -226,7 +226,7 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static void ResizeArray<T>(ref T* arr, ref uint length, uint newLength, bool free = true)
+		public static void ResizeArray<T>(ref T* arr, ref int length, int newLength, bool free = true)
 			where T : unmanaged
 		{
 			if (newLength <= length)

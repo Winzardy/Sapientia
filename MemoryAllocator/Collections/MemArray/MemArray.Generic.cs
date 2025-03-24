@@ -9,7 +9,7 @@ namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemArrayProxy<>))]
-	public unsafe struct MemArray<T> : IIsCreated, IListEnumerable<T> where T : unmanaged
+	public unsafe struct MemArray<T> : IListEnumerable<T> where T : unmanaged
 	{
 		public static readonly MemArray<T> Empty = new () { innerArray = MemArray.Empty };
 

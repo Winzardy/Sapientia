@@ -11,7 +11,7 @@ namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
 	[DebuggerTypeProxy(typeof(MemArrayProxy<>))]
-	public unsafe struct MemArray : IIsCreated, IListEnumerable
+	public unsafe struct MemArray : IListEnumerable
 	{
 		public static readonly MemArray Empty = new () { ptr = Ptr.Invalid, Length = 0, };
 
@@ -233,7 +233,7 @@ namespace Sapientia.MemoryAllocator
 				return false;
 			}
 
-			Debug.Assert(elementSize == ElementSize);
+			E.ASSERT(elementSize == ElementSize);
 
 			var prevLength = Length;
 			var arrPtr = allocator->ReAllocArray(ptr.memPtr, elementSize, newLength, out void* rawPtr);

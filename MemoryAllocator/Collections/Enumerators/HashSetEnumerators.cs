@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace Sapientia.MemoryAllocator
 {
 	public unsafe interface IHashSetEnumerable<T> : IEnumerable<T>
-		where T: unmanaged
+		where T: unmanaged, IEquatable<T>
 	{
 		public int LastIndex { get; }
 		public HashSet<T>.Slot* GetSlotPtr();
@@ -74,7 +74,7 @@ namespace Sapientia.MemoryAllocator
 	}
 
 	public unsafe struct HashSetPtrEnumerator<T> : IEnumerator<IntPtr>
-		where T: unmanaged
+		where T: unmanaged, IEquatable<T>
 	{
 		private readonly HashSet<T>.Slot* _slots;
 		private readonly int _lastIndex;
@@ -85,18 +85,18 @@ namespace Sapientia.MemoryAllocator
 		{
 			_slots = slots;
 			_lastIndex = lastIndex;
-			_index = 0;
+			_index = -1;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool MoveNext()
 		{
-			while (_index < _lastIndex)
+			while (++_index < _lastIndex)
 			{
-				if (_slots[_index++].hashCode >= 0)
+				if (_slots[_index].hashCode >= 0)
 					return true;
 			}
-			_index = _lastIndex + 1;
+			_index = _lastIndex;
 
 			return false;
 		}
@@ -104,7 +104,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Reset()
 		{
-			_index = 0;
+			_index = -1;
 		}
 
 		object IEnumerator.Current
@@ -116,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 		public IntPtr Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (IntPtr)(&(_slots + _index - 1)->value);
+			get => (IntPtr)(&(_slots + _index)->value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -127,7 +127,7 @@ namespace Sapientia.MemoryAllocator
 	}
 
 	public unsafe struct HashSetEnumerator<T> : IEnumerator<T>
-		where T: unmanaged
+		where T: unmanaged, IEquatable<T>
 	{
 		private readonly HashSet<T>.Slot* _slots;
 		private readonly int _lastIndex;
@@ -138,26 +138,26 @@ namespace Sapientia.MemoryAllocator
 		{
 			_slots = slots;
 			_lastIndex = lastIndex;
-			_index = 0;
+			_index = -1;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool MoveNext()
 		{
-			while (_index < _lastIndex)
+			while (++_index < _lastIndex)
 			{
-				if (_slots[_index++].hashCode >= 0)
+				if (_slots[_index].hashCode >= 0)
 					return true;
 			}
 
-			_index = _lastIndex + 1;
+			_index = _lastIndex;
 			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Reset()
 		{
-			_index = 0;
+			_index = -1;
 		}
 
 		object IEnumerator.Current
@@ -169,7 +169,7 @@ namespace Sapientia.MemoryAllocator
 		public T Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (_slots + _index - 1)->value;
+			get => (_slots + _index)->value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
