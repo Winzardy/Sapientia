@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Sapientia.MemoryAllocator.My
+namespace Sapientia.MemoryAllocator
 {
 	public unsafe partial struct Allocator
 	{

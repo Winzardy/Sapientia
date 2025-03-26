@@ -45,6 +45,11 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)] get => count - freeCount;
 		}
 
+		public readonly int Capacity
+		{
+			[INLINE(256)] get => buckets.Length;
+		}
+
 		public readonly int LastIndex
 		{
 			[INLINE(256)] get => count;
@@ -64,13 +69,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		private int Initialize(Allocator* allocator, int capacity)
+		private void Initialize(Allocator* allocator, int capacity)
 		{
 			var prime = capacity.GetPrime();
 			freeList = -1;
 			buckets = new MemArray<int>(allocator, prime, -1);
 			entries = new MemArray<Entry>(allocator, prime);
-			return prime;
 		}
 
 		[INLINE(256)]
@@ -490,7 +494,8 @@ namespace Sapientia.MemoryAllocator
 
 			if (buckets.IsCreated == false)
 			{
-				return Initialize(allocator, capacity);
+				Initialize(allocator, capacity);
+				return Capacity;
 			}
 
 			var prime = capacity.GetPrime();

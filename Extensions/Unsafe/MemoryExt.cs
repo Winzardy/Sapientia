@@ -15,62 +15,84 @@ namespace Sapientia.Extensions
 	public static unsafe class MemoryExt
 	{
 		[INLINE(256)]
-		public static void* MemAlloc(long size)
+		public static void* MemAlloc(int size)
 		{
-#if UNITY_5_3_OR_NEWER
-			return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<byte>(), Unity.Collections.Allocator.Persistent);
+			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+#if UNITY_EDITOR
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, UnsafeExt.AlignOf<byte>(), Unity.Collections.Allocator.Persistent, 0);
+#elif UNITY_5_3_OR_NEWER
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
 #else
-			return (void*)Marshal.AllocHGlobal((int)size);
+			var ptr = Marshal.AllocHGlobal(size);
 #endif
+			return ptr;
 		}
 
 		[INLINE(256)]
-		public static void* MemAlloc(long size, int align)
+		public static void* MemAlloc(int size, int align)
 		{
-#if UNITY_5_3_OR_NEWER
-			return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, Unity.Collections.Allocator.Persistent);
+			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+#if UNITY_EDITOR
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, align, Unity.Collections.Allocator.Persistent, 0);
+#elif UNITY_5_3_OR_NEWER
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
 #else
-			return (void*)Marshal.AllocHGlobal((int)size);
+			var ptr = Marshal.AllocHGlobal(size);
 #endif
+			return ptr;
 		}
 
 		[INLINE(256)]
-		public static T* MemAlloc<T>(long size) where T : unmanaged
+		public static T* MemAlloc<T>(int size) where T : unmanaged
 		{
-#if UNITY_5_3_OR_NEWER
-			return (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
+			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+#if UNITY_EDITOR
+			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent, 0);
+#elif UNITY_5_3_OR_NEWER
+			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
 #else
-			return (T*)Marshal.AllocHGlobal((int)size);
+			var ptr = (T*)Marshal.AllocHGlobal(size);
 #endif
+			return ptr;
 		}
 
 		[INLINE(256)]
 		public static T* MemAlloc<T>() where T : unmanaged
 		{
-#if UNITY_5_3_OR_NEWER
-			return (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(TSize<T>.size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
+			var size = TSize<T>.size;
+			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+#if UNITY_EDITOR
+			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent, 0);
+#elif UNITY_5_3_OR_NEWER
+			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
 #else
-			return (T*)Marshal.AllocHGlobal(TSize<T>.size);
+			var ptr = (T*)Marshal.AllocHGlobal(size);
 #endif
+			return ptr;
 		}
 
 		[INLINE(256)]
 		public static T* MemAllocAndClear<T>() where T : unmanaged
 		{
 			var size = TSize<T>.size;
-#if UNITY_5_3_OR_NEWER
-			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
+			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+#if UNITY_EDITOR
+			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent, 0);
+#elif UNITY_5_3_OR_NEWER
+			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
 #else
-			var ptr = (void*)Marshal.AllocHGlobal(size);
+			var ptr = (T*)Marshal.AllocHGlobal(size);
 #endif
 			MemClear(ptr, size);
-			return (T*)ptr;
+			return ptr;
 		}
 
 		[INLINE(256)]
 		public static void MemFree(void* memory)
 		{
-#if UNITY_5_3_OR_NEWER
+#if UNITY_EDITOR
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.FreeTracked(memory, Unity.Collections.Allocator.Persistent);
+#elif UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory, Unity.Collections.Allocator.Persistent);
 #else
 			Marshal.FreeHGlobal((IntPtr)memory);
@@ -112,7 +134,7 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static void MemClear(void* destination, long size)
+		public static void MemClear(void* destination, int size)
 		{
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSet(destination, 0, size);
@@ -123,7 +145,17 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static void MemCopy(void* source, void* destination, long size)
+		public static void MemCopy<T>(T* source, T* destination, int length) where T: unmanaged
+		{
+#if UNITY_5_3_OR_NEWER
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination, source, length * TSize<T>.size);
+#else
+			Buffer.MemoryCopy(source, destination, size, size);
+#endif
+		}
+
+		[INLINE(256)]
+		public static void MemCopy(void* source, void* destination, int size)
 		{
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination, source, size);
@@ -133,7 +165,7 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static void MemSwap(void* a, void* b, long size)
+		public static void MemSwap(void* a, void* b, int size)
 		{
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSwap(a, b, size);
@@ -155,7 +187,7 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static void MemMove(void* source, void* destination, long size)
+		public static void MemMove(void* source, void* destination, int size)
 		{
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemMove(destination, source, size);
@@ -211,14 +243,13 @@ namespace Sapientia.Extensions
 		[INLINE(256)]
 		public static void ResizeArray<T>(ref T** arr, int length, int newLength) where T : unmanaged
 		{
+			if (newLength <= length)
+				return;
+
 			var ptr = (T**)MemAlloc(newLength * sizeof(T*));
 			if (arr != null)
 			{
-				for (var i = 0; i < length; ++i)
-				{
-					ptr[i] = arr[i];
-				}
-
+				MemCopy(arr, ptr, length);
 				MemFree(arr);
 			}
 
@@ -226,31 +257,23 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static void ResizeArray<T>(ref T* arr, ref int length, int newLength, bool free = true)
+		public static void ResizeArray<T>(ref T* arr, ref int length, int newLength, bool powerOfTwo = false, bool clearMemory = false)
 			where T : unmanaged
 		{
 			if (newLength <= length)
 				return;
+			if (powerOfTwo)
+				newLength = newLength.NextPowerOfTwo().Max(8);
 
 			var size = newLength * TSize<T>.size;
 			var ptr = MemAlloc<T>(size);
-			MemClear(ptr, size);
+			if (clearMemory)
+				MemClear(ptr, size);
 
 			if (arr != null)
 			{
-				// MemCopy(arr, ptr, length * TSize<T>.size);
-				for (var i = 0; i < length; ++i)
-				{
-					*(ptr + i) = *(arr + i);
-				}
-
-				for (var i = length; i < newLength; ++i)
-				{
-					*(ptr + i) = default;
-				}
-
-				if (free)
-					MemFree(arr);
+				MemCopy(arr, ptr, length * TSize<T>.size);
+				MemFree(arr);
 			}
 
 			arr = ptr;

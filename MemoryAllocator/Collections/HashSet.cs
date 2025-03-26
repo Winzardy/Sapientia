@@ -6,6 +6,7 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
+	[DebuggerTypeProxy(typeof(HashSetProxy<>))]
 	public unsafe struct HashSet<T> : IHashSetEnumerable<T>
 		where T : unmanaged, IEquatable<T>
 	{
@@ -402,7 +403,7 @@ namespace Sapientia.MemoryAllocator
 			var hashCode = value.GetHashCode() & _hashCodeMask;
 			var bucket = hashCode % buckets.Length;
 
-			for (var i = bucketsPtr[hashCode % buckets.Length] - 1; i >= 0; i = slotsPtr[i].next)
+			for (var i = bucketsPtr[bucket] - 1; i >= 0; i = slotsPtr[i].next)
 			{
 				if (slotsPtr[i].hashCode == hashCode && slotsPtr[i].value.Equals(value))
 				{
@@ -427,10 +428,12 @@ namespace Sapientia.MemoryAllocator
 				index = lastIndex;
 				lastIndex++;
 			}
-			slots[index].hashCode = hashCode;
-			slots[index].value = value;
-			slots[index].next = buckets[bucket] - 1;
-			buckets[bucket] = index + 1;
+
+			slotsPtr[index].hashCode = hashCode;
+			slotsPtr[index].value = value;
+			slotsPtr[index].next = bucketsPtr[bucket] - 1;
+			bucketsPtr[bucket] = index + 1;
+
 			count++;
 
 			return true;

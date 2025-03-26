@@ -1,11 +1,12 @@
 using System;
 using System.Runtime.CompilerServices;
-using Sapientia.Extensions;
+using System.Runtime.InteropServices;
 using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
+	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct ServiceRegistryContext : IEquatable<ServiceRegistryContext>
 	{
 		public TypeIndex typeIndex;
@@ -17,7 +18,7 @@ namespace Sapientia.MemoryAllocator
 			return new ServiceRegistryContext
 			{
 				typeIndex = TypeIndex<T>.typeIndex,
-				contextTypeIndex = -1,
+				contextTypeIndex = TypeIndex.Empty,
 			};
 		}
 
@@ -37,6 +38,13 @@ namespace Sapientia.MemoryAllocator
 			return other.typeIndex == typeIndex && other.contextTypeIndex == contextTypeIndex;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			return typeIndex.index ^ contextTypeIndex.index;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ServiceRegistryContext(TypeIndex typeIndex)
 		{
 			return new ServiceRegistryContext { typeIndex = typeIndex, contextTypeIndex = -1, };

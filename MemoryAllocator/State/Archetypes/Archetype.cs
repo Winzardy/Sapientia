@@ -157,7 +157,7 @@ namespace Sapientia.MemoryAllocator.State
 			archetype._elements  = new SparseSet(allocator, TSize<ArchetypeElement<T>>.size, elementsCount, entitiesCapacity);
 			archetype._destroyHandlerProxy = default;
 
-			allocator->GetService<EntityStatePart>().AddSubscriber((IndexedPtr)archetypePtr);
+			allocator->GetService<EntityStatePart>().AddSubscriber(allocator, (IndexedPtr)archetypePtr);
 
 			return archetypePtr;
 		}
@@ -166,7 +166,7 @@ namespace Sapientia.MemoryAllocator.State
 		public static Ptr<Archetype> RegisterArchetype(Allocator* allocator, ServiceRegistryContext context, int elementsCount)
 		{
 			var ptr = CreateArchetype(allocator, elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity);
-			context.RegisterService((Ptr)ptr);
+			context.RegisterService(allocator, (Ptr)ptr);
 
 			return ptr;
 		}
@@ -182,10 +182,10 @@ namespace Sapientia.MemoryAllocator.State
 			var archetypePtr = Ptr<Archetype>.Create(allocator);
 			ref var archetype = ref archetypePtr.GetValue(allocator);
 
-			archetype._elements  = new SparseSet(allocator, TSize<ArchetypeElement>.size, elementsCount, entitiesCapacity);
+			archetype._elements = new SparseSet(allocator, TSize<ArchetypeElement>.size, elementsCount, entitiesCapacity);
 			archetype._destroyHandlerProxy = default;
 
-			allocator->GetService<EntityStatePart>().AddSubscriber((IndexedPtr)archetypePtr);
+			allocator->GetService<EntityStatePart>().AddSubscriber(allocator, (IndexedPtr)archetypePtr);
 
 			return archetypePtr;
 		}

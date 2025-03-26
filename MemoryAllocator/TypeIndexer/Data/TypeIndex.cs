@@ -10,7 +10,9 @@ namespace Sapientia.TypeIndexer
 
 	public struct TypeIndex : IEquatable<TypeIndex>
 	{
-		internal ushort index;
+		public static readonly TypeIndex Empty = -1;
+
+		internal int index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TypeIndex Create<T>()
@@ -33,12 +35,6 @@ namespace Sapientia.TypeIndexer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator TypeIndex(int index)
 		{
-			return new TypeIndex{ index = (ushort)index, };
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator TypeIndex(ushort index)
-		{
 			return new TypeIndex{ index = index, };
 		}
 
@@ -56,6 +52,11 @@ namespace Sapientia.TypeIndexer
 		public bool Equals(TypeIndex other)
 		{
 			return index == other.index;
+		}
+
+		public override int GetHashCode()
+		{
+			return index;
 		}
 	}
 }

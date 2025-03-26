@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			this = default;
 			ptr = default;
-			var memPtr = allocator->AllocArray(elementSize, length, out var tPtr);
+			var memPtr = allocator->MemAlloc(elementSize * length, out var tPtr);
 			ptr = new Ptr(allocator, tPtr, memPtr);
 			ElementSize = elementSize;
 			Length = length;
@@ -75,7 +75,7 @@ namespace Sapientia.MemoryAllocator
 			Length = arr.Length;
 			ElementSize = arr.ElementSize;
 
-			var memPtr = allocator->AllocArray(arr.ElementSize, arr.Length, out var tPtr);
+			var memPtr = allocator->MemAlloc(arr.ElementSize * arr.Length, out var tPtr);
 			ptr = new Ptr(allocator, tPtr, memPtr);
 			MemArrayExt.CopyNoChecks(allocator, in arr, 0, ref this, 0, arr.Length);
 		}
@@ -143,16 +143,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemPtr GetAllocPtr(Allocator* allocator, int index)
-		{
-			return allocator->GetArrayElementPtr(ptr.memPtr, ElementSize, index);
-		}
-
-		[INLINE(256)]
 		public MemPtr GetAllocPtr(int index)
 		{
-			var allocator = ptr.memPtr.GetAllocatorPtr();
-			return allocator->GetArrayElementPtr(ptr.memPtr, ElementSize, index);
+			return ptr.memPtr.GetArrayElement(ElementSize, index);
 		}
 
 		[INLINE(256)]
@@ -236,7 +229,7 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(elementSize == ElementSize);
 
 			var prevLength = Length;
-			var arrPtr = allocator->ReAllocArray(ptr.memPtr, elementSize, newLength, out void* rawPtr);
+			var arrPtr = allocator->MemReAlloc(ptr.memPtr, elementSize * newLength, out var rawPtr);
 			ptr = new Ptr(allocator, rawPtr, arrPtr);
 			if (options == ClearOptions.ClearMemory)
 			{
@@ -258,7 +251,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Fill<T>(Allocator* allocator, in T value, int fromIndex, int count) where T: unmanaged
 		{
-			allocator->MemFill(ptr.memPtr, value, fromIndex * ElementSize, count);
+			allocator->MemFill<T>(ptr.memPtr, value, fromIndex, count);
 		}
 
 		[INLINE(256)]

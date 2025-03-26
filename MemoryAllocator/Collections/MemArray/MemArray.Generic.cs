@@ -134,12 +134,6 @@ namespace Sapientia.MemoryAllocator
 			return innerArray.GetPtr();
 		}
 
-		[INLINE(256)]
-		public MemPtr GetAllocPtr(Allocator* allocator, int index)
-		{
-			return innerArray.GetAllocPtr(allocator, index);
-		}
-
 		public ref T this[int index]
 		{
 			[INLINE(256)]

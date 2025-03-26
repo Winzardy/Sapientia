@@ -51,6 +51,9 @@ namespace Sapientia.MemoryAllocator
 		{
 			this = default;
 			EnsureCapacity(allocator, capacity);
+
+			if (!_arr.IsCreated)
+				_arr = new MemArray<T>(allocator, capacity);
 		}
 
 		[INLINE(256)]
@@ -156,6 +159,8 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool EnsureCapacity(Allocator* allocator, int capacity)
 		{
+			if (capacity <= Capacity)
+				return false;
 			capacity = capacity.NextPowerOfTwo();
 			return _arr.Resize(allocator, capacity, ClearOptions.UninitializedMemory);
 		}
@@ -215,13 +220,13 @@ namespace Sapientia.MemoryAllocator
 		public void Insert(Allocator* allocator, int index, T value)
 		{
 			EnsureCapacity(allocator, _count + 1);
-			_count++;
 
-			var source = GetValuePtr(allocator) + index;
+			var source = GetValuePtr(allocator, index);
 			var destination = source + 1;
 			MemoryExt.MemMove<T>(source, destination, _count - index);
 
-			source[0] = value;
+			*source = value;
+			_count++;
 		}
 
 		[INLINE(256)]
@@ -284,8 +289,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			var ptr = _arr.innerArray.ptr.memPtr;
-			var size = sizeof(T);
-			allocator->MemMove(ptr, size * index, ptr, size * (index + 1), (_count - index - 1) * size);
+			allocator->MemMove<T>(ptr, index + 1, ptr, index, (_count - index - 1));
 
 			--_count;
 			_arr[allocator, _count] = default;
@@ -330,74 +334,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void AddRange(Allocator* allocator, in List<T> collection)
-		{
-			AddRange(allocator, in collection, 0, collection._count);
-		}
-
-		[INLINE(256)]
-		public void AddRange(Allocator* allocator, in List<T> collection, int fromIdx, int toIdx)
-		{
-			var index = _count;
-
-			var srcOffset = fromIdx;
-			var length = toIdx - fromIdx;
-			if (length > 0u)
-			{
-				EnsureCapacity(allocator, _count + length);
-				var size = sizeof(T);
-				if (index < _count)
-				{
-					allocator->MemMove(_arr.innerArray.ptr.memPtr, (index + length) * size, _arr.innerArray.ptr.memPtr, index * size,
-						(_count - index) * size);
-				}
-
-				if (_arr.innerArray.ptr.memPtr == collection._arr.innerArray.ptr.memPtr)
-				{
-					allocator->MemMove(_arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, 0, index * size);
-					allocator->MemMove(_arr.innerArray.ptr.memPtr, (index * 2) * size, _arr.innerArray.ptr.memPtr, (index + length) * size,
-						(_count - index) * size);
-				}
-				else
-				{
-					collection.CopyTo(allocator, _arr, srcOffset, index, length);
-				}
-
-				_count += length;
-			}
-		}
-
-		[INLINE(256)]
-		public void AddRange(Allocator* allocator, MemArray<T> collection)
-		{
-			var index = _count;
-			var length = collection.Length;
-			if (length > 0u)
-			{
-				EnsureCapacity(allocator, _count + length);
-				var size = sizeof(T);
-				if (index < _count)
-				{
-					allocator->MemMove(_arr.innerArray.ptr.memPtr, (index + length) * size, _arr.innerArray.ptr.memPtr, index * size,
-						(_count - index) * size);
-				}
-
-				if (_arr.innerArray.ptr.memPtr == collection.innerArray.ptr.memPtr)
-				{
-					allocator->MemMove(_arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, 0, index * size);
-					allocator->MemMove(_arr.innerArray.ptr.memPtr, (index * 2) * size, _arr.innerArray.ptr.memPtr, (index + length) * size,
-						(_count - index) * size);
-				}
-				else
-				{
-					CopyFrom(allocator, collection, index);
-				}
-
-				_count += length;
-			}
-		}
-
-		[INLINE(256)]
 		public void AddRange<TEnumerable>(TEnumerable collection) where TEnumerable: IEnumerable<T>
 		{
 			foreach (var value in collection)
@@ -418,22 +354,13 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly void CopyTo(Allocator* allocator, MemArray<T> arr, int srcOffset, int index, int count)
 		{
-			var size = sizeof(T);
-			allocator->MemCopy(arr.innerArray.ptr.memPtr, index * size, _arr.innerArray.ptr.memPtr, srcOffset * size, count * size);
+			allocator->MemCopy<T>(_arr.innerArray.ptr.memPtr, srcOffset, arr.innerArray.ptr.memPtr, index, count);
 		}
 
 		[INLINE(256)]
 		public readonly void CopyTo(Allocator* allocator, in MemPtr arrPtr, int srcOffset, int index, int count)
 		{
-			var size = sizeof(T);
-			allocator->MemCopy(arrPtr, index * size, _arr.innerArray.ptr.memPtr, srcOffset * size, count * size);
-		}
-
-		[INLINE(256)]
-		public readonly void CopyFrom(Allocator* allocator, MemArray<T> arr, int index)
-		{
-			var size = sizeof(T);
-			allocator->MemCopy(_arr.innerArray.ptr.memPtr, index * size, arr.innerArray.ptr.memPtr, 0, arr.Length * size);
+			allocator->MemCopy<T>(_arr.innerArray.ptr.memPtr, srcOffset, arrPtr, index, count);
 		}
 
 		public int GetReservedSizeInBytes()

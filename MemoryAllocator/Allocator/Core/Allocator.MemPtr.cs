@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
-namespace Sapientia.MemoryAllocator.My
+namespace Sapientia.MemoryAllocator
 {
 	public unsafe partial struct Allocator
 	{
@@ -14,7 +14,7 @@ namespace Sapientia.MemoryAllocator.My
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly byte* GetUnsafePtr(in MemPtr memPtr)
 		{
-			return (byte*)zonesList[memPtr.zoneId].memory + memPtr.zoneOffset;
+			return ((byte*)zonesList[memPtr.zoneId].memory) + memPtr.zoneOffset;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -25,6 +25,11 @@ namespace Sapientia.MemoryAllocator
 			return new MemPtr(0, -1, allocatorId);
 		}
 
+		public MemPtr GetArrayElement(int elementSize, int index)
+		{
+			return new MemPtr(zoneId, zoneOffset + index * elementSize, allocatorId);
+		}
+
 		[INLINE(256)]
 		public readonly bool IsValid() => zoneOffset != 0;
 		[INLINE(256)]

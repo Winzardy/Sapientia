@@ -1,10 +1,11 @@
 using System;
-using System.Collections;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
+	[DebuggerTypeProxy(typeof(UnsafeList<>.UnsafeListProxy))]
 	public unsafe struct UnsafeList<T> : IDisposable
 		where T : unmanaged
 	{
@@ -27,6 +28,7 @@ namespace Sapientia.Collections
 			get => ref array[index];
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(T item)
 		{
 			EnsureCapacity(count + 1);
@@ -35,58 +37,81 @@ namespace Sapientia.Collections
 			count++;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveAt(int index)
 		{
 			var result = array[index];
 
 			count--;
 			if (index < count)
-				MemoryExt.MemMove(array + index + 1, array + index, count - index);
+				MemoryExt.MemMove<T>(array + index + 1, array + index, count - index);
 
 			return result;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveAtSwapBack(int index)
 		{
 			var result = array[index];
-
-			array[index] = array[count - 1];
-			count--;
+			array[index] = array[--count];
 
 			return result;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveLast()
 		{
 			count--;
 			return array[count];
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
 			count = 0;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void EnsureCapacity(int newCapacity)
 		{
-			if (newCapacity <= capacity)
-				return;
-
-			var newArray = MemoryExt.MakeArray<T>(newCapacity, false);
-
-			MemoryExt.MemCopy(array, newArray, capacity);
-			MemoryExt.MemFree(array);
-
-			capacity = newCapacity;
-			array = newArray;
+			MemoryExt.ResizeArray<T>(ref array, ref capacity, newCapacity, true, false);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
 			if (!IsValid)
 				return;
 			MemoryExt.MemFree(array);
 			this = default;
+		}
+
+		public unsafe class UnsafeListProxy
+		{
+			private UnsafeList<T> _arr;
+
+			public UnsafeListProxy(UnsafeList<T> arr)
+			{
+				_arr = arr;
+			}
+
+			public int Capacity => _arr.capacity;
+
+			public int Count => _arr.count;
+
+			public T[] Items
+			{
+				get
+				{
+					var arr = new T[_arr.count];
+					for (var i = 0; i < _arr.count; ++i)
+					{
+						arr[i] = _arr[i];
+					}
+
+					return arr;
+				}
+			}
 		}
 	}
 }

@@ -558,7 +558,7 @@ namespace Sapientia.MemoryAllocator
 
 			if (options == ClearOptions.ClearMemory)
 			{
-				allocator->MemClear(ptr, 0u, sizeInBytes);
+				allocator->MemClear(ptr, 0, sizeInBytes);
 			}
 		}
 
@@ -596,8 +596,8 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Clear(Allocator* allocator)
 		{
-			var sizeInBytes = Bitwise.AlignUp((int)length, 64) / 8u;
-			allocator->MemClear(ptr, 0u, sizeInBytes);
+			var sizeInBytes = Bitwise.AlignUp(length, 64) / 8;
+			allocator->MemClear(ptr, 0, sizeInBytes);
 		}
 
 		/// <summary>
@@ -859,15 +859,14 @@ namespace Sapientia.MemoryAllocator
 
 				if (numBytes > 0)
 				{
-					allocator->MemMove(this.ptr, dstPosInBytes, srcBitArray.ptr, srcPosInBytes, numBytes);
+					allocator->MemMove(srcBitArray.ptr, srcPosInBytes, this.ptr, dstPosInBytes, numBytes);
 				}
 
 				var numPostBits = numBitsLeft & 7;
 
 				if (numPostBits > 0)
 				{
-					CopyUlong(allocator, (dstPosInBytes + numBytes) * 8, ref srcBitArray,
-						(srcPosInBytes + numBytes) * 8, numPostBits);
+					CopyUlong(allocator, (dstPosInBytes + numBytes) * 8, ref srcBitArray, (srcPosInBytes + numBytes) * 8, numPostBits);
 				}
 			}
 			else // unaligned copy
