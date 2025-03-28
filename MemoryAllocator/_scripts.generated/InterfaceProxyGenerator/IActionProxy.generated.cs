@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator;
 using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.TypeIndexer
@@ -91,9 +90,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyEvent<IActionProxy> __proxyEvent, Sapientia.MemoryAllocator.SafePtr<Sapientia.MemoryAllocator.Allocator> allocator)
 		{
-			foreach (SafePtr<ProxyPtr<IActionProxy>> __proxyPtr in __proxyEvent.GetEnumerable())
+			foreach (ProxyPtr<IActionProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
 			{
-				__proxyPtr.ptr->proxy.ProxyDispose(__proxyPtr.ptr->GetPtr().ptr, allocator);
+				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr().ptr, allocator);
 			}
 		}
 
