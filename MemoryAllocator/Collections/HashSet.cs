@@ -42,20 +42,20 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return buckets.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator* allocator, int capacity = 8)
+		public HashSet(SafePtr<Allocator> allocator, int capacity = 8)
 		{
 			this = default;
 			Initialize(allocator, capacity);
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator* allocator, in HashSet<T> other)
+		public HashSet(SafePtr<Allocator> allocator, in HashSet<T> other)
 		{
 			Debug.Assert(other.IsCreated);
 
@@ -65,7 +65,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator* allocator, in ICollection<T> other) : this(allocator, other.Count)
+		public HashSet(SafePtr<Allocator> allocator, in ICollection<T> other) : this(allocator, other.Count)
 		{
 			foreach (var value in other)
 			{
@@ -74,7 +74,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator* allocator, in IEnumerable<T> other, int capacity) : this(allocator, capacity)
+		public HashSet(SafePtr<Allocator> allocator, in IEnumerable<T> other, int capacity) : this(allocator, capacity)
 		{
 			foreach (var value in other)
 			{
@@ -89,37 +89,30 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="allocator"></param>
 		/// <param name="capacity"></param>
 		[INLINE(256)]
-		private void Initialize(Allocator* allocator, int capacity)
+		private void Initialize(SafePtr<Allocator> allocator, int capacity)
 		{
 			var size = capacity.GetPrime();
 			buckets = new MemArray<int>(allocator, size);
 			slots = new MemArray<Slot>(allocator, size);
-
-			var rawSlots = (Slot*)slots.GetPtr(allocator);
-			for (var i = 0; i < slots.Length; ++i)
-			{
-				(*(rawSlots + i)).hashCode = -1;
-			}
-
 			freeList = -1;
 		}
 
 		[INLINE(256)]
-		public Slot* GetSlotPtr()
+		public SafePtr<Slot> GetSlotPtr()
 		{
 			E.ASSERT(IsCreated);
 			return slots.GetValuePtr();
 		}
 
 		[INLINE(256)]
-		public Slot* GetSlotPtr(Allocator* allocator)
+		public SafePtr<Slot> GetSlotPtr(SafePtr<Allocator> allocator)
 		{
 			E.ASSERT(IsCreated);
 			return slots.GetValuePtr(allocator);
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			buckets.Dispose(allocator);
 			slots.Dispose(allocator);
@@ -140,7 +133,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void ReplaceWith(Allocator* allocator, ref HashSet<T> other)
+		public void ReplaceWith(SafePtr<Allocator> allocator, ref HashSet<T> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 			{
@@ -157,7 +150,7 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="allocator"></param>
 		[INLINE(256)]
-		public void Clear(Allocator* allocator)
+		public void Clear(SafePtr<Allocator> allocator)
 		{
 			if (lastIndex > 0)
 			{
@@ -179,13 +172,13 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="item">item to check for containment</param>
 		/// <returns>true if item contained; false if not</returns>
 		[INLINE(256)]
-		public bool Contains(Allocator* allocator, in T item)
+		public bool Contains(SafePtr<Allocator> allocator, in T item)
 		{
 			return Contains(item, slots.GetValuePtr(allocator), buckets.GetValuePtr(allocator));
 		}
 
 		[INLINE(256)]
-		private readonly bool Contains(in T item, Slot* slotsPtr, int* bucketsPtr)
+		private readonly bool Contains(in T item, SafePtr<Slot> slotsPtr, SafePtr<int> bucketsPtr)
 		{
 			E.ASSERT(IsCreated);
 
@@ -203,7 +196,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void RemoveExcept(Allocator* allocator, ref HashSet<T> other)
+		public void RemoveExcept(SafePtr<Allocator> allocator, ref HashSet<T> other)
 		{
 			var slotsPtr = slots.GetValuePtr(allocator);
 			for (var i = 0; i < lastIndex; i++)
@@ -223,17 +216,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Remove(Allocator* allocator, ref HashSet<T> other)
+		public void Remove(SafePtr<Allocator> allocator, ref HashSet<T> other)
 		{
 			E.ASSERT(IsCreated);
 
 			var slotsPtr = slots.GetValuePtr(allocator);
 			for (var i = 0; i < lastIndex; i++)
 			{
-				var slot = (slotsPtr + i);
-				if (slot->hashCode >= 0)
+				ref var slot = ref (slotsPtr + i).Value();
+				if (slot.hashCode >= 0)
 				{
-					var item = slot->value;
+					var item = slot.value;
 					if (other.Contains(allocator, item))
 					{
 						Remove(allocator, item);
@@ -245,15 +238,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Add(Allocator* allocator, ref HashSet<T> other)
+		public void Add(SafePtr<Allocator> allocator, ref HashSet<T> other)
 		{
 			var slotsPtr = slots.GetValuePtr(allocator);
 			for (var i = 0; i < other.lastIndex; i++)
 			{
-				var slot = (slotsPtr + i);
-				if (slot->hashCode >= 0)
+				ref var slot = ref (slotsPtr + i).Value();
+				if (slot.hashCode >= 0)
 				{
-					Add(allocator, slot->value);
+					Add(allocator, slot.value);
 				}
 			}
 		}
@@ -277,7 +270,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="item">item to remove</param>
 		/// <returns>true if removed; false if not (i.e. if the item wasn't in the HashSet)</returns>
 		[INLINE(256)]
-		public bool Remove(Allocator* allocator, in T item)
+		public bool Remove(SafePtr<Allocator> allocator, in T item)
 		{
 			if (!buckets.IsCreated)
 				return false;
@@ -331,7 +324,7 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="allocator"></param>
 		[INLINE(256)]
-		private void IncreaseCapacity(Allocator* allocator)
+		private void IncreaseCapacity(SafePtr<Allocator> allocator)
 		{
 			var newSize = count.ExpandPrime();
 
@@ -345,12 +338,12 @@ namespace Sapientia.MemoryAllocator
 		/// instead of this method.
 		/// </summary>
 		[INLINE(256)]
-		private void SetCapacity(Allocator* allocator, int newSize)
+		private void SetCapacity(SafePtr<Allocator> allocator, int newSize)
 		{
 			var newSlots = new MemArray<Slot>(allocator, newSize);
 			if (slots.IsCreated)
 			{
-				MemArrayExt.CopyNoChecks(allocator, slots, 0, ref newSlots, 0, lastIndex);
+				MemArrayExt.CopyNoChecks<HashSet<T>.Slot>(allocator, slots, 0, ref newSlots, 0, lastIndex);
 			}
 
 			var newBuckets = new MemArray<int>(allocator, newSize);
@@ -390,7 +383,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="value"></param>
 		/// <returns>true if added, false if already present</returns>
 		[INLINE(256)]
-		public bool Add(Allocator* allocator, in T value)
+		public bool Add(SafePtr<Allocator> allocator, in T value)
 		{
 			if (!buckets.IsCreated)
 			{
@@ -446,7 +439,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(Allocator* allocator, in HashSet<T> other)
+		public void CopyFrom(SafePtr<Allocator> allocator, in HashSet<T> other)
 		{
 			MemArrayExt.CopyExact(allocator, in other.buckets, ref buckets);
 			slots.CopyFrom(allocator, other.slots);
@@ -465,7 +458,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSetEnumerator<T> GetEnumerator(Allocator* allocator)
+		public HashSetEnumerator<T> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new HashSetEnumerator<T>(GetSlotPtr(allocator), LastIndex);
 		}
@@ -477,7 +470,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSetPtrEnumerator<T> GetPtrEnumerator(Allocator* allocator)
+		public HashSetPtrEnumerator<T> GetPtrEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new HashSetPtrEnumerator<T>(GetSlotPtr(allocator), LastIndex);
 		}
@@ -489,7 +482,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly Enumerable<T, HashSetEnumerator<T>> GetEnumerable(Allocator* allocator)
+		public readonly Enumerable<T, HashSetEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}
@@ -501,13 +494,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<IntPtr, HashSetPtrEnumerator<T>> GetPtrEnumerable(Allocator* allocator)
+		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}
 
 		[INLINE(256)]
-		public Enumerable<IntPtr, HashSetPtrEnumerator<T>> GetPtrEnumerable()
+		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable()
 		{
 			return new (new (GetSlotPtr(), LastIndex));
 		}

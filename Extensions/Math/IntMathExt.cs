@@ -11,17 +11,6 @@ namespace Sapientia.Extensions
 	{
 		public const int FIRST_TO_LAST_SHIFT = 32 - 1;
 
-		public static int Log2(this int value, out int roundedUp)
-		{
-			var log2 = Log2(value);
-			roundedUp = log2;
-
-			if ((1 << roundedUp) != value)
-				roundedUp++;
-
-			return log2;
-		}
-
 		public static int Log2(this int value)
 		{
 			var result = 0;

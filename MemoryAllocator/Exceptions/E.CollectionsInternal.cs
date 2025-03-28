@@ -27,42 +27,41 @@ namespace Sapientia.MemoryAllocator
 
 			[BURST_DISCARD]
 			[HIDE_CALLSTACK]
-			private static void ThrowNotBurst(string str) =>
-				throw new CollectionInternalException($"{Exception.Format(str)}");
+			private static void ThrowNotBurst(string str) => throw new CollectionInternalException($"{Format(str)}");
 		}
 	}
 
 	public static partial class E
 	{
-		[Conditional(COND.EXCEPTIONS_INTERNAL)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void ADDING_DUPLICATE()
 		{
 			CollectionInternalException.Throw("Duplicate adding");
 		}
 
-		[Conditional(COND.EXCEPTIONS_INTERNAL)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void VERSION_CHANGED()
 		{
 			CollectionInternalException.Throw("Version changed while enumeration");
 		}
 
-		[Conditional(COND.EXCEPTIONS_INTERNAL)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void OP_NOT_STARTED()
 		{
 			CollectionInternalException.Throw("Operation not started");
 		}
 
-		[Conditional(COND.EXCEPTIONS_INTERNAL)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void OP_ENDED()
 		{
 			CollectionInternalException.Throw("Operation not ended");
 		}
 
-		[Conditional(COND.EXCEPTIONS_INTERNAL)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void IS_EMPTY(uint size)
 		{

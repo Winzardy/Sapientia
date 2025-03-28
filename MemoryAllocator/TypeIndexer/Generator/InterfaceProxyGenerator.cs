@@ -180,7 +180,7 @@ namespace Sapientia.TypeIndexer
 
 				{
 					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr" + (parameters.Length > 0 ? ", " : string.Empty));
-					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr()" + (parameters.Length > 0 ? ", " : string.Empty));
+					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr().ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
@@ -195,7 +195,7 @@ namespace Sapientia.TypeIndexer
 
 				{
 					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(Allocator).FullName}* __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
-					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr(__allocator)" + (parameters.Length > 0 ? ", " : string.Empty));
+					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr(__allocator).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
@@ -210,7 +210,7 @@ namespace Sapientia.TypeIndexer
 
 				{
 					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent" + (parameters.Length > 0 ? ", " : string.Empty));
-					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr()" + (parameters.Length > 0 ? ", " : string.Empty));
+					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr().ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{eventParametersString}");
 					sourceBuilder.AppendLine($"		{{");
@@ -231,7 +231,7 @@ namespace Sapientia.TypeIndexer
 
 				{
 					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent, {typeof(Allocator).FullName}* __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
-					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr(__allocator)" + (parameters.Length > 0 ? ", " : string.Empty));
+					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr(__allocator).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{eventParametersString}");

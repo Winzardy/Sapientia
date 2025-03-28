@@ -11,7 +11,7 @@ namespace Sapientia.TypeIndexer
 
 		DelegateIndex FirstDelegateIndex { get; set; }
 
-		public void ProxyDispose(void* executorPtr, Allocator* allocator) {}
+		public void ProxyDispose(void* executorPtr, SafePtr<Allocator> allocator) {}
 	}
 
 	[IndexedType]
@@ -19,7 +19,7 @@ namespace Sapientia.TypeIndexer
 
 	public unsafe interface IInterfaceProxyType : IIndexedType
 	{
-		public virtual void ProxyDispose(Allocator* allocator) {}
+		public virtual void ProxyDispose(SafePtr<Allocator> allocator) {}
 	}
 
 	public static unsafe class IndexedTypes

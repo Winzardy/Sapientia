@@ -2,23 +2,22 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
-using UnityEngine;
 
 namespace Sapientia.MemoryAllocator.State
 {
 	public readonly unsafe ref struct DestroyLogic
 	{
-		public readonly Allocator* allocator;
+		public readonly SafePtr<Allocator> allocator;
 
-		public readonly EntityStatePart* entityStatePart;
+		public readonly SafePtr<EntityStatePart> entityStatePart;
 		public readonly ArchetypeContext<KillElement> killElementArchetype;
 		public readonly ArchetypeContext<DestroyRequest> destroyRequestArchetype;
 		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
 
-		public DestroyLogic(Allocator* allocator)
+		public DestroyLogic(SafePtr<Allocator> allocator)
 		{
 			this.allocator = allocator;
-			entityStatePart = allocator->GetServicePtr<EntityStatePart>();
+			entityStatePart = allocator.GetServicePtr<EntityStatePart>();
 			killElementArchetype = new ArchetypeContext<KillElement>(allocator);
 			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(allocator);
 			killRequestArchetype = new ArchetypeContext<KillRequest>(allocator);
@@ -27,10 +26,11 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RequestDestroy(Entity entity)
 		{
-			Debug.Assert(IsAlive(entity));
-			Debug.Assert(!killRequestArchetype.HasElement(entity));
+			E.ASSERT(IsAlive(entity));
+			E.ASSERT(!killRequestArchetype.HasElement(entity));
 
 			destroyRequestArchetype.GetElement(entity);
+			UnityEngine.Debug.LogWarning($"Request Destroy entity [id: {entity.id} gen: {entity.generation}]");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -42,15 +42,15 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RequestKill(Entity entity)
 		{
-			Debug.Assert(IsAlive(entity));
+			E.ASSERT(IsAlive(entity));
 			killRequestArchetype.GetElement(entity);
+
+			UnityEngine.Debug.LogWarning($"Request Kill entity [id: {entity.id} gen: {entity.generation}]");
 		}
 
 		public void RequestKill(Entity entity, float delay)
 		{
-			Debug.Assert(IsAlive(entity));
-			if (killRequestArchetype.HasElement(entity))
-				return;
+			E.ASSERT(IsAlive(entity));
 			ref var request = ref entity.Get<DelayKillRequest>(allocator, out var hasRequest);
 			if (!hasRequest || request.delay > delay)
 				request.delay = delay;
@@ -70,8 +70,10 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void AddKillParent(Entity child, Entity parent)
 		{
-			Debug.Assert(IsAlive(child));
-			Debug.Assert(IsAlive(parent));
+			if (!IsAlive(child))
+				UnityEngine.Debug.LogWarning($"Child entity is destroyed [id: {child.id} gen: {child.generation}]");
+			E.ASSERT(IsAlive(child));
+			E.ASSERT(IsAlive(parent));
 
 			ref var childElement = ref killElementArchetype.GetElement(child);
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
@@ -93,7 +95,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void AddKillChildren<T>(Entity parent, in T children) where T: IEnumerable<Entity>
 		{
-			Debug.Assert(IsAlive(parent));
+			E.ASSERT(IsAlive(parent));
 
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
 
@@ -103,7 +105,7 @@ namespace Sapientia.MemoryAllocator.State
 
 			foreach (var child in children)
 			{
-				Debug.Assert(IsAlive(child));
+				E.ASSERT(IsAlive(child));
 				ref var childElement = ref killElementArchetype.GetElement(child);
 				if (!childElement.parents.IsCreated)
 					childElement.parents = new List<Entity>(allocator);
@@ -136,13 +138,13 @@ namespace Sapientia.MemoryAllocator.State
 				return false;
 			if (killRequestArchetype.HasElement(entity))
 				return false;
-			return entityStatePart->IsEntityExist(allocator, entity);
+			return entityStatePart.ptr->IsEntityExist(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsExist(Entity entity)
 		{
-			return entityStatePart->IsEntityExist(allocator, entity);
+			return entityStatePart.ptr->IsEntityExist(allocator, entity);
 		}
 	}
 }

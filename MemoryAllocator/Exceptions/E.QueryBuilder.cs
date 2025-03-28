@@ -27,13 +27,13 @@ namespace Sapientia.MemoryAllocator
 			[BURST_DISCARD]
 			[HIDE_CALLSTACK]
 			private static void ThrowNotBurst(string str) =>
-				throw new QueryBuilderException($"{Exception.Format(str)}");
+				throw new QueryBuilderException($"{Format(str)}");
 		}
 	}
 
 	public static partial class E
 	{
-		[Conditional(COND.EXCEPTIONS_QUERY_BUILDER)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void QUERY_BUILDER_AS_JOB(bool asJob)
 		{
@@ -41,7 +41,7 @@ namespace Sapientia.MemoryAllocator
 				QueryBuilderException.Throw("Query Builder can't use this method because it is in AsJob mode");
 		}
 
-		[Conditional(COND.EXCEPTIONS_QUERY_BUILDER)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void QUERY_BUILDER_PARALLEL_FOR(uint parallelForBatch)
 		{

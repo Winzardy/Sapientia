@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator
 		public int ZoneSize
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => zonesList[0].size;
+			get => zonesList[0]->size;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,7 +36,7 @@ namespace Sapientia.MemoryAllocator
 
 			zonesList = new UnsafeList<MemoryZone>();
 
-			var maxBlockSizeId = zoneSize.Log2() + 1 - MIN_BLOCK_SIZE_LOG2;
+			var maxBlockSizeId = GetBlockSizeId(zoneSize) + 1;
 			freeBlocksCollections = new UnsafeList<MemoryBlockPtrCollection>(maxBlockSizeId);
 
 			var blockSize = MIN_BLOCK_SIZE;
@@ -48,26 +48,25 @@ namespace Sapientia.MemoryAllocator
 
 			AllocateMemoryZone(zoneSize);
 
-			serviceRegistry = ServiceRegistry.Create((Allocator*)this.AsPointer());
+			serviceRegistry = ServiceRegistry.Create(new SafePtr<Allocator>(this.AsPointer(), 1));
 		}
 
 		public void Dispose()
 		{
 			for (var i = 0; i < freeBlocksCollections.count; i++)
 			{
-				freeBlocksCollections[i].Dispose();
+				freeBlocksCollections[i]->Dispose();
 			}
 			freeBlocksCollections.Dispose();
-			freeBlocksCollections = default;
 
 			for (var i = 0; i < zonesList.count; i++)
 			{
-				zonesList[i].Dispose();
+				zonesList[i]->Dispose();
 			}
 			zonesList.Dispose();
-			zonesList = default;
-		}
 
+			this = default;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void GetSize(out int reservedSize, out int usedSize, out int freeSize)
@@ -91,7 +90,7 @@ namespace Sapientia.MemoryAllocator
 			var size = 0;
 			for (var i = 0; i < zonesList.count; i++)
 			{
-				size += zonesList[i].size;
+				size += zonesList[i]->size;
 			}
 
 			return size;

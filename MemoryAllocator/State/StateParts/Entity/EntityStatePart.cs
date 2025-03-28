@@ -9,7 +9,7 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe interface IEntityDestroySubscriber : IInterfaceProxyType
 	{
-		public void EntityArrayDestroyed(Allocator* allocator, Entity* entities, int count);
+		public void EntityArrayDestroyed(SafePtr<Allocator> allocator, Entity* entities, int count);
 	}
 
 	public unsafe struct EntityStatePart : IWorldStatePart
@@ -27,7 +27,7 @@ namespace Sapientia.MemoryAllocator.State
 		public MemArray<FixedString64Bytes> entityIdToName;
 		public int MaxEntitiesCount { get; private set; }
 
-		public string GetEntityName(Allocator* allocator, in Entity entity)
+		public string GetEntityName(SafePtr<Allocator> allocator, in Entity entity)
 		{
 			return entityIdToName[allocator, entity.id].ToString();
 		}
@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 		}
 
-		public void Initialize(Allocator* allocator, IndexedPtr self)
+		public void Initialize(SafePtr<Allocator> allocator, IndexedPtr self)
 		{
 			_freeEntitiesIds = new MemArray<ushort>(allocator, EntitiesCapacity, ClearOptions.UninitializedMemory);
 			_entityIdToGeneration = new MemArray<ushort>(allocator, EntitiesCapacity);
@@ -70,7 +70,7 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 		}
 
-		public void AddSubscriber(Allocator* allocator, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
+		public void AddSubscriber(SafePtr<Allocator> allocator, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
 			_entityDestroySubscribers.Subscribe(allocator, subscriber);
 		}
@@ -85,15 +85,15 @@ namespace Sapientia.MemoryAllocator.State
 			_entityDestroySubscribers.UnSubscribe(subscriber);
 		}
 
-		public void RemoveSubscriber(Allocator* allocator, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
+		public void RemoveSubscriber(SafePtr<Allocator> allocator, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
 			_entityDestroySubscribers.UnSubscribe(allocator, subscriber);
 		}
 
 #if UNITY_EDITOR
-		public Entity CreateEntity(Allocator* allocator, in FixedString64Bytes name = default)
+		public Entity CreateEntity(SafePtr<Allocator> allocator, in FixedString64Bytes name = default)
 #else
-		public Entity CreateEntity(Allocator* allocator)
+		public Entity CreateEntity(SafePtr<Allocator> allocator)
 
 #endif
 		{
@@ -102,17 +102,16 @@ namespace Sapientia.MemoryAllocator.State
 			var id = _freeEntitiesIds[allocator, EntitiesCount++];
 			var generation = ++_entityIdToGeneration[allocator, id];
 
-			var entity = new Entity(id, generation, allocator->allocatorId);
+			var entity = new Entity(id, generation, allocator.Value().allocatorId);
 #if UNITY_EDITOR
 			entityIdToName[allocator, id] = name;
 			if (MaxEntitiesCount < EntitiesCount)
 				MaxEntitiesCount = EntitiesCount;
 #endif
-
 			return entity;
 		}
 
-		public bool IsEntityExist(Allocator* allocator, in Entity entity)
+		public bool IsEntityExist(SafePtr<Allocator> allocator, in Entity entity)
 		{
 			return entity.id < EntitiesCapacity && _entityIdToGeneration[allocator, entity.id] == entity.generation;
 		}
@@ -123,7 +122,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DestroyEntities(Allocator* allocator, Entity* entities, int count)
+		public void DestroyEntities(SafePtr<Allocator> allocator, Entity* entities, int count)
 		{
 #if DEBUG
 			for (var i = 0; i < count; i++)
@@ -143,7 +142,7 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		private void EnsureCapacity(Allocator* allocator, int index)
+		private void EnsureCapacity(SafePtr<Allocator> allocator, int index)
 		{
 			if (index < EntitiesCapacity)
 				return;
@@ -157,7 +156,7 @@ namespace Sapientia.MemoryAllocator.State
 #if UNITY_EDITOR
 			entityIdToName.Resize(allocator, EntitiesCapacity);
 #endif
-#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && ARCHETYPES_DEBUG)
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 			UnityEngine.Debug.LogWarning($"Entities Capacity was expanded to {EntitiesCapacity}");
 #endif
 		}

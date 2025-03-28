@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Sapientia.MemoryAllocator
@@ -10,8 +11,13 @@ namespace Sapientia.MemoryAllocator
 			public int sizeId;
 			public int freeId;
 
-			public bool IsFree => freeId >= 0;
+			public bool IsFree
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => freeId >= 0;
+			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public BlockId(int sizeId, int freeId)
 			{
 				this.sizeId = sizeId;

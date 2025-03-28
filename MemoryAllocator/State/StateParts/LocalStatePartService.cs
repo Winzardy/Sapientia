@@ -5,18 +5,18 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe interface IWoldLocalStatePart
 	{
-		public void Initialize(Allocator* allocator){}
+		public void Initialize(SafePtr<Allocator> allocator){}
 
-		public void Dispose(Allocator* allocator){}
+		public void Dispose(SafePtr<Allocator> allocator){}
 	}
 
 	public unsafe class LocalStatePartService
 	{
 		public readonly SimpleList<IWoldLocalStatePart> localStateParts = new();
 
-		public static void AddStatePart(Allocator* allocator, IWoldLocalStatePart statePart)
+		public static void AddStatePart(SafePtr<Allocator> allocator, IWoldLocalStatePart statePart)
 		{
-			var service = ServiceContext<AllocatorId>.GetOrCreateService<LocalStatePartService>(allocator->allocatorId);
+			var service = ServiceContext<AllocatorId>.GetOrCreateService<LocalStatePartService>(allocator.Value().allocatorId);
 			if (service == null)
 			{
 				service = new LocalStatePartService();
@@ -25,9 +25,9 @@ namespace Sapientia.MemoryAllocator.State
 			service.localStateParts.Add(statePart);
 		}
 
-		public static void Initialize(Allocator* allocator)
+		public static void Initialize(SafePtr<Allocator> allocator)
 		{
-			var service = ServiceContext<AllocatorId>.GetOrCreateService<LocalStatePartService>(allocator->allocatorId);
+			var service = ServiceContext<AllocatorId>.GetOrCreateService<LocalStatePartService>(allocator.Value().allocatorId);
 
 			foreach (var statePart in service.localStateParts)
 			{
@@ -35,9 +35,9 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		public static void Dispose(Allocator* allocator)
+		public static void Dispose(SafePtr<Allocator> allocator)
 		{
-			if (!ServiceLocator<AllocatorId, LocalStatePartService>.TryRemoveService(allocator->allocatorId, out var service))
+			if (!ServiceLocator<AllocatorId, LocalStatePartService>.TryRemoveService(allocator.Value().allocatorId, out var service))
 				return;
 
 			foreach (var statePart in service.localStateParts)

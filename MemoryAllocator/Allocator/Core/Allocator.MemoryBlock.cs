@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -13,6 +14,12 @@ namespace Sapientia.MemoryAllocator
 			public int prevBlockOffset;
 			public int blockSize; // Равен размеру структуры MemoryBlock + размер свободной памяти блока
 
+			public bool IsStartBlock
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => prevBlockOffset >= 0;
+			}
+
 			public MemoryBlock(BlockId id, int prevBlockOffset, int blockSize)
 			{
 				this.id = id;
@@ -25,6 +32,25 @@ namespace Sapientia.MemoryAllocator
 			{
 				return new MemoryBlock(id, 0, zoneSize);
 			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private int GetBlockSizeId(int blockSize)
+		{
+			return blockSize.Log2() - MIN_BLOCK_SIZE_LOG2;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private int GetBlockSizeId(int blockSize, out int roundedUpSizeId)
+		{
+			var log2= blockSize.Log2();
+			var sizeId = log2 - MIN_BLOCK_SIZE_LOG2;
+			roundedUpSizeId = sizeId;
+
+			if ((1 << log2) != blockSize)
+				roundedUpSizeId++;
+
+			return sizeId;
 		}
 	}
 }

@@ -14,7 +14,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ServiceRegistry Create(Allocator* allocator, int capacity = 128)
+		public static ServiceRegistry Create(SafePtr<Allocator> allocator, int capacity = 128)
 		{
 			return new ServiceRegistry
 			{

@@ -30,7 +30,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public IndexedPtr(Allocator* allocator, void* cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
+		public IndexedPtr(SafePtr<Allocator> allocator, SafePtr cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
 		{
 			_ptr = new Ptr(allocator, cachedPtr, memPtr);
 			this.typeIndex = typeIndex;
@@ -49,16 +49,16 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(Allocator* allocator) where T : unmanaged
+		public static IndexedPtr Create<T>(SafePtr<Allocator> allocator) where T : unmanaged
 		{
-			var memPtr = allocator->MemAlloc<T>(out var rawPtr);
+			var memPtr = allocator.Value().MemAlloc<T>(out var rawPtr);
 			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(Allocator* allocator, in T value) where T : unmanaged
+		public static IndexedPtr Create<T>(SafePtr<Allocator> allocator, in T value) where T : unmanaged
 		{
-			var memPtr = allocator->MemAlloc<T>(value, out var rawPtr);
+			var memPtr = allocator.Value().MemAlloc<T>(value, out var rawPtr);
 			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
@@ -66,7 +66,7 @@ namespace Sapientia.MemoryAllocator.Data
 		public static IndexedPtr Create<T>(in T value) where T : unmanaged
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
-			var memPtr = allocator->MemAlloc<T>(value, out var rawPtr);
+			var memPtr = allocator.Value().MemAlloc<T>(value, out var rawPtr);
 			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
@@ -78,38 +78,38 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public ref T GetValue<T>(Allocator* allocator) where T : unmanaged
+		public ref T GetValue<T>(SafePtr<Allocator> allocator) where T : unmanaged
 		{
 			Debug.Assert(IsCreated);
 			return ref _ptr.Get<T>(allocator);
 		}
 
 		[INLINE(256)]
-		public void* GetPtr()
+		public SafePtr GetPtr()
 		{
 			Debug.Assert(IsCreated);
 			return _ptr.GetPtr();
 		}
 
 		[INLINE(256)]
-		public void* GetPtr(Allocator* allocator)
+		public SafePtr GetPtr(SafePtr<Allocator> allocator)
 		{
 			Debug.Assert(IsCreated);
 			return _ptr.GetPtr(allocator);
 		}
 
 		[INLINE(256)]
-		public T* GetPtr<T>() where T: unmanaged
+		public SafePtr<T> GetPtr<T>() where T: unmanaged
 		{
 			Debug.Assert(IsCreated);
-			return (T*)_ptr.GetPtr();
+			return _ptr.GetPtr();
 		}
 
 		[INLINE(256)]
-		public T* GetPtr<T>(Allocator* allocator) where T: unmanaged
+		public SafePtr<T> GetPtr<T>(SafePtr<Allocator> allocator) where T: unmanaged
 		{
 			Debug.Assert(IsCreated);
-			return (T*)_ptr.GetPtr(allocator);
+			return _ptr.GetPtr(allocator);
 		}
 
 		[INLINE(256)]
@@ -134,13 +134,13 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return _ptr.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			_ptr.Dispose(allocator);
 			this = default;
@@ -154,7 +154,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public IndexedPtr CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
+		public IndexedPtr CopyTo(SafePtr<Allocator> srsAllocator, SafePtr<Allocator> dstAllocator)
 		{
 			return new IndexedPtr(_ptr.CopyTo(srsAllocator, dstAllocator), typeIndex);
 		}

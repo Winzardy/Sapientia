@@ -13,6 +13,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveService(SafePtr<Allocator> allocator, ServiceRegistryContext context)
+		{
+			_typeToPtr.Remove(allocator, context);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveService<T>() where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
@@ -20,9 +26,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveService<T>(SafePtr<Allocator> allocator) where T: unmanaged, IIndexedType
+		{
+			var typeIndex = TypeIndex.Create<T>();
+			_typeToPtr.Remove(allocator, typeIndex);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveService(IndexedPtr indexedPtr)
 		{
 			_typeToPtr.Remove(indexedPtr.typeIndex);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveService(SafePtr<Allocator> allocator, IndexedPtr indexedPtr)
+		{
+			_typeToPtr.Remove(allocator, indexedPtr.typeIndex);
 		}
 	}
 }

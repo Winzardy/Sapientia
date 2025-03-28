@@ -22,10 +22,22 @@ namespace Sapientia.Collections
 			this.capacity = capacity;
 		}
 
-		public ref T this[int index]
+		public ref T Last
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref array[index];
+			get => ref array[count - 1];
+		}
+
+		public T* LastPtr
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => &array[count - 1];
+		}
+
+		public T* this[int index]
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => &array[index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -106,7 +118,7 @@ namespace Sapientia.Collections
 					var arr = new T[_arr.count];
 					for (var i = 0; i < _arr.count; ++i)
 					{
-						arr[i] = _arr[i];
+						arr[i] = *_arr[i];
 					}
 
 					return arr;

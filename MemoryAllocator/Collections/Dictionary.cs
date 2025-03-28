@@ -56,20 +56,20 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return buckets.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
-		public Dictionary(Allocator* allocator, int capacity)
+		public Dictionary(SafePtr<Allocator> allocator, int capacity)
 		{
 			this = default;
 			Initialize(allocator, capacity);
 		}
 
 		[INLINE(256)]
-		private void Initialize(Allocator* allocator, int capacity)
+		private void Initialize(SafePtr<Allocator> allocator, int capacity)
 		{
 			var prime = capacity.GetPrime();
 			freeList = -1;
@@ -78,7 +78,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			buckets.Dispose(allocator);
 			entries.Dispose(allocator);
@@ -86,13 +86,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Entry* GetEntryPtr()
+		public SafePtr<Entry> GetEntryPtr()
 		{
 			return entries.GetValuePtr();
 		}
 
 		[INLINE(256)]
-		public Entry* GetEntryPtr(Allocator* allocator)
+		public SafePtr<Entry> GetEntryPtr(SafePtr<Allocator> allocator)
 		{
 			return entries.GetValuePtr(allocator);
 		}
@@ -104,7 +104,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void ReplaceWith(Allocator* allocator, in Dictionary<TKey, TValue> other)
+		public void ReplaceWith(SafePtr<Allocator> allocator, in Dictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr()) return;
 
@@ -113,7 +113,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(Allocator* allocator, in Dictionary<TKey, TValue> other)
+		public void CopyFrom(SafePtr<Allocator> allocator, in Dictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 				return;
@@ -138,7 +138,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
 		/// <param name="allocator"></param>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public ref TValue this[Allocator* allocator, in TKey key]
+		public ref TValue this[SafePtr<Allocator> allocator, in TKey key]
 		{
 			[INLINE(256)]
 			get
@@ -179,7 +179,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref TValue GetValue(Allocator* allocator, TKey key)
+		public ref TValue GetValue(SafePtr<Allocator> allocator, TKey key)
 		{
 			var entry = FindEntry(allocator, key);
 			if (entry >= 0)
@@ -191,7 +191,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref TValue GetValue(Allocator* allocator, TKey key, out bool success)
+		public ref TValue GetValue(SafePtr<Allocator> allocator, TKey key, out bool success)
 		{
 			var entry = FindEntry(allocator, key);
 			if (entry >= 0)
@@ -205,7 +205,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool TryGetValue(Allocator* allocator, TKey key, out TValue value)
+		public bool TryGetValue(SafePtr<Allocator> allocator, TKey key, out TValue value)
 		{
 			var entry = FindEntry(allocator, key);
 			if (entry >= 0)
@@ -219,7 +219,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool TryGetValuePtr(Allocator* allocator, TKey key, out TValue* value)
+		public bool TryGetValuePtr(SafePtr<Allocator> allocator, TKey key, out TValue* value)
 		{
 			var entry = FindEntry(allocator, key);
 			if (entry >= 0)
@@ -246,14 +246,14 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="key">The key of the element to add to the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public void Add(Allocator* allocator, TKey key, TValue value)
+		public void Add(SafePtr<Allocator> allocator, TKey key, TValue value)
 		{
 			TryInsert(allocator, key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
 		[INLINE(256)]
-		public void Clear(Allocator* allocator)
+		public void Clear(SafePtr<Allocator> allocator)
 		{
 			var clearCount = count;
 			if (clearCount > 0)
@@ -270,7 +270,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="allocator"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
 		[INLINE(256)]
-		public bool ContainsKey(Allocator* allocator, TKey key)
+		public bool ContainsKey(SafePtr<Allocator> allocator, TKey key)
 		{
 			return FindEntry(allocator, key) >= 0;
 		}
@@ -279,7 +279,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="allocator"></param>
 		/// <param name="value">The value to locate in the dictionary.</param>
 		[INLINE(256)]
-		public bool ContainsValue(Allocator* allocator, TValue value)
+		public bool ContainsValue(SafePtr<Allocator> allocator, TValue value)
 		{
 			var rawEntries = entries.GetValuePtr(allocator);
 			for (var i = 0; i < count; i++)
@@ -292,7 +292,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		private int FindEntry(Allocator* allocator, in TKey key)
+		private int FindEntry(SafePtr<Allocator> allocator, in TKey key)
 		{
 			if (buckets.IsCreated)
 			{
@@ -310,7 +310,7 @@ namespace Sapientia.MemoryAllocator
 			return -1;
 		}
 
-		private bool TryInsert(Allocator* allocator, TKey key, TValue value, InsertionBehavior behavior)
+		private bool TryInsert(SafePtr<Allocator> allocator, TKey key, TValue value, InsertionBehavior behavior)
 		{
 			if (!buckets.IsCreated)
 			{
@@ -353,7 +353,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				if (count == entries.Length)
 				{
-					Resize(allocator);
+					IncreaseCapacity(allocator);
 					targetBucket = hashCode % buckets.Length;
 
 					rawBuckets = buckets.GetValuePtr(allocator);
@@ -374,13 +374,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		private void Resize(Allocator* allocator)
+		private void IncreaseCapacity(SafePtr<Allocator> allocator)
 		{
-			Resize(allocator, count.ExpandPrime());
+			IncreaseCapacity(allocator, count.ExpandPrime());
 		}
 
 		[INLINE(256)]
-		private void Resize(Allocator* allocator, int newSize)
+		private void IncreaseCapacity(SafePtr<Allocator> allocator, int newSize)
 		{
 			var bucketsArray = new MemArray<int>(allocator, newSize, -1);
 			var entryArray = new MemArray<Entry>(allocator, newSize);
@@ -421,7 +421,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public bool Remove(Allocator* allocator, TKey key)
+		public bool Remove(SafePtr<Allocator> allocator, TKey key)
 		{
 			return Remove(allocator, key, out _);
 		}
@@ -431,7 +431,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public bool Remove(Allocator* allocator, TKey key, out TValue value)
+		public bool Remove(SafePtr<Allocator> allocator, TKey key, out TValue value)
 		{
 			value = default;
 
@@ -476,13 +476,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool TryAdd(Allocator* allocator, TKey key, TValue value)
+		public bool TryAdd(SafePtr<Allocator> allocator, TKey key, TValue value)
 		{
 			return TryInsert(allocator, key, value, InsertionBehavior.None);
 		}
 
 		[INLINE(256)]
-		public int EnsureCapacity(Allocator* allocator, int capacity)
+		public int EnsureCapacity(SafePtr<Allocator> allocator, int capacity)
 		{
 			Debug.Assert(IsCreated);
 
@@ -499,12 +499,12 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			var prime = capacity.GetPrime();
-			Resize(allocator, prime);
+			IncreaseCapacity(allocator, prime);
 			return prime;
 		}
 
 		[INLINE(256)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(Allocator* allocator)
+		public DictionaryEnumerator<TKey, TValue> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
 		}
@@ -516,7 +516,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(Allocator* allocator)
+		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
 		}
@@ -528,7 +528,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(Allocator* allocator)
+		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new(new(GetEntryPtr(allocator), LastIndex));
 		}
@@ -540,13 +540,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<IntPtr, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(Allocator* allocator)
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new(new(GetEntryPtr(allocator), LastIndex));
 		}
 
 		[INLINE(256)]
-		public Enumerable<IntPtr, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable()
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable()
 		{
 			return new(new(GetEntryPtr(), LastIndex));
 		}

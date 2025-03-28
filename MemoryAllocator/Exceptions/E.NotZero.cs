@@ -27,7 +27,7 @@ namespace Sapientia.MemoryAllocator
 
 	public static partial class E
 	{
-		[Conditional(COND.EXCEPTIONS_COLLECTIONS)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void NOT_ZERO(in uint index)
 		{

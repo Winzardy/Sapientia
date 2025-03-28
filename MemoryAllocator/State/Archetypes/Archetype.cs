@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Collections;
+using Sapientia.Collections.Fixed;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
@@ -46,17 +47,17 @@ namespace Sapientia.MemoryAllocator.State
 
 	public unsafe interface IElementDestroyHandler<T> : IElementDestroyHandler where T: unmanaged, IComponent
 	{
-		public void EntityPtrArrayDestroyed(Allocator* allocator, ArchetypeElement<T>** elementsPtr, int count);
-		public void EntityArrayDestroyed(Allocator* allocator, ArchetypeElement<T>* elementsPtr, int count);
+		public void EntityPtrArrayDestroyed(SafePtr<Allocator> allocator, ArchetypeElement<T>** elementsPtr, int count);
+		public void EntityArrayDestroyed(SafePtr<Allocator> allocator, ArchetypeElement<T>* elementsPtr, int count);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void IElementDestroyHandler.EntityPtrArrayDestroyed(Allocator* allocator, void** elementsPtr, int count)
+		void IElementDestroyHandler.EntityPtrArrayDestroyed(SafePtr<Allocator> allocator, void** elementsPtr, int count)
 		{
 			EntityPtrArrayDestroyed(allocator, (ArchetypeElement<T>**)elementsPtr, count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void IElementDestroyHandler.EntityArrayDestroyed(Allocator* allocator, void* elementsPtr, int count)
+		void IElementDestroyHandler.EntityArrayDestroyed(SafePtr<Allocator> allocator, void* elementsPtr, int count)
 		{
 			EntityArrayDestroyed(allocator, (ArchetypeElement<T>*)elementsPtr, count);
 		}
@@ -66,13 +67,13 @@ namespace Sapientia.MemoryAllocator.State
 	public unsafe interface IElementDestroyHandler : IInterfaceProxyType
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityPtrArrayDestroyed(Allocator* allocator, void** elementsPtr, int count);
+		public void EntityPtrArrayDestroyed(SafePtr<Allocator> allocator, void** elementsPtr, int count);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityArrayDestroyed(Allocator* allocator, void* elementsPtr, int count);
+		public void EntityArrayDestroyed(SafePtr<Allocator> allocator, void* elementsPtr, int count);
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe struct Archetype : IEntityDestroySubscriber, IEnumerable<IntPtr>, IIndexedType
+	public unsafe struct Archetype : IEntityDestroySubscriber, IIndexedType
 	{
 		public static class DefaultValue<TValue>
 		{
@@ -83,6 +84,10 @@ namespace Sapientia.MemoryAllocator.State
 
 		private ProxyPtr<IElementDestroyHandlerProxy> _destroyHandlerProxy;
 
+#if DEBUG
+		public FixedString64Bytes elementTypeName;
+#endif
+
 		public int Count
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,31 +95,31 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return _elements.GetAllocatorPtr();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, int elementsCount) where T: unmanaged, IIndexedType
+		public static ref Archetype RegisterArchetype<T>(SafePtr<Allocator> allocator, int elementsCount) where T: unmanaged, IIndexedType
 		{
-			return ref RegisterArchetype<T>(allocator, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity);
+			return ref RegisterArchetype<T>(allocator, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, allocator.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, ServiceRegistryContext context, int elementsCount) where T: unmanaged
+		public static ref Archetype RegisterArchetype<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context, int elementsCount) where T: unmanaged
 		{
-			return ref RegisterArchetype<T>(allocator, context, elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity);
+			return ref RegisterArchetype<T>(allocator, context, elementsCount, allocator.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, int elementsCount, int entitiesCapacity) where T: unmanaged, IIndexedType
+		public static ref Archetype RegisterArchetype<T>(SafePtr<Allocator> allocator, int elementsCount, int entitiesCapacity) where T: unmanaged, IIndexedType
 		{
 			return ref RegisterArchetype<T>(allocator, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, entitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, ServiceRegistryContext context, int elementsCount, int entitiesCapacity) where T: unmanaged
+		public static ref Archetype RegisterArchetype<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context, int elementsCount, int entitiesCapacity) where T: unmanaged
 		{
 			var archetypePtr = CreateArchetype<T>(allocator, elementsCount, entitiesCapacity);
 			context.RegisterService(allocator, archetypePtr);
@@ -123,25 +128,25 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, int elementsCount, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
+		public static ref Archetype RegisterArchetype<T>(SafePtr<Allocator> allocator, int elementsCount, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
 		{
-			return ref RegisterArchetype<T>(allocator, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity, out archetypePtr);
+			return ref RegisterArchetype<T>(allocator, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, allocator.GetService<EntityStatePart>().EntitiesCapacity, out archetypePtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, ServiceRegistryContext context, int elementsCount, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
+		public static ref Archetype RegisterArchetype<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context, int elementsCount, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
 		{
-			return ref RegisterArchetype<T>(allocator, context, elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity, out archetypePtr);
+			return ref RegisterArchetype<T>(allocator, context, elementsCount, allocator.GetService<EntityStatePart>().EntitiesCapacity, out archetypePtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, int elementsCount, int entitiesCapacity, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
+		public static ref Archetype RegisterArchetype<T>(SafePtr<Allocator> allocator, int elementsCount, int entitiesCapacity, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
 		{
 			return ref RegisterArchetype<T>(allocator, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, entitiesCapacity, out archetypePtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(Allocator* allocator, ServiceRegistryContext context, int elementsCount, int entitiesCapacity, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
+		public static ref Archetype RegisterArchetype<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context, int elementsCount, int entitiesCapacity, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
 		{
 			archetypePtr = CreateArchetype<T>(allocator, elementsCount, entitiesCapacity);
 			context.RegisterService(allocator, archetypePtr);
@@ -149,35 +154,38 @@ namespace Sapientia.MemoryAllocator.State
 			return ref archetypePtr.GetArchetype(allocator);
 		}
 
-		public static Ptr<Archetype> CreateArchetype<T>(Allocator* allocator, int elementsCount, int entitiesCapacity) where T: unmanaged
+		public static Ptr<Archetype> CreateArchetype<T>(SafePtr<Allocator> allocator, int elementsCount, int entitiesCapacity) where T: unmanaged
 		{
 			var archetypePtr = Ptr<Archetype>.Create(allocator);
 			ref var archetype = ref archetypePtr.GetValue(allocator);
 
-			archetype._elements  = new SparseSet(allocator, TSize<ArchetypeElement<T>>.size, elementsCount, entitiesCapacity);
+			archetype._elements = new SparseSet(allocator, TSize<ArchetypeElement<T>>.size, elementsCount, entitiesCapacity);
 			archetype._destroyHandlerProxy = default;
+#if DEBUG
+			archetype.elementTypeName = typeof(T).Name;
+#endif
 
-			allocator->GetService<EntityStatePart>().AddSubscriber(allocator, (IndexedPtr)archetypePtr);
+			allocator.GetService<EntityStatePart>().AddSubscriber(allocator, (IndexedPtr)archetypePtr);
 
 			return archetypePtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Ptr<Archetype> RegisterArchetype(Allocator* allocator, ServiceRegistryContext context, int elementsCount)
+		public static Ptr<Archetype> RegisterArchetype(SafePtr<Allocator> allocator, ServiceRegistryContext context, int elementsCount)
 		{
-			var ptr = CreateArchetype(allocator, elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity);
+			var ptr = CreateArchetype(allocator, elementsCount, allocator.GetService<EntityStatePart>().EntitiesCapacity);
 			context.RegisterService(allocator, (Ptr)ptr);
 
 			return ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Ptr<Archetype> CreateArchetype(Allocator* allocator, int elementsCount)
+		public static Ptr<Archetype> CreateArchetype(SafePtr<Allocator> allocator, int elementsCount)
 		{
-			return CreateArchetype(allocator, elementsCount, allocator->GetService<EntityStatePart>().EntitiesCapacity);
+			return CreateArchetype(allocator, elementsCount, allocator.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
-		public static Ptr<Archetype> CreateArchetype(Allocator* allocator, int elementsCount, int entitiesCapacity)
+		public static Ptr<Archetype> CreateArchetype(SafePtr<Allocator> allocator, int elementsCount, int entitiesCapacity)
 		{
 			var archetypePtr = Ptr<Archetype>.Create(allocator);
 			ref var archetype = ref archetypePtr.GetValue(allocator);
@@ -185,7 +193,7 @@ namespace Sapientia.MemoryAllocator.State
 			archetype._elements = new SparseSet(allocator, TSize<ArchetypeElement>.size, elementsCount, entitiesCapacity);
 			archetype._destroyHandlerProxy = default;
 
-			allocator->GetService<EntityStatePart>().AddSubscriber(allocator, (IndexedPtr)archetypePtr);
+			allocator.GetService<EntityStatePart>().AddSubscriber(allocator, (IndexedPtr)archetypePtr);
 
 			return archetypePtr;
 		}
@@ -197,25 +205,25 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetDestroyHandler<THandler>(Allocator* allocator) where THandler : unmanaged, IElementDestroyHandler
+		public void SetDestroyHandler<THandler>(SafePtr<Allocator> allocator) where THandler : unmanaged, IElementDestroyHandler
 		{
 			_destroyHandlerProxy = ProxyPtr<IElementDestroyHandlerProxy>.Create<THandler>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ArchetypeElement<T>* GetRawElements<T>() where T: unmanaged
+		public SafePtr<ArchetypeElement<T>> GetRawElements<T>() where T: unmanaged
 		{
 			return _elements.GetValuePtr<ArchetypeElement<T>>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ArchetypeElement<T>* GetRawElements<T>(Allocator* allocator) where T: unmanaged
+		public SafePtr<ArchetypeElement<T>> GetRawElements<T>(SafePtr<Allocator> allocator) where T: unmanaged
 		{
 			return _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TryReadElement<T>(Allocator* allocator, Entity entity, out T result) where T : unmanaged
+		public bool TryReadElement<T>(SafePtr<Allocator> allocator, Entity entity, out T result) where T : unmanaged
 		{
 			if (!_elements.Has(allocator, entity.id))
 			{
@@ -233,7 +241,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref readonly T ReadElement<T>(Allocator* allocator, Entity entity) where T : unmanaged
+		public ref readonly T ReadElement<T>(SafePtr<Allocator> allocator, Entity entity) where T : unmanaged
 		{
 			if (!_elements.Has(allocator, entity.id))
 				return ref DefaultValue<T>.DEFAULT;
@@ -241,7 +249,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref readonly T ReadElement<T>(Allocator* allocator, Entity entity, out bool isExist) where T : unmanaged
+		public ref readonly T ReadElement<T>(SafePtr<Allocator> allocator, Entity entity, out bool isExist) where T : unmanaged
 		{
 			isExist = _elements.Has(allocator, entity.id);
 			if (!isExist)
@@ -250,7 +258,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref readonly T ReadElementNoCheck<T>(Allocator* allocator, Entity entity) where T : unmanaged
+		public ref readonly T ReadElementNoCheck<T>(SafePtr<Allocator> allocator, Entity entity) where T : unmanaged
 		{
 			return ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id).value;
 		}
@@ -268,7 +276,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SimpleList<T> ReadElements<T, TEnumerable>(Allocator* allocator, TEnumerable entities) where T : unmanaged where TEnumerable: IEnumerable<Entity>
+		public SimpleList<T> ReadElements<T, TEnumerable>(SafePtr<Allocator> allocator, TEnumerable entities) where T : unmanaged where TEnumerable: IEnumerable<Entity>
 		{
 			var result = new SimpleList<T>();
 			foreach (var entity in entities)
@@ -286,7 +294,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool HasElement(Allocator* allocator, Entity entity)
+		public bool HasElement(SafePtr<Allocator> allocator, Entity entity)
 		{
 			return _elements.Has(allocator, entity.id);
 		}
@@ -298,7 +306,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool SetElement(Allocator* allocator, Entity entity)
+		public bool SetElement(SafePtr<Allocator> allocator, Entity entity)
 		{
 			if (_elements.Has(allocator, entity.id))
 				return false;
@@ -315,7 +323,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T TryGetElement<T>(Allocator* allocator, Entity entity, out bool isExist) where T : unmanaged
+		public ref T TryGetElement<T>(SafePtr<Allocator> allocator, Entity entity, out bool isExist) where T : unmanaged
 		{
 			if (_elements.Has(allocator, entity.id))
 			{
@@ -330,7 +338,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetElement<T>(Allocator* allocator, Entity entity, out bool isCreated) where T : unmanaged
+		public ref T GetElement<T>(SafePtr<Allocator> allocator, Entity entity, out bool isCreated) where T : unmanaged
 		{
 			if (_elements.Has(allocator, entity.id))
 			{
@@ -375,7 +383,7 @@ namespace Sapientia.MemoryAllocator.State
 		///
 		/// В общем это тупо, но обойти не получается...
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetElement<T>(Allocator* allocator, Entity entity) where T : unmanaged
+		public ref T GetElement<T>(SafePtr<Allocator> allocator, Entity entity) where T : unmanaged
 		{
 			if (_elements.Has(allocator, entity.id))
 			{
@@ -413,7 +421,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (_destroyHandlerProxy.IsCreated)
 			{
 				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
-				_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, valueArray, _elements.Count);
+				_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, valueArray.ptr, _elements.Count);
 			}
 			_elements.Clear(allocator);
 		}
@@ -425,7 +433,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (_destroyHandlerProxy.IsCreated)
 			{
 				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
-				_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, valueArray, _elements.Count);
+				_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, valueArray.ptr, _elements.Count);
 			}
 
 			_elements.ClearFast();
@@ -438,20 +446,20 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBackElement(Allocator* allocator, Entity entity)
+		public void RemoveSwapBackElement(SafePtr<Allocator> allocator, Entity entity)
 		{
 			if (_elements.TryGetDenseId(allocator, entity.id, out var denseId))
 			{
 				if (_destroyHandlerProxy.IsCreated)
 				{
-					_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, _elements.GetValuePtrByDenseId(allocator, entity.id), 1);
+					_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, _elements.GetValuePtrByDenseId(allocator, entity.id).ptr, 1);
 				}
 				_elements.RemoveSwapBackByDenseId(allocator, denseId);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void EntityArrayDestroyed(Allocator* allocator, Entity* entities, int count)
+		public void EntityArrayDestroyed(SafePtr<Allocator> allocator, Entity* entities, int count)
 		{
 			if (_destroyHandlerProxy.IsCreated)
 			{
@@ -463,7 +471,7 @@ namespace Sapientia.MemoryAllocator.State
 					var entityId = entities[i].id;
 					if (!_elements.Has(allocator, entityId))
 						continue;
-					archetypeEntities[archetypeEntitiesCount++] = _elements.GetValuePtr(allocator, entityId);
+					archetypeEntities[archetypeEntitiesCount++] = _elements.GetValuePtr(allocator, entityId).ptr;
 				}
 
 				_destroyHandlerProxy.EntityPtrArrayDestroyed(allocator, allocator, archetypeEntities, archetypeEntitiesCount);
@@ -482,7 +490,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			_elements.Dispose(allocator);
 		}
@@ -494,21 +502,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator GetPtrEnumerator()
+		public ListPtrEnumerator<T> GetPtrEnumerator<T>() where T: unmanaged
 		{
-			return _elements.GetPtrEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<IntPtr> IEnumerable<IntPtr>.GetEnumerator()
-		{
-			return GetPtrEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetPtrEnumerator();
+			return _elements.GetPtrEnumerator<T>();
 		}
 	}
 }

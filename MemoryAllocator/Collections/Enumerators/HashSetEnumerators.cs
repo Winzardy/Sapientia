@@ -9,11 +9,11 @@ namespace Sapientia.MemoryAllocator
 		where T: unmanaged, IEquatable<T>
 	{
 		public int LastIndex { get; }
-		public HashSet<T>.Slot* GetSlotPtr();
-		public HashSet<T>.Slot* GetSlotPtr(Allocator* allocator);
+		public SafePtr<HashSet<T>.Slot> GetSlotPtr();
+		public SafePtr<HashSet<T>.Slot> GetSlotPtr(SafePtr<Allocator> allocator);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerator<T> GetEnumerator(Allocator* allocator)
+		public HashSetEnumerator<T> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new HashSetEnumerator<T>(GetSlotPtr(allocator), LastIndex);
 		}
@@ -25,7 +25,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<T> GetPtrEnumerator(Allocator* allocator)
+		public HashSetPtrEnumerator<T> GetPtrEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new HashSetPtrEnumerator<T>(GetSlotPtr(allocator), LastIndex);
 		}
@@ -37,7 +37,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(Allocator* allocator)
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}
@@ -49,13 +49,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, HashSetPtrEnumerator<T>> GetPtrEnumerable(Allocator* allocator)
+		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, HashSetPtrEnumerator<T>> GetPtrEnumerable()
+		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable()
 		{
 			return new (new (GetSlotPtr(), LastIndex));
 		}
@@ -73,15 +73,15 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe struct HashSetPtrEnumerator<T> : IEnumerator<IntPtr>
+	public unsafe struct HashSetPtrEnumerator<T> : IEnumerator<SafePtr<T>>, IEnumerator<SafePtr>
 		where T: unmanaged, IEquatable<T>
 	{
-		private readonly HashSet<T>.Slot* _slots;
+		private readonly SafePtr<HashSet<T>.Slot> _slots;
 		private readonly int _lastIndex;
 		private int _index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal HashSetPtrEnumerator(HashSet<T>.Slot* slots, int lastIndex)
+		internal HashSetPtrEnumerator(SafePtr<HashSet<T>.Slot> slots, int lastIndex)
 		{
 			_slots = slots;
 			_lastIndex = lastIndex;
@@ -107,16 +107,22 @@ namespace Sapientia.MemoryAllocator
 			_index = -1;
 		}
 
+		SafePtr IEnumerator<SafePtr>.Current
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => new SafePtr<T>(&(_slots + _index).ptr->value, 1);
+		}
+
 		object IEnumerator.Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => Current;
 		}
 
-		public IntPtr Current
+		public SafePtr<T> Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (IntPtr)(&(_slots + _index)->value);
+			get => new SafePtr<T>(&(_slots + _index).ptr->value, 1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -129,12 +135,12 @@ namespace Sapientia.MemoryAllocator
 	public unsafe struct HashSetEnumerator<T> : IEnumerator<T>
 		where T: unmanaged, IEquatable<T>
 	{
-		private readonly HashSet<T>.Slot* _slots;
+		private readonly SafePtr<HashSet<T>.Slot> _slots;
 		private readonly int _lastIndex;
 		private int _index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal HashSetEnumerator(HashSet<T>.Slot* slots, int lastIndex)
+		internal HashSetEnumerator(SafePtr<HashSet<T>.Slot> slots, int lastIndex)
 		{
 			_slots = slots;
 			_lastIndex = lastIndex;
@@ -169,7 +175,7 @@ namespace Sapientia.MemoryAllocator
 		public T Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (_slots + _index)->value;
+			get => (_slots + _index).Value().value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

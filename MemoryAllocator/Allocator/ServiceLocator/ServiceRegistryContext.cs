@@ -53,25 +53,25 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService(MemPtr ptr)
 		{
-			AllocatorManager.CurrentAllocatorPtr->serviceRegistry.RegisterService(this, ptr);
+			AllocatorManager.CurrentAllocatorPtr.Value().serviceRegistry.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService(Ptr ptr)
 		{
-			AllocatorManager.CurrentAllocatorPtr->serviceRegistry.RegisterService(this, ptr);
+			AllocatorManager.CurrentAllocatorPtr.Value().serviceRegistry.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService(IndexedPtr indexedPtr)
 		{
-			AllocatorManager.CurrentAllocatorPtr->serviceRegistry.RegisterService(this, indexedPtr);
+			AllocatorManager.CurrentAllocatorPtr.Value().serviceRegistry.RegisterService(this, indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveService()
 		{
-			AllocatorManager.CurrentAllocatorPtr->serviceRegistry.RemoveService(this);
+			AllocatorManager.CurrentAllocatorPtr.Value().serviceRegistry.RemoveService(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -99,69 +99,69 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T* GetServicePtr<T>() where T: unmanaged
+		public SafePtr<T> GetServicePtr<T>() where T: unmanaged
 		{
 			return GetServicePtr<T>(AllocatorManager.CurrentAllocatorPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(Allocator* allocator, MemPtr ptr)
+		public void RegisterService(SafePtr<Allocator> allocator, MemPtr ptr)
 		{
-			allocator->serviceRegistry.RegisterService(this, ptr);
+			allocator.Value().serviceRegistry.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(Allocator* allocator, Ptr ptr)
+		public void RegisterService(SafePtr<Allocator> allocator, Ptr ptr)
 		{
-			allocator->serviceRegistry.RegisterService(this, ptr);
+			allocator.Value().serviceRegistry.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(Allocator* allocator, Ptr<T> ptr) where T: unmanaged
+		public void RegisterService<T>(SafePtr<Allocator> allocator, Ptr<T> ptr) where T: unmanaged
 		{
-			allocator->serviceRegistry.RegisterService(this, (Ptr)ptr);
+			allocator.Value().serviceRegistry.RegisterService(this, (Ptr)ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(Allocator* allocator, IndexedPtr indexedPtr)
+		public void RegisterService(SafePtr<Allocator> allocator, IndexedPtr indexedPtr)
 		{
-			allocator->serviceRegistry.RegisterService(this, indexedPtr);
+			allocator.Value().serviceRegistry.RegisterService(this, indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService(Allocator* allocator)
+		public void RemoveService(SafePtr<Allocator> allocator)
 		{
-			allocator->serviceRegistry.RemoveService(this);
+			allocator.Value().serviceRegistry.RemoveService(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(Allocator* allocator) where T: unmanaged
+		public ref T GetService<T>(SafePtr<Allocator> allocator) where T: unmanaged
 		{
-			return ref allocator->serviceRegistry.GetService<T>(allocator, this);
+			return ref allocator.Value().serviceRegistry.GetService<T>(allocator, this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(Allocator* allocator, out bool exist) where T: unmanaged
+		public ref T GetService<T>(SafePtr<Allocator> allocator, out bool exist) where T: unmanaged
 		{
-			return ref allocator->serviceRegistry.GetService<T>(allocator, this, out exist);
+			return ref allocator.Value().serviceRegistry.GetService<T>(allocator, this, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetServiceIndexedPtr<T>(Allocator* allocator) where T: unmanaged
+		public IndexedPtr GetServiceIndexedPtr<T>(SafePtr<Allocator> allocator) where T: unmanaged
 		{
-			return allocator->serviceRegistry.GetServiceIndexedPtr<T>(allocator, this);
+			return allocator.Value().serviceRegistry.GetServiceIndexedPtr<T>(allocator, this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Ptr<T> GetServiceCachedPtr<T>(Allocator* allocator) where T: unmanaged
+		public Ptr<T> GetServiceCachedPtr<T>(SafePtr<Allocator> allocator) where T: unmanaged
 		{
-			return allocator->serviceRegistry.GetServiceCachedPtr<T>(allocator, this);
+			return allocator.Value().serviceRegistry.GetServiceCachedPtr<T>(allocator, this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T* GetServicePtr<T>(Allocator* allocator) where T: unmanaged
+		public SafePtr<T> GetServicePtr<T>(SafePtr<Allocator> allocator) where T: unmanaged
 		{
-			return allocator->serviceRegistry.GetServicePtr<T>(allocator, this);
+			return allocator.Value().serviceRegistry.GetServicePtr<T>(allocator, this);
 		}
 	}
 }

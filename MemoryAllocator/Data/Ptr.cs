@@ -14,17 +14,17 @@ namespace Sapientia.MemoryAllocator.Data
 		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
 #endif
 		private ushort _version;
-		private void* _cachedPtr;
+		private SafePtr _cachedPtr;
 		public MemPtr memPtr;
 
 		[INLINE(256)]
 		public readonly bool IsValid() => memPtr.IsValid();
 
 		[INLINE(256)]
-		public Ptr(MemPtr memPtr) : this(0, null, memPtr) {}
+		public Ptr(MemPtr memPtr) : this(0, default, memPtr) {}
 
 		[INLINE(256)]
-		public Ptr(ushort version, void* cachedPtr, MemPtr memPtr)
+		public Ptr(ushort version, SafePtr cachedPtr, MemPtr memPtr)
 		{
 			_version = version;
 			_cachedPtr = cachedPtr;
@@ -32,114 +32,89 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public Ptr(Allocator* allocator, void* cachedPtr, MemPtr memPtr)
+		public Ptr(SafePtr<Allocator> allocator, SafePtr cachedPtr, MemPtr memPtr)
 		{
-			_version = allocator->version;
+			_version = allocator.Value().version;
 			_cachedPtr = cachedPtr;
 			this.memPtr = memPtr;
 		}
 
 		[INLINE(256)]
-		public bool IsValid(Allocator* allocator)
+		public bool IsValid(SafePtr<Allocator> allocator)
 		{
-			return _version == allocator->version;
+			return _version == allocator.Value().version;
 		}
 
 		[INLINE(256)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return memPtr.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
-		public void* GetPtr()
+		public SafePtr GetPtr()
 		{
 			var allocator = memPtr.GetAllocatorPtr();
-			if (allocator->version != _version)
+			if (allocator.Value().version != _version)
 			{
-				_cachedPtr = allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
 			return _cachedPtr;
 		}
 
 		[INLINE(256)]
-		public void* GetPtr(Allocator* allocator)
+		public SafePtr GetPtr(SafePtr<Allocator> allocator)
 		{
-			if (allocator->version != _version)
+			if (allocator.Value().version != _version)
 			{
-				_cachedPtr = allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
 			return _cachedPtr;
 		}
 
 		[INLINE(256)]
-		public T* GetPtr<T>(Allocator* allocator) where T: unmanaged
+		public SafePtr<T> GetPtr<T>(SafePtr<Allocator> allocator) where T: unmanaged
 		{
-			if (allocator->version != _version)
+			if (allocator.Value().version != _version)
 			{
-				_cachedPtr = allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
-			return (T*)_cachedPtr;
+			return _cachedPtr;
 		}
 
 		[INLINE(256)]
 		public ref T Get<T>() where T : unmanaged
 		{
 			var allocator = memPtr.GetAllocatorPtr();
-			if (allocator->version != _version)
+			if (allocator.Value().version != _version)
 			{
-				_cachedPtr = allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
-			return ref *(T*)_cachedPtr;
+			return ref _cachedPtr.Value<T>();
 		}
 
 		[INLINE(256)]
-		public ref T Get<T>(Allocator* allocator) where T : unmanaged
+		public ref T Get<T>(SafePtr<Allocator> allocator) where T : unmanaged
 		{
-			if (allocator->version != _version)
+			if (allocator.Value().version != _version)
 			{
-				_cachedPtr = allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
-			return ref *(T*)_cachedPtr;
+			return ref _cachedPtr.Value<T>();
 		}
 
 		[INLINE(256)]
-		public ref T Get<T>(int index) where T : unmanaged
-		{
-			var allocator = memPtr.GetAllocatorPtr();
-			if (allocator->version != _version)
-			{
-				_cachedPtr = allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
-			}
-
-			return ref *((T*)_cachedPtr + index);
-		}
-
-		[INLINE(256)]
-		public ref T Get<T>(Allocator* allocator, int index) where T : unmanaged
-		{
-			if (allocator->version != _version)
-			{
-				_cachedPtr = allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
-			}
-
-			return ref *((T*)_cachedPtr + index);
-		}
-
-		[INLINE(256)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			memPtr.Dispose(allocator);
 			this = Invalid;
@@ -152,7 +127,7 @@ namespace Sapientia.MemoryAllocator.Data
 			this = Invalid;
 		}
 
-		public Ptr CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
+		public Ptr CopyTo(SafePtr<Allocator> srsAllocator, SafePtr<Allocator> dstAllocator)
 		{
 			return new Ptr(memPtr.CopyTo(srsAllocator, dstAllocator));
 		}
@@ -188,17 +163,17 @@ namespace Sapientia.MemoryAllocator.Data
 		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
 #endif
 		private ushort _version;
-		private T* _cachedPtr;
+		private SafePtr<T> _cachedPtr;
 		public MemPtr memPtr;
 
 		[INLINE(256)]
 		public readonly bool IsValid() => memPtr.IsValid();
 
 		[INLINE(256)]
-		public Ptr(MemPtr memPtr) : this(0, null, memPtr) {}
+		public Ptr(MemPtr memPtr) : this(0, default, memPtr) {}
 
 		[INLINE(256)]
-		public Ptr(ushort version, T* cachedPtr, MemPtr memPtr)
+		public Ptr(ushort version, SafePtr<T> cachedPtr, MemPtr memPtr)
 		{
 			_version = version;
 			_cachedPtr = cachedPtr;
@@ -206,17 +181,17 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public Ptr(Allocator* allocator, T* cachedPtr, MemPtr memPtr)
+		public Ptr(SafePtr<Allocator> allocator, SafePtr<T> cachedPtr, MemPtr memPtr)
 		{
-			_version = allocator->version;
+			_version = allocator.Value().version;
 			_cachedPtr = cachedPtr;
 			this.memPtr = memPtr;
 		}
 
 		[INLINE(256)]
-		public Ptr(Allocator* allocator, T* cachedPtr, MemPtr memPtr, in T value)
+		public Ptr(SafePtr<Allocator> allocator, SafePtr<T> cachedPtr, MemPtr memPtr, in T value)
 		{
-			_version = allocator->version;
+			_version = allocator.Value().version;
 			_cachedPtr = cachedPtr;
 			this.memPtr = memPtr;
 
@@ -224,23 +199,23 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public static Ptr<T> Create(Allocator* allocator)
+		public static Ptr<T> Create(SafePtr<Allocator> allocator)
 		{
-			var memPtr = allocator->MemAlloc<T>(out var cachedPtr);
+			var memPtr = allocator.Value().MemAlloc<T>(out var cachedPtr);
 			return new Ptr<T>(allocator, cachedPtr, memPtr);
 		}
 
 		[INLINE(256)]
-		public static Ptr<T> Create(Allocator* allocator, in T value)
+		public static Ptr<T> Create(SafePtr<Allocator> allocator, in T value)
 		{
-			var memPtr = allocator->MemAlloc<T>(out var cachedPtr);
+			var memPtr = allocator.Value().MemAlloc<T>(out var cachedPtr);
 			return new Ptr<T>(allocator, cachedPtr, memPtr, value);
 		}
 
 		[INLINE(256)]
-		public static T* Create(Allocator* allocator, out Ptr<T> ptr)
+		public static SafePtr<T> Create(SafePtr<Allocator> allocator, out Ptr<T> ptr)
 		{
-			var memPtr = allocator->MemAlloc<T>(out var cachedPtr);
+			var memPtr = allocator.Value().MemAlloc<T>(out var cachedPtr);
 			ptr = new Ptr<T>(allocator, cachedPtr, memPtr);
 			return cachedPtr;
 		}
@@ -249,42 +224,42 @@ namespace Sapientia.MemoryAllocator.Data
 		public static Ptr<T> Create()
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
-			var memPtr = allocator->MemAlloc<T>(out var cachedPtr);
+			var memPtr = allocator.Value().MemAlloc<T>(out var cachedPtr);
 			return new Ptr<T>(allocator, cachedPtr, memPtr);
 		}
 
 		[INLINE(256)]
 		public Ptr<T1> ToCachedPtr<T1>() where T1 : unmanaged
 		{
-			return new Ptr<T1>(_version, (T1*)_cachedPtr, memPtr);
+			return new Ptr<T1>(_version, _cachedPtr.Cast<T1>(), memPtr);
 		}
 
 		[INLINE(256)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return memPtr.allocatorId.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
-		public T* GetPtr()
+		public SafePtr<T> GetPtr()
 		{
 			var allocator = GetAllocatorPtr();
-			if (allocator->version != _version && memPtr.IsValid())
+			if (allocator.Value().version != _version && memPtr.IsValid())
 			{
-				_cachedPtr = (T*)allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
 			return _cachedPtr;
 		}
 
 		[INLINE(256)]
-		public T* GetPtr(Allocator* allocator)
+		public SafePtr<T> GetPtr(SafePtr<Allocator> allocator)
 		{
-			if (allocator->version != _version && memPtr.IsValid())
+			if (allocator.Value().version != _version && memPtr.IsValid())
 			{
-				_cachedPtr = (T*)allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
 			return _cachedPtr;
@@ -294,58 +269,33 @@ namespace Sapientia.MemoryAllocator.Data
 		public ref T GetValue()
 		{
 			var allocator = GetAllocatorPtr();
-			if (allocator->version != _version)
+			if (allocator.Value().version != _version)
 			{
-				_cachedPtr = (T*)allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
-			return ref *_cachedPtr;
+			return ref _cachedPtr.Value();
 		}
 
 		[INLINE(256)]
-		public ref T GetValue(Allocator* allocator)
+		public ref T GetValue(SafePtr<Allocator> allocator)
 		{
-			if (allocator->version != _version)
+			if (allocator.Value().version != _version)
 			{
-				_cachedPtr = (T*)allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
+				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
+				_version = allocator.Value().version;
 			}
 
-			return ref *_cachedPtr;
+			return ref _cachedPtr.Value();
 		}
 
-		[INLINE(256)]
-		public ref T GetValue(Allocator* allocator, int index)
-		{
-			if (allocator->version != _version)
-			{
-				_cachedPtr = (T*)allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
-			}
-
-			return ref *(_cachedPtr + index);
-		}
-
-		[INLINE(256)]
-		public ref T GetValue(int index)
-		{
-			var allocator = GetAllocatorPtr();
-			if (allocator->version != _version)
-			{
-				_cachedPtr = (T*)allocator->GetUnsafePtr(in memPtr);
-				_version = allocator->version;
-			}
-
-			return ref *(_cachedPtr + index);
-		}
-
-		public Ptr<T> CopyTo(Allocator* srsAllocator, Allocator* dstAllocator)
+		public Ptr<T> CopyTo(SafePtr<Allocator> srsAllocator, SafePtr<Allocator> dstAllocator)
 		{
 			return new Ptr<T>(memPtr.CopyTo(srsAllocator, dstAllocator));
 		}
 
-		public void Dispose(Allocator* allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			memPtr.Dispose(allocator);
 			this = Invalid;

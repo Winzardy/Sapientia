@@ -4,17 +4,17 @@ namespace Sapientia.MemoryAllocator.State
 {
 	internal readonly unsafe ref struct DestroyUpdater
 	{
-		private readonly Allocator* _allocator;
-		private readonly EntityStatePart* _entitiesStatePart;
+		private readonly SafePtr<Allocator> _allocator;
+		private readonly SafePtr<EntityStatePart> _entitiesStatePart;
 		private readonly ArchetypeContext<DestroyRequest> _destroyRequestArchetype;
 		private readonly ArchetypeContext<KillRequest> _killRequestArchetype;
 		private readonly ArchetypeContext<DelayKillRequest> _delayKillRequestArchetype;
 		private readonly ArchetypeContext<KillElement> _killElementsArchetype;
 
-		public DestroyUpdater(Allocator* allocator)
+		public DestroyUpdater(SafePtr<Allocator> allocator)
 		{
 			_allocator = allocator;
-			_entitiesStatePart = _allocator->GetServicePtr<EntityStatePart>();
+			_entitiesStatePart = _allocator.GetServicePtr<EntityStatePart>();
 			_destroyRequestArchetype = new (_allocator);
 			_killRequestArchetype = new (_allocator);
 			_delayKillRequestArchetype = new (_allocator);
@@ -40,10 +40,11 @@ namespace Sapientia.MemoryAllocator.State
 			var elementsToDestroy = stackalloc Entity[count];
 
 			for (var i = 0; i < count; i++)
+			{
 				elementsToDestroy[i] = destroyRequests[i].entity;
+			}
 
-			_destroyRequestArchetype.ClearFast();
-			_entitiesStatePart->DestroyEntities(_allocator, elementsToDestroy, count);
+			_entitiesStatePart.ptr->DestroyEntities(_allocator, elementsToDestroy, count);
 		}
 
 		/// <summary>
@@ -86,9 +87,9 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		private void ExecuteKillCallback(in Entity entity)
 		{
-			if (!_killElementsArchetype.HasElement(entity))
+			ref var destroyElement = ref _killElementsArchetype.TryGetElement(entity, out var isExist);
+			if (!isExist)
 				return;
-			ref var destroyElement = ref _killElementsArchetype.GetElement(entity);
 
 			if (destroyElement.killCallbacks.IsCreated)
 			{
@@ -102,8 +103,8 @@ namespace Sapientia.MemoryAllocator.State
 						killCallback.callback.Dispose(_allocator);
 					}
 
-					ref var targetElement = ref _killElementsArchetype.TryGetElement(killCallback.target, out var isExist);
-					if (!isExist || !_entitiesStatePart->IsEntityExist(_allocator, killCallback.target))
+					ref var targetElement = ref _killElementsArchetype.TryGetElement(killCallback.target, out var isTargetExist);
+					if (!isTargetExist || !_entitiesStatePart.ptr->IsEntityExist(_allocator, killCallback.target))
 						continue;
 					if (targetElement.killCallbackHolders.IsCreated)
 						continue;
@@ -122,7 +123,7 @@ namespace Sapientia.MemoryAllocator.State
 				for (var i = 0; i < destroyElement.killCallbackHolders.Count; i++)
 				{
 					var holder = destroyElement.killCallbackHolders[_allocator, i];
-					if (!_killElementsArchetype.HasElement(holder) || !_entitiesStatePart->IsEntityExist(_allocator, holder))
+					if (!_killElementsArchetype.HasElement(holder) || !_entitiesStatePart.ptr->IsEntityExist(_allocator, holder))
 						continue;
 					ref var holderElement = ref _killElementsArchetype.GetElement(holder);
 					for (var j = 0; j < holderElement.killCallbacks.Count; j++)
@@ -156,8 +157,9 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				var parent = destroyElement.parents[_allocator, i];
 				ref var parentElement = ref _killElementsArchetype.TryGetElement(parent, out var isParentExist);
-				if (!isParentExist || !_entitiesStatePart->IsEntityExist(_allocator, parent))
+				if (!isParentExist || !_entitiesStatePart.ptr->IsEntityExist(_allocator, parent))
 					continue;
+
 				for (var j = 0; j < parentElement.children.Count; j++)
 				{
 					if (parentElement.children[_allocator, j].id == entity.id)
@@ -186,8 +188,11 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				var child = destroyElement.children[_allocator, i];
 
+				if (!_entitiesStatePart.ptr->IsEntityExist(child))
+					continue;
+
 				_killRequestArchetype.GetElement(child, out var isChildExist);
-				if (isChildExist || !_entitiesStatePart->IsEntityExist(child))
+				if (isChildExist)
 					continue;
 
 				KillParent(child);

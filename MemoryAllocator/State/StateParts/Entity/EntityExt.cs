@@ -5,9 +5,9 @@ namespace Sapientia.MemoryAllocator.State
 	public static unsafe class EntityExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsExist(this Entity entity, Allocator* allocator)
+		public static bool IsExist(this Entity entity, SafePtr<Allocator> allocator)
 		{
-			return allocator->GetService<EntityStatePart>().IsEntityExist(allocator, entity);
+			return allocator.GetService<EntityStatePart>().IsEntityExist(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -25,9 +25,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>(this Entity entity, Allocator* allocator) where T: unmanaged, IComponent
+		public static bool Has<T>(this Entity entity, SafePtr<Allocator> allocator) where T: unmanaged, IComponent
 		{
-			return allocator->GetArchetype<T>().HasElement(entity);
+			return allocator.GetArchetype<T>().HasElement(entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -37,9 +37,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryRead<T>(this ref Entity entity, Allocator* allocator, out T result) where T: unmanaged, IComponent
+		public static bool TryRead<T>(this ref Entity entity, SafePtr<Allocator> allocator, out T result) where T: unmanaged, IComponent
 		{
-			return allocator->GetArchetype<T>().TryReadElement<T>(allocator, entity, out result);
+			return allocator.GetArchetype<T>().TryReadElement<T>(allocator, entity, out result);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -49,15 +49,15 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref readonly T Read<T>(this Entity entity, Allocator* allocator) where T: unmanaged, IComponent
+		public static ref readonly T Read<T>(this Entity entity, SafePtr<Allocator> allocator) where T: unmanaged, IComponent
 		{
-			return ref allocator->GetArchetype<T>().ReadElement<T>(allocator, entity);
+			return ref allocator.GetArchetype<T>().ReadElement<T>(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref readonly T Read<T>(this Entity entity, Allocator* allocator, out bool isExist) where T: unmanaged, IComponent
+		public static ref readonly T Read<T>(this Entity entity, SafePtr<Allocator> allocator, out bool isExist) where T: unmanaged, IComponent
 		{
-			return ref allocator->GetArchetype<T>().ReadElement<T>(allocator, entity, out isExist);
+			return ref allocator.GetArchetype<T>().ReadElement<T>(allocator, entity, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,9 +67,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T Get<T>(this Entity entity, Allocator* allocator) where T: unmanaged, IComponent
+		public static ref T Get<T>(this Entity entity, SafePtr<Allocator> allocator) where T: unmanaged, IComponent
 		{
-			return ref allocator->GetArchetype<T>().GetElement<T>(allocator, entity);
+			return ref allocator.GetArchetype<T>().GetElement<T>(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -79,9 +79,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T Get<T>(this Entity entity, Allocator* allocator, out bool isCreated) where T: unmanaged, IComponent
+		public static ref T Get<T>(this Entity entity, SafePtr<Allocator> allocator, out bool isCreated) where T: unmanaged, IComponent
 		{
-			return ref allocator->GetArchetype<T>().GetElement<T>(allocator, entity, out isCreated);
+			return ref allocator.GetArchetype<T>().GetElement<T>(allocator, entity, out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -91,9 +91,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Remove<T>(this ref Entity entity, Allocator* allocator) where T: unmanaged, IComponent
+		public static void Remove<T>(this ref Entity entity, SafePtr<Allocator> allocator) where T: unmanaged, IComponent
 		{
-			allocator->GetArchetype<T>().RemoveSwapBackElement(allocator, entity);
+			allocator.GetArchetype<T>().RemoveSwapBackElement(allocator, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -14,10 +14,19 @@ namespace Sapientia.Extensions
 
 	public static unsafe class MemoryExt
 	{
+		[Conditional("DEBUG")]
+		[Conditional("UNITY_EDITOR")]
+		private static void DebugMemAllocSize(int size)
+		{
+#if UNITY_5_3_OR_NEWER
+			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+#endif
+		}
+
 		[INLINE(256)]
 		public static void* MemAlloc(int size)
 		{
-			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+			DebugMemAllocSize(size);
 #if UNITY_EDITOR
 			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, UnsafeExt.AlignOf<byte>(), Unity.Collections.Allocator.Persistent, 0);
 #elif UNITY_5_3_OR_NEWER
@@ -31,7 +40,7 @@ namespace Sapientia.Extensions
 		[INLINE(256)]
 		public static void* MemAlloc(int size, int align)
 		{
-			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+			DebugMemAllocSize(size);
 #if UNITY_EDITOR
 			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, align, Unity.Collections.Allocator.Persistent, 0);
 #elif UNITY_5_3_OR_NEWER
@@ -45,7 +54,7 @@ namespace Sapientia.Extensions
 		[INLINE(256)]
 		public static T* MemAlloc<T>(int size) where T : unmanaged
 		{
-			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+			DebugMemAllocSize(size);
 #if UNITY_EDITOR
 			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent, 0);
 #elif UNITY_5_3_OR_NEWER
@@ -60,7 +69,7 @@ namespace Sapientia.Extensions
 		public static T* MemAlloc<T>() where T : unmanaged
 		{
 			var size = TSize<T>.size;
-			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+			DebugMemAllocSize(size);
 #if UNITY_EDITOR
 			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent, 0);
 #elif UNITY_5_3_OR_NEWER
@@ -75,7 +84,7 @@ namespace Sapientia.Extensions
 		public static T* MemAllocAndClear<T>() where T : unmanaged
 		{
 			var size = TSize<T>.size;
-			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b");
+			DebugMemAllocSize(size);
 #if UNITY_EDITOR
 			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent, 0);
 #elif UNITY_5_3_OR_NEWER
@@ -203,6 +212,12 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
+		public static T** MakePtrArray<T>(int length, bool clearMemory = false) where T : unmanaged
+		{
+			return (T**)MemAlloc(length * sizeof(T*));
+		}
+
+		[INLINE(256)]
 		public static T* MakeArray<T>(in T firstElement, int length, bool clearMemory = false) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
@@ -241,12 +256,18 @@ namespace Sapientia.Extensions
 #endif
 
 		[INLINE(256)]
-		public static void ResizeArray<T>(ref T** arr, int length, int newLength) where T : unmanaged
+		public static void ResizePtrArray<T>(ref T** arr, ref int length, int newLength, bool powerOfTwo = false, bool clearMemory = false) where T : unmanaged
 		{
 			if (newLength <= length)
 				return;
+			if (powerOfTwo)
+				newLength = newLength.NextPowerOfTwo().Max(8);
 
-			var ptr = (T**)MemAlloc(newLength * sizeof(T*));
+			var size = newLength * sizeof(T*);
+			var ptr = (T**)MemAlloc(size);
+			if (clearMemory)
+				MemClear(ptr, size);
+
 			if (arr != null)
 			{
 				MemCopy(arr, ptr, length);
@@ -254,6 +275,7 @@ namespace Sapientia.Extensions
 			}
 
 			arr = ptr;
+			length = newLength;
 		}
 
 		[INLINE(256)]

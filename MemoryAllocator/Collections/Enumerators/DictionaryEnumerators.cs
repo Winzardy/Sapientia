@@ -10,11 +10,11 @@ namespace Sapientia.MemoryAllocator
 		where TValue: unmanaged
 	{
 		public int LastIndex { get; }
-		public Dictionary<TKey, TValue>.Entry* GetEntryPtr();
-		public Dictionary<TKey, TValue>.Entry* GetEntryPtr(Allocator* allocator);
+		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr();
+		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(SafePtr<Allocator> allocator);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(Allocator* allocator)
+		public DictionaryEnumerator<TKey, TValue> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
 		}
@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(Allocator* allocator)
+		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
 		}
@@ -38,7 +38,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(Allocator* allocator)
+		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetEntryPtr(allocator), LastIndex));
 		}
@@ -50,13 +50,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(Allocator* allocator)
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetEntryPtr(allocator), LastIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable()
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable()
 		{
 			return new (new (GetEntryPtr(), LastIndex));
 		}
@@ -74,16 +74,16 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe struct DictionaryPtrEnumerator<TKey, TValue> : IEnumerator<IntPtr>
+	public unsafe struct DictionaryPtrEnumerator<TKey, TValue> : IEnumerator<SafePtr<TValue>>
 		where TKey: unmanaged, IEquatable<TKey>
 		where TValue: unmanaged
 	{
-		private readonly Dictionary<TKey, TValue>.Entry* _entries;
+		private readonly SafePtr<Dictionary<TKey, TValue>.Entry> _entries;
 		private readonly int _count;
 		private int _index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal DictionaryPtrEnumerator(Dictionary<TKey, TValue>.Entry* entries, int count)
+		internal DictionaryPtrEnumerator(SafePtr<Dictionary<TKey, TValue>.Entry> entries, int count)
 		{
 			_entries = entries;
 			_count = count;
@@ -115,10 +115,10 @@ namespace Sapientia.MemoryAllocator
 			get => Current;
 		}
 
-		public IntPtr Current
+		public SafePtr<TValue> Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (IntPtr)(&(_entries + _index)->value);
+			get => new SafePtr<TValue>(&(_entries + _index).ptr->value, 1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,16 +128,18 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe struct DictionaryEnumerator<TKey, TValue> : IEnumerator<Dictionary<TKey, TValue>.Entry>
+	public unsafe struct DictionaryEnumerator<TKey, TValue> :
+		IEnumerator<Dictionary<TKey, TValue>.Entry>,
+		IEnumerator<SafePtr<Dictionary<TKey, TValue>.Entry>>
 		where TKey: unmanaged, IEquatable<TKey>
 		where TValue: unmanaged
 	{
-		private readonly Dictionary<TKey, TValue>.Entry* _entries;
+		private readonly SafePtr<Dictionary<TKey, TValue>.Entry> _entries;
 		private readonly int _count;
 		private int _index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal DictionaryEnumerator(Dictionary<TKey, TValue>.Entry* entries, int count)
+		internal DictionaryEnumerator(SafePtr<Dictionary<TKey, TValue>.Entry> entries, int count)
 		{
 			_entries = entries;
 			_count = count;
@@ -169,10 +171,16 @@ namespace Sapientia.MemoryAllocator
 			get => Current;
 		}
 
+		SafePtr<Dictionary<TKey, TValue>.Entry> IEnumerator<SafePtr<Dictionary<TKey, TValue>.Entry>>.Current
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _entries + _index;
+		}
+
 		public Dictionary<TKey, TValue>.Entry Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => *(_entries + _index);
+			get => (_entries + _index).Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

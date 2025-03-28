@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator
 	public unsafe partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(Allocator* allocator, ServiceRegistryContext context) where T: unmanaged
+		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context) where T: unmanaged
 		{
 			ref var result = ref _typeToPtr.GetValue(allocator, context, out var exist);
 			if (!exist)
@@ -19,7 +19,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(Allocator* allocator, ServiceRegistryContext context, out bool exist) where T: unmanaged
+		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context, out bool exist) where T: unmanaged
 		{
 			ref var result = ref _typeToPtr.GetValue(allocator, context, out exist);
 			if (!exist)
@@ -40,33 +40,33 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator* allocator, ServiceRegistryContext context) where T: unmanaged
+		public ref T GetOrRegisterService<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context) where T: unmanaged
 		{
 			return ref GetOrRegisterServiceIndexedPtr<T>(allocator, context).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator* allocator, ServiceRegistryContext context, out bool exist) where T: unmanaged
+		public ref T GetOrRegisterService<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context, out bool exist) where T: unmanaged
 		{
 			return ref GetOrRegisterServiceIndexedPtr<T>(allocator, context, out exist).GetValue<T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator* allocator) where T: unmanaged, IIndexedType
+		public ref T GetOrRegisterService<T>(SafePtr<Allocator> allocator) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
 			return ref GetOrRegisterService<T>(allocator, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T* GetOrRegisterServicePtr<T>(Allocator* allocator) where T: unmanaged, IIndexedType
+		public SafePtr<T> GetOrRegisterServicePtr<T>(SafePtr<Allocator> allocator) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
 			return GetOrRegisterServicePtr<T>(allocator, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator* allocator, out bool exist) where T: unmanaged, IIndexedType
+		public ref T GetOrRegisterService<T>(SafePtr<Allocator> allocator, out bool exist) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
 			return ref GetOrRegisterService<T>(allocator, typeIndex, out exist);
@@ -101,7 +101,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator* allocator, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
+		public ref T GetOrRegisterService<T>(SafePtr<Allocator> allocator, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
 		{
 			return ref GetOrRegisterService<T>(allocator, proxyPtr.indexedPtr.typeIndex, out exist);
 		}
@@ -116,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Ptr<T> GetOrRegisterServiceCachedPtr<T>(Allocator* allocator, ServiceRegistryContext context) where T: unmanaged
+		public Ptr<T> GetOrRegisterServiceCachedPtr<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context) where T: unmanaged
 		{
 			return GetOrRegisterServiceIndexedPtr<T>(allocator, context).GetCachedPtr<T>();
 		}
@@ -131,13 +131,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T* GetOrRegisterServicePtr<T>(Allocator* allocator, ServiceRegistryContext context) where T: unmanaged
+		public SafePtr<T> GetOrRegisterServicePtr<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context) where T: unmanaged
 		{
 			return GetOrRegisterServiceIndexedPtr<T>(allocator, context).GetPtr<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T* GetOrRegisterServicePtr<T>() where T: unmanaged, IIndexedType
+		public SafePtr<T> GetOrRegisterServicePtr<T>() where T: unmanaged, IIndexedType
 		{
 			var allocator = _typeToPtr.GetAllocatorPtr();
 			var typeIndex = TypeIndex.Create<T>();
@@ -146,7 +146,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T* GetOrRegisterServiceAsPtr<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
+		public SafePtr<T> GetOrRegisterServiceAsPtr<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			var allocator = _typeToPtr.GetAllocatorPtr();
 			var typeIndex = TypeIndex.Create<TBase>();

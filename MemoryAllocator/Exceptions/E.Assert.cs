@@ -28,13 +28,13 @@ namespace Sapientia.MemoryAllocator
 			[BURST_DISCARD]
 			[HIDE_CALLSTACK]
 			private static void ThrowNotBurst(string str) =>
-				throw new AssertException($"{Exception.Format(str)}");
+				throw new AssertException($"{Format(str)}");
 		}
 	}
 
 	public static partial class E
 	{
-		[Conditional(COND.EXCEPTIONS_INTERNAL)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void ASSERT(bool condition, string str = null)
 		{

@@ -20,13 +20,13 @@ namespace Sapientia.MemoryAllocator.State
 			get
 			{
 				var allocator = allocatorId.GetAllocatorPtr();
-				return allocator->GetService<EntityStatePart>().GetEntityName(allocator, this);
+				return allocator.GetService<EntityStatePart>().GetEntityName(allocator, this);
 			}
 		}
 #endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return allocatorId.GetAllocatorPtr();
 		}
@@ -44,9 +44,9 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
 #if UNITY_EDITOR
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator, name);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
@@ -54,23 +54,23 @@ namespace Sapientia.MemoryAllocator.State
 		public static Entity Create()
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(Allocator* allocator, string name)
+		public static Entity Create(SafePtr<Allocator> allocator, string name)
 		{
 #if UNITY_EDITOR
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator, name);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(Allocator* allocator)
+		public static Entity Create(SafePtr<Allocator> allocator)
 		{
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,9 +78,9 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			var allocator = allocatorId.GetAllocatorPtr();
 #if UNITY_EDITOR
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator, name);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
 #endif
 		}
 
@@ -88,7 +88,7 @@ namespace Sapientia.MemoryAllocator.State
 		public static Entity Create(AllocatorId allocatorId)
 		{
 			var allocator = allocatorId.GetAllocatorPtr();
-			return allocator->GetService<EntityStatePart>().CreateEntity(allocator);
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

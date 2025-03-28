@@ -25,7 +25,7 @@ namespace Sapientia.MemoryAllocator.State
 
 	public abstract unsafe class StateBuilder
 	{
-		protected Allocator* _allocator;
+		protected SafePtr<Allocator> _allocator;
 
 		private readonly SimpleList<ProxyPtr<IWorldStatePartProxy>> _stateParts = new();
 		private readonly SimpleList<ProxyPtr<IWorldSystemProxy>> _systems = new();
@@ -47,12 +47,12 @@ namespace Sapientia.MemoryAllocator.State
 
 			InitializeWorld(world);
 
-			return new State(_allocator->allocatorId);
+			return new State(_allocator.Value().allocatorId);
 		}
 
-		protected virtual void InitializeWorld(World* world)
+		protected virtual void InitializeWorld(SafePtr<World> world)
 		{
-			world->Initialize(_stateParts, _systems);
+			world.Value().Initialize(_stateParts, _systems);
 		}
 
 		protected virtual void AddStateParts()
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
 		{
 			LocalStatePartService.AddStatePart(_allocator, value);
-			ServiceContext<AllocatorId>.SetService(_allocator->allocatorId, value);
+			ServiceContext<AllocatorId>.SetService(_allocator.Value().allocatorId, value);
 		}
 
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart

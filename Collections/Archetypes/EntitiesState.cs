@@ -127,7 +127,7 @@ namespace Sapientia.Collections.Archetypes
 #if UNITY_EDITOR
 			entitiesNames.Expand(EntitiesCapacity, default);
 #endif
-#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && ARCHETYPES_DEBUG)
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 			UnityEngine.Debug.LogWarning($"Entities Capacity was expanded to {EntitiesCapacity}");
 #endif
 			for (var i = oldCapacity; i < EntitiesCapacity; i++)

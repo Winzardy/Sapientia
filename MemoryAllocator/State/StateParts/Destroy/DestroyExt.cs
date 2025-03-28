@@ -2,7 +2,7 @@ namespace Sapientia.MemoryAllocator.State
 {
 	/*public static unsafe class DestroyExt
 	{
-		public static void RequestDestroy(this Entity entity, Allocator* allocator)
+		public static void RequestDestroy(this Entity entity, SafePtr<Allocator> allocator)
 		{
 			Debug.Assert(entity.IsAlive(allocator));
 
@@ -16,7 +16,7 @@ namespace Sapientia.MemoryAllocator.State
 			entity.RequestDestroy(entity.GetAllocatorPtr());
 		}
 
-		public static bool HasDestroyRequest(this Entity entity, Allocator* allocator)
+		public static bool HasDestroyRequest(this Entity entity, SafePtr<Allocator> allocator)
 		{
 			return entity.Has<DestroyRequest>(allocator);
 		}
@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator.State
 			return entity.HasDestroyRequest(entity.GetAllocatorPtr());
 		}
 
-		public static void RequestKill(this Entity entity, Allocator* allocator)
+		public static void RequestKill(this Entity entity, SafePtr<Allocator> allocator)
 		{
 			Debug.Assert(entity.IsAlive());
 			entity.Get<KillRequest>(allocator);
@@ -37,7 +37,7 @@ namespace Sapientia.MemoryAllocator.State
 			entity.RequestKill(entity.GetAllocatorPtr());
 		}
 
-		public static void RequestKill(this Entity entity, Allocator* allocator, float delay)
+		public static void RequestKill(this Entity entity, SafePtr<Allocator> allocator, float delay)
 		{
 			Debug.Assert(entity.IsAlive(allocator));
 			if (entity.Has<KillRequest>(allocator))
@@ -52,7 +52,7 @@ namespace Sapientia.MemoryAllocator.State
 			entity.RequestKill(entity.GetAllocatorPtr(), delay);
 		}
 
-		public static bool HasKillRequest(this Entity entity, Allocator* allocator)
+		public static bool HasKillRequest(this Entity entity, SafePtr<Allocator> allocator)
 		{
 			return entity.Has<KillRequest>(allocator);
 		}
@@ -62,7 +62,7 @@ namespace Sapientia.MemoryAllocator.State
 			return entity.HasKillRequest(entity.GetAllocatorPtr());
 		}
 
-		public static bool HasDestroyOrKillRequest(this Entity entity, Allocator* allocator)
+		public static bool HasDestroyOrKillRequest(this Entity entity, SafePtr<Allocator> allocator)
 		{
 			return entity.Has<KillRequest>(allocator) || entity.Has<DestroyRequest>(allocator);
 		}
@@ -72,7 +72,7 @@ namespace Sapientia.MemoryAllocator.State
 			return entity.HasDestroyOrKillRequest(entity.GetAllocatorPtr());
 		}
 
-		public static void AddKillParent(this Entity child, Allocator* allocator, Entity parent)
+		public static void AddKillParent(this Entity child, SafePtr<Allocator> allocator, Entity parent)
 		{
 			Debug.Assert(child.IsAlive(allocator));
 			Debug.Assert(parent.IsAlive(allocator));
@@ -94,7 +94,7 @@ namespace Sapientia.MemoryAllocator.State
 			child.AddKillParent(child.GetAllocatorPtr(), parent);
 		}
 
-		public static void AddKillChild(this ref Entity parent, Allocator* allocator, Entity child)
+		public static void AddKillChild(this ref Entity parent, SafePtr<Allocator> allocator, Entity child)
 		{
 			child.AddKillParent(allocator, parent);
 		}
@@ -104,7 +104,7 @@ namespace Sapientia.MemoryAllocator.State
 			child.AddKillParent(parent.GetAllocatorPtr(), parent);
 		}
 
-		public static void AddKillChildren<T>(this Entity parent, Allocator* allocator, in T children) where T: IEnumerable<Entity>
+		public static void AddKillChildren<T>(this Entity parent, SafePtr<Allocator> allocator, in T children) where T: IEnumerable<Entity>
 		{
 			Debug.Assert(parent.IsAlive(allocator));
 
@@ -131,7 +131,7 @@ namespace Sapientia.MemoryAllocator.State
 			parent.AddKillChildren(parent.GetAllocatorPtr(), children);
 		}
 
-		public static void AddKillCallback<T>(this Entity holder, Allocator* allocator, Entity target, in T callback = default) where T: unmanaged, IKillSubscriber
+		public static void AddKillCallback<T>(this Entity holder, SafePtr<Allocator> allocator, Entity target, in T callback = default) where T: unmanaged, IKillSubscriber
 		{
 			ref var holderElement = ref holder.Get<KillElement>(allocator);
 
@@ -154,7 +154,7 @@ namespace Sapientia.MemoryAllocator.State
 			holder.AddKillCallback(holder.GetAllocatorPtr(), target, callback);
 		}
 
-		public static bool IsAlive(this Entity entity, Allocator* allocator)
+		public static bool IsAlive(this Entity entity, SafePtr<Allocator> allocator)
 		{
 			return !entity.Has<DestroyRequest>(allocator) &&
 			       !entity.Has<KillRequest>(allocator) &&
@@ -167,7 +167,7 @@ namespace Sapientia.MemoryAllocator.State
 			return IsAlive(entity, entity.GetAllocatorPtr());
 		}
 
-		public static bool IsDead(this Entity entity, Allocator* allocator)
+		public static bool IsDead(this Entity entity, SafePtr<Allocator> allocator)
 		{
 			return entity.Has<DestroyRequest>(allocator) ||
 			       entity.Has<KillRequest>(allocator) ||

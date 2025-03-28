@@ -30,18 +30,18 @@ namespace Sapientia.MemoryAllocator
 			[BURST_DISCARD]
 			[HIDE_CALLSTACK]
 			private static void ThrowNotBurst<T>(T obj) =>
-				throw new NotCreatedException($"{Exception.Format(typeof(T).Name)} is not created");
+				throw new NotCreatedException($"{Format(typeof(T).Name)} is not created");
 
 			[BURST_DISCARD]
 			[HIDE_CALLSTACK]
 			private static void ThrowNotBurst<T>(T* obj) where T : unmanaged =>
-				throw new NotCreatedException($"{Exception.Format(typeof(T).Name)} is not created");
+				throw new NotCreatedException($"{Format(typeof(T).Name)} is not created");
 		}
 	}
 
 	public static partial class E
 	{
-		[Conditional(COND.EXCEPTIONS)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void IS_CREATED<K, V>(Dictionary<K, V> dic) where K : unmanaged, System.IEquatable<K> where V : unmanaged
 		{
@@ -54,7 +54,7 @@ namespace Sapientia.MemoryAllocator
 
 	public static partial class E
 	{
-		[Conditional(COND.EXCEPTIONS)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void IS_CREATED<T>(List<T> list) where T : unmanaged
 		{
@@ -65,7 +65,7 @@ namespace Sapientia.MemoryAllocator
 
 	public static partial class E
 	{
-		[Conditional(COND.EXCEPTIONS)]
+		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void IS_CREATED<T>(MemArray<T> arr) where T : unmanaged
 		{

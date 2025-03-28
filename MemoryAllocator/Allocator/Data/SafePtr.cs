@@ -1,0 +1,298 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
+
+namespace Sapientia.MemoryAllocator
+{
+	[StructLayout(LayoutKind.Sequential)]
+	public readonly unsafe struct SafePtr
+	{
+		[NativeDisableUnsafePtrRestriction]
+		public readonly byte* ptr;
+#if DEBUG
+		[NativeDisableUnsafePtrRestriction]
+		public readonly byte* lowBound;
+		[NativeDisableUnsafePtrRestriction]
+		public readonly byte* hiBound;
+
+		public byte* HiBound => hiBound;
+		public byte* LowBound => lowBound;
+#else
+		public byte* HiBound => this.ptr;
+		public byte* LowBound => this.ptr;
+#endif
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr(void* ptr)
+		{
+			this.ptr = (byte*)ptr;
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			lowBound = null;
+			hiBound = null;
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr(void* ptr, int size)
+		{
+			this.ptr = (byte*)ptr;
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			lowBound = this.ptr;
+			hiBound = this.ptr + size;
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr(void* ptr, byte* hiBound)
+		{
+			this.ptr = (byte*)ptr;
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			lowBound = this.ptr;
+			this.hiBound = hiBound;
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal SafePtr(void* ptr, byte* lowBound, byte* hiBound)
+		{
+			this.ptr = (byte*)ptr;
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			this.lowBound = lowBound;
+			this.hiBound = hiBound;
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static explicit operator SafePtr(void* ptr)
+		{
+			return new SafePtr(ptr, 0);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static explicit operator byte*(SafePtr safePtr)
+		{
+			return safePtr.ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T Value<T>() where T : unmanaged
+		{
+			return ref *(T*)ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<U> Cast<U>() where U : unmanaged
+		{
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			return new SafePtr<U>((U*)ptr, lowBound, hiBound);
+#else
+			return new SafePtr<U>((U*)this.ptr);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr operator +(SafePtr safePtr, int index)
+		{
+#if DEBUG
+			var newPtr = safePtr.ptr + index;
+			if (safePtr.hiBound != safePtr.lowBound)
+				E.ASSERT(newPtr >= safePtr.lowBound && newPtr < safePtr.hiBound);
+
+			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
+#else
+			return new SafePtr(newPtr);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr operator -(SafePtr safePtr, int index)
+		{
+#if DEBUG
+			var newPtr = safePtr.ptr - index;
+			if (safePtr.hiBound != safePtr.lowBound)
+				E.ASSERT(newPtr >= safePtr.lowBound && newPtr < safePtr.hiBound);
+
+			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
+#else
+			return new SafePtr(newPtr);
+#endif
+		}
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(SafePtr left, SafePtr right)
+		{
+#if DEBUG
+			if (left.lowBound != right.lowBound || left.hiBound != right.hiBound)
+				return false;
+#endif
+			return left.ptr == right.ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(SafePtr left, SafePtr right)
+		{
+#if DEBUG
+			if (left.lowBound != right.lowBound || left.hiBound != right.hiBound)
+				return true;
+#endif
+			return left.ptr != right.ptr;
+		}
+	}
+
+	public readonly unsafe struct SafePtr<T> where T : unmanaged
+	{
+		[NativeDisableUnsafePtrRestriction]
+		public readonly T* ptr;
+#if DEBUG
+		[NativeDisableUnsafePtrRestriction]
+		public readonly byte* lowBound;
+		[NativeDisableUnsafePtrRestriction]
+		public readonly byte* hiBound;
+#endif
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr(T* ptr)
+		{
+			this.ptr = ptr;
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			lowBound = null;
+			hiBound = null;
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr(void* ptr, int length)
+		{
+			this.ptr = (T*)ptr;
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			lowBound = (byte*)ptr;
+			hiBound = (byte*)(this.ptr + length);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr(T* ptr, int length)
+		{
+			this.ptr = ptr;
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			lowBound = (byte*)ptr;
+			hiBound = (byte*)(this.ptr + length);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal SafePtr(T* ptr, byte* lowBound, byte* hiBound)
+		{
+			this.ptr = ptr;
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			this.lowBound = lowBound;
+			this.hiBound = hiBound;
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T Value()
+		{
+			return ref *ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<U> Cast<U>() where U : unmanaged
+		{
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			return new SafePtr<U>((U*)ptr, lowBound, hiBound);
+#else
+			return new SafePtr<U>((U*)this.ptr);
+#endif
+		}
+
+		public ref T this[int index]
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get
+			{
+#if DEBUG
+				if (hiBound != lowBound)
+				{
+					var result = (byte*)(ptr + index);
+					E.ASSERT(result >= lowBound && result < hiBound);
+				}
+#endif
+				return ref ptr[index];
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator SafePtr(SafePtr<T> safePtr)
+		{
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			return new SafePtr(safePtr.ptr, safePtr.lowBound, safePtr.hiBound);
+#else
+			return new SafePtr(safePtr.ptr);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator SafePtr<T>(SafePtr safePtr)
+		{
+#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+			return new SafePtr<T>((T*)safePtr.ptr, safePtr.lowBound, safePtr.hiBound);
+#else
+			return new SafePtr<T>((T*)safePtr.ptr);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static explicit operator T*(SafePtr<T> safePtr)
+		{
+			return safePtr.ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> operator +(SafePtr<T> safePtr, int index)
+		{
+#if DEBUG
+			var newPtr = safePtr.ptr + index;
+			if (safePtr.hiBound != safePtr.lowBound)
+				E.ASSERT(newPtr >= safePtr.lowBound && newPtr < safePtr.hiBound);
+			return new SafePtr<T>(newPtr, safePtr.lowBound, safePtr.hiBound);
+#else
+			return new SafePtr<T>(safePtr.ptr + index);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> operator -(SafePtr<T> safePtr, int index)
+		{
+#if DEBUG
+			var newPtr = safePtr.ptr - index;
+			if (safePtr.hiBound != safePtr.lowBound)
+				E.ASSERT(newPtr >= safePtr.lowBound && newPtr < safePtr.hiBound);
+			return new SafePtr<T>(newPtr, safePtr.lowBound, safePtr.hiBound);
+#else
+			return new SafePtr<T>(safePtr.ptr - index);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(SafePtr<T> left, SafePtr<T> right)
+		{
+#if DEBUG
+			if (left.lowBound != right.lowBound || left.hiBound != right.hiBound)
+				return false;
+#endif
+			return left.ptr == right.ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(SafePtr<T> left, SafePtr<T> right)
+		{
+#if DEBUG
+			if (left.lowBound != right.lowBound || left.hiBound != right.hiBound)
+				return true;
+#endif
+			return left.ptr != right.ptr;
+		}
+	}
+}
