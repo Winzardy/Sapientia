@@ -146,7 +146,7 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)]
 			get
 			{
-				E.IS_CREATED(this);
+				E.ASSERT(IsCreated);
 				E.RANGE(index, 0, this.Length);
 				return ref innerArray.GetValue<T> (allocator, index);
 			}
@@ -161,7 +161,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public SafePtr<T> GetValuePtr(SafePtr<Allocator> allocator)
 		{
-			E.IS_CREATED(this);
+			E.ASSERT(IsCreated);
 			return innerArray.GetValuePtr<T>(allocator);
 		}
 

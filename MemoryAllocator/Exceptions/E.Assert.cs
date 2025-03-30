@@ -27,8 +27,7 @@ namespace Sapientia.MemoryAllocator
 
 			[BURST_DISCARD]
 			[HIDE_CALLSTACK]
-			private static void ThrowNotBurst(string str) =>
-				throw new AssertException($"{Format(str)}");
+			private static void ThrowNotBurst(string str) => throw new AssertException($"{Format(str)}");
 		}
 	}
 

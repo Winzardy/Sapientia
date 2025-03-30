@@ -33,40 +33,16 @@ namespace Sapientia.MemoryAllocator
 
 	public static partial class E
 	{
-		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
 		public static void ADDING_DUPLICATE()
 		{
 			CollectionInternalException.Throw("Duplicate adding");
 		}
 
-		[Conditional(ENABLE_EXCEPTIONS)]
 		[HIDE_CALLSTACK]
-		public static void VERSION_CHANGED()
+		public static void NOT_FOUND(string obj)
 		{
-			CollectionInternalException.Throw("Version changed while enumeration");
-		}
-
-		[Conditional(ENABLE_EXCEPTIONS)]
-		[HIDE_CALLSTACK]
-		public static void OP_NOT_STARTED()
-		{
-			CollectionInternalException.Throw("Operation not started");
-		}
-
-		[Conditional(ENABLE_EXCEPTIONS)]
-		[HIDE_CALLSTACK]
-		public static void OP_ENDED()
-		{
-			CollectionInternalException.Throw("Operation not ended");
-		}
-
-		[Conditional(ENABLE_EXCEPTIONS)]
-		[HIDE_CALLSTACK]
-		public static void IS_EMPTY(uint size)
-		{
-			if (size == 0u)
-				CollectionInternalException.Throw("Collection is empty");
+			CollectionInternalException.Throw(obj);
 		}
 	}
 }

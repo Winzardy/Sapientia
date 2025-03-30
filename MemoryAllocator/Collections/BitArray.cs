@@ -122,6 +122,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Gets the value of the bit at the specified index.
 		/// </summary>
+		/// <param name="allocator"></param>
 		/// <param name="index">The index of the bit.</param>
 		/// <returns>The value of the bit at the specified index.</returns>
 		[INLINE(256)]
