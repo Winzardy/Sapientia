@@ -57,15 +57,15 @@ namespace Sapientia.MemoryAllocator
 			var blockSize = Align(size + TSize<MemoryBlock>.size);
 			var blockRef = AllocateBlock(blockSize, out var blockPtr);
 
-			E.ASSERT(blockPtr->blockSize >= MIN_BLOCK_SIZE);
-			E.ASSERT(blockPtr->blockSize >= blockSize);
+			E.ASSERT(blockPtr.ptr->blockSize >= MIN_BLOCK_SIZE);
+			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
 
 			var memPtr = new MemPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size, allocatorId);
-			valuePtr = new SafePtr((blockPtr + 1), blockPtr->blockSize);
+			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
 
-			E.ASSERT(valuePtr.ptr - (byte*)blockPtr == TSize<MemoryBlock>.size);
+			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size);
 			E.ASSERT(GetUnsafePtr(memPtr) == valuePtr.ptr);
-			E.ASSERT(GetUnsafePtr(memPtr) - TSize<MemoryBlock>.size == blockPtr);
+			E.ASSERT(GetUnsafePtr(memPtr) - TSize<MemoryBlock>.size == blockPtr.ptr);
 
 			return memPtr;
 		}
@@ -80,15 +80,15 @@ namespace Sapientia.MemoryAllocator
 
 			var newBlockRef = ReAllocateBlock(blockRef, blockSize, out var blockPtr);
 
-			E.ASSERT(blockPtr->blockSize >= MIN_BLOCK_SIZE);
-			E.ASSERT(blockPtr->blockSize >= blockSize);
+			E.ASSERT(blockPtr.ptr->blockSize >= MIN_BLOCK_SIZE);
+			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
 
 			var newMemPtr = new MemPtr(newBlockRef.memoryZoneId, newBlockRef.memoryZoneOffset + TSize<MemoryBlock>.size, allocatorId);
-			valuePtr = new SafePtr((blockPtr + 1), blockPtr->blockSize);
+			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
 
-			E.ASSERT(valuePtr.ptr - (byte*)blockPtr == TSize<MemoryBlock>.size);
+			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size);
 			E.ASSERT(GetUnsafePtr(newMemPtr) == valuePtr.ptr);
-			E.ASSERT(GetUnsafePtr(newMemPtr) - TSize<MemoryBlock>.size == blockPtr);
+			E.ASSERT(GetUnsafePtr(newMemPtr) - TSize<MemoryBlock>.size == blockPtr.ptr);
 
 			return newMemPtr;
 		}
@@ -108,6 +108,9 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly void MemSwap(in MemPtr a, int aOffset, in MemPtr b, int bOffset, int length)
 		{
+			if (length == 0)
+				return;
+
 			var aRawPtr = GetUnsafePtr(a) + aOffset;
 			var bRawPtr = GetUnsafePtr(b) + bOffset;
 
@@ -116,44 +119,92 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly void MemCopy(in MemPtr source, int sourceOffset, in MemPtr dest, int destOffset, int length)
 		{
-			var sourceRawPtr = GetSafePtr(source) + sourceOffset;
-			var destRawPtr = GetSafePtr(dest) + destOffset;
+			if (length == 0)
+				return;
 
-			MemoryExt.MemCopy(sourceRawPtr.ptr, destRawPtr.ptr, length);
+			var sourcePtr = GetSafePtr(source) + sourceOffset;
+			var destPtr = GetSafePtr(dest) + destOffset;
+
+#if DEBUG
+			E.ASSERT(sourcePtr.HiBound - (sourcePtr.ptr + length) >= 0);
+			E.ASSERT(destPtr.HiBound - (destPtr.ptr + length) >= 0);
+#endif
+
+			MemoryExt.MemCopy(sourcePtr.ptr, destPtr.ptr, length);
 		}
 
 		public readonly void MemCopy<T>(in MemPtr source, int sourceIndex, in MemPtr dest, int destIndex, int length) where T : unmanaged
 		{
-			var sourceRawPtr = GetSafePtr<T>(source) + sourceIndex;
-			var destRawPtr = GetSafePtr<T>(dest) + destIndex;
+			if (length == 0)
+				return;
 
-			MemoryExt.MemCopy(sourceRawPtr.ptr, destRawPtr.ptr, length);
+			var sourcePtr = GetSafePtr<T>(source) + sourceIndex;
+			var destPtr = GetSafePtr<T>(dest) + destIndex;
+
+#if DEBUG
+			E.ASSERT(sourcePtr.HiBound - ((byte*)sourcePtr.ptr + length) >= 0);
+			E.ASSERT(destPtr.HiBound - ((byte*)destPtr.ptr + length) >= 0);
+#endif
+
+			MemoryExt.MemCopy(sourcePtr.ptr, destPtr.ptr, length);
 		}
 
 		public readonly void MemMove(in MemPtr source, int sourceOffset, in MemPtr dest, int destOffset, int length)
 		{
-			var sourceRawPtr = GetSafePtr(source) + sourceOffset;
-			var destRawPtr = GetSafePtr(dest) + destOffset;
+			if (length == 0)
+				return;
 
-			MemoryExt.MemMove(sourceRawPtr.ptr, destRawPtr.ptr, length);
+			var sourcePtr = GetSafePtr(source) + sourceOffset;
+			var destPtr = GetSafePtr(dest) + destOffset;
+#if DEBUG
+			E.ASSERT(sourcePtr.HiBound - (sourcePtr.ptr + length) >= 0);
+			E.ASSERT(destPtr.HiBound - (destPtr.ptr + length) >= 0);
+#endif
+
+			MemoryExt.MemMove(sourcePtr.ptr, destPtr.ptr, length);
 		}
 
 		public readonly void MemMove<T>(in MemPtr source, int sourceIndex, in MemPtr dest, int destIndex, int length) where T : unmanaged
 		{
-			var sourceRawPtr = GetSafePtr<T>(source) + sourceIndex;
-			var destRawPtr = GetSafePtr<T>(dest) + destIndex;
+			if (length == 0)
+				return;
 
-			MemoryExt.MemMove<T>(sourceRawPtr.ptr, destRawPtr.ptr, length);
+			var sourcePtr = GetSafePtr<T>(source) + sourceIndex;
+			var destPtr = GetSafePtr<T>(dest) + destIndex;
+#if DEBUG
+			E.ASSERT(sourcePtr.HiBound - ((byte*)sourcePtr.ptr + length) >= 0);
+			E.ASSERT(destPtr.HiBound - ((byte*)destPtr.ptr + length) >= 0);
+#endif
+
+			MemoryExt.MemMove<T>(sourcePtr.ptr, destPtr.ptr, length);
 		}
 
 		public readonly void MemFill<T>(in MemPtr dest, in T value, int index, int length) where T : unmanaged
 		{
-			MemoryExt.MemFill<T>(value, (GetSafePtr<T>(dest) + index).ptr, length);
+			if (length == 0)
+				return;
+
+			var destPtr = GetSafePtr<T>(dest) + index;
+
+#if DEBUG
+			E.ASSERT(destPtr.hiBound - (byte*)(destPtr.ptr + length) >= 0);
+#endif
+
+			MemoryExt.MemFill<T>(value, destPtr.ptr, length);
 		}
 
-		public readonly void MemClear(in MemPtr dest, int destOffset, int size)
+		public readonly void MemClear(in MemPtr dest, int index, int size)
 		{
-			MemoryExt.MemClear((GetSafePtr(dest) + destOffset).ptr, size);
+			if (size == 0)
+				return;
+
+			var destPtr = GetSafePtr(dest) + index;
+
+#if DEBUG
+			E.ASSERT(destPtr.HiBound - (destPtr.ptr + size) >= 0);
+#endif
+
+			MemoryExt.MemClear(destPtr.ptr, size);
 		}
 	}
 }

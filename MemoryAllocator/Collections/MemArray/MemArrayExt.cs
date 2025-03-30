@@ -64,10 +64,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public static void CopyNoChecks(SafePtr<Allocator> allocator, in MemArray fromArr, int sourceIndex, ref MemArray arr, int destIndex, int length)
+		public static void CopyNoChecks(SafePtr<Allocator> allocator, in MemArray fromArr, int sourceIndex, ref MemArray destArr, int destIndex, int length)
 		{
+			E.ASSERT(fromArr.ElementSize == destArr.ElementSize);
+
 			var size = fromArr.ElementSize;
-			allocator.Value().MemCopy(fromArr.ptr.memPtr, sourceIndex * size, arr.ptr.memPtr, destIndex * size, length * size);
+			allocator.Value().MemCopy(fromArr.ptr.memPtr, sourceIndex * size, destArr.ptr.memPtr, destIndex * size, length * size);
 		}
 
 		[INLINE(256)]

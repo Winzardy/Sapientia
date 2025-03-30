@@ -3,21 +3,21 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
-namespace Sapientia.Collections
+namespace Sapientia.MemoryAllocator.Collections
 {
 	[DebuggerTypeProxy(typeof(UnsafeList<>.UnsafeListProxy))]
 	public unsafe struct UnsafeList<T> : IDisposable
 		where T : unmanaged
 	{
-		public T* array;
+		public SafePtr<T> array;
 		public int count;
 		public int capacity;
 
-		public bool IsValid => array != null;
+		public bool IsValid => array != default;
 
 		public UnsafeList(int capacity = 8)
 		{
-			this.array = MemoryExt.MakeArray<T>(capacity, false);
+			this.array = new SafePtr<T>(MemoryExt.MakeArray<T>(capacity, false), capacity);
 			this.count = 0;
 			this.capacity = capacity;
 		}
@@ -28,16 +28,16 @@ namespace Sapientia.Collections
 			get => ref array[count - 1];
 		}
 
-		public T* LastPtr
+		public SafePtr<T> LastPtr
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => &array[count - 1];
+			get => new SafePtr<T>((array + (count - 1)).ptr, 1);
 		}
 
-		public T* this[int index]
+		public SafePtr<T> this[int index]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => &array[index];
+			get => new SafePtr<T>((array + index).ptr, 1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,7 +56,9 @@ namespace Sapientia.Collections
 
 			count--;
 			if (index < count)
-				MemoryExt.MemMove<T>(array + index + 1, array + index, count - index);
+			{
+				MemoryExt.MemMove<T>((array + (index + 1)).ptr, (array + index).ptr, count - index);
+			}
 
 			return result;
 		}
@@ -86,7 +88,10 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void EnsureCapacity(int newCapacity)
 		{
-			MemoryExt.ResizeArray<T>(ref array, ref capacity, newCapacity, true, false);
+			var ptr = array.ptr;
+			MemoryExt.ResizeArray<T>(ref ptr, ref capacity, newCapacity, true, false);
+
+			array = new SafePtr<T>(ptr, capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -94,7 +99,8 @@ namespace Sapientia.Collections
 		{
 			if (!IsValid)
 				return;
-			MemoryExt.MemFree(array);
+
+			MemoryExt.MemFree(array.ptr);
 			this = default;
 		}
 
@@ -118,7 +124,7 @@ namespace Sapientia.Collections
 					var arr = new T[_arr.count];
 					for (var i = 0; i < _arr.count; ++i)
 					{
-						arr[i] = *_arr[i];
+						arr[i] = _arr[i].Value();
 					}
 
 					return arr;

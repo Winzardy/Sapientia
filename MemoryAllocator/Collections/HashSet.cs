@@ -196,6 +196,20 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void Add(SafePtr<Allocator> allocator, ref HashSet<T> other)
+		{
+			var slotsPtr = slots.GetValuePtr(allocator);
+			for (var i = 0; i < other.lastIndex; i++)
+			{
+				ref var slot = ref (slotsPtr + i).Value();
+				if (slot.hashCode >= 0)
+				{
+					Add(allocator, slot.value);
+				}
+			}
+		}
+
+		[INLINE(256)]
 		public void RemoveExcept(SafePtr<Allocator> allocator, ref HashSet<T> other)
 		{
 			var slotsPtr = slots.GetValuePtr(allocator);
@@ -237,24 +251,9 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
-		public void Add(SafePtr<Allocator> allocator, ref HashSet<T> other)
-		{
-			var slotsPtr = slots.GetValuePtr(allocator);
-			for (var i = 0; i < other.lastIndex; i++)
-			{
-				ref var slot = ref (slotsPtr + i).Value();
-				if (slot.hashCode >= 0)
-				{
-					Add(allocator, slot.value);
-				}
-			}
-		}
-
 		/// <summary>
 		/// Remove item from this hashset
 		/// </summary>
-		/// <param name="allocator"></param>
 		/// <param name="item">item to remove</param>
 		/// <returns>true if removed; false if not (i.e. if the item wasn't in the HashSet)</returns>
 		[INLINE(256)]
@@ -347,7 +346,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			var newBuckets = new MemArray<int>(allocator, newSize);
-			for (var i = 0; i < lastIndex; ++i)
+			for (var i = 0; i < lastIndex; i++)
 			{
 				var bucket = newSlots[allocator, i].hashCode % newSize;
 				newSlots[allocator, i].next = newBuckets[allocator, bucket] - 1;
@@ -417,6 +416,9 @@ namespace Sapientia.MemoryAllocator
 					IncreaseCapacity(allocator);
 					// this will change during resize
 					bucket = hashCode % buckets.Length;
+
+					bucketsPtr = buckets.GetValuePtr(allocator);
+					slotsPtr = slots.GetValuePtr(allocator);
 				}
 				index = lastIndex;
 				lastIndex++;
@@ -442,19 +444,14 @@ namespace Sapientia.MemoryAllocator
 		public void CopyFrom(SafePtr<Allocator> allocator, in HashSet<T> other)
 		{
 			MemArrayExt.CopyExact(allocator, in other.buckets, ref buckets);
+
 			slots.CopyFrom(allocator, other.slots);
 			var thisBuckets = buckets;
 			var thisSlots = slots;
 			this = other;
+
 			buckets = thisBuckets;
 			slots = thisSlots;
-		}
-
-		[INLINE(256)]
-		public static bool Equal(T v1, T v2)
-		{
-			return v1.IsEquals<T>(ref v2);
-			//return EqualityComparer<T>.Default.Equals(v1, v2);
 		}
 
 		[INLINE(256)]
@@ -482,7 +479,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly Enumerable<T, HashSetEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}

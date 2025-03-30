@@ -34,7 +34,7 @@ namespace Sapientia.MemoryAllocator.Data
 		[INLINE(256)]
 		public Ptr(SafePtr<Allocator> allocator, SafePtr cachedPtr, MemPtr memPtr)
 		{
-			_version = allocator.Value().version;
+			_version = allocator.ptr->version;
 			_cachedPtr = cachedPtr;
 			this.memPtr = memPtr;
 		}
@@ -42,7 +42,7 @@ namespace Sapientia.MemoryAllocator.Data
 		[INLINE(256)]
 		public bool IsValid(SafePtr<Allocator> allocator)
 		{
-			return _version == allocator.Value().version;
+			return _version == allocator.ptr->version;
 		}
 
 		[INLINE(256)]

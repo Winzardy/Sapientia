@@ -231,6 +231,7 @@ namespace Sapientia.MemoryAllocator
 			var prevLength = Length;
 			var arrPtr = allocator.Value().MemReAlloc(ptr.memPtr, elementSize * newLength, out var rawPtr);
 			ptr = new Ptr(allocator, rawPtr, arrPtr);
+
 			if (options == ClearOptions.ClearMemory)
 			{
 				Clear(allocator, prevLength, newLength - prevLength);

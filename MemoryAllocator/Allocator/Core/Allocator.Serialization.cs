@@ -1,5 +1,6 @@
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.MemoryAllocator.Collections;
 using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
@@ -18,23 +19,23 @@ namespace Sapientia.MemoryAllocator
 			{
 				var zone = zonesList[i];
 
-				stream.Write(zone->size);
-				E.ASSERT(zone->size > 0);
+				stream.Write(zone.ptr->size);
+				E.ASSERT(zone.ptr->size > 0);
 
-				stream.Write((byte*)zone->memory, zone->size);
+				stream.Write((byte*)zone.ptr->memory, zone.ptr->size);
 			}
 
 			// Записываем свободные блоки
-			stream.Write(freeBlocksCollections.count);
-			for (var i = 0; i < freeBlocksCollections.count; i++)
+			stream.Write(freeBlockPools.count);
+			for (var i = 0; i < freeBlockPools.count; i++)
 			{
-				stream.Write(freeBlocksCollections[i]->blockSize);
-				stream.Write(freeBlocksCollections[i]->freeBlocks.count);
+				stream.Write(freeBlockPools[i].ptr->blockSize);
+				stream.Write(freeBlockPools[i].ptr->freeBlocks.count);
 
-				if (freeBlocksCollections[i]->freeBlocks.count == 0)
+				if (freeBlockPools[i].ptr->freeBlocks.count == 0)
 					continue;
 
-				stream.Write(freeBlocksCollections[i]->freeBlocks.array, freeBlocksCollections[i]->freeBlocks.count);
+				stream.Write(freeBlockPools[i].ptr->freeBlocks.array.ptr, freeBlockPools[i].ptr->freeBlocks.count);
 			}
 		}
 
@@ -56,25 +57,29 @@ namespace Sapientia.MemoryAllocator
 				E.ASSERT(zoneSize > 0);
 
 				allocator.Value().zonesList.Add(new MemoryZone(default, zoneSize));
-				var zoneMemory = allocator.Value().zonesList[i]->memory;
+				var zoneMemoryPtr = allocator.Value().zonesList[i].ptr->memory.ptr;
 
-				stream.Read(ref zoneMemory, zoneSize);
+				stream.Read(ref zoneMemoryPtr, zoneSize);
 			}
 
 			var blockCollectionsCount = stream.Read<int>();
-			allocator.Value().freeBlocksCollections = new UnsafeList<MemoryBlockPtrCollection>(blockCollectionsCount);
+			ref var freeBlockPools = ref allocator.Value().freeBlockPools;
+			freeBlockPools = new UnsafeList<MemoryBlockPtrCollection>(blockCollectionsCount);
+
 			for (var i = 0; i < blockCollectionsCount; i++)
 			{
 				var blockSize = stream.Read<int>();
 				var blocksCount = stream.Read<int>();
-				allocator.Value().freeBlocksCollections.Add(new MemoryBlockPtrCollection(blockSize, blocksCount));
+				freeBlockPools.Add(new MemoryBlockPtrCollection(blockSize, blocksCount));
 
 				if (blocksCount == 0)
 					continue;
 
-				ref var freeBlocks = ref allocator.Value().freeBlocksCollections[i]->freeBlocks;
+				ref var freeBlocks = ref freeBlockPools[i].ptr->freeBlocks;
 				freeBlocks.count = blocksCount;
-				stream.Read(ref freeBlocks.array, blocksCount);
+
+				var arrayPtr = freeBlocks.array.ptr;
+				stream.Read(ref arrayPtr, blocksCount);
 			}
 
 			return allocator;

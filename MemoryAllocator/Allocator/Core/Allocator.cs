@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.MemoryAllocator.Collections;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -14,7 +15,7 @@ namespace Sapientia.MemoryAllocator
 		public AllocatorId allocatorId;
 
 		private UnsafeList<MemoryZone> zonesList;
-		private UnsafeList<MemoryBlockPtrCollection> freeBlocksCollections;
+		private UnsafeList<MemoryBlockPtrCollection> freeBlockPools;
 
 		public ServiceRegistry serviceRegistry;
 
@@ -23,7 +24,7 @@ namespace Sapientia.MemoryAllocator
 		public int ZoneSize
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => zonesList[0]->size;
+			get => zonesList[0].ptr->size;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -37,12 +38,12 @@ namespace Sapientia.MemoryAllocator
 			zonesList = new UnsafeList<MemoryZone>();
 
 			var maxBlockSizeId = GetBlockSizeId(zoneSize) + 1;
-			freeBlocksCollections = new UnsafeList<MemoryBlockPtrCollection>(maxBlockSizeId);
+			freeBlockPools = new UnsafeList<MemoryBlockPtrCollection>(maxBlockSizeId);
 
 			var blockSize = MIN_BLOCK_SIZE;
-			for (var i = 0; i < freeBlocksCollections.capacity; i++)
+			for (var i = 0; i < freeBlockPools.capacity; i++)
 			{
-				freeBlocksCollections.Add(new MemoryBlockPtrCollection(blockSize));
+				freeBlockPools.Add(new MemoryBlockPtrCollection(blockSize));
 				blockSize <<= 1;
 			}
 
@@ -53,15 +54,15 @@ namespace Sapientia.MemoryAllocator
 
 		public void Dispose()
 		{
-			for (var i = 0; i < freeBlocksCollections.count; i++)
+			for (var i = 0; i < freeBlockPools.count; i++)
 			{
-				freeBlocksCollections[i]->Dispose();
+				freeBlockPools[i].ptr->Dispose();
 			}
-			freeBlocksCollections.Dispose();
+			freeBlockPools.Dispose();
 
 			for (var i = 0; i < zonesList.count; i++)
 			{
-				zonesList[i]->Dispose();
+				zonesList[i].ptr->Dispose();
 			}
 			zonesList.Dispose();
 
@@ -90,7 +91,7 @@ namespace Sapientia.MemoryAllocator
 			var size = 0;
 			for (var i = 0; i < zonesList.count; i++)
 			{
-				size += zonesList[i]->size;
+				size += zonesList[i].ptr->size;
 			}
 
 			return size;

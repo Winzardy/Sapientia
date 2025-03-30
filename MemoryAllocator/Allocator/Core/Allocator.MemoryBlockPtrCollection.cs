@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
+using Sapientia.MemoryAllocator.Collections;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -39,91 +40,91 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private int GetBlockSize(in MemPtr memPtr)
 		{
-			var blockPtr = (MemoryBlock*)(zonesList[memPtr.zoneId]->memory + memPtr.zoneOffset - TSize<MemoryBlock>.size);
-			return blockPtr->blockSize;
+			var blockPtr = (zonesList[memPtr.zoneId].ptr->memory + memPtr.zoneOffset - TSize<MemoryBlock>.size).Cast<MemoryBlock>();
+			return blockPtr.ptr->blockSize;
 		}
 
-		private void CreateFreeBlock(MemoryZone* zone, MemoryBlock* blockPtr, MemoryBlockRef blockRef, int blockSize, int prevBlockOffset)
+		private void CreateFreeBlock(SafePtr<MemoryZone> zone, SafePtr<MemoryBlock> blockPtr, MemoryBlockRef blockRef, int blockSize, int prevBlockOffset)
 		{
-			E.ASSERT(blockPtr < zone->zoneEnd);
+			E.ASSERT(blockPtr.ptr < zone.ptr->zoneEnd);
 			E.ASSERT(prevBlockOffset <= 0);
 
 			var sizeId = GetBlockSizeId(blockSize);
 
 			// Иногда возвращается блок больше 2^(sizeId + MIN_BLOCK_SIZE_LOG2)
 			// Это возникает если размер зоны не степень двойки
-			if (sizeId >= freeBlocksCollections.count)
-				sizeId = freeBlocksCollections.count - 1;
+			if (sizeId >= freeBlockPools.count)
+				sizeId = freeBlockPools.count - 1;
 
-			var sizeBlocksCollection = freeBlocksCollections[sizeId];
+			var sizeBlocksCollection = freeBlockPools[sizeId];
 
-			E.ASSERT(sizeBlocksCollection->blockSize <= blockSize);
+			E.ASSERT(sizeBlocksCollection.ptr->blockSize <= blockSize);
 
 			// Создаём свободный блок из остатка памяти
-			blockPtr->blockSize = blockSize;
-			blockPtr->prevBlockOffset = prevBlockOffset;
-			blockPtr->id = new BlockId(sizeId, sizeBlocksCollection->freeBlocks.count);
+			blockPtr.ptr->blockSize = blockSize;
+			blockPtr.ptr->prevBlockOffset = prevBlockOffset;
+			blockPtr.ptr->id = new BlockId(sizeId, sizeBlocksCollection.ptr->freeBlocks.count);
 
 			// Добавляем ссылку на новый блок в список свободных блоков
-			sizeBlocksCollection->freeBlocks.Add(blockRef);
+			sizeBlocksCollection.ptr->freeBlocks.Add(blockRef);
 
 			// Если существует следующий блок, то обновляем его ссылку на предыдущий блок
-			var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr + blockPtr->blockSize);
-			if (nextBlockPtr < zone->zoneEnd)
-				nextBlockPtr->prevBlockOffset = -blockPtr->blockSize;
+			var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
+			if (nextBlockPtr < zone.ptr->zoneEnd)
+				nextBlockPtr->prevBlockOffset = -blockPtr.ptr->blockSize;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void AddFreeBlock(MemoryBlock* blockPtr, MemoryBlockRef blockRef)
+		private void AddFreeBlock(SafePtr<MemoryBlock> blockPtr, MemoryBlockRef blockRef)
 		{
-			E.ASSERT(!blockPtr->id.IsFree);
+			E.ASSERT(!blockPtr.ptr->id.IsFree);
 
-			var freeBlocksCollection = freeBlocksCollections[blockPtr->id.sizeId];
+			var freeBlocksCollection = freeBlockPools[blockPtr.ptr->id.sizeId];
 
-			E.ASSERT(blockPtr->blockSize >= freeBlocksCollection->blockSize);
+			E.ASSERT(blockPtr.ptr->blockSize >= freeBlocksCollection.ptr->blockSize);
 
-			ref var freeBlocks = ref freeBlocksCollection->freeBlocks;
-			blockPtr->id.freeId = freeBlocks.count;
+			ref var freeBlocks = ref freeBlocksCollection.ptr->freeBlocks;
+			blockPtr.ptr->id.freeId = freeBlocks.count;
 
 			freeBlocks.Add(blockRef);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private MemoryBlockRef RemoveLastFreeBlock(int sizeId, out MemoryZone* zone, out MemoryBlock* blockPtr)
+		private MemoryBlockRef RemoveLastFreeBlock(int sizeId, out SafePtr<MemoryZone> zone, out SafePtr<MemoryBlock> blockPtr)
 		{
-			E.ASSERT(sizeId >= 0 && sizeId < freeBlocksCollections.count);
-			E.ASSERT(freeBlocksCollections[sizeId]->Count > 0);
+			E.ASSERT(sizeId >= 0 && sizeId < freeBlockPools.count);
+			E.ASSERT(freeBlockPools[sizeId].ptr->Count > 0);
 
-			ref var freeBlocks = ref freeBlocksCollections[sizeId]->freeBlocks;
+			ref var freeBlocks = ref freeBlockPools[sizeId].ptr->freeBlocks;
 			var blockRef = freeBlocks.RemoveLast();
 
 			zone = zonesList[blockRef.memoryZoneId];
-			blockPtr = (MemoryBlock*)(zone->memory + blockRef.memoryZoneOffset);
+			blockPtr = (zone.ptr->memory + blockRef.memoryZoneOffset).Cast<MemoryBlock>();
 
-			E.ASSERT(blockPtr->id.IsFree);
-			E.ASSERT(blockPtr < zone->zoneEnd);
+			E.ASSERT(blockPtr.ptr->id.IsFree);
+			E.ASSERT(blockPtr.ptr < zone.ptr->zoneEnd);
 
-			blockPtr->id.freeId = -1;
+			blockPtr.ptr->id.freeId = -1;
 			return blockRef;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private MemoryBlockRef RemoveFreeBlock(ref BlockId blockId)
 		{
-			E.ASSERT(blockId.sizeId >= 0 && blockId.sizeId < freeBlocksCollections.count);
+			E.ASSERT(blockId.sizeId >= 0 && blockId.sizeId < freeBlockPools.count);
 			E.ASSERT(blockId.IsFree);
 
-			ref var freeBlocks = ref freeBlocksCollections[blockId.sizeId]->freeBlocks;
+			ref var freeBlocks = ref freeBlockPools[blockId.sizeId].ptr->freeBlocks;
 			var blockRef = freeBlocks.RemoveAtSwapBack(blockId.freeId);
 
 			// Если ссылка на блок удалена из середины, то меняем freeId блока этой ссылки
 			if (freeBlocks.count > blockId.freeId)
 			{
 				var swappedBlockRef = freeBlocks[blockId.freeId];
-				var zone = zonesList[swappedBlockRef->memoryZoneId];
+				var zone = zonesList[swappedBlockRef.ptr->memoryZoneId];
 
-				var swappedBlockPtr = (MemoryBlock*)(zone->memory + swappedBlockRef->memoryZoneOffset);
-				swappedBlockPtr->id.freeId = blockId.freeId;
+				var swappedBlockPtr = (zone.ptr->memory + swappedBlockRef.ptr->memoryZoneOffset).Cast<MemoryBlock>();
+				swappedBlockPtr.ptr->id.freeId = blockId.freeId;
 			}
 
 			blockId.freeId = -1;
@@ -131,71 +132,71 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private MemoryBlockRef AllocateBlock(int requiredBlockSize, out MemoryBlock* blockPtr)
+		private MemoryBlockRef AllocateBlock(int requiredBlockSize, out SafePtr<MemoryBlock> blockPtr)
 		{
 			// `requiredSizeId` округлён вверх, т.к. хотим найти блок не меньше требуемого размера
 			// `requiredBlockSizeId` - это индекс блока размером <= `requiredBlockSize`
 			var requiredBlockSizeId = GetBlockSizeId(requiredBlockSize, out var requiredSizeId);
 
-			E.ASSERT(requiredSizeId >= 0 && requiredSizeId < freeBlocksCollections.count);
+			E.ASSERT(requiredSizeId >= 0 && requiredSizeId < freeBlockPools.count);
 
-			var blocksCollection = freeBlocksCollections[requiredSizeId];
+			var blocksCollection = freeBlockPools[requiredSizeId];
 
 			// Ищем свободный блок памяти, подходящий под требуемый размер
-			while (blocksCollection->Count == 0)
+			while (blocksCollection.ptr->Count == 0)
 			{
 				requiredSizeId++;
 
 				// Если такого блока нет, то аллоцируем ещё одну зону
-				if (requiredSizeId >= freeBlocksCollections.count)
+				if (requiredSizeId >= freeBlockPools.count)
 				{
 					AllocateMemoryZone();
 					// При аллокации зоны аллоцируется блок самого большого размера
-					requiredSizeId = freeBlocksCollections.count - 1;
+					requiredSizeId = freeBlockPools.count - 1;
 				}
 
-				blocksCollection = freeBlocksCollections[requiredSizeId];
+				blocksCollection = freeBlockPools[requiredSizeId];
 			}
 
 			// Берём последний свободный блок
 			var blockRef = RemoveLastFreeBlock(requiredSizeId, out var zone, out blockPtr);
-			E.ASSERT(blockPtr->id.sizeId == requiredSizeId);
+			E.ASSERT(blockPtr.ptr->id.sizeId == requiredSizeId);
 
 			// Если у блока осталось свободное место, то создаём новый свободный блок
-			var extraSize = blockPtr->blockSize - requiredBlockSize;
+			var extraSize = blockPtr.ptr->blockSize - requiredBlockSize;
 			E.ASSERT(extraSize >= 0);
 			if (extraSize >= MIN_BLOCK_SIZE)
 			{
-				var extraBlockPtr = (MemoryBlock*)((byte*)blockPtr + requiredBlockSize);
+				var extraBlockPtr = ((SafePtr)blockPtr + requiredBlockSize).Cast<MemoryBlock>();
 				var extraBlockRef = new MemoryBlockRef(blockRef.memoryZoneId, blockRef.memoryZoneOffset + requiredBlockSize);
 
 				CreateFreeBlock(zone, extraBlockPtr, extraBlockRef, extraSize, -requiredBlockSize);
 
 				// Устанавливаем требуемый размер блока
-				blockPtr->blockSize = requiredBlockSize;
-				blockPtr->id.sizeId = requiredBlockSizeId;
+				blockPtr.ptr->blockSize = requiredBlockSize;
+				blockPtr.ptr->id.sizeId = requiredBlockSizeId;
 			}
 
 			return blockRef;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private MemoryBlockRef ReAllocateBlock(MemoryBlockRef blockRef, int requiredBlockSize, out MemoryBlock* blockPtr)
+		private MemoryBlockRef ReAllocateBlock(MemoryBlockRef blockRef, int requiredBlockSize, out SafePtr<MemoryBlock> blockPtr)
 		{
 			var zone = zonesList[blockRef.memoryZoneId];
-			blockPtr = (MemoryBlock*)(zone->memory + blockRef.memoryZoneOffset);
+			blockPtr = (zone.ptr->memory + blockRef.memoryZoneOffset).Cast<MemoryBlock>();
 
 			// Если в тукущем блоке достаточно памяти, то ничего не делаем
-			if (blockPtr->blockSize >= requiredBlockSize)
+			if (blockPtr.ptr->blockSize >= requiredBlockSize)
 				return blockRef;
 
-			E.ASSERT(blockPtr->blockSize > 0);
+			E.ASSERT(blockPtr.ptr->blockSize > 0);
 
 			// TODO: Добавить обработку предыдущего блока
-			var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr + blockPtr->blockSize);
-			if (nextBlockPtr < zone->zoneEnd && nextBlockPtr->id.IsFree)
+			var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
+			if (nextBlockPtr < zone.ptr->zoneEnd && nextBlockPtr->id.IsFree)
 			{
-				var requiredSize = requiredBlockSize - blockPtr->blockSize;
+				var requiredSize = requiredBlockSize - blockPtr.ptr->blockSize;
 				var extraSize = nextBlockPtr->blockSize - requiredSize;
 
 				// Если в следующем блоке достаточно памяти, то увеличиваем размер текущего блока
@@ -203,29 +204,30 @@ namespace Sapientia.MemoryAllocator
 				{
 					RemoveFreeBlock(ref nextBlockPtr->id);
 
-					blockPtr->blockSize += requiredSize;
+					blockPtr.ptr->blockSize += requiredSize;
 
 					// Если остаток меньше минимального размера блока, то оставляем остаток памяти в текущем блоке
 					if (extraSize < MIN_BLOCK_SIZE)
 					{
-						blockPtr->blockSize += extraSize;
+						blockPtr.ptr->blockSize += extraSize;
 
 						// Если следующий блок существует, то обновляем ссылку на предыдущий блок
 						nextBlockPtr = (MemoryBlock*)((byte*)nextBlockPtr + nextBlockPtr->blockSize);
 						E.ASSERT(!nextBlockPtr->id.IsFree);
-						if (nextBlockPtr < zone->zoneEnd)
-							nextBlockPtr->prevBlockOffset = -blockPtr->blockSize;
+
+						if (nextBlockPtr < zone.ptr->zoneEnd)
+							nextBlockPtr->prevBlockOffset = -blockPtr.ptr->blockSize;
 					}
 					else
 					{
-						var extraBlockPtr = (MemoryBlock*)((byte*)blockPtr + requiredBlockSize);
-						var extraBlockRef = new MemoryBlockRef(blockRef.memoryZoneId, blockRef.memoryZoneOffset + blockPtr->blockSize);
+						var extraBlockPtr = ((SafePtr)blockPtr + requiredBlockSize).Cast<MemoryBlock>();
+						var extraBlockRef = new MemoryBlockRef(blockRef.memoryZoneId, blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
 
-						CreateFreeBlock(zone, extraBlockPtr, extraBlockRef, extraSize, -blockPtr->blockSize);
+						CreateFreeBlock(zone, extraBlockPtr, extraBlockRef, extraSize, -blockPtr.ptr->blockSize);
 					}
 
 					// Обновляем `sizeId` блока
-					blockPtr->id.sizeId = GetBlockSizeId(blockPtr->blockSize);
+					blockPtr.ptr->id.sizeId = GetBlockSizeId(blockPtr.ptr->blockSize);
 					return blockRef;
 				}
 			}
@@ -233,10 +235,10 @@ namespace Sapientia.MemoryAllocator
 			var newBlockRef = AllocateBlock(requiredBlockSize, out var newBlockPtr);
 
 			// Копируем данные из старого блока в новый
-			var newBlock = *newBlockPtr;
-			MemoryExt.MemCopy((byte*)blockPtr, (byte*)newBlockPtr, blockPtr->blockSize);
+			var newBlock = newBlockPtr.Value();
+			MemoryExt.MemCopy((byte*)blockPtr.ptr, (byte*)newBlockPtr.ptr, blockPtr.ptr->blockSize);
 			// Восстанавливаем данные нового блока
-			*newBlockPtr = newBlock;
+			newBlockPtr.Value() = newBlock;
 
 			// Освобождаем старый блок
 			FreeBlock(blockRef);
@@ -249,35 +251,35 @@ namespace Sapientia.MemoryAllocator
 		private void FreeBlock(MemoryBlockRef blockRef)
 		{
 			var zone = zonesList[blockRef.memoryZoneId];
-			var blockPtr = (MemoryBlock*)(zone->memory + blockRef.memoryZoneOffset);
+			var blockPtr = (zone.ptr->memory + blockRef.memoryZoneOffset).Cast<MemoryBlock>();
 
 			E.ASSERT(blockRef.memoryZoneId >= 0 && blockRef.memoryZoneId < zonesList.count);
-			E.ASSERT(zone->size >= blockRef.memoryZoneOffset + blockPtr->blockSize);
-			E.ASSERT(!blockPtr->id.IsFree);
+			E.ASSERT(zone.ptr->size >= blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
+			E.ASSERT(!blockPtr.ptr->id.IsFree);
 
 			// Если предыдущий блок существует и свободен, то мерджим предыдущий блок
-			var prevBlockPtr = (MemoryBlock*)((byte*)blockPtr + blockPtr->prevBlockOffset);
-			if (prevBlockPtr != blockPtr && prevBlockPtr->id.IsFree)
+			var prevBlockPtr = ((SafePtr)blockPtr + blockPtr.ptr->prevBlockOffset).Cast<MemoryBlock>();
+			if (prevBlockPtr != blockPtr && prevBlockPtr.ptr->id.IsFree)
 			{
-				E.ASSERT(prevBlockPtr >= zone->memory);
+				E.ASSERT(prevBlockPtr.ptr >= zone.ptr->memory.ptr);
 
-				prevBlockPtr->blockSize += blockPtr->blockSize;
-				E.ASSERT((byte*)blockPtr + blockPtr->blockSize == (byte*)prevBlockPtr + prevBlockPtr->blockSize);
+				prevBlockPtr.ptr->blockSize += blockPtr.ptr->blockSize;
+				E.ASSERT((SafePtr)blockPtr + blockPtr.ptr->blockSize == (SafePtr)prevBlockPtr + prevBlockPtr.ptr->blockSize);
 
 				// Если следующий блок существует и он пустой, то мерджим следующий блок
-				var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr + blockPtr->blockSize);
-				if (nextBlockPtr < zone->zoneEnd && nextBlockPtr->id.IsFree)
+				var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
+				if (nextBlockPtr < zone.ptr->zoneEnd && nextBlockPtr->id.IsFree)
 				{
-					prevBlockPtr->blockSize += nextBlockPtr->blockSize;
+					prevBlockPtr.ptr->blockSize += nextBlockPtr->blockSize;
 					RemoveFreeBlock(ref nextBlockPtr->id);
 				}
 
 				// Если размер изменился, то перемещаем ссылку на блок в другую коллекцию
-				var newBlockSizeId = GetBlockSizeId(prevBlockPtr->blockSize);
-				if (prevBlockPtr->id.sizeId != newBlockSizeId)
+				var newBlockSizeId = GetBlockSizeId(prevBlockPtr.ptr->blockSize);
+				if (prevBlockPtr.ptr->id.sizeId != newBlockSizeId)
 				{
-					var prevBlockRef = RemoveFreeBlock(ref prevBlockPtr->id);
-					prevBlockPtr->id.sizeId = newBlockSizeId;
+					var prevBlockRef = RemoveFreeBlock(ref prevBlockPtr.ptr->id);
+					prevBlockPtr.ptr->id.sizeId = newBlockSizeId;
 
 					AddFreeBlock(prevBlockPtr, prevBlockRef);
 				}
@@ -285,14 +287,14 @@ namespace Sapientia.MemoryAllocator
 			else
 			{
 				// Если следующий блок существует и он пустой, то мерджим следующий блок
-				var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr + blockPtr->blockSize);
-				if (nextBlockPtr < zone->zoneEnd && nextBlockPtr->id.IsFree)
+				var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
+				if (nextBlockPtr < zone.ptr->zoneEnd && nextBlockPtr->id.IsFree)
 				{
-					E.ASSERT(zone->size > blockRef.memoryZoneOffset + blockPtr->blockSize);
+					E.ASSERT(zone.ptr->size > blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
 
-					blockPtr->blockSize += nextBlockPtr->blockSize;
+					blockPtr.ptr->blockSize += nextBlockPtr->blockSize;
 					// Обновляем sizeId прежде чем добавлять блок в список свободных
-					blockPtr->id.sizeId = GetBlockSizeId(blockPtr->blockSize);
+					blockPtr.ptr->id.sizeId = GetBlockSizeId(blockPtr.ptr->blockSize);
 
 					RemoveFreeBlock(ref nextBlockPtr->id);
 				}

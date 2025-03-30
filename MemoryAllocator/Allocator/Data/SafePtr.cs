@@ -95,8 +95,7 @@ namespace Sapientia.MemoryAllocator
 		{
 #if DEBUG
 			var newPtr = safePtr.ptr + index;
-			if (safePtr.hiBound != safePtr.lowBound)
-				E.ASSERT(newPtr >= safePtr.lowBound && newPtr < safePtr.hiBound);
+			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
 
 			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
@@ -109,8 +108,7 @@ namespace Sapientia.MemoryAllocator
 		{
 #if DEBUG
 			var newPtr = safePtr.ptr - index;
-			if (safePtr.hiBound != safePtr.lowBound)
-				E.ASSERT(newPtr >= safePtr.lowBound && newPtr < safePtr.hiBound);
+			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
 
 			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
@@ -149,6 +147,12 @@ namespace Sapientia.MemoryAllocator
 		public readonly byte* lowBound;
 		[NativeDisableUnsafePtrRestriction]
 		public readonly byte* hiBound;
+
+		public byte* HiBound => hiBound;
+		public byte* LowBound => lowBound;
+#else
+		public byte* HiBound => this.ptr;
+		public byte* LowBound => this.ptr;
 #endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -213,11 +217,8 @@ namespace Sapientia.MemoryAllocator
 			get
 			{
 #if DEBUG
-				if (hiBound != lowBound)
-				{
-					var result = (byte*)(ptr + index);
-					E.ASSERT(result >= lowBound && result < hiBound);
-				}
+				var result = (byte*)(ptr + index);
+				E.ASSERT((result - lowBound >= 0) && (hiBound - result > 0));
 #endif
 				return ref ptr[index];
 			}
@@ -250,12 +251,23 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> operator ++(SafePtr<T> safePtr)
+		{
+			return safePtr + 1;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> operator --(SafePtr<T> safePtr)
+		{
+			return safePtr - 1;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> operator +(SafePtr<T> safePtr, int index)
 		{
 #if DEBUG
 			var newPtr = safePtr.ptr + index;
-			if (safePtr.hiBound != safePtr.lowBound)
-				E.ASSERT(newPtr >= safePtr.lowBound && newPtr < safePtr.hiBound);
+			E.ASSERT(((byte*)newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - (byte*)newPtr > 0));
 			return new SafePtr<T>(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
 			return new SafePtr<T>(safePtr.ptr + index);
@@ -267,8 +279,7 @@ namespace Sapientia.MemoryAllocator
 		{
 #if DEBUG
 			var newPtr = safePtr.ptr - index;
-			if (safePtr.hiBound != safePtr.lowBound)
-				E.ASSERT(newPtr >= safePtr.lowBound && newPtr < safePtr.hiBound);
+			E.ASSERT(((byte*)newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - (byte*)newPtr > 0));
 			return new SafePtr<T>(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
 			return new SafePtr<T>(safePtr.ptr - index);

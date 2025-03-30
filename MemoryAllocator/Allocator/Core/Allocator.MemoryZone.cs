@@ -11,44 +11,44 @@ namespace Sapientia.MemoryAllocator
 		[StructLayout(LayoutKind.Sequential)]
 		private readonly struct MemoryZone : IDisposable
 		{
-			public readonly byte* memory;
+			public readonly SafePtr memory;
 			public readonly byte* zoneEnd;
 			public readonly int size;
 
 			public MemoryZone(MemoryBlock firstMemoryBlock, int size)
 			{
-				this.memory = (byte*)MemoryExt.MemAlloc(size);
-				this.zoneEnd = memory + size;
+				this.memory = new SafePtr(MemoryExt.MemAlloc(size), size);
+				this.zoneEnd = memory.ptr + size;
 				this.size = size;
 
-				*((MemoryBlock*)memory) = firstMemoryBlock;
+				memory.Value<MemoryBlock>() = firstMemoryBlock;
 			}
 
 			public void Dispose()
 			{
-				MemoryExt.MemFree(memory);
+				MemoryExt.MemFree(memory.ptr);
 			}
 		}
 
 		private readonly int GetMemoryZoneSize(int zoneId, out int usedSize, out int freeSize)
 		{
 			var zone = zonesList[zoneId];
-			var blockPtr = (MemoryBlock*)zone->memory;
+			var blockPtr = zone.ptr->memory.Cast<MemoryBlock>();
 			var totalSize = 0;
 
 			freeSize = 0;
 			do
 			{
-				if (blockPtr->id.freeId >= 0)
-					freeSize += blockPtr->blockSize;
-				totalSize += blockPtr->blockSize;
+				if (blockPtr.ptr->id.freeId >= 0)
+					freeSize += blockPtr.ptr->blockSize;
+				totalSize += blockPtr.ptr->blockSize;
 
-				blockPtr = (MemoryBlock*)((byte*)blockPtr + blockPtr->blockSize);
-			} while (totalSize < zone->size);
+				blockPtr = ((SafePtr)blockPtr + blockPtr.ptr->blockSize);
+			} while (totalSize < zone.ptr->size);
 
-			usedSize = zone->size - freeSize;
+			usedSize = zone.ptr->size - freeSize;
 
-			return zone->size;
+			return zone.ptr->size;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,11 +60,11 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void AllocateMemoryZone(int zoneSize)
 		{
-			var blockId = new BlockId(freeBlocksCollections.count - 1, freeBlocksCollections[freeBlocksCollections.count - 1]->Count);
+			var blockId = new BlockId(freeBlockPools.count - 1, freeBlockPools[freeBlockPools.count - 1].ptr->Count);
 			var memoryBlock = MemoryBlock.CreateFirstBlock(blockId, zoneSize);
 			var zone = new MemoryZone(memoryBlock, zoneSize);
 
-			freeBlocksCollections[freeBlocksCollections.count - 1]->freeBlocks.Add(new MemoryBlockRef(zonesList.count, 0));
+			freeBlockPools[freeBlockPools.count - 1].ptr->freeBlocks.Add(new MemoryBlockRef(zonesList.count, 0));
 			zonesList.Add(zone);
 
 #if UNITY_5_3_OR_NEWER
@@ -72,14 +72,14 @@ namespace Sapientia.MemoryAllocator
 #endif
 		}
 
-		private static void MemoryZoneDumpHeap(MemoryZone* zone, SimpleList<string> results)
+		private static void MemoryZoneDumpHeap(SafePtr<MemoryZone> zone, SimpleList<string> results)
 		{
-			results.Add($"zone size: {zone->size}; location: {new IntPtr(zone)};");
+			results.Add($"zone size: {zone.ptr->size}; location: {new IntPtr(zone.ptr)};");
 
-			var blockPtr = (MemoryBlock*)zone->memory;
-			while (blockPtr->blockSize > 0)
+			var blockPtr = zone.ptr->memory.Cast<MemoryBlock>();
+			while (blockPtr.ptr->blockSize > 0)
 			{
-				results.Add($"block offset: {(byte*)blockPtr - zone->memory}; freeId: {blockPtr->id.freeId}; sizeId: {blockPtr->id.sizeId}; size: {blockPtr->blockSize}; prevBlockOffset: {blockPtr->prevBlockOffset};");
+				results.Add($"block offset: {(byte*)blockPtr.ptr - zone.ptr->memory.ptr}; freeId: {blockPtr.ptr->id.freeId}; sizeId: {blockPtr.ptr->id.sizeId}; size: {blockPtr.ptr->blockSize}; prevBlockOffset: {blockPtr.ptr->prevBlockOffset};");
 				blockPtr++;
 			}
 		}

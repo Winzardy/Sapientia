@@ -49,16 +49,16 @@ namespace Sapientia.MemoryAllocator.State
 				worldSystems.Add(allocator, system.ToProxy<IWorldSystemProxy>());
 			}
 
-			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
+			foreach (var element in worldElements.GetPtrEnumerable(allocator))
 			{
-				element->Initialize(allocator, allocator, element->indexedPtr);
+				element.ptr->Initialize(allocator, allocator, element.ptr->indexedPtr);
 			}
 
 			LocalStatePartService.Initialize(allocator);
 
-			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
+			foreach (var element in worldElements.GetPtrEnumerable(allocator))
 			{
-				element->LateInitialize(allocator, allocator, element->indexedPtr);
+				element.ptr->LateInitialize(allocator, allocator, element.ptr->indexedPtr);
 			}
 		}
 
@@ -74,9 +74,9 @@ namespace Sapientia.MemoryAllocator.State
 
 			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 
-			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
+			foreach (var element in worldElements.GetPtrEnumerable(allocator))
 			{
-				element->Start(allocator, allocator, element->indexedPtr);
+				element.ptr->Start(allocator, allocator, element.ptr->indexedPtr);
 			}
 			IsStarted = true;
 
@@ -108,9 +108,9 @@ namespace Sapientia.MemoryAllocator.State
 
 			using var scope = allocatorId.GetAllocatorScope(out var allocator);
 
-			foreach (ProxyPtr<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable(allocator))
+			foreach (var system in worldSystems.GetPtrEnumerable(allocator))
 			{
-				system->LateUpdate(allocator, allocator, system->indexedPtr);
+				system.ptr->LateUpdate(allocator, allocator, system.ptr->indexedPtr);
 			}
 
 			// TODO: TASK-1379 SendLateUpdateMessage();

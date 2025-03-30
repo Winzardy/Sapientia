@@ -39,12 +39,6 @@ namespace Sapientia.MemoryAllocator
 			get => _innerSet.IsCreated;
 		}
 
-		public int ElementSize
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _innerSet.ElementSize;
-		}
-
 		public int ExpandStep
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -20,20 +20,20 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly SafePtr GetSafePtr(in MemPtr memPtr)
 		{
-			var memory = zonesList[memPtr.zoneId]->memory;
-			var ptr = memory + memPtr.zoneOffset;
+			var memory = zonesList[memPtr.zoneId].ptr->memory;
+			var safePtr = memory + memPtr.zoneOffset;
 #if DEBUG
-			var hiPtr = memory + ((MemoryBlock*)ptr - 1)->blockSize;
-			return new SafePtr(ptr, hiPtr);
+			var size = (safePtr.Cast<MemoryBlock>() - 1).ptr->blockSize - TSize<MemoryBlock>.size;
+			return new SafePtr(safePtr.ptr, size);
 #else
-			return new SafePtr(ptr);
+			return new SafePtr(pt.ptr);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private readonly byte* GetUnsafePtr(in MemPtr memPtr)
 		{
-			return zonesList[memPtr.zoneId]->memory + memPtr.zoneOffset;
+			return (zonesList[memPtr.zoneId].ptr->memory + memPtr.zoneOffset).ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
