@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr(void* ptr)
 		{
 			this.ptr = (byte*)ptr;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			lowBound = null;
 			hiBound = null;
 #endif
@@ -36,7 +36,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr(void* ptr, int size)
 		{
 			this.ptr = (byte*)ptr;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			lowBound = this.ptr;
 			hiBound = this.ptr + size;
 #endif
@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr(void* ptr, byte* hiBound)
 		{
 			this.ptr = (byte*)ptr;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			lowBound = this.ptr;
 			this.hiBound = hiBound;
 #endif
@@ -56,7 +56,7 @@ namespace Sapientia.MemoryAllocator
 		internal SafePtr(void* ptr, byte* lowBound, byte* hiBound)
 		{
 			this.ptr = (byte*)ptr;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			this.lowBound = lowBound;
 			this.hiBound = hiBound;
 #endif
@@ -83,7 +83,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<U> Cast<U>() where U : unmanaged
 		{
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			return new SafePtr<U>((U*)ptr, lowBound, hiBound);
 #else
 			return new SafePtr<U>((U*)this.ptr);
@@ -159,7 +159,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr(T* ptr)
 		{
 			this.ptr = ptr;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			lowBound = null;
 			hiBound = null;
 #endif
@@ -169,7 +169,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr(void* ptr, int length)
 		{
 			this.ptr = (T*)ptr;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			lowBound = (byte*)ptr;
 			hiBound = (byte*)(this.ptr + length);
 #endif
@@ -179,7 +179,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr(T* ptr, int length)
 		{
 			this.ptr = ptr;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			lowBound = (byte*)ptr;
 			hiBound = (byte*)(this.ptr + length);
 #endif
@@ -189,7 +189,7 @@ namespace Sapientia.MemoryAllocator
 		internal SafePtr(T* ptr, byte* lowBound, byte* hiBound)
 		{
 			this.ptr = ptr;
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			this.lowBound = lowBound;
 			this.hiBound = hiBound;
 #endif
@@ -204,7 +204,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<U> Cast<U>() where U : unmanaged
 		{
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			return new SafePtr<U>((U*)ptr, lowBound, hiBound);
 #else
 			return new SafePtr<U>((U*)this.ptr);
@@ -227,7 +227,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator SafePtr(SafePtr<T> safePtr)
 		{
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			return new SafePtr(safePtr.ptr, safePtr.lowBound, safePtr.hiBound);
 #else
 			return new SafePtr(safePtr.ptr);
@@ -237,7 +237,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator SafePtr<T>(SafePtr safePtr)
 		{
-#if MEMORY_ALLOCATOR_BOUNDS_CHECK || LEAK_DETECTION
+#if DEBUG
 			return new SafePtr<T>((T*)safePtr.ptr, safePtr.lowBound, safePtr.hiBound);
 #else
 			return new SafePtr<T>((T*)safePtr.ptr);
