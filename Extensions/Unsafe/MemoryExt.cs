@@ -28,9 +28,9 @@ namespace Sapientia.Extensions
 		{
 			DebugMemAllocSize(size);
 #if UNITY_EDITOR
-			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, UnsafeExt.AlignOf<byte>(), Unity.Collections.Allocator.Persistent, 0);
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, TAlign<byte>.align, Unity.Collections.Allocator.Persistent, 0);
 #elif UNITY_5_3_OR_NEWER
-			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<byte>.align, Unity.Collections.Allocator.Persistent);
 #else
 			var ptr = Marshal.AllocHGlobal(size);
 #endif
@@ -44,7 +44,7 @@ namespace Sapientia.Extensions
 #if UNITY_EDITOR
 			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MallocTracked(size, align, Unity.Collections.Allocator.Persistent, 0);
 #elif UNITY_5_3_OR_NEWER
-			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, Unity.Collections.Allocator.Persistent);
 #else
 			var ptr = Marshal.AllocHGlobal(size);
 #endif
@@ -313,6 +313,7 @@ namespace Sapientia.Extensions
 		/// <param name="alignmentPowerOfTwo">A non-zero, positive power of two.</param>
 		/// <returns>The smallest integer that is greater than or equal to `size` and is a multiple of `alignmentPowerOfTwo`.</returns>
 		/// <exception cref="ArgumentException">Thrown if `alignmentPowerOfTwo` is not a non-zero, positive power of two.</exception>
+		[INLINE(256)]
 		public static int Align(int size, int alignmentPowerOfTwo)
 		{
 			// Copy of Unity CollectionHelper.Align
