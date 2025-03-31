@@ -74,15 +74,15 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
 				return;
-			if (!_arr.innerArray.ptr.memPtr.IsNotEmpty() && !other._arr.innerArray.ptr.memPtr.IsNotEmpty())
+			if (!_arr.innerArray.ptr.memPtr.IsCreated() && !other._arr.innerArray.ptr.memPtr.IsCreated())
 				return;
-			if (_arr.innerArray.ptr.memPtr.IsNotEmpty() && !other._arr.innerArray.ptr.memPtr.IsNotEmpty())
+			if (_arr.innerArray.ptr.memPtr.IsCreated() && !other._arr.innerArray.ptr.memPtr.IsCreated())
 			{
 				Dispose(allocator);
 				return;
 			}
 
-			if (!_arr.innerArray.ptr.memPtr.IsNotEmpty())
+			if (!_arr.innerArray.ptr.memPtr.IsCreated())
 				this = new List<T>(allocator, other.Capacity);
 
 			MemArrayExt.Copy(allocator, in other._arr.innerArray, ref _arr.innerArray);

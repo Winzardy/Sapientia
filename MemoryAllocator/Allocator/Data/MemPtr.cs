@@ -31,9 +31,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly bool IsNotEmpty() => zoneOffset != 0;
+		public readonly bool IsCreated() => zoneOffset != 0;
 		[INLINE(256)]
-		public bool IsValid() => IsNotEmpty() && allocatorId.IsValid();
+		public bool IsValid() => IsCreated() && allocatorId.IsValid();
 		[INLINE(256)]
 		public readonly bool IsZeroSized() => zoneOffset < 0;
 

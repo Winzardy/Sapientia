@@ -16,7 +16,7 @@ namespace Sapientia.MemoryAllocator
 #endif
 		private SafePtr<ulong> _cachedPtr;
 
-		public bool IsCreated => memPtr.IsNotEmpty();
+		public bool IsCreated => memPtr.IsCreated();
 
 		[INLINE(256)]
 		public BitArray(SafePtr<Allocator> allocator, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)

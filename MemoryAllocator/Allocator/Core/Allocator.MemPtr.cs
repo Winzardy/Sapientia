@@ -44,7 +44,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemPtr CopyPtrTo(SafePtr<Allocator> dstAllocator, MemPtr memPtr)
 		{
-			if (!memPtr.IsNotEmpty())
+			if (!memPtr.IsCreated())
 				return MemPtr.Invalid;
 			if (memPtr.IsZeroSized())
 			{

@@ -72,7 +72,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemPtr MemReAlloc(in MemPtr memPtr, int size, out SafePtr valuePtr)
 		{
-			if (!memPtr.IsNotEmpty() || memPtr.IsZeroSized())
+			if (!memPtr.IsCreated() || memPtr.IsZeroSized())
 				return MemAlloc(size, out valuePtr);
 
 			var blockSize = Align(size + TSize<MemoryBlock>.size);
@@ -95,7 +95,7 @@ namespace Sapientia.MemoryAllocator
 
 		public bool MemFree(MemPtr memPtr)
 		{
-			if (!memPtr.IsNotEmpty())
+			if (!memPtr.IsCreated())
 				return false;
 			if (memPtr.IsZeroSized())
 				return true;
