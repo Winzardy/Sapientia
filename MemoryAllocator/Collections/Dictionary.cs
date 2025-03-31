@@ -117,15 +117,15 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 				return;
-			if (!GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
+			if (!GetMemPtr().IsNotEmpty() && !other.GetMemPtr().IsNotEmpty())
 				return;
-			if (GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
+			if (GetMemPtr().IsNotEmpty() && !other.GetMemPtr().IsNotEmpty())
 			{
 				Dispose(allocator);
 				return;
 			}
 
-			if (GetMemPtr().IsValid() == false)
+			if (GetMemPtr().IsNotEmpty() == false)
 				this = new Dictionary<TKey, TValue>(allocator, other.Count);
 
 			MemArrayExt.CopyExact(allocator, other.buckets, ref buckets);

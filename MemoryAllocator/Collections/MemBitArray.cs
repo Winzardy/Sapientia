@@ -578,7 +578,7 @@ namespace Sapientia.MemoryAllocator
 		/// Whether this array has been allocated (and not yet deallocated).
 		/// </summary>
 		/// <value>True if this array has been allocated (and not yet deallocated).</value>
-		public bool IsCreated => ptr.IsValid();
+		public bool IsCreated => ptr.IsNotEmpty();
 
 		/// <summary>
 		/// Releases all resources (memory and safety handles).

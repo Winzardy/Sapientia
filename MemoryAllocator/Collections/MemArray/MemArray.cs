@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => ptr.IsValid();
+			[INLINE(256)] get => ptr.IsNotEmpty();
 		}
 
 		[INLINE(256)]
@@ -105,15 +105,15 @@ namespace Sapientia.MemoryAllocator
 		public void CopyFrom(SafePtr<Allocator> allocator, in MemArray other)
 		{
 			if (other.ptr.memPtr == ptr.memPtr) return;
-			if (!ptr.memPtr.IsValid() && !other.ptr.memPtr.IsValid())
+			if (!ptr.memPtr.IsNotEmpty() && !other.ptr.memPtr.IsNotEmpty())
 				return;
-			if (ptr.memPtr.IsValid() && !other.ptr.memPtr.IsValid())
+			if (ptr.memPtr.IsNotEmpty() && !other.ptr.memPtr.IsNotEmpty())
 			{
 				Dispose(allocator);
 				return;
 			}
 
-			if (ptr.memPtr.IsValid() == false)
+			if (ptr.memPtr.IsNotEmpty() == false)
 				this = new MemArray(allocator, other.ElementSize, other.Length, ClearOptions.ClearMemory);
 
 			MemArrayExt.Copy(allocator, in other, ref this);
@@ -122,7 +122,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Dispose(SafePtr<Allocator> allocator)
 		{
-			if (ptr.memPtr.IsValid())
+			if (ptr.memPtr.IsNotEmpty())
 			{
 				allocator.Value().MemFree(ptr.memPtr);
 			}

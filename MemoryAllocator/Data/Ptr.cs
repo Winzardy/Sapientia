@@ -18,7 +18,9 @@ namespace Sapientia.MemoryAllocator.Data
 		public MemPtr memPtr;
 
 		[INLINE(256)]
-		public readonly bool IsValid() => memPtr.IsValid();
+		public readonly bool IsNotEmpty() => memPtr.IsNotEmpty();
+		[INLINE(256)]
+		public bool IsValid() => memPtr.IsValid();
 
 		[INLINE(256)]
 		public Ptr(MemPtr memPtr) : this(0, default, memPtr) {}
@@ -167,7 +169,9 @@ namespace Sapientia.MemoryAllocator.Data
 		public MemPtr memPtr;
 
 		[INLINE(256)]
-		public readonly bool IsValid() => memPtr.IsValid();
+		public readonly bool IsNotEmpty() => memPtr.IsNotEmpty();
+		[INLINE(256)]
+		public bool IsValid() => memPtr.IsValid();
 
 		[INLINE(256)]
 		public Ptr(MemPtr memPtr) : this(0, default, memPtr) {}
@@ -244,7 +248,7 @@ namespace Sapientia.MemoryAllocator.Data
 		public SafePtr<T> GetPtr()
 		{
 			var allocator = GetAllocatorPtr();
-			if (allocator.Value().version != _version && memPtr.IsValid())
+			if (allocator.Value().version != _version && memPtr.IsNotEmpty())
 			{
 				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
 				_version = allocator.Value().version;
@@ -256,7 +260,7 @@ namespace Sapientia.MemoryAllocator.Data
 		[INLINE(256)]
 		public SafePtr<T> GetPtr(SafePtr<Allocator> allocator)
 		{
-			if (allocator.Value().version != _version && memPtr.IsValid())
+			if (allocator.Value().version != _version && memPtr.IsNotEmpty())
 			{
 				_cachedPtr = allocator.Value().GetSafePtr(in memPtr);
 				_version = allocator.Value().version;

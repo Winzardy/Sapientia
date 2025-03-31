@@ -12,7 +12,7 @@ namespace Sapientia.MemoryAllocator.Data
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => _ptr.memPtr.IsValid();
+			[INLINE(256)] get => _ptr.memPtr.IsNotEmpty();
 		}
 
 		[INLINE(256)]
