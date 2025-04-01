@@ -23,5 +23,22 @@ namespace Sapientia.Extensions
 
 			cts = null;
 		}
+
+		public static bool AnyCancellation(CancellationToken a, CancellationToken b)
+			=> a.IsCancellationRequested || b.IsCancellationRequested;
+
+		public static bool AnyCancellation(CancellationToken a, CancellationToken b, CancellationToken c)
+			=> a.IsCancellationRequested || b.IsCancellationRequested || c.IsCancellationRequested;
+
+		public static bool AnyCancellation(params CancellationToken[] tokens)
+		{
+			for (int i = 0; i < tokens.Length; i++)
+			{
+				if (tokens[i].IsCancellationRequested)
+					return true;
+			}
+
+			return false;
+		}
 	}
 }
