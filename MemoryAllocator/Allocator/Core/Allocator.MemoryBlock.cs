@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator
 	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
-		private struct MemoryBlock
+		public struct MemoryBlock
 		{
 			public BlockId id;
 

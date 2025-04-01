@@ -1,6 +1,6 @@
 using System;
 
-namespace Sapientia.MemoryAllocator
+namespace Sapientia
 {
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
 	internal class PlaceholderAttribute : Attribute

@@ -1,4 +1,4 @@
-namespace Sapientia.Collections.Fixed
+namespace Sapientia.Collections.FixedString
 {
 #if BURST
 	[Unity.Collections.BurstCompatible]

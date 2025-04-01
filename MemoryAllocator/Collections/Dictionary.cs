@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Sapientia.Data;
 using Sapientia.Extensions;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
@@ -215,20 +216,6 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			value = TDefaultValue<TValue>.value;
-			return false;
-		}
-
-		[INLINE(256)]
-		public bool TryGetValuePtr(SafePtr<Allocator> allocator, TKey key, out TValue* value)
-		{
-			var entry = FindEntry(allocator, key);
-			if (entry >= 0)
-			{
-				value = (TValue*)entries[allocator, entry].value.AsPointer();
-				return true;
-			}
-
-			value = null;
 			return false;
 		}
 

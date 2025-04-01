@@ -1,4 +1,5 @@
 using System;
+using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
 using Sapientia.ServiceManagement;
@@ -10,7 +11,7 @@ namespace Sapientia.MemoryAllocator
 	{
 		private static SafePtr<Allocator> _currentAllocator = default;
 
-		private static SafePtr<Allocator>* _allocators = null;
+		private static SafePtr<SafePtr<Allocator>> _allocators = default;
 		private static int _count = 0;
 		private static int _capacity = 0;
 		private static int _currentId = 0;
@@ -91,7 +92,7 @@ namespace Sapientia.MemoryAllocator
 
 			var allocatorId = new AllocatorId((ushort)_count++, (ushort)++_currentId);
 
-			var allocator = new SafePtr<Allocator>(MemoryExt.MemAllocAndClear<Allocator>(), 1);
+			var allocator = MemoryExt.MemAllocAndClear<Allocator>();
 			_allocators[allocatorId.index] = allocator;
 
 			allocator.Value().Initialize(allocatorId, initialSize);
@@ -111,10 +112,11 @@ namespace Sapientia.MemoryAllocator
 			if (_currentAllocator == _allocators[allocatorId.index])
 				SetCurrentAllocator(default(SafePtr<Allocator>));
 
-			var allocator = _allocators[allocatorId.index];
-			allocator.Value().Dispose();
+			var allocatorPtr = _allocators[allocatorId.index];
+			ref var allocator = ref allocatorPtr.Value();
+			allocator.Dispose();
 
-			MemoryExt.MemFree(allocator.ptr);
+			MemoryExt.MemFree(allocatorPtr);
 
 			_allocators[allocatorId.index] = _allocators[_count - 1];
 			_count--;

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
@@ -240,8 +241,8 @@ namespace Sapientia.MemoryAllocator
 			var valueB = _values.GetValuePtr(allocator, _count);
 			var size = _values.ElementSize;
 
-			MemoryExt.MemMove(valueB.ptr, valueA.ptr, size);
-			MemoryExt.MemClear(valueB.ptr, size);
+			MemoryExt.MemMove(valueB, valueA, size);
+			MemoryExt.MemClear(valueB, size);
 
 			E.ASSERT(_count >= 0);
 			return true;
@@ -259,8 +260,8 @@ namespace Sapientia.MemoryAllocator
 			var valueB = _values.GetValuePtr(allocator, _count);
 			var size = _values.ElementSize;
 
-			MemoryExt.MemMove(valueB.ptr, valueA.ptr, size);
-			MemoryExt.MemClear(valueB.ptr, size);
+			MemoryExt.MemMove(valueB, valueA, size);
+			MemoryExt.MemClear(valueB, size);
 
 			E.ASSERT(_count >= 0);
 			return true;

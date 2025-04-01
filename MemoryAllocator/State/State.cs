@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator.State

@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace Sapientia.MemoryAllocator
+namespace Sapientia.Data
 {
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly unsafe struct SafePtr
@@ -21,6 +21,19 @@ namespace Sapientia.MemoryAllocator
 		public byte* HiBound => this.ptr;
 		public byte* LowBound => this.ptr;
 #endif
+
+		public ref byte this[int index]
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get
+			{
+#if DEBUG
+				var result = (ptr + index);
+				E.ASSERT((result - lowBound >= 0) && (hiBound - result > 0));
+#endif
+				return ref ptr[index];
+			}
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr(void* ptr)
@@ -91,10 +104,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SafePtr operator +(SafePtr safePtr, int index)
+		public bool IsValidLength(int length)
 		{
 #if DEBUG
+			var newPtr = ptr + length;
+			return newPtr >= lowBound && newPtr <= hiBound;
+#else
+			return true;
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr operator +(SafePtr safePtr, int index)
+		{
 			var newPtr = safePtr.ptr + index;
+#if DEBUG
 			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
 
 			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
@@ -106,8 +130,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr operator -(SafePtr safePtr, int index)
 		{
-#if DEBUG
 			var newPtr = safePtr.ptr - index;
+#if DEBUG
 			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
 
 			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
@@ -115,7 +139,6 @@ namespace Sapientia.MemoryAllocator
 			return new SafePtr(newPtr);
 #endif
 		}
-
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(SafePtr left, SafePtr right)
@@ -211,6 +234,17 @@ namespace Sapientia.MemoryAllocator
 #endif
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool IsLengthInRange(int length)
+		{
+#if DEBUG
+			var newPtr = ptr + length;
+			return newPtr >= lowBound && newPtr <= hiBound;
+#else
+			return true;
+#endif
+		}
+
 		public ref T this[int index]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -222,6 +256,15 @@ namespace Sapientia.MemoryAllocator
 #endif
 				return ref ptr[index];
 			}
+		}
+
+		public SafePtr<T> Slice(int index, int length)
+		{
+#if DEBUG
+			var result = (byte*)(ptr + index);
+			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0));
+#endif
+			return new SafePtr<T>(ptr + index, length);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -265,8 +308,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> operator +(SafePtr<T> safePtr, int index)
 		{
-#if DEBUG
 			var newPtr = safePtr.ptr + index;
+#if DEBUG
 			E.ASSERT(((byte*)newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - (byte*)newPtr > 0));
 			return new SafePtr<T>(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
@@ -277,8 +320,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> operator -(SafePtr<T> safePtr, int index)
 		{
-#if DEBUG
 			var newPtr = safePtr.ptr - index;
+#if DEBUG
 			E.ASSERT(((byte*)newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - (byte*)newPtr > 0));
 			return new SafePtr<T>(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else

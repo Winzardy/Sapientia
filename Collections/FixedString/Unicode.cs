@@ -1,7 +1,8 @@
+using Sapientia.Data;
 using Sapientia.Extensions;
 
 // Copy of Unity.Collections.Unicode file
-namespace Sapientia.Collections.Fixed
+namespace Sapientia.Collections.FixedString
 {
 	/// <summary>
 	/// Kinds of format errors.
@@ -211,7 +212,7 @@ namespace Sapientia.Collections.Fixed
 		/// size in bytes of the character read. If the read fails, index is incremented by 1.</param>
 		/// <param name="capacity">The size in bytes of the buffer. Used to check that the read is in bounds.</param>
 		/// <returns><see cref="ConversionError.None"/> if the read succeeds. Otherwise, returns <see cref="ConversionError.Overflow"/> or <see cref="ConversionError.Encoding"/>.</returns>
-		public static ConversionError Utf8ToUcs(out Rune rune, byte* buffer, ref int index, int capacity)
+		public static ConversionError Utf8ToUcs(out Rune rune, SafePtr buffer, ref int index, int capacity)
 		{
 			int code = 0;
 			rune = ReplacementCharacter;
@@ -328,7 +329,7 @@ namespace Sapientia.Collections.Fixed
 		/// size in chars of the character read. If the read fails, index is not incremented.</param>
 		/// <param name="capacity">The size in chars of the buffer. Used to check that the read is in bounds.</param>
 		/// <returns><see cref="ConversionError.None"/> if the read succeeds. Otherwise, returns <see cref="ConversionError.Overflow"/>.</returns>
-		public static ConversionError Utf16ToUcs(out Rune rune, char* buffer, ref int index, int capacity)
+		public static ConversionError Utf16ToUcs(out Rune rune, SafePtr<char> buffer, ref int index, int capacity)
 		{
 			int code = 0;
 			rune = ReplacementCharacter;
@@ -366,7 +367,7 @@ namespace Sapientia.Collections.Fixed
 		/// size in bytes of the character written. If the write fails, index is not incremented.</param>
 		/// <param name="capacity">The size in bytes of the buffer. Used to check that the write is in bounds.</param>
 		/// <returns><see cref="ConversionError.None"/> if the write succeeds. Otherwise, returns <see cref="ConversionError.CodePoint"/>, <see cref="ConversionError.Overflow"/>, or <see cref="ConversionError.Encoding"/>.</returns>
-		public static ConversionError UcsToUtf8(byte* buffer, ref int index, int capacity, Rune rune)
+		public static ConversionError UcsToUtf8(SafePtr buffer, ref int index, int capacity, Rune rune)
 		{
 			if (!IsValidCodePoint(rune.value))
 			{
@@ -435,7 +436,7 @@ namespace Sapientia.Collections.Fixed
 		/// size in chars of the character written. If the write fails, index is not incremented.</param>
 		/// <param name="capacity">The size in chars of the buffer. Used to check that the write is in bounds.</param>
 		/// <returns><see cref="ConversionError.None"/> if the write succeeds. Otherwise, returns <see cref="ConversionError.CodePoint"/>, <see cref="ConversionError.Overflow"/>, or <see cref="ConversionError.Encoding"/>.</returns>
-		public static ConversionError UcsToUtf16(char* buffer, ref int index, int capacity, Rune rune)
+		public static ConversionError UcsToUtf16(SafePtr<char> buffer, ref int index, int capacity, Rune rune)
 		{
 			if (!IsValidCodePoint(rune.value))
 			{
@@ -479,7 +480,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="utf8Length">Outputs the number of bytes written to the destination.</param>
 		/// <param name="utf8Capacity">The size in bytes of the destination buffer.</param>
 		/// <returns><see cref="ConversionError.None"/> if the copy fully completes. Otherwise, returns <see cref="ConversionError.Overflow"/>.</returns>
-		public static ConversionError Utf16ToUtf8(char* utf16Buffer, int utf16Length, byte* utf8Buffer,
+		public static ConversionError Utf16ToUtf8(SafePtr<char> utf16Buffer, int utf16Length, SafePtr utf8Buffer,
 			out int utf8Length, int utf8Capacity)
 		{
 			utf8Length = 0;
@@ -503,7 +504,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Outputs the number of bytes written to the destination.</param>
 		/// <param name="destCapacity">The size in bytes of the destination buffer.</param>
 		/// <returns><see cref="ConversionError.None"/> if the copy fully completes. Otherwise, returns <see cref="ConversionError.Overflow"/>.</returns>
-		public static ConversionError Utf8ToUtf8(byte* srcBuffer, int srcLength, byte* destBuffer, out int destLength,
+		public static ConversionError Utf8ToUtf8(SafePtr srcBuffer, int srcLength, SafePtr destBuffer, out int destLength,
 			int destCapacity)
 		{
 			if (destCapacity >= srcLength)
@@ -537,7 +538,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="utf16Length">Outputs the number of chars written to the destination.</param>
 		/// <param name="utf16Capacity">The size in chars of the destination buffer.</param>
 		/// <returns><see cref="ConversionError.None"/> if the copy fully completes. Otherwise, <see cref="ConversionError.Overflow"/>.</returns>
-		public static ConversionError Utf8ToUtf16(byte* utf8Buffer, int utf8Length, char* utf16Buffer,
+		public static ConversionError Utf8ToUtf16(SafePtr utf8Buffer, int utf8Length, SafePtr<char> utf16Buffer,
 			out int utf16Length, int utf16Capacity)
 		{
 			utf16Length = 0;

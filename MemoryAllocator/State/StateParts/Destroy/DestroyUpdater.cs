@@ -1,3 +1,4 @@
+using Sapientia.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State

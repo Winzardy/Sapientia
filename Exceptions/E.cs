@@ -1,8 +1,8 @@
-namespace Sapientia.MemoryAllocator
+namespace Sapientia
 {
 	public partial class E
 	{
-		public const string ENABLE_EXCEPTIONS = "UNITY_EDITOR";
+		public const string DEBUG = "DEBUG";
 
 		public static string Format(string str)
 		{

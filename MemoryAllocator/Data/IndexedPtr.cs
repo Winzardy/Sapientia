@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using Sapientia.Data;
 using Sapientia.TypeIndexer;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 

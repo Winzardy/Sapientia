@@ -1,7 +1,5 @@
-namespace Sapientia.MemoryAllocator
+namespace Sapientia
 {
-	using System.Diagnostics;
-
 #if UNITY_EDITOR
 	using BURST_DISCARD = Unity.Burst.BurstDiscardAttribute;
 	using HIDE_CALLSTACK = UnityEngine.HideInCallstackAttribute;

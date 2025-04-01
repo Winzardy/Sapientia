@@ -1,6 +1,6 @@
 using Sapientia.Collections;
+using Sapientia.Data;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Collections;
 using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
@@ -22,7 +22,7 @@ namespace Sapientia.MemoryAllocator
 				stream.Write(zone.ptr->size);
 				E.ASSERT(zone.ptr->size > 0);
 
-				stream.Write((byte*)zone.ptr->memory, zone.ptr->size);
+				stream.Write(zone.ptr->memory, zone.ptr->size);
 			}
 
 			// Записываем свободные блоки
@@ -35,13 +35,13 @@ namespace Sapientia.MemoryAllocator
 				if (freeBlockPools[i].ptr->freeBlocks.count == 0)
 					continue;
 
-				stream.Write(freeBlockPools[i].ptr->freeBlocks.array.ptr, freeBlockPools[i].ptr->freeBlocks.count);
+				stream.Write(freeBlockPools[i].ptr->freeBlocks.array, freeBlockPools[i].ptr->freeBlocks.count);
 			}
 		}
 
 		public static SafePtr<Allocator> Deserialize(ref StreamBufferReader stream)
 		{
-			var allocator = new SafePtr<Allocator>(MemoryExt.MemAlloc<Allocator>(), 1);
+			var allocator = MemoryExt.MemAlloc<Allocator>();
 
 			stream.Read(ref allocator.Value().allocatorId);
 			stream.Read(ref allocator.Value().serviceRegistry);
@@ -57,7 +57,7 @@ namespace Sapientia.MemoryAllocator
 				E.ASSERT(zoneSize > 0);
 
 				allocator.Value().zonesList.Add(new MemoryZone(default, zoneSize));
-				var zoneMemoryPtr = allocator.Value().zonesList[i].ptr->memory.ptr;
+				var zoneMemoryPtr = allocator.Value().zonesList[i].ptr->memory;
 
 				stream.Read(ref zoneMemoryPtr, zoneSize);
 			}
@@ -78,7 +78,7 @@ namespace Sapientia.MemoryAllocator
 				ref var freeBlocks = ref freeBlockPools[i].ptr->freeBlocks;
 				freeBlocks.count = blocksCount;
 
-				var arrayPtr = freeBlocks.array.ptr;
+				var arrayPtr = freeBlocks.array;
 				stream.Read(ref arrayPtr, blocksCount);
 			}
 

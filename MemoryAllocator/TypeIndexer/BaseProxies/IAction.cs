@@ -1,3 +1,4 @@
+using Sapientia.Data;
 using Sapientia.MemoryAllocator;
 
 namespace Sapientia.TypeIndexer.BaseProxies

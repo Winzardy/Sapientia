@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Collections;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
@@ -9,7 +10,7 @@ namespace Sapientia.MemoryAllocator
 	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
-		private readonly struct MemoryZone : IDisposable
+		public readonly struct MemoryZone : IDisposable
 		{
 			public readonly SafePtr memory;
 			public readonly byte* zoneEnd;
@@ -17,7 +18,7 @@ namespace Sapientia.MemoryAllocator
 
 			public MemoryZone(MemoryBlock firstMemoryBlock, int size)
 			{
-				this.memory = new SafePtr(MemoryExt.MemAlloc(size), size);
+				this.memory = MemoryExt.MemAlloc(size);
 				this.zoneEnd = memory.ptr + size;
 				this.size = size;
 
@@ -26,7 +27,7 @@ namespace Sapientia.MemoryAllocator
 
 			public void Dispose()
 			{
-				MemoryExt.MemFree(memory.ptr);
+				MemoryExt.MemFree(memory);
 			}
 		}
 

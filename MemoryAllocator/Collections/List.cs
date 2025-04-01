@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Sapientia.Data;
 using Sapientia.Extensions;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
@@ -219,7 +220,7 @@ namespace Sapientia.MemoryAllocator
 			var source = GetValuePtr(allocator, index);
 			var destination = source + 1;
 
-			MemoryExt.MemMove<T>(source.ptr, destination.ptr, _count - index);
+			MemoryExt.MemMove<T>(source, destination, _count - index);
 
 			source.Value() = value;
 			_count++;

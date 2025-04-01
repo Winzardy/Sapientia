@@ -1,3 +1,5 @@
+using Sapientia.Data;
+
 namespace Sapientia.MemoryAllocator
 {
 	public static unsafe class CollectionsExt

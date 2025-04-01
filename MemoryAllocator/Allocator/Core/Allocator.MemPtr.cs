@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
@@ -26,14 +27,8 @@ namespace Sapientia.MemoryAllocator
 			var size = (safePtr.Cast<MemoryBlock>() - 1).ptr->blockSize - TSize<MemoryBlock>.size;
 			return new SafePtr(safePtr.ptr, size);
 #else
-			return new SafePtr(pt.ptr);
+			return new SafePtr(safePtr.ptr);
 #endif
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private readonly byte* GetUnsafePtr(in MemPtr memPtr)
-		{
-			return (zonesList[memPtr.zoneId].ptr->memory + memPtr.zoneOffset).ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,8 +50,8 @@ namespace Sapientia.MemoryAllocator
 			var size = GetPtrSize(memPtr);
 			var dstMemPtr = dstAllocator.Value().MemAlloc(size);
 
-			var srcData = GetUnsafePtr(memPtr);
-			var dstData = dstAllocator.Value().GetUnsafePtr(dstMemPtr);
+			var srcData = GetSafePtr(memPtr);
+			var dstData = dstAllocator.Value().GetSafePtr(dstMemPtr);
 
 			MemoryExt.MemCopy(srcData, dstData, size);
 

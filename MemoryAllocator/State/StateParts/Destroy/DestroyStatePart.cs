@@ -1,3 +1,4 @@
+using Sapientia.Data;
 using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 

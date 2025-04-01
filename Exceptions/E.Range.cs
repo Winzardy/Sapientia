@@ -1,6 +1,7 @@
-namespace Sapientia.MemoryAllocator
+using System.Diagnostics;
+
+namespace Sapientia
 {
-	using System.Diagnostics;
 #if UNITY_EDITOR
 	using BURST_DISCARD = Unity.Burst.BurstDiscardAttribute;
 	using HIDE_CALLSTACK = UnityEngine.HideInCallstackAttribute;
@@ -33,7 +34,7 @@ namespace Sapientia.MemoryAllocator
 
 	public static partial class E
 	{
-		[Conditional(ENABLE_EXCEPTIONS)]
+		[Conditional(DEBUG)]
 		[HIDE_CALLSTACK]
 		public static void RANGE(in int index, int startIndex, in int length)
 		{
@@ -41,7 +42,7 @@ namespace Sapientia.MemoryAllocator
 			OutOfRangeException.Throw(index, startIndex, length);
 		}
 
-		[Conditional(ENABLE_EXCEPTIONS)]
+		[Conditional(DEBUG)]
 		[HIDE_CALLSTACK]
 		public static void RANGE(in int index, uint startIndex, in uint length)
 		{
@@ -49,7 +50,7 @@ namespace Sapientia.MemoryAllocator
 			OutOfRangeException.Throw(index, (int)startIndex, (int)length);
 		}
 
-		[Conditional(ENABLE_EXCEPTIONS)]
+		[Conditional(DEBUG)]
 		[HIDE_CALLSTACK]
 		public static void RANGE(in uint index, uint startIndex, in uint length)
 		{
@@ -57,7 +58,7 @@ namespace Sapientia.MemoryAllocator
 			OutOfRangeException.Throw((int)index, (int)startIndex, (int)length);
 		}
 
-		[Conditional(ENABLE_EXCEPTIONS)]
+		[Conditional(DEBUG)]
 		[HIDE_CALLSTACK]
 		public static void RANGE_INVERSE(uint index, uint length)
 		{
@@ -65,7 +66,7 @@ namespace Sapientia.MemoryAllocator
 			OutOfRangeException.Throw((int)index, 0, (int)length);
 		}
 
-		[Conditional(ENABLE_EXCEPTIONS)]
+		[Conditional(DEBUG)]
 		[HIDE_CALLSTACK]
 		public static void OUT_OF_RANGE()
 		{

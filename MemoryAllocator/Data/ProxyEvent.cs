@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.Data

@@ -6,7 +6,7 @@ namespace Sapientia.MemoryAllocator
 	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
-		private readonly struct MemoryBlockRef
+		public readonly struct MemoryBlockRef
 		{
 			public readonly int memoryZoneId;
 			public readonly int memoryZoneOffset;

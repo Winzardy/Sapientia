@@ -1,8 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
-namespace Sapientia.Collections.Fixed
+namespace Sapientia.Collections.FixedString
 {
 	/// <summary>
 	/// Provides extension methods for FixedString*N*Bytes.
@@ -183,7 +184,7 @@ namespace Sapientia.Collections.Fixed
 			var origLength = fs.Length;
 			if (!fs.TryResize(origLength + 1, ClearOptions.UninitializedMemory))
 				return FormatError.Overflow;
-			fs.GetUnsafePtr()[origLength] = a;
+			fs.GetSafePtr()[origLength] = a;
 			return FormatError.None;
 		}
 
@@ -207,7 +208,7 @@ namespace Sapientia.Collections.Fixed
 				return FormatError.Overflow;
 
 			var cap = fs.Capacity;
-			var b = fs.GetUnsafePtr();
+			var b = fs.GetSafePtr();
 			int offset = origLength;
 			for (int i = 0; i < count; ++i)
 			{
@@ -233,8 +234,9 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 		{
 			const int maximumDigits = 20;
-			var temp = stackalloc byte[maximumDigits];
-			int offset = maximumDigits;
+			var tempRaw = stackalloc byte[maximumDigits];
+			var temp = new SafePtr(tempRaw, maximumDigits);
+			var offset = maximumDigits;
 			if (input >= 0)
 			{
 				do
@@ -289,8 +291,9 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 		{
 			const int maximumDigits = 20;
-			var temp = stackalloc byte[maximumDigits];
-			int offset = maximumDigits;
+			var tempRaw = stackalloc byte[maximumDigits];
+			var temp = new SafePtr(tempRaw, maximumDigits);
+			var offset = maximumDigits;
 			do
 			{
 				var digit = (byte)(input % 10);
@@ -442,7 +445,7 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
 		{
-			return fs.Append(input.GetUnsafePtr(), input.Length);
+			return fs.Append(input.GetSafePtr(), input.Length);
 		}
 
 		/// <summary>
@@ -486,27 +489,15 @@ namespace Sapientia.Collections.Fixed
 #if BURST
 		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
 #endif
-#if UNITY_5_3_OR_NEWER
-		public unsafe static FormatError Append<T>(ref this T fs, byte* utf8Bytes, int utf8BytesLength)
+		public unsafe static FormatError Append<T>(ref this T fs, SafePtr utf8Bytes, int utf8BytesLength)
 			where T : struct, IFixedString
 		{
 			var origLength = fs.Length;
 			if (!fs.TryResize(origLength + utf8BytesLength, ClearOptions.UninitializedMemory))
 				return FormatError.Overflow;
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(fs.GetUnsafePtr() + origLength, utf8Bytes, utf8BytesLength);
+			MemoryExt.MemCopy(fs.GetSafePtr() + origLength, utf8Bytes, utf8BytesLength);
 			return FormatError.None;
 		}
-#else
-		public unsafe static FormatError Append<T>(ref this T fs, byte* utf8Bytes, int utf8BytesLength)
-			where T : struct, IFixedString
-		{
-			var origLength = fs.Length;
-			if (!fs.TryResize(origLength + utf8BytesLength, ClearOptions.UninitializedMemory))
-				return FormatError.Overflow;
-			Buffer.MemoryCopy(utf8Bytes, fs.GetUnsafePtr() + origLength, utf8BytesLength, utf8BytesLength);
-			return FormatError.None;
-		}
-#endif
 
 		/// <summary>
 		/// Appends another string to this string.
@@ -525,12 +516,14 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 		{
 			// we don't know how big the expansion from UTF16 to UTF8 will be, so we account for worst case.
-			int worstCaseCapacity = s.Length * 4;
-			byte* utf8Bytes = stackalloc byte[worstCaseCapacity];
+			var worstCaseCapacity = s.Length * 4;
+			var utf8BytesRaw = stackalloc byte[worstCaseCapacity];
+			var utf8Bytes = new SafePtr(utf8BytesRaw, worstCaseCapacity);
 			int utf8Len;
 
-			fixed (char* chars = s)
+			fixed (char* charsRaw = s)
 			{
+				var chars = new SafePtr<char>(charsRaw, s.Length);
 				var err = UTF8Ext.Copy(utf8Bytes, out utf8Len, worstCaseCapacity, chars, s.Length);
 				if (err != CopyError.None)
 				{
@@ -577,9 +570,10 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 		{
 			int utf8Len;
-			fixed (char* chars = s)
+			fixed (char* charsRaw = s)
 			{
-				UTF8Ext.Copy(fs.GetUnsafePtr(), out utf8Len, fs.Capacity, chars, s.Length);
+				var chars = new SafePtr<char>(charsRaw, s.Length);
+				UTF8Ext.Copy(fs.GetSafePtr(), out utf8Len, fs.Capacity, chars, s.Length);
 				fs.Length = utf8Len;
 			}
 		}

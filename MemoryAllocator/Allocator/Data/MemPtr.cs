@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Sapientia.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator

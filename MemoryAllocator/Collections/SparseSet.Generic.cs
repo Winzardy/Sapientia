@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
@@ -148,6 +149,30 @@ namespace Sapientia.MemoryAllocator
 		public void ClearFast()
 		{
 			_innerSet.ClearFast();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
+		{
+			return new (new (GetValuePtr(allocator), Count));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
+		{
+			return new (new (GetValuePtr(), Count));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
+		{
+			return new (new (GetValuePtr(allocator), 0, Count));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
+		{
+			return new (new (GetValuePtr(), 0, Count));
 		}
 	}
 }

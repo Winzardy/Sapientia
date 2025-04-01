@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Sapientia.Data;
 #if UNITY_5_3_OR_NEWER
 using Unity.Collections.LowLevel.Unsafe;
 #endif
@@ -96,6 +97,12 @@ namespace Sapientia.Extensions
 #else
 			return Unsafe.AsPointer(ref value);
 #endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> AsSafePtr<T>(this ref T value) where T : unmanaged
+		{
+			return new SafePtr<T>(value.AsPointer(), 1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

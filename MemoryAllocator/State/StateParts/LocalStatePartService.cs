@@ -1,4 +1,5 @@
 using Sapientia.Collections;
+using Sapientia.Data;
 using Sapientia.ServiceManagement;
 
 namespace Sapientia.MemoryAllocator.State

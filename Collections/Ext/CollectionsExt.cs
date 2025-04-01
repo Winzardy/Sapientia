@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Sapientia.Collections;
 using Sapientia.Collections.Archetypes;
 
-namespace Sapientia.Extensions
+namespace Sapientia.Collections.Ext
 {
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#b48166b7e5c44ce8957d060d93577fe3

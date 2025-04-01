@@ -1,7 +1,7 @@
-namespace Sapientia.MemoryAllocator
-{
-	using System.Diagnostics;
+using System.Diagnostics;
 
+namespace Sapientia
+{
 #if UNITY_EDITOR
 	using BURST_DISCARD = Unity.Burst.BurstDiscardAttribute;
 	using HIDE_CALLSTACK = UnityEngine.HideInCallstackAttribute;
@@ -33,7 +33,7 @@ namespace Sapientia.MemoryAllocator
 
 	public static partial class E
 	{
-		[Conditional(ENABLE_EXCEPTIONS)]
+		[Conditional(DEBUG)]
 		[HIDE_CALLSTACK]
 		public static void ASSERT(bool condition, string str = null)
 		{

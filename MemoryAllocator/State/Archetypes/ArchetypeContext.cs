@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
+using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {

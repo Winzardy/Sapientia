@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {

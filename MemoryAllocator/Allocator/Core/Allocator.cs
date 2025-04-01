@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Collections;
+using Sapientia.Data;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Collections;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -14,8 +14,8 @@ namespace Sapientia.MemoryAllocator
 	{
 		public AllocatorId allocatorId;
 
-		private UnsafeList<MemoryZone> zonesList;
-		private UnsafeList<MemoryBlockPtrCollection> freeBlockPools;
+		public UnsafeList<MemoryZone> zonesList;
+		public UnsafeList<MemoryBlockPtrCollection> freeBlockPools;
 
 		public ServiceRegistry serviceRegistry;
 
@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator
 
 			AllocateMemoryZone(zoneSize);
 
-			serviceRegistry = ServiceRegistry.Create(new SafePtr<Allocator>(this.AsPointer(), 1));
+			serviceRegistry = ServiceRegistry.Create(this.AsSafePtr());
 		}
 
 		public void Dispose()

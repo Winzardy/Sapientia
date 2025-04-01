@@ -1,9 +1,10 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
-namespace Sapientia.MemoryAllocator.Collections
+namespace Sapientia.Collections
 {
 	[DebuggerTypeProxy(typeof(UnsafeList<>.UnsafeListProxy))]
 	public unsafe struct UnsafeList<T> : IDisposable
@@ -17,7 +18,7 @@ namespace Sapientia.MemoryAllocator.Collections
 
 		public UnsafeList(int capacity = 8)
 		{
-			this.array = new SafePtr<T>(MemoryExt.MakeArray<T>(capacity, false), capacity);
+			this.array = MemoryExt.MakeArray<T>(capacity, false);
 			this.count = 0;
 			this.capacity = capacity;
 		}
@@ -31,13 +32,13 @@ namespace Sapientia.MemoryAllocator.Collections
 		public SafePtr<T> LastPtr
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => new SafePtr<T>((array + (count - 1)).ptr, 1);
+			get => array.Slice(count - 1, 1);
 		}
 
 		public SafePtr<T> this[int index]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => new SafePtr<T>((array + index).ptr, 1);
+			get => array.Slice(index, 1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -57,7 +58,7 @@ namespace Sapientia.MemoryAllocator.Collections
 			count--;
 			if (index < count)
 			{
-				MemoryExt.MemMove<T>((array + (index + 1)).ptr, (array + index).ptr, count - index);
+				MemoryExt.MemMove<T>((array + (index + 1)), (array + index), count - index);
 			}
 
 			return result;
@@ -88,10 +89,7 @@ namespace Sapientia.MemoryAllocator.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void EnsureCapacity(int newCapacity)
 		{
-			var ptr = array.ptr;
-			MemoryExt.ResizeArray<T>(ref ptr, ref capacity, newCapacity, true, false);
-
-			array = new SafePtr<T>(ptr, capacity);
+			MemoryExt.ResizeArray<T>(ref array, ref capacity, newCapacity, true, false);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -100,7 +98,7 @@ namespace Sapientia.MemoryAllocator.Collections
 			if (!IsValid)
 				return;
 
-			MemoryExt.MemFree(array.ptr);
+			MemoryExt.MemFree(array);
 			this = default;
 		}
 

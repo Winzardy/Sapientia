@@ -2,15 +2,15 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Collections;
+using Sapientia.Data;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Collections;
 
 namespace Sapientia.MemoryAllocator
 {
 	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
-		private struct MemoryBlockPtrCollection : IDisposable
+		public struct MemoryBlockPtrCollection : IDisposable
 		{
 			public readonly int blockSize;
 			public UnsafeList<MemoryBlockRef> freeBlocks;
@@ -236,7 +236,7 @@ namespace Sapientia.MemoryAllocator
 
 			// Копируем данные из старого блока в новый
 			var newBlock = newBlockPtr.Value();
-			MemoryExt.MemCopy((byte*)blockPtr.ptr, (byte*)newBlockPtr.ptr, blockPtr.ptr->blockSize);
+			MemoryExt.MemCopy((SafePtr)blockPtr, (SafePtr)newBlockPtr, blockPtr.ptr->blockSize);
 			// Восстанавливаем данные нового блока
 			newBlockPtr.Value() = newBlock;
 

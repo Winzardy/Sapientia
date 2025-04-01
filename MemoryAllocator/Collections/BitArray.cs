@@ -1,3 +1,4 @@
+using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
@@ -43,7 +44,7 @@ namespace Sapientia.MemoryAllocator
 			length = source.length;
 			var sourcePtr = allocator.Value().GetSafePtr(source.memPtr);
 
-			MemoryExt.MemCopy(sourcePtr.ptr, safePtr.ptr, sizeInBytes);
+			MemoryExt.MemCopy(sourcePtr, safePtr, sizeInBytes);
 		}
 
 		[INLINE(256)]
@@ -53,7 +54,7 @@ namespace Sapientia.MemoryAllocator
 			Resize(allocator, source.length);
 			var sourcePtr = allocator.Value().GetSafePtr(in source.memPtr);
 
-			MemoryExt.MemCopy(sourcePtr.ptr, allocator.Value().GetSafePtr(in memPtr).ptr, sizeInBytes);
+			MemoryExt.MemCopy(sourcePtr, allocator.Value().GetSafePtr(in memPtr), sizeInBytes);
 		}
 
 		[INLINE(256)]
@@ -82,7 +83,7 @@ namespace Sapientia.MemoryAllocator
 				if (clearOptions == ClearOptions.ClearMemory)
 				{
 					var clearSize = Bitwise.AlignULongBits(newLength - length);
-					MemoryExt.MemClear((byte*)_cachedPtr.ptr + Bitwise.AlignULongBits(length), clearSize);
+					MemoryExt.MemClear((_cachedPtr + Bitwise.AlignULongBits(length)), clearSize);
 				}
 
 				length = newLength;
