@@ -20,9 +20,9 @@ namespace Sapientia.Extensions
 			return string.IsNullOrEmpty(str);
 		}
 
-		public static string Format(this string str, params object[] args)
+		public static string Format(this string format, params object[] args)
 		{
-			return string.Format(str, args);
+			return string.Format(format, args);
 		}
 
 		public static bool IsNullOrWhiteSpace(this string? str)
@@ -51,20 +51,20 @@ namespace Sapientia.Extensions
 
 			using (StringBuilderPool.Get(out var sb))
 			{
-				for (int i = 0; i < items.Count; i++)
+				for (var i = 0; i < items.Count; i++)
 				{
-					T item = items[i];
+					var item = items[i];
 
-					string value =
+					var value =
 						item == null ? NULL :
 						getter != null ? getter.Invoke(item) :
 						item.ToString();
 
-					string prefix = !separator.IsNullOrEmpty() ? separator :
+					var prefix = !separator.IsNullOrEmpty() ? i != 0 ? separator : string.Empty :
 						numerate ? $"{i + 1}. " :
 						null;
 
-					string next = vertical ? $"\n{prefix}{value}" : $"{prefix}{value} ";
+					var next = vertical ? $"\n{prefix}{value}" : $"{prefix}{value}";
 
 					sb.Append(next);
 				}

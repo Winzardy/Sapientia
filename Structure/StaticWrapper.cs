@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
-namespace Sapientia.Extensions
+namespace Sapientia
 {
 	/// <summary>
-	/// Use it to implement static wrapper for features.
-	/// Check each method invocation with InitializationCheck to lot invalid use.
-	/// Should only be one wrapper per type of T.
+	/// Статический сервис, cмесь двух паттернов Provider и Strategy. Используется для инфраструктурных сервисов, минуя ServiceLocator/DI
 	/// </summary>
 	public abstract class StaticWrapper<T> where T : class
 	{
@@ -14,11 +11,11 @@ namespace Sapientia.Extensions
 
 		public static bool IsInitialized => _instance != null;
 
-		public static void Initialize(T instance)
+		public static void Initialize(T service)
 		{
 			Terminate();
 
-			_instance = instance;
+			_instance = service;
 		}
 
 		public static void Terminate()

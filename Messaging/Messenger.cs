@@ -1,6 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using Sapientia.Extensions;
+﻿using System.Runtime.CompilerServices;
 
 namespace Sapientia.Messaging
 {
