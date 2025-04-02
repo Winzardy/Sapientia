@@ -6,8 +6,6 @@ using Sapientia.Data;
 
 namespace Sapientia.Messaging
 {
-	public delegate void Receiver<T>(in T msg);
-
 	public delegate bool Filter<T>(in T msg);
 
 	/// <summary>

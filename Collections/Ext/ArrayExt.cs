@@ -2,7 +2,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace Sapientia.Collections.Ext
+namespace Sapientia.Collections
 {
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#5dd46b19b2fa4e1c8d6ac4fabf6a19cd

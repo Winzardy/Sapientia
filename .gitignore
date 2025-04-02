@@ -1,5 +1,7 @@
-bin/
-obj/
+[Bb]in/
+[Oo]bj/
+[Bb]in.meta
+[Oo]bj.meta
 /packages/
 riderModule.iml
 /_ReSharper.Caches/

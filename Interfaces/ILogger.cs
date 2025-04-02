@@ -1,0 +1,10 @@
+using System;
+
+public interface ILogger
+{
+	public void Log(string msg, object context = null);
+	public void LogWarning(string msg, object context = null);
+	public void LogError(string msg, object context = null);
+	public void LogException(Exception exception, object context = null);
+}
+

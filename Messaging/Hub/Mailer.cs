@@ -1,29 +1,31 @@
-using System;
-
 namespace Sapientia.Messaging
 {
 	/// <summary>
 	/// Объединяет событие и передачу сообщение (<see cref="Messenger"/>) в один объект.
 	/// Так же как и у события есть подписка и отписка, а так же Invoke
 	/// </summary>
-	public struct Mailer<TMessage> where TMessage : struct
+	public struct Mailer<TMessage> : IReactiveProperty<TMessage>
+		where TMessage : struct
 	{
 		private MessengerHub _hub;
 
-		private event Action _action;
 		private event Receiver<TMessage> _receiver;
 
 		private TMessage _last;
+		public TMessage Value => _last;
 
 		internal Mailer(MessengerHub hub = null) : this() => Setup(hub);
 
 		internal void Setup(MessengerHub hub) => _hub = hub;
 
-		public void Subscribe(Receiver<TMessage> receiver) => _receiver += receiver;
-		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;
+		public void Subscribe(Receiver<TMessage> receiver, bool invokeOnSubscribe = true)
+		{
+			if (invokeOnSubscribe)
+				receiver?.Invoke(_last);
+			_receiver += receiver;
+		}
 
-		public void Subscribe(Action action) => _action += action;
-		public void Unsubscribe(Action action) => _action -= action;
+		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;
 
 		public void Invoke() => InvokeInternal(ref _last);
 
@@ -41,7 +43,6 @@ namespace Sapientia.Messaging
 
 		private void InvokeInternal(ref TMessage msg)
 		{
-			_action?.Invoke();
 			_receiver?.Invoke(in msg);
 
 			if (_hub != null)
@@ -54,39 +55,33 @@ namespace Sapientia.Messaging
 		}
 
 		/// <summary>
-		/// Аналог подписки
+		/// Не работает, если нет сеттера ( { set; } )
 		/// </summary>
-		public static Mailer<TMessage> operator +(Mailer<TMessage> mailer, Receiver<TMessage> receiver)
+		public static Mailer<TMessage> operator +(Mailer<TMessage> property, Receiver<TMessage> receiver)
 		{
-			mailer.Subscribe(receiver);
-			return mailer;
+			property.Subscribe(receiver);
+			return property;
 		}
 
 		/// <summary>
-		/// Аналог отписки
+		/// Не работает, если нет сеттера ( { set; } )
 		/// </summary>
-		public static Mailer<TMessage> operator -(Mailer<TMessage> mailer, Receiver<TMessage> receiver)
+		public static Mailer<TMessage> operator -(Mailer<TMessage> property, Receiver<TMessage> receiver)
 		{
-			mailer.Unsubscribe(receiver);
-			return mailer;
+			property.Unsubscribe(receiver);
+			return property;
 		}
 
-		/// <summary>
-		/// Аналог подписки
-		/// </summary>
-		public static Mailer<TMessage> operator +(Mailer<TMessage> mailer, Action action)
+		public static Receiver<TMessage> operator +(Receiver<TMessage> receiver, Mailer<TMessage> property)
 		{
-			mailer.Subscribe(action);
-			return mailer;
+			property.Subscribe(receiver);
+			return receiver;
 		}
 
-		/// <summary>
-		/// Аналог отписки
-		/// </summary>
-		public static Mailer<TMessage> operator -(Mailer<TMessage> mailer, Action action)
+		public static Receiver<TMessage> operator -(Receiver<TMessage> receiver, Mailer<TMessage> property)
 		{
-			mailer.Unsubscribe(action);
-			return mailer;
+			property.Unsubscribe(receiver);
+			return receiver;
 		}
 	}
 
@@ -94,7 +89,8 @@ namespace Sapientia.Messaging
 	/// Объединяет событие и передачу сообщение (<see cref="Messenger"/>) в один объект.
 	/// Так же как и у события есть подписка и отписка, а так же Invoke
 	/// </summary>
-	public struct Mailer<TMessage, T1> where TMessage : struct
+	public struct Mailer<TMessage, T1>
+		where TMessage : struct
 	{
 		public delegate void CustomAction(in T1 value);
 
