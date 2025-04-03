@@ -367,7 +367,7 @@ namespace Sapientia.Extensions
 
 			if (arr != default)
 			{
-				MemCopy(arr, ptr, length * TSize<T>.size);
+				MemCopy<T>(arr, ptr, length);
 				MemFree(arr);
 			}
 
