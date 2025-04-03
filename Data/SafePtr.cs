@@ -174,8 +174,8 @@ namespace Sapientia.Data
 		public byte* HiBound => hiBound;
 		public byte* LowBound => lowBound;
 #else
-		public byte* HiBound => this.ptr;
-		public byte* LowBound => this.ptr;
+		public byte* HiBound => (byte*)ptr;
+		public byte* LowBound => (byte*)ptr;
 #endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

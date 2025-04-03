@@ -15,7 +15,7 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly ushort generation;
 		public AllocatorId allocatorId;
 
-#if UNITY_EDITOR
+#if ENABLE_ENTITY_NAMES
 		public string Name
 		{
 			get

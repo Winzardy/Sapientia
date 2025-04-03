@@ -24,7 +24,7 @@ namespace Sapientia.MemoryAllocator.State
 		private MemArray<ushort> _entityIdToGeneration;
 		private ProxyEvent<IEntityDestroySubscriberProxy> _entityDestroySubscribers;
 
-#if UNITY_EDITOR
+#if ENABLE_ENTITY_NAMES
 		public MemArray<FixedString64Bytes> entityIdToName;
 		public int MaxEntitiesCount { get; private set; }
 
@@ -44,7 +44,7 @@ namespace Sapientia.MemoryAllocator.State
 			_freeEntitiesIds = default;
 			_entityIdToGeneration = default;
 			_entityDestroySubscribers = default;
-#if UNITY_EDITOR
+#if ENABLE_ENTITY_NAMES
 			entityIdToName = default;
 			MaxEntitiesCount = 0;
 #endif
@@ -55,7 +55,7 @@ namespace Sapientia.MemoryAllocator.State
 			_freeEntitiesIds = new MemArray<ushort>(allocator, EntitiesCapacity, ClearOptions.UninitializedMemory);
 			_entityIdToGeneration = new MemArray<ushort>(allocator, EntitiesCapacity);
 			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(allocator, 128);
-#if UNITY_EDITOR
+#if ENABLE_ENTITY_NAMES
 			entityIdToName = new MemArray<FixedString64Bytes>(allocator, EntitiesCapacity);
 #endif
 
@@ -64,7 +64,7 @@ namespace Sapientia.MemoryAllocator.State
 				_freeEntitiesIds[allocator, i] = i;
 			}
 
-#if UNITY_EDITOR
+#if ENABLE_ENTITY_NAMES
 			WorldEntity = CreateEntity(allocator, "World");
 #else
 			WorldEntity = CreateEntity(allocator);
@@ -91,11 +91,16 @@ namespace Sapientia.MemoryAllocator.State
 			_entityDestroySubscribers.UnSubscribe(allocator, subscriber);
 		}
 
-#if UNITY_EDITOR
+#if ENABLE_ENTITY_NAMES
 		public Entity CreateEntity(SafePtr<Allocator> allocator, in FixedString64Bytes name = default)
 #else
-		public Entity CreateEntity(SafePtr<Allocator> allocator)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Entity CreateEntity(SafePtr<Allocator> allocator, in FixedString64Bytes name)
+		{
+			return CreateEntity(allocator);
+		}
 
+		public Entity CreateEntity(SafePtr<Allocator> allocator, string name = null)
 #endif
 		{
 			EnsureCapacity(allocator, EntitiesCount);
@@ -104,7 +109,7 @@ namespace Sapientia.MemoryAllocator.State
 			var generation = ++_entityIdToGeneration[allocator, id];
 
 			var entity = new Entity(id, generation, allocator.Value().allocatorId);
-#if UNITY_EDITOR
+#if ENABLE_ENTITY_NAMES
 			entityIdToName[allocator, id] = name;
 			if (MaxEntitiesCount < EntitiesCount)
 				MaxEntitiesCount = EntitiesCount;
@@ -154,7 +159,7 @@ namespace Sapientia.MemoryAllocator.State
 
 			_freeEntitiesIds.Resize(allocator, EntitiesCapacity);
 			_entityIdToGeneration.Resize(allocator, EntitiesCapacity);
-#if UNITY_EDITOR
+#if ENABLE_ENTITY_NAMES
 			entityIdToName.Resize(allocator, EntitiesCapacity);
 #endif
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
