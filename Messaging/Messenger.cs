@@ -4,6 +4,18 @@ namespace Sapientia.Messaging
 {
 	public class Messenger : StaticWrapper<MessengerHub>
 	{
+		private static MessengerHub hub
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _instance;
+		}
+
+		public static bool IsInitialized
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _instance != null;
+		}
+
 		/// <summary>
 		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(System.Action{TMessage})"/>
 		/// </summary>
@@ -11,7 +23,7 @@ namespace Sapientia.Messaging
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SendAndUnsubscribeAll<TMessage>(ref TMessage msg)
 			where TMessage : struct =>
-			_instance.SendAndUnsubscribeAll(ref msg);
+			hub.SendAndUnsubscribeAll(ref msg);
 
 		/// <summary>
 		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(System.Action{TMessage})"/>
@@ -24,7 +36,7 @@ namespace Sapientia.Messaging
 #if UNITY_EDITOR
 			if (IsInitialized)
 #endif
-				_instance.Send(ref msg);
+				hub.Send(ref msg);
 		}
 
 		/// <summary>
@@ -36,7 +48,7 @@ namespace Sapientia.Messaging
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver)
 			where TMessage : struct =>
-			_instance.Subscribe(receiver);
+			hub.Subscribe(receiver);
 
 		/// <summary>
 		/// Подписаться на сообщения с фильтром
@@ -49,13 +61,13 @@ namespace Sapientia.Messaging
 		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver,
 			Filter<TMessage> filter)
 			where TMessage : struct =>
-			_instance.Subscribe(receiver, filter);
+			hub.Subscribe(receiver, filter);
 
 		/// <summary>
 		/// Отписывает всех подписчиков от сообщения
 		/// </summary>
 		/// <typeparam name="TMessage"></typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void UnsubscribeAll<TMessage>() where TMessage : struct => _instance.UnsubscribeAll<TMessage>();
+		public static void UnsubscribeAll<TMessage>() where TMessage : struct => hub.UnsubscribeAll<TMessage>();
 	}
 }

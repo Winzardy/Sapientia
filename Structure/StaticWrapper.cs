@@ -9,8 +9,6 @@ namespace Sapientia
 	{
 		protected static T _instance;
 
-		public static bool IsInitialized => _instance != null;
-
 		public static void Initialize(T service)
 		{
 			Terminate();

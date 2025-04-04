@@ -1,14 +1,27 @@
+using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
 namespace Sapientia.Pooling
 {
 	public sealed class StaticObjectPool<T> : StaticWrapper<ObjectPool<T>>
 	{
-		internal static T Get() => _instance.Get();
+		private static ObjectPool<T> pool
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _instance;
+		}
 
-		internal static PooledObject<T> Get(out T result) => _instance.Get(out result);
+		public static bool IsInitialized
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _instance != null;
+		}
 
-		internal static void Release(T obj) => _instance.Release(obj);
+		internal static T Get() => pool.Get();
+
+		internal static PooledObject<T> Get(out T result) => pool.Get(out result);
+
+		internal static void Release(T obj) => pool.Release(obj);
 	}
 
 	public static class StaticObjectPool
