@@ -22,11 +22,7 @@ namespace Sapientia.Messaging
 		public static void Send<TMessage>(in TContext context, ref TMessage msg)
 			where TMessage : struct
 		{
-#if UNITY_EDITOR
 			if (ServiceLocator<TContext, MessengerHub>.TryGetService(context, out var messengerHub))
-#else
-				var messengerHub = ServiceLocator<TContext, MessengerHub>.GetService(context);
-#endif
 				messengerHub.Send(ref msg);
 		}
 
