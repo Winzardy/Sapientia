@@ -22,6 +22,12 @@ namespace Sapientia.Data
 		public byte* LowBound => this.ptr;
 #endif
 
+		public bool IsValid
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ptr != null;
+		}
+
 		public ref byte this[int index]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -177,6 +183,12 @@ namespace Sapientia.Data
 		public byte* HiBound => (byte*)ptr;
 		public byte* LowBound => (byte*)ptr;
 #endif
+
+		public bool IsValid
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ptr != null;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr(T* ptr)

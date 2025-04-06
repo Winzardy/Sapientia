@@ -21,6 +21,8 @@ namespace Sapientia.MemoryAllocator
 
 		public ushort version;
 
+		public bool IsValid => version > 0;
+
 		public int ZoneSize
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -30,6 +32,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Initialize(AllocatorId allocatorId, int zoneSize = MIN_ZONE_SIZE)
 		{
+			E.ASSERT(!IsValid);
+
 			this.allocatorId = allocatorId;
 			this.version = 1;
 
@@ -48,6 +52,33 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			AllocateMemoryZone(zoneSize);
+
+			serviceRegistry = ServiceRegistry.Create(this.AsSafePtr());
+		}
+
+		public void Reset(AllocatorId allocatorId)
+		{
+			E.ASSERT(IsValid);
+
+			this.allocatorId = allocatorId;
+			this.version++;
+
+			for (var i = 0; i < freeBlockPools.count; i++)
+			{
+				freeBlockPools[i].Value().freeBlocks.Clear();
+			}
+
+			for (var i = 0; i < zonesList.count; i++)
+			{
+				ref var pool = ref freeBlockPools[freeBlockPools.count - 1].Value();
+				ref var zone = ref zonesList[i].Value();
+				var blockId = new BlockId(freeBlockPools.count - 1, pool.Count);
+				var memoryBlock = MemoryBlock.CreateFirstBlock(blockId, zone.size);
+
+				// Reset first block
+				zone.memory.Cast<MemoryBlock>().Value() = memoryBlock;
+				pool.freeBlocks.Add(new MemoryBlockRef(i, 0));
+			}
 
 			serviceRegistry = ServiceRegistry.Create(this.AsSafePtr());
 		}

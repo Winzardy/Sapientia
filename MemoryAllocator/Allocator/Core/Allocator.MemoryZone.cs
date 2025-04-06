@@ -25,6 +25,15 @@ namespace Sapientia.MemoryAllocator
 				memory.Value<MemoryBlock>() = firstMemoryBlock;
 			}
 
+			public MemoryZone(SafePtr memory, MemoryBlock firstMemoryBlock, int size)
+			{
+				this.memory = memory;
+				this.zoneEnd = memory.ptr + size;
+				this.size = size;
+
+				memory.Value<MemoryBlock>() = firstMemoryBlock;
+			}
+
 			public void Dispose()
 			{
 				MemoryExt.MemFree(memory);

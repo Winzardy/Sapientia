@@ -91,11 +91,18 @@ namespace Sapientia.MemoryAllocator
 			Prewarm(_count);
 
 			var allocatorId = new AllocatorId((ushort)_count++, (ushort)++_currentId);
+			ref var allocator = ref _allocators[allocatorId.index];
 
-			var allocator = MemoryExt.MemAllocAndClear<Allocator>();
-			_allocators[allocatorId.index] = allocator;
+			if (allocator.IsValid)
+			{
+				allocator.Value().Reset(allocatorId);
+			}
+			else
+			{
+				allocator = MemoryExt.MemAllocAndClear<Allocator>();
+				allocator.Value().Initialize(allocatorId, initialSize);
+			}
 
-			allocator.Value().Initialize(allocatorId, initialSize);
 			return allocator;
 		}
 
@@ -112,13 +119,13 @@ namespace Sapientia.MemoryAllocator
 			if (_currentAllocator == _allocators[allocatorId.index])
 				SetCurrentAllocator(default(SafePtr<Allocator>));
 
-			var allocatorPtr = _allocators[allocatorId.index];
-			ref var allocator = ref allocatorPtr.Value();
-			allocator.Dispose();
+			if (_count > 1)
+			{
+				ref var a = ref _allocators[allocatorId.index];
+				ref var b = ref _allocators[_count - 1];
 
-			MemoryExt.MemFree(allocatorPtr);
-
-			_allocators[allocatorId.index] = _allocators[_count - 1];
+				(a, b) = (b, a);
+			}
 			_count--;
 		}
 
