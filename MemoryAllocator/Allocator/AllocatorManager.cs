@@ -95,6 +95,7 @@ namespace Sapientia.MemoryAllocator
 
 			if (allocator.IsValid)
 			{
+				// Переиспользуем память
 				allocator.Value().Reset(allocatorId);
 			}
 			else
@@ -121,6 +122,8 @@ namespace Sapientia.MemoryAllocator
 
 			if (_count > 1)
 			{
+				// Не освобождаем память, будем её переиспользовать
+				// !!! Если её освободить, по по непонятной причине происходит краш !!!
 				ref var a = ref _allocators[allocatorId.index];
 				ref var b = ref _allocators[_count - 1];
 

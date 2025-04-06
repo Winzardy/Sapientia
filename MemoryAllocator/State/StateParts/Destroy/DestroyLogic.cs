@@ -31,7 +31,6 @@ namespace Sapientia.MemoryAllocator.State
 			E.ASSERT(!killRequestArchetype.HasElement(entity));
 
 			destroyRequestArchetype.GetElement(entity);
-			UnityEngine.Debug.LogWarning($"Request Destroy entity [id: {entity.id} gen: {entity.generation}]");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,8 +44,6 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			E.ASSERT(IsAlive(entity));
 			killRequestArchetype.GetElement(entity);
-
-			UnityEngine.Debug.LogWarning($"Request Kill entity [id: {entity.id} gen: {entity.generation}]");
 		}
 
 		public void RequestKill(Entity entity, float delay)
@@ -71,8 +68,6 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void AddKillParent(Entity child, Entity parent)
 		{
-			if (!IsAlive(child))
-				UnityEngine.Debug.LogWarning($"Child entity is destroyed [id: {child.id} gen: {child.generation}]");
 			E.ASSERT(IsAlive(child));
 			E.ASSERT(IsAlive(parent));
 
