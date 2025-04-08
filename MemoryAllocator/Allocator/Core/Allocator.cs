@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Collections;
-using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
