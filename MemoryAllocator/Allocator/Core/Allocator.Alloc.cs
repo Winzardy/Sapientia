@@ -10,7 +10,7 @@ namespace Sapientia.MemoryAllocator
 		private static int Align(int size)
 		{
 			E.ASSERT(size > 0);
-			return (size + MIN_BLOCK_ALIGN) & ~MIN_BLOCK_ALIGN;
+			return (size + MIN_BLOCK_ALIGN_MINUS_ONE) & ~MIN_BLOCK_ALIGN_MINUS_ONE;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
