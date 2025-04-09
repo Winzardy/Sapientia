@@ -31,6 +31,13 @@ namespace Sapientia.Extensions
 			return n;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Abs(this int value)
+		{
+			var mask = value >> FIRST_TO_LAST_SHIFT;
+			return (value + mask) ^ mask;
+		}
+
 		// ~5% faster: value >= 0 ? 1 : -1;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this int value)
