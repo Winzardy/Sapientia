@@ -1,18 +1,23 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Unity.Collections.LowLevel.Unsafe;
 
 namespace Sapientia.Data
 {
 	[StructLayout(LayoutKind.Sequential)]
 	public readonly unsafe struct SafePtr
 	{
-		[NativeDisableUnsafePtrRestriction]
+#if UNITY_5_3_OR_NEWER
+		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
+#endif
 		public readonly byte* ptr;
 #if DEBUG
-		[NativeDisableUnsafePtrRestriction]
+#if UNITY_5_3_OR_NEWER
+		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
+#endif
 		public readonly byte* lowBound;
-		[NativeDisableUnsafePtrRestriction]
+#if UNITY_5_3_OR_NEWER
+		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
+#endif
 		public readonly byte* hiBound;
 
 		public byte* HiBound => hiBound;
@@ -169,12 +174,18 @@ namespace Sapientia.Data
 
 	public readonly unsafe struct SafePtr<T> where T : unmanaged
 	{
-		[NativeDisableUnsafePtrRestriction]
+#if UNITY_5_3_OR_NEWER
+		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
+#endif
 		public readonly T* ptr;
 #if DEBUG
-		[NativeDisableUnsafePtrRestriction]
+#if UNITY_5_3_OR_NEWER
+		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
+#endif
 		public readonly byte* lowBound;
-		[NativeDisableUnsafePtrRestriction]
+#if UNITY_5_3_OR_NEWER
+		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
+#endif
 		public readonly byte* hiBound;
 
 		public byte* HiBound => hiBound;

@@ -11,9 +11,6 @@ namespace Sapientia.MemoryAllocator.Data
 	{
 		public static readonly Ptr Invalid = new (MemPtr.Invalid);
 
-#if UNITY_5_3_OR_NEWER
-		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
-#endif
 		private ushort _version;
 		private SafePtr _cachedPtr;
 		public MemPtr memPtr;
