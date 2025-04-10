@@ -109,7 +109,7 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine($"			var typeToDelegateIndex = new Dictionary<({nameof(TypeIndex)}, {nameof(ProxyIndex)}), {nameof(DelegateIndex)}>");
+			sourceBuilder.AppendLine($"			var typeToDelegateIndex = new Dictionary<({nameof(TypeIndex)}, {nameof(ProxyId)}), {nameof(DelegateIndex)}>");
 			sourceBuilder.AppendLine("			{");
 
 			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");

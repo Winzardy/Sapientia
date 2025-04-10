@@ -8,7 +8,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe interface IProxy
 	{
-		ProxyIndex ProxyIndex { get; }
+		ProxyId ProxyId { get; }
 
 		DelegateIndex FirstDelegateIndex { get; set; }
 
@@ -33,19 +33,19 @@ namespace Sapientia.TypeIndexer
 		/// Причём, методы создаются пачками для каждого конкретного наследника интерфейса.
 		/// Поэтому зная индекс первого метода, можно получить все остальные методы для конкретного наследника интерфейса.
 		/// </summary>
-		private static Delegate[] _delegateIndexToCompiledMethod;
+		private static Delegate[] _delegateIndexToDelegate;
 		/// <summary>
-		/// Получаем индекс первого метода для интерфейса (ProxyIndex) и его наследника (TypeIndex).
+		/// Получаем индекс первого метода для интерфейса (ProxyId) и его наследника (TypeIndex).
 		/// </summary>
-		private static System.Collections.Generic.Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> _typeToDelegateIndex;
+		private static System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> _typeToDelegateIndex;
 
 		public static void Initialize(System.Collections.Generic.Dictionary<Type, TypeIndex> typeToIndex,
 			Type[] indexToType,
-			Delegate[] delegateIndexToCompiledMethod, System.Collections.Generic.Dictionary<(TypeIndex, ProxyIndex), DelegateIndex> typeToDelegateIndex)
+			Delegate[] delegateIndexToCompiledMethod, System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> typeToDelegateIndex)
 		{
 			_typeToIndex = typeToIndex;
 			_indexToType = indexToType;
-			_delegateIndexToCompiledMethod = delegateIndexToCompiledMethod;
+			_delegateIndexToDelegate = delegateIndexToCompiledMethod;
 			_typeToDelegateIndex = typeToDelegateIndex;
 		}
 
@@ -53,7 +53,7 @@ namespace Sapientia.TypeIndexer
 		public static TProxy GetProxy<TProxy>(TypeIndex executorType) where TProxy: unmanaged, IProxy
 		{
 			var result = default(TProxy);
-			result.FirstDelegateIndex = _typeToDelegateIndex[(executorType, result.ProxyIndex)];
+			result.FirstDelegateIndex = _typeToDelegateIndex[(executorType, result.ProxyId)];
 			return result;
 		}
 
@@ -61,14 +61,14 @@ namespace Sapientia.TypeIndexer
 		public static TProxy GetProxy<T, TProxy>() where TProxy: unmanaged, IProxy
 		{
 			var result = default(TProxy);
-			result.FirstDelegateIndex = _typeToDelegateIndex[(TypeIndex<T>.typeIndex, result.ProxyIndex)];
+			result.FirstDelegateIndex = _typeToDelegateIndex[(TypeIndex<T>.typeIndex, result.ProxyId)];
 			return result;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Delegate GetDelegate(int delegateIndex)
 		{
-			return _delegateIndexToCompiledMethod[delegateIndex];
+			return _delegateIndexToDelegate[delegateIndex];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

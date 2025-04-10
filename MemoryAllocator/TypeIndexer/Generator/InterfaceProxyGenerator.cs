@@ -77,7 +77,7 @@ namespace Sapientia.TypeIndexer
 			return result;
 		}
 
-		private static string CreateFile(Type baseType, int proxyIndex)
+		private static string CreateFile(Type baseType, int proxyId)
 		{
 			var methods = baseType.GetAllInstanceMethods();
 
@@ -89,7 +89,7 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("");
 			sourceBuilder.AppendLine("namespace Sapientia.TypeIndexer");
 			sourceBuilder.AppendLine("{");
-			sourceBuilder.Append(CreateBaseProxy(baseType, methods, proxyIndex));
+			sourceBuilder.Append(CreateBaseProxy(baseType, methods, proxyId));
 			sourceBuilder.AppendLine();
 			sourceBuilder.Append(CreateBaseProxyExt(baseType, methods));
 			sourceBuilder.AppendLine();
@@ -100,16 +100,16 @@ namespace Sapientia.TypeIndexer
 			return sourceBuilder.ToString();
 		}
 
-		private static string CreateBaseProxy(Type baseType, IEnumerable<MethodInfo> methods, int proxyIndex)
+		private static string CreateBaseProxy(Type baseType, IEnumerable<MethodInfo> methods, int proxyId)
 		{
 			var sourceBuilder = new StringBuilder();
 			sourceBuilder.AppendLine($"	public unsafe struct {baseType.Name}Proxy : {nameof(IProxy)}");
 			sourceBuilder.AppendLine("	{");
-			sourceBuilder.AppendLine($"		public static readonly {nameof(ProxyIndex)} ProxyIndex = {proxyIndex};");
-			sourceBuilder.AppendLine($"		{nameof(ProxyIndex)} {nameof(IProxy)}.{nameof(IProxy.ProxyIndex)}");
+			sourceBuilder.AppendLine($"		public static readonly {nameof(ProxyId)} {nameof(ProxyId)} = {proxyId};");
+			sourceBuilder.AppendLine($"		{nameof(ProxyId)} {nameof(IProxy)}.{nameof(IProxy.ProxyId)}");
 			sourceBuilder.AppendLine($"		{{");
 			sourceBuilder.AppendLine($"			{MethodImplAttribute}");
-			sourceBuilder.AppendLine($"			get => ProxyIndex;");
+			sourceBuilder.AppendLine($"			get => {nameof(ProxyId)};");
 			sourceBuilder.AppendLine($"		}}");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"		private {nameof(DelegateIndex)} _firstDelegateIndex;");
