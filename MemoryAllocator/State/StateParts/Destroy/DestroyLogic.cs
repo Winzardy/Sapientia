@@ -28,7 +28,6 @@ namespace Sapientia.MemoryAllocator.State
 		public void RequestDestroy(Entity entity)
 		{
 			E.ASSERT(IsAlive(entity));
-			E.ASSERT(!killRequestArchetype.HasElement(entity));
 
 			destroyRequestArchetype.GetElement(entity);
 		}

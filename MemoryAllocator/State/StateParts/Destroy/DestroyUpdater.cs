@@ -1,4 +1,5 @@
 using Sapientia.Data;
+using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
@@ -65,11 +66,18 @@ namespace Sapientia.MemoryAllocator.State
 					request.value.delay -= deltaTime;
 			}
 
-			var killRequests = _killRequestArchetype.GetRawElements();
+			var killRequestsCount = _killRequestArchetype.Count;
+			var killRequestsTemp = stackalloc ArchetypeElement<KillRequest>[killRequestsCount];
+			var killRequestsTempPtr = new SafePtr<ArchetypeElement<KillRequest>>(killRequestsTemp, killRequestsCount);
 
-			for (var i = 0; i < _killRequestArchetype.Count; i++)
+			var killRequests = _killRequestArchetype.GetRawElements();
+			MemoryExt.MemCopy(killRequests, killRequestsTempPtr, killRequestsCount);
+
+			_killRequestArchetype.Clear();
+
+			for (var i = 0; i < killRequestsCount; i++)
 			{
-				var entity = killRequests[i].entity;
+				var entity = killRequestsTempPtr[i].entity;
 
 				ExecuteKillCallback(entity);
 				KillChild(entity);
@@ -78,8 +86,6 @@ namespace Sapientia.MemoryAllocator.State
 				_delayKillRequestArchetype.RemoveSwapBackElement(entity);
 				_destroyRequestArchetype.GetElement(entity);
 			}
-
-			_killRequestArchetype.Clear();
 		}
 
 		/// <summary>

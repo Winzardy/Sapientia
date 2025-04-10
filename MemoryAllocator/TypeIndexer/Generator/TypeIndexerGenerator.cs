@@ -95,10 +95,10 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine($"			var typeToIndex = new Dictionary<Type, {nameof(TypeIndex)}>(indexToType.Length);");
+			sourceBuilder.AppendLine($"			var types = new Dictionary<Type, {nameof(TypeIndex)}>(indexToType.Length);");
 			sourceBuilder.AppendLine("			for (var i = 0; i < indexToType.Length; i++)");
 			sourceBuilder.AppendLine("			{");
-			sourceBuilder.AppendLine("				typeToIndex.Add(indexToType[i], i);");
+			sourceBuilder.AppendLine("				types.Add(indexToType[i], i);");
 			sourceBuilder.AppendLine("			}");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			var delegateIndexToDelegate = new {nameof(Delegate)}[]");
@@ -109,18 +109,18 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine($"			var typeToDelegateIndex = new Dictionary<({nameof(TypeIndex)}, {nameof(ProxyId)}), {nameof(DelegateIndex)}>");
+			sourceBuilder.AppendLine($"			var delegates = new Dictionary<({nameof(TypeIndex)}, {nameof(ProxyId)}), {nameof(DelegateIndex)}>");
 			sourceBuilder.AppendLine("			{");
 
 			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");
-			sourceBuilder.Append(GenerateTypeToDelegateIndexBody(proxyTypes, true));
+			sourceBuilder.Append(GenerateDelegatesBody(proxyTypes, true));
 			sourceBuilder.AppendLine("#else");
-			sourceBuilder.Append(GenerateTypeToDelegateIndexBody(proxyTypes, false));
+			sourceBuilder.Append(GenerateDelegatesBody(proxyTypes, false));
 			sourceBuilder.AppendLine("#endif");
 
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.Initialize)}(typeToIndex, indexToType, delegateIndexToDelegate, typeToDelegateIndex);");
+			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.Initialize)}(types, indexToType, delegateIndexToDelegate, delegates);");
 			sourceBuilder.AppendLine("		}");
 			sourceBuilder.AppendLine("	}");
 			sourceBuilder.AppendLine("}");
@@ -156,7 +156,7 @@ namespace Sapientia.TypeIndexer
 			return sourceBuilder.ToString();
 		}
 
-		private static string GenerateTypeToDelegateIndexBody(List<(Type baseType, HashSet<Type> children)> proxyTypes, bool isDebug)
+		private static string GenerateDelegatesBody(List<(Type baseType, HashSet<Type> children)> proxyTypes, bool isDebug)
 		{
 			var duplicates = new HashSet<string>();
 			var sourceBuilder = new StringBuilder();
@@ -177,8 +177,8 @@ namespace Sapientia.TypeIndexer
 				foreach (var child in children)
 				{
 					var body = isDebug
-						? $"				{{ (typeToIndex[Type.GetType(\"{child.AssemblyQualifiedName}\")], {i}), {delegateIndex}}},"
-						: $"				{{ (typeToIndex[typeof({child.GetFullName()})], {i}), {delegateIndex}}},";
+						? $"				{{ (types[Type.GetType(\"{child.AssemblyQualifiedName}\")], {i}), {delegateIndex}}},"
+						: $"				{{ (types[typeof({child.GetFullName()})], {i}), {delegateIndex}}},";
 
 					Debug.Assert(duplicates.Add(body));
 					sourceBuilder.AppendLine(body);

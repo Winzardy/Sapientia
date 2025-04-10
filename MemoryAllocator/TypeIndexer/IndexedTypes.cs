@@ -26,26 +26,26 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IndexedTypes
 	{
 		private static System.Collections.Generic.Dictionary<Type, TypeIndex> _typeToIndex = new();
-		private static Type[] _indexToType = Array.Empty<Type>();
+		private static Type[] _types = Array.Empty<Type>();
 
 		/// <summary>
 		/// При инициализации сюда записываются все методы для всех unmanaged наследников интерфейсов с атрибутом [InterfaceProxyAttribute].
 		/// Причём, методы создаются пачками для каждого конкретного наследника интерфейса.
 		/// Поэтому зная индекс первого метода, можно получить все остальные методы для конкретного наследника интерфейса.
 		/// </summary>
-		private static Delegate[] _delegateIndexToDelegate;
+		private static Delegate[] _delegates;
 		/// <summary>
 		/// Получаем индекс первого метода для интерфейса (ProxyId) и его наследника (TypeIndex).
 		/// </summary>
 		private static System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> _typeToDelegateIndex;
 
 		public static void Initialize(System.Collections.Generic.Dictionary<Type, TypeIndex> typeToIndex,
-			Type[] indexToType,
-			Delegate[] delegateIndexToCompiledMethod, System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> typeToDelegateIndex)
+			Type[] types,
+			Delegate[] delegates, System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> typeToDelegateIndex)
 		{
 			_typeToIndex = typeToIndex;
-			_indexToType = indexToType;
-			_delegateIndexToDelegate = delegateIndexToCompiledMethod;
+			_types = types;
+			_delegates = delegates;
 			_typeToDelegateIndex = typeToDelegateIndex;
 		}
 
@@ -68,7 +68,7 @@ namespace Sapientia.TypeIndexer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Delegate GetDelegate(int delegateIndex)
 		{
-			return _delegateIndexToDelegate[delegateIndex];
+			return _delegates[delegateIndex];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,7 +93,7 @@ namespace Sapientia.TypeIndexer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type GetType(TypeIndex typeIndex)
 		{
-			return _indexToType[typeIndex.index];
+			return _types[typeIndex.index];
 		}
 	}
 }

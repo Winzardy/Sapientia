@@ -180,7 +180,6 @@ namespace Sapientia.Extensions
 		{
 #if DEBUG
 			E.ASSERT(destination.IsLengthInRange(count));
-			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
 			var sourcePtr = &source;
 #if UNITY_5_3_OR_NEWER
@@ -197,8 +196,6 @@ namespace Sapientia.Extensions
 #if DEBUG
 			E.ASSERT(source.IsLengthInRange(count));
 			E.ASSERT(destination.IsLengthInRange(count));
-			E.ASSERT(DebugIsInBound(source.LowBound, source.HiBound));
-			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(destination.ptr, source.ptr, TSize<T>.size, count);
@@ -229,8 +226,6 @@ namespace Sapientia.Extensions
 #if DEBUG
 			E.ASSERT(source.IsLengthInRange(length));
 			E.ASSERT(destination.IsLengthInRange(length));
-			E.ASSERT(DebugIsInBound(source.LowBound, source.HiBound));
-			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
 			var size = length * TSize<T>.size;
 #if UNITY_5_3_OR_NEWER
@@ -260,8 +255,6 @@ namespace Sapientia.Extensions
 #if DEBUG
 			E.ASSERT(a.IsValidLength(size));
 			E.ASSERT(b.IsValidLength(size));
-			E.ASSERT(DebugIsInBound(a.LowBound, a.HiBound));
-			E.ASSERT(DebugIsInBound(b.LowBound, b.HiBound));
 #endif
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSwap(a.ptr, b.ptr, size);
@@ -288,8 +281,6 @@ namespace Sapientia.Extensions
 #if DEBUG
 			E.ASSERT(source.IsValidLength(size));
 			E.ASSERT(destination.IsValidLength(size));
-			E.ASSERT(DebugIsInBound(source.LowBound, source.HiBound));
-			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemMove(destination.ptr, source.ptr, size);

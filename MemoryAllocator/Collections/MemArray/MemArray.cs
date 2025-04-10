@@ -278,6 +278,8 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Clear(int index, int length)
 		{
+			if (!IsCreated)
+				return;
 			var size = ElementSize;
 			var allocator = ptr.memPtr.GetAllocatorPtr();
 			allocator.Value().MemClear(ptr.memPtr, index * size, length * size);
