@@ -10,7 +10,7 @@ namespace Sapientia.MemoryAllocator
 		private static int Align(int size)
 		{
 			E.ASSERT(size > 0);
-			return (size + MIN_BLOCK_ALIGN_MINUS_ONE) & ~MIN_BLOCK_ALIGN_MINUS_ONE;
+			return ((size + BLOCK_ALIGN_MINUS_ONE) & ~BLOCK_ALIGN_MINUS_ONE).Max(MIN_BLOCK_SIZE);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,7 +58,7 @@ namespace Sapientia.MemoryAllocator
 			var blockSize = Align(size + TSize<MemoryBlock>.size);
 			var blockRef = AllocateBlock(blockSize, out var blockPtr);
 
-			E.ASSERT(blockPtr.ptr->blockSize >= MIN_BLOCK_SIZE);
+			E.ASSERT(blockPtr.ptr->blockSize >= TSize<MemoryBlock>.size + BLOCK_ALIGN);
 			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
 
 			var memPtr = new MemPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size, allocatorId);

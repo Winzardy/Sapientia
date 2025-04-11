@@ -218,9 +218,12 @@ namespace Sapientia.MemoryAllocator
 			EnsureCapacity(allocator, _count + 1);
 
 			var source = GetValuePtr(allocator, index);
-			var destination = source + 1;
 
-			MemoryExt.MemMove<T>(source, destination, _count - index);
+			if (_count > index)
+			{
+				var destination = source + 1;
+				MemoryExt.MemMove<T>(source, destination, _count - index);
+			}
 
 			source.Value() = value;
 			_count++;

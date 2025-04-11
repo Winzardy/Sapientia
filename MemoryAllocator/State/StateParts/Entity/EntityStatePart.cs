@@ -54,7 +54,7 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			_freeEntitiesIds = new MemArray<ushort>(allocator, EntitiesCapacity, ClearOptions.UninitializedMemory);
 			_entityIdToGeneration = new MemArray<ushort>(allocator, EntitiesCapacity);
-			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(allocator, 128);
+			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(allocator, 256);
 #if ENABLE_ENTITY_NAMES
 			entityIdToName = new MemArray<FixedString64Bytes>(allocator, EntitiesCapacity);
 #endif
@@ -157,7 +157,9 @@ namespace Sapientia.MemoryAllocator.State
 				EntitiesCapacity += ExpandStep;
 			while (index >= EntitiesCapacity);
 
-			_freeEntitiesIds.Resize(allocator, EntitiesCapacity);
+			var freeStartIndex = _freeEntitiesIds.Length;
+
+			_freeEntitiesIds.Resize(allocator, EntitiesCapacity, ClearOptions.UninitializedMemory);
 			_entityIdToGeneration.Resize(allocator, EntitiesCapacity);
 #if ENABLE_ENTITY_NAMES
 			entityIdToName.Resize(allocator, EntitiesCapacity);
@@ -165,6 +167,11 @@ namespace Sapientia.MemoryAllocator.State
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 			UnityEngine.Debug.LogWarning($"Entities Capacity was expanded to {EntitiesCapacity}");
 #endif
+
+			for (ushort i = (ushort)freeStartIndex; i < EntitiesCapacity; i++)
+			{
+				_freeEntitiesIds[allocator, i] = i;
+			}
 		}
 	}
 }
