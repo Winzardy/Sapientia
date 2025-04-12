@@ -9,6 +9,8 @@ namespace Sapientia
 	{
 		protected static T _instance;
 
+		//TODO:Удалить!
+		[Obsolete("Удалить когда волью в мейн!")]
 		public static bool IsInitialized => _instance != null;
 
 		public static void Initialize(T service)

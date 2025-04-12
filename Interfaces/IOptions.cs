@@ -1,6 +1,3 @@
-using Sapientia.Collections;
-using Sapientia.MemoryAllocator;
-
 public interface IOptions<T>
 {
 	public T[] Options { get; }
