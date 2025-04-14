@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sapientia.Collections.Archetypes;
+#if UNITY_5_3_OR_NEWER
 using Random = UnityEngine.Random;
+#endif
 
 namespace Sapientia.Collections
 {

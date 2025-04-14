@@ -5,17 +5,16 @@ namespace Sapientia.Messaging
 {
 	public static class Messenger
 	{
-		public static void Initialize()
+		private static MessengerHub hub
 		{
-			Terminate();
-
-			ServiceLocator<MessengerHub>.Create<MessengerHub>();
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _instance;
 		}
 
-		public static void Terminate()
+		public static bool IsInitialized
 		{
-			ServiceLocator<MessengerHub>.UnRegister();
-			ServiceLocator<MessengerHub>.RemoveAllContext();
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _instance != null;
 		}
 
 		/// <summary>
@@ -25,7 +24,7 @@ namespace Sapientia.Messaging
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SendAndUnsubscribeAll<TMessage>(ref TMessage msg)
 			where TMessage : struct =>
-			ServiceLocator<MessengerHub>.Instance.SendAndUnsubscribeAll(ref msg);
+			hub.SendAndUnsubscribeAll(ref msg);
 
 		/// <summary>
 		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(System.Action{TMessage})"/>
@@ -38,7 +37,7 @@ namespace Sapientia.Messaging
 #if UNITY_EDITOR
 			if (ServiceLocator<MessengerHub>.HasInstance())
 #endif
-				ServiceLocator<MessengerHub>.Instance.Send(ref msg);
+				hub.Send(ref msg);
 		}
 
 		/// <summary>
@@ -50,7 +49,7 @@ namespace Sapientia.Messaging
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver)
 			where TMessage : struct =>
-			ServiceLocator<MessengerHub>.Instance.Subscribe(receiver);
+			hub.Subscribe(receiver);
 
 		/// <summary>
 		/// Подписаться на сообщения с фильтром
@@ -63,15 +62,13 @@ namespace Sapientia.Messaging
 		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver,
 			Filter<TMessage> filter)
 			where TMessage : struct =>
-			ServiceLocator<MessengerHub>.Instance.Subscribe(receiver, filter);
+			hub.Subscribe(receiver, filter);
 
 		/// <summary>
 		/// Отписывает всех подписчиков от сообщения
 		/// </summary>
 		/// <typeparam name="TMessage"></typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void UnsubscribeAll<TMessage>()
-			where TMessage : struct =>
-			ServiceLocator<MessengerHub>.Instance.UnsubscribeAll<TMessage>();
+		public static void UnsubscribeAll<TMessage>() where TMessage : struct => hub.UnsubscribeAll<TMessage>();
 	}
 }
