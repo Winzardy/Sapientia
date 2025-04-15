@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sapientia.Collections.Archetypes;
 #if UNITY_5_3_OR_NEWER
 using Random = UnityEngine.Random;
 #endif
@@ -54,15 +53,6 @@ namespace Sapientia.Collections
 			for (var i = 0; i < length; i++)
 			{
 				list.AddWithoutExpand(i);
-			}
-		}
-
-		public static void FillEntities(this SimpleList<Entity> list, int length, string entitiesName)
-		{
-			list.Expand(length);
-			for (var i = 0; i < length; i++)
-			{
-				list.AddWithoutExpand(Entity.Create(entitiesName));
 			}
 		}
 
