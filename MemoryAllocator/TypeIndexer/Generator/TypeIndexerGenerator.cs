@@ -11,6 +11,8 @@ namespace Sapientia.TypeIndexer
 {
 	public static class TypeIndexerGenerator
 	{
+		private const string IndexedTypesInitializer = "IndexedTypesInitializer";
+
 		public static void GenerateTypeIndexes(string folderPath)
 		{
 			folderPath = Path.Combine(folderPath, nameof(TypeIndexerGenerator));
@@ -20,7 +22,7 @@ namespace Sapientia.TypeIndexer
 			Directory.CreateDirectory(folderPath);
 
 			var typeIndexProvider = CreateTypeIndexProvider();
-			File.WriteAllText(Path.Combine(folderPath, "IndexedTypesProvider.generated.cs"), typeIndexProvider);
+			File.WriteAllText(Path.Combine(folderPath, $"{IndexedTypesInitializer}.generated.cs"), typeIndexProvider);
 		}
 
 		private static Type[] GetIndexedTypes()
@@ -71,7 +73,7 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("");
 			sourceBuilder.AppendLine("namespace Sapientia.TypeIndexer");
 			sourceBuilder.AppendLine("{");
-			sourceBuilder.AppendLine("	public static class IndexedTypesInitializer");
+			sourceBuilder.AppendLine($"	public static class {IndexedTypesInitializer}");
 			sourceBuilder.AppendLine("	{");
 			sourceBuilder.AppendLine("		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]");
 			sourceBuilder.AppendLine("		public static void Initialize()");
