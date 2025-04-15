@@ -49,6 +49,34 @@ namespace Sapientia.Data
 			return true;
 		}
 
+		/// <param name="ignoreThreadId">
+		/// If `true` -> recursive call will lock thread.
+		/// Example:
+		/// void Test1()
+		/// {
+		///		async.SetBusy(true);
+		///		if (something)
+		///			Test1(); // Deadlock
+		///		if (somethingElse)
+		///		{
+		///			new Task(Test1).Start(); // Lock, but not deadlock
+		///			new Thread(Test1).Start(); // Lock, but not deadlock
+		///		}
+		///		async.SetFree();
+		/// }
+		/// void Test2()
+		/// {
+		///		async.SetBusy(false);
+		///		if (something)
+		///			Test2(); // No lock
+		///		if (somethingElse)
+		///		{
+		///			new Task(Test2).Start(); // No lock
+		///			new Thread(Test2).Start(); // Lock, but not deadlock
+		///		}
+		///		async.SetFree();
+		/// }
+		/// </param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBusy(bool ignoreThreadId = false)
 		{
@@ -83,9 +111,10 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetFree()
+		public void SetFree(bool ignoreThreadId = false)
 		{
-			Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
+			if (!ignoreThreadId)
+				Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
 			Debug.Assert(_count > 0);
 			Interlocked.Decrement(ref _count);
 		}

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Sapientia.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
@@ -9,24 +10,38 @@ namespace Sapientia.MemoryAllocator
 		public static readonly MemPtr Invalid = new (0, 0, default);
 
 		public int zoneId;
-		public int offset;
+		public int zoneOffset;
 		public AllocatorId allocatorId;
 
 		[INLINE(256)]
-		public MemPtr(int zoneId, int offset, AllocatorId allocatorId)
+		public MemPtr(int zoneId, int zoneOffset, AllocatorId allocatorId)
 		{
 			this.zoneId = zoneId;
-			this.offset = offset;
+			this.zoneOffset = zoneOffset;
 			this.allocatorId = allocatorId;
 		}
 
+		public static MemPtr CreateZeroSized(AllocatorId allocatorId)
+		{
+			return new MemPtr(0, -1, allocatorId);
+		}
+
+		public MemPtr GetArrayElement(int elementSize, int index)
+		{
+			return new MemPtr(zoneId, zoneOffset + index * elementSize, allocatorId);
+		}
+
 		[INLINE(256)]
-		public readonly bool IsValid() => offset > 0u;
+		public readonly bool IsCreated() => zoneOffset != 0;
+		[INLINE(256)]
+		public bool IsValid() => IsCreated() && allocatorId.IsValid();
+		[INLINE(256)]
+		public readonly bool IsZeroSized() => zoneOffset < 0;
 
 		[INLINE(256)]
 		public static bool operator ==(in MemPtr m1, in MemPtr m2)
 		{
-			return m1.zoneId == m2.zoneId && m1.offset == m2.offset;
+			return m1.zoneId == m2.zoneId && m1.zoneOffset == m2.zoneOffset;
 		}
 
 		[INLINE(256)]
@@ -38,7 +53,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Equals(MemPtr other)
 		{
-			return zoneId == other.zoneId && offset == other.offset;
+			return zoneId == other.zoneId && zoneOffset == other.zoneOffset;
 		}
 
 		[INLINE(256)]
@@ -50,35 +65,40 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public override int GetHashCode()
 		{
-			return System.HashCode.Combine(zoneId, offset);
+			return System.HashCode.Combine(zoneId, zoneOffset);
 		}
 
 		[INLINE(256)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return allocatorId.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
-		public void* GetPtr()
+		public SafePtr GetPtr()
 		{
-			return GetAllocatorPtr()->GetUnsafePtr(in this);
+			return GetAllocatorPtr().ptr->GetSafePtr(in this);
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
-			allocator->Free(this);
+			allocator.Value().MemFree(this);
 			this = Invalid;
 		}
 
 		[INLINE(256)]
 		public void Dispose()
 		{
-			GetAllocatorPtr()->Free(this);
+			GetAllocatorPtr().ptr->MemFree(this);
 			this = Invalid;
 		}
 
-		public override string ToString() => $"zoneId: {zoneId}, offset: {offset}, allocatorId: [{allocatorId}]";
+		public MemPtr CopyTo(SafePtr<Allocator> srsAllocator, SafePtr<Allocator> dstAllocator)
+		{
+			return srsAllocator.Value().CopyPtrTo(dstAllocator, this);
+		}
+
+		public override string ToString() => $"zoneId: {zoneId}, offset: {zoneOffset}, allocatorId: [{allocatorId}]";
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sapientia.Collections;
 using Sapientia.Pooling;
 
 namespace Sapientia.Extensions

@@ -35,6 +35,11 @@ namespace Sapientia.Extensions.Reflection
 			return index == -1 ? name : name.Substring(0, index);
 		}
 
+		public static string GetFullName(this Type type)
+		{
+			return type.FullName!.Replace('+', '.');
+		}
+
 		public static bool HasAttribute<T>(this Type type) where T: Attribute
 		{
 			return type.GetCustomAttribute<T>(true) != null;
@@ -415,7 +420,7 @@ namespace Sapientia.Extensions.Reflection
 			while (field == null)
 			{
 				type = type.BaseType;
-				field = type.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
+				field = type!.GetField(fieldName, INTERNAL_FIELD_BINDING_FLAGS);
 			}
 
 			return field;
@@ -427,7 +432,7 @@ namespace Sapientia.Extensions.Reflection
 			while (methodInfo == null)
 			{
 				type = type.BaseType;
-				methodInfo = type.GetMethod(methodName, PRIVATE_METHOD_BINDING_FLAGS, null, new Type[] { }, null);
+				methodInfo = type!.GetMethod(methodName, PRIVATE_METHOD_BINDING_FLAGS, null, new Type[] { }, null);
 			}
 
 			return methodInfo;

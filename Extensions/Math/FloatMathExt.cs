@@ -24,6 +24,12 @@ namespace Sapientia.Extensions
 		private const float POSITIVE_CEIL_OFFSET = 1f - EPSILON;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float Pow(this float value, float power)
+		{
+			return MathF.Pow(value, power);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int DivRem(this float value, float divider, out float remainder)
 		{
 			remainder = value % divider;

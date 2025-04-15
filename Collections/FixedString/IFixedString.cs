@@ -1,6 +1,7 @@
+using Sapientia.Data;
 using Sapientia.Extensions;
 
-namespace Sapientia.Collections.Fixed
+namespace Sapientia.Collections.FixedString
 {
 	public interface IFixedString
 	{
@@ -8,7 +9,7 @@ namespace Sapientia.Collections.Fixed
 		int Length { get; set; }
 		int Capacity { get; }
 
-		unsafe byte* GetUnsafePtr();
+		unsafe SafePtr GetSafePtr();
 
 		bool TryResize(int newLength, ClearOptions clearOptions = ClearOptions.ClearMemory);
 	}

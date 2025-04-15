@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.Data
@@ -23,13 +24,13 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProxyPtr<T> Create<TInstance>(Allocator* allocator) where TInstance: unmanaged
+		public static ProxyPtr<T> Create<TInstance>(SafePtr<Allocator> allocator) where TInstance: unmanaged
 		{
 			return new ProxyPtr<T>(IndexedPtr.Create<TInstance>(allocator));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProxyPtr<T> Create<TInstance>(Allocator* allocator, in TInstance value) where TInstance: unmanaged
+		public static ProxyPtr<T> Create<TInstance>(SafePtr<Allocator> allocator, in TInstance value) where TInstance: unmanaged
 		{
 			return new ProxyPtr<T>(IndexedPtr.Create(allocator, value));
 		}
@@ -47,27 +48,55 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void* GetPtr(Allocator* allocator)
+		public ref T1 GetValue<T1>(SafePtr<Allocator> allocator) where T1: unmanaged
+		{
+			return ref indexedPtr.GetValue<T1>(allocator);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T1 GetValue<T1>() where T1: unmanaged
+		{
+			return ref indexedPtr.GetValue<T1>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Ptr<T1> ToPtr<T1>() where T1: unmanaged
+		{
+			return new Ptr<T1>(indexedPtr.GetMemPtr());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr GetPtr(SafePtr<Allocator> allocator)
 		{
 			return indexedPtr.GetPtr(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void* GetPtr()
+		public SafePtr GetPtr()
 		{
 			return indexedPtr.GetPtr();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
-			indexedPtr.Dispose();
+			return indexedPtr.GetAllocatorPtr();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose()
 		{
-			indexedPtr.Dispose(allocator);
+			Dispose(GetAllocatorPtr());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose(SafePtr<Allocator> allocator)
+		{
+			if (IsCreated)
+			{
+				proxy.ProxyDispose(GetPtr(allocator).ptr, allocator);
+				indexedPtr.Dispose(allocator);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,6 +115,16 @@ namespace Sapientia.MemoryAllocator.Data
 		public bool Equals(ProxyPtr<T> other)
 		{
 			return indexedPtr == other.indexedPtr && proxy.FirstDelegateIndex.index == other.proxy.FirstDelegateIndex.index;
+		}
+
+		public ProxyPtr<T> CopyTo(SafePtr<Allocator> srsAllocator, SafePtr<Allocator> dstAllocator)
+		{
+			return new ProxyPtr<T>(indexedPtr.CopyTo(srsAllocator, dstAllocator));
+		}
+
+		public override int GetHashCode()
+		{
+			return indexedPtr.GetHashCode();
 		}
 	}
 }

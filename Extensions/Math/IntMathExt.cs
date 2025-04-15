@@ -7,16 +7,45 @@ namespace Sapientia.Extensions
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#475c07dd42b6492fbfe02c809358689a
 	/// </summary>
-	public static class IntMathExt
+	public static partial class IntMathExt
 	{
 		public const int FIRST_TO_LAST_SHIFT = 32 - 1;
+
+		public static int Log2(this int value)
+		{
+			var result = 0;
+			while ((value >>= 1) != 0)
+				result++;
+			return result;
+		}
+
+		public static int NextPowerOfTwo(this int n)
+		{
+			--n;
+			n |= n >> 1;
+			n |= n >> 2;
+			n |= n >> 4;
+			n |= n >> 8;
+			n |= n >> 16;
+			++n;
+			return n;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Abs(this int value)
+		{
+			var mask = value >> FIRST_TO_LAST_SHIFT;
+			return (value + mask) ^ mask;
+		}
 
 		// ~5% faster: value >= 0 ? 1 : -1;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Sign(this int value)
 		{
 			return ((value & int.MinValue) >> FIRST_TO_LAST_SHIFT) | 1;
-		}		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsEven(this int value)
 		{
 			return (value & 1) == 0;

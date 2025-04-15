@@ -25,31 +25,6 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	/*public unsafe class MemArrayProxy
-	{
-		private MemArray _arr;
-
-		public MemArrayProxy(MemArray arr)
-		{
-			_arr = arr;
-		}
-
-		public object[] Items
-		{
-			get
-			{
-				var allocator = _arr.GetAllocatorPtr();
-				var arr = new object[_arr.Length];
-				for (var i = 0; i < _arr.Length; ++i)
-				{
-					arr[i] = _arr.GetValue(allocator, i);
-				}
-
-				return arr;
-			}
-		}
-	}*/
-
 	public unsafe class ListProxy<T> where T : unmanaged
 	{
 		private List<T> _arr;
@@ -151,7 +126,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemArray<int> Buckets => _arr.buckets;
 		public MemArray<Dictionary<TK, TV>.Entry> Entries => _arr.entries;
-		public int LastIndex => _arr.lastIndex;
+		public int Count => _arr.count;
 		public int FreeList => _arr.freeList;
 		public int FreeCount => _arr.freeCount;
 

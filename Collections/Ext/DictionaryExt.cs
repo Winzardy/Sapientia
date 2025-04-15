@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Sapientia.Extensions
+namespace Sapientia.Collections
 {
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#efe20baff23f4f768efbfcb4e3282747

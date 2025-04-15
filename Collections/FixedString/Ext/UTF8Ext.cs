@@ -1,6 +1,7 @@
+using Sapientia.Data;
 using Sapientia.Extensions;
 
-namespace Sapientia.Collections.Fixed
+namespace Sapientia.Collections.FixedString
 {
 	/// <summary>
 	/// Provides methods for copying and encoding Unicode text.
@@ -20,7 +21,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Outputs the number of bytes written to the destination.</param>
 		/// <param name="destUTF8MaxLengthInBytes">The max number of bytes that will be written to the destination buffer.</param>
 		/// <returns><see cref="CopyError.None"/> if the copy fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Copy(byte* dest, out int destLength, int destUTF8MaxLengthInBytes, char* src, int srcLength)
+		public static CopyError Copy(SafePtr dest, out int destLength, int destUTF8MaxLengthInBytes, SafePtr<char> src, int srcLength)
 		{
 			var error = Unicode.Utf16ToUtf8(src, srcLength, dest, out destLength, destUTF8MaxLengthInBytes);
 			if (error == ConversionError.None)
@@ -38,7 +39,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Outputs the number of bytes written to the destination.</param>
 		/// <param name="destUTF8MaxLengthInBytes">The max number of bytes that will be written to the destination buffer.</param>
 		/// <returns><see cref="CopyError.None"/> if the copy fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Copy(byte* dest, out ushort destLength, ushort destUTF8MaxLengthInBytes, char* src,
+		public static CopyError Copy(SafePtr dest, out ushort destLength, ushort destUTF8MaxLengthInBytes, SafePtr<char> src,
 			int srcLength)
 		{
 			var error = Unicode.Utf16ToUtf8(src, srcLength, dest, out var temp, destUTF8MaxLengthInBytes);
@@ -58,7 +59,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Outputs the number of bytes written to the destination.</param>
 		/// <param name="destUTF8MaxLengthInBytes">The max number of bytes that will be written to the destination buffer.</param>
 		/// <returns><see cref="CopyError.None"/> if the copy fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Copy(byte* dest, out int destLength, int destUTF8MaxLengthInBytes, byte* src,
+		public static CopyError Copy(SafePtr dest, out int destLength, int destUTF8MaxLengthInBytes, SafePtr src,
 			int srcLength)
 		{
 			var error = Unicode.Utf8ToUtf8(src, srcLength, dest, out var temp, destUTF8MaxLengthInBytes);
@@ -78,7 +79,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Outputs the number of bytes written to the destination.</param>
 		/// <param name="destUTF8MaxLengthInBytes">The max number of bytes that will be written to the destination buffer.</param>
 		/// <returns><see cref="CopyError.None"/> if the copy fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Copy(byte* dest, out ushort destLength, ushort destUTF8MaxLengthInBytes, byte* src,
+		public static CopyError Copy(SafePtr dest, out ushort destLength, ushort destUTF8MaxLengthInBytes, SafePtr src,
 			ushort srcLength)
 		{
 			var error = Unicode.Utf8ToUtf8(src, srcLength, dest, out var temp, destUTF8MaxLengthInBytes);
@@ -98,7 +99,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Outputs the number of chars written to the destination.</param>
 		/// <param name="destUCS2MaxLengthInChars">The max number of chars that will be written to the destination buffer.</param>
 		/// <returns><see cref="CopyError.None"/> if the copy fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Copy(char* dest, out int destLength, int destUCS2MaxLengthInChars, byte* src,
+		public static CopyError Copy(SafePtr<char> dest, out int destLength, int destUCS2MaxLengthInChars, SafePtr src,
 			int srcLength)
 		{
 			if (ConversionError.None ==
@@ -117,7 +118,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Outputs the number of chars written to the destination.</param>
 		/// <param name="destUCS2MaxLengthInChars">The max number of chars that will be written to the destination buffer.</param>
 		/// <returns><see cref="CopyError.None"/> if the copy fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Copy(char* dest, out ushort destLength, ushort destUCS2MaxLengthInChars, byte* src,
+		public static CopyError Copy(SafePtr<char> dest, out ushort destLength, ushort destUCS2MaxLengthInChars, SafePtr src,
 			ushort srcLength)
 		{
 			var error = Unicode.Utf8ToUtf16(src, srcLength, dest, out var temp, destUCS2MaxLengthInChars);
@@ -140,7 +141,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Reference to the destination buffer's length in bytes *before* the append. Will be assigned the new length *after* the append.</param>
 		/// <param name="destCapacity">The destination buffer capacity in bytes.</param>
 		/// <returns><see cref="FormatError.None"/> if the append fully completes. Otherwise, returns <see cref="FormatError.Overflow"/>.</returns>
-		public static FormatError AppendUTF8Bytes(byte* dest, ref int destLength, int destCapacity, byte* src,
+		public static FormatError AppendUTF8Bytes(SafePtr dest, ref int destLength, int destCapacity, SafePtr src,
 			int srcLength)
 		{
 			if (destLength + srcLength > destCapacity)
@@ -160,7 +161,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Reference to the destination buffer's length in bytes *before* the append. Will be assigned the number of bytes appended.</param>
 		/// <param name="destUTF8MaxLengthInBytes">The destination buffer's length in bytes. Data will not be appended past this length.</param>
 		/// <returns><see cref="CopyError.None"/> if the append fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Append(byte* dest, ref ushort destLength, ushort destUTF8MaxLengthInBytes, byte* src,
+		public static CopyError Append(SafePtr dest, ref ushort destLength, ushort destUTF8MaxLengthInBytes, SafePtr src,
 			ushort srcLength)
 		{
 			var error = Unicode.Utf8ToUtf8(src, srcLength, dest + destLength, out var temp,
@@ -181,7 +182,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Reference to the destination buffer's length in bytes *before* the append. Will be assigned the number of bytes appended.</param>
 		/// <param name="destUTF8MaxLengthInBytes">The destination buffer's length in bytes. Data will not be appended past this length.</param>
 		/// <returns><see cref="CopyError.None"/> if the append fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Append(byte* dest, ref ushort destLength, ushort destUTF8MaxLengthInBytes, char* src,
+		public static CopyError Append(SafePtr dest, ref ushort destLength, ushort destUTF8MaxLengthInBytes, SafePtr<char> src,
 			int srcLength)
 		{
 			var error = Unicode.Utf16ToUtf8(src, srcLength, dest + destLength, out var temp,
@@ -202,7 +203,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="destLength">Reference to the destination buffer's length in chars *before* the append. Will be assigned the number of chars appended.</param>
 		/// <param name="destUCS2MaxLengthInChars">The destination buffer's length in chars. Data will not be appended past this length.</param>
 		/// <returns><see cref="CopyError.None"/> if the append fully completes. Otherwise, returns <see cref="CopyError.Truncation"/>.</returns>
-		public static CopyError Append(char* dest, ref ushort destLength, ushort destUCS2MaxLengthInChars, byte* src,
+		public static CopyError Append(SafePtr<char> dest, ref ushort destLength, ushort destUCS2MaxLengthInChars, SafePtr src,
 			ushort srcLength)
 		{
 			var error = Unicode.Utf8ToUtf16(src, srcLength, dest + destLength, out var temp,
@@ -247,7 +248,7 @@ namespace Sapientia.Collections.Fixed
 		/// Zero if the strings are identical.
 		/// More than zero if first different code point is less in the second UTF-8 buffer.
 		/// </returns>
-		public static int StrCmp(byte* utf8BufferA, int utf8LengthInBytesA, byte* utf8BufferB, int utf8LengthInBytesB)
+		public static int StrCmp(SafePtr utf8BufferA, int utf8LengthInBytesA, SafePtr utf8BufferB, int utf8LengthInBytesB)
 		{
 			int byteIndexA = 0;
 			int byteIndexB = 0;
@@ -271,7 +272,7 @@ namespace Sapientia.Collections.Fixed
 		/// Zero if the strings are identical.
 		/// More than zero if first different code point is less in the second UTF-16 buffer.
 		/// </returns>
-		public static int StrCmp(char* utf16BufferA, int utf16LengthInCharsA, char* utf16BufferB,
+		public static int StrCmp(SafePtr<char> utf16BufferA, int utf16LengthInCharsA, SafePtr<char> utf16BufferB,
 			int utf16LengthInCharsB)
 		{
 			int charIndexA = 0;
@@ -294,7 +295,7 @@ namespace Sapientia.Collections.Fixed
 		/// <param name="bBytes">The second buffer of UTF-8 text.</param>
 		/// <param name="bLength">The length in bytes of the second buffer.</param>
 		/// <returns>True if the content of both strings is identical.</returns>
-		public static bool EqualsUTF8Bytes(byte* aBytes, int aLength, byte* bBytes, int bLength)
+		public static bool EqualsUTF8Bytes(SafePtr aBytes, int aLength, SafePtr bBytes, int bLength)
 		{
 			return StrCmp(aBytes, aLength, bBytes, bLength) == 0;
 		}
@@ -309,7 +310,7 @@ namespace Sapientia.Collections.Fixed
 		/// Zero if the strings are identical.
 		/// More than zero if first different code point is less in UTF-16 buffer.
 		/// </returns>
-		public static int StrCmp(byte* utf8Buffer, int utf8LengthInBytes, char* utf16Buffer, int utf16LengthInChars)
+		public static int StrCmp(SafePtr utf8Buffer, int utf8LengthInBytes, SafePtr<char> utf16Buffer, int utf16LengthInChars)
 		{
 			int byteIndex = 0;
 			int charIndex = 0;
@@ -333,7 +334,7 @@ namespace Sapientia.Collections.Fixed
 		/// Zero if the strings are identical.
 		/// More than zero if first different code point is less in UTF-8 buffer.
 		/// </returns>
-		public static int StrCmp(char* utf16Buffer, int utf16LengthInChars, byte* utf8Buffer, int utf8LengthInBytes)
+		public static int StrCmp(SafePtr<char> utf16Buffer, int utf16LengthInChars, SafePtr utf8Buffer, int utf8LengthInBytes)
 		{
 			return -StrCmp(utf8Buffer, utf8LengthInBytes, utf16Buffer, utf16LengthInChars);
 		}

@@ -1,11 +1,11 @@
 using System;
-using Sapientia.Extensions;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
 	public struct AllocatorId : IEquatable<AllocatorId>
 	{
+		// Always more then 0
 		public readonly ushort id;
 		public ushort index;
 

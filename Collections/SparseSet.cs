@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace Sapientia.Collections
@@ -18,7 +19,7 @@ namespace Sapientia.Collections
 		private int[] _sparse;
 
 		private readonly bool _useIndexPool;
-		private bool _useValuePool;
+		private readonly bool _useValuePool;
 		private readonly ResetAction _resetValue;
 
 		private int _count;
@@ -95,7 +96,7 @@ namespace Sapientia.Collections
 			ref var denseId = ref _sparse[id];
 			if (denseId >= _count || _dense[denseId] != id)
 			{
-				ExpandIfNeeded(_count + 1);
+				ExpandDenseIfNeeded(_count + 1);
 				_dense[_count] = id;
 				denseId = _count++;
 			}
@@ -159,17 +160,17 @@ namespace Sapientia.Collections
 			_sparseCapacity = _sparse.Length;
 		}
 
-		private void ExpandIfNeeded(int newCapacity)
+		private void ExpandDenseIfNeeded(int newCapacity)
 		{
 			if (_capacity >= newCapacity)
 				return;
 
 			newCapacity = SnapCeilCapacity(newCapacity);
 
-			Expand(newCapacity);
+			ExpandDense(newCapacity);
 		}
 
-		private void Expand(int newCapacity)
+		private void ExpandDense(int newCapacity)
 		{
 			if (_useIndexPool)
 				ArrayExt.Expand_WithPool(ref _dense, newCapacity);

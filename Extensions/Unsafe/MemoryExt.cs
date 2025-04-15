@@ -1,7 +1,9 @@
+//#define FORCE_MARSHAL_ALLOC
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using Sapientia.Collections;
+using Sapientia.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.Extensions
@@ -14,108 +16,252 @@ namespace Sapientia.Extensions
 
 	public static unsafe class MemoryExt
 	{
-		[INLINE(256)]
-		public static void* MemAlloc(long size)
+#if DEBUG
+		private static Dictionary<IntPtr, int> _allocations = new Dictionary<IntPtr, int>();
+		// Всегда кратно 2, при выделении памяти добавляет в список нижний и верхний предел выделенной памяти
+		private static SimpleList<long> _memorySpaces = new SimpleList<long>();
+#endif
+
+		[Conditional(E.DEBUG)]
+		private static void DebugMemAlloc(void* ptr, int size)
 		{
+#if DEBUG
+			DebugInsertMemorySpace((IntPtr)ptr, size);
 #if UNITY_5_3_OR_NEWER
-			return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<byte>(), Unity.Collections.Allocator.Persistent);
+			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b. Allocations Remains: {_allocations.Count}");
+#endif
+#endif
+		}
+
+		[Conditional(E.DEBUG)]
+		private static void DebugMemFree(void* ptr)
+		{
+#if DEBUG
+			DebugRemoveMemorySpace((IntPtr)ptr, out var size);
+#if UNITY_5_3_OR_NEWER
+			UnityEngine.Debug.LogWarning($"MemFree: {size}b. Allocations Remains: {_allocations.Count}");
+#endif
+#endif
+		}
+
+#if DEBUG
+		private static void DebugRemoveMemorySpace(IntPtr ptr, out int size)
+		{
+			E.ASSERT(_allocations.Remove(ptr, out size));
+			var low = ptr.ToInt64();
+			var hi = (ptr + size).ToInt64() - 1;
+
+			E.ASSERT(DebugIsInBound(low, out var lowIndex));
+			E.ASSERT(DebugIsInBound(hi, out var hiIndex));
+			E.ASSERT((lowIndex + 1) == hiIndex);
+
+			_memorySpaces.RemoveAt(hiIndex);
+			_memorySpaces.RemoveAt(lowIndex);
+		}
+
+		private static void DebugInsertMemorySpace(IntPtr ptr, int size)
+		{
+			var low = ptr.ToInt64();
+			var hi = (ptr + size).ToInt64() - 1;
+
+			E.ASSERT(!DebugIsInBound(low, out var lowIndex));
+			E.ASSERT(!DebugIsInBound(hi, out var hiIndex));
+			E.ASSERT(lowIndex == hiIndex);
+
+			_memorySpaces.Insert(hiIndex, hi);
+			_memorySpaces.Insert(lowIndex, low);
+
+			_allocations.Add(ptr, size);
+		}
+
+		private static bool DebugIsInBound(byte* lowPtr, byte* hiPtr)
+		{
+			if (!DebugIsInBound(((IntPtr)lowPtr).ToInt64(), out _))
+				return false;
+			return DebugIsInBound(((IntPtr)(hiPtr - 1)).ToInt64(), out _);
+		}
+
+		private static bool DebugIsInBound(long ptr, out int index)
+		{
+			index = _memorySpaces.BinarySearch(ptr);
+			if (index >= 0)
+				return true;
+			index = ~index;
+
+			return index % 2 == 1;
+		}
+#endif
+
+		[INLINE(256)]
+		public static SafePtr MemAlloc(int size)
+		{
+#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<byte>.align, Unity.Collections.Allocator.Persistent);
 #else
-			return (void*)Marshal.AllocHGlobal((int)size);
+			var ptr = (void*)Marshal.AllocHGlobal(size);
+#endif
+			DebugMemAlloc(ptr, size);
+
+			return new SafePtr(ptr, size);
+		}
+
+		[INLINE(256)]
+		public static SafePtr MemAlloc(int size, int align)
+		{
+#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, Unity.Collections.Allocator.Persistent);
+#else
+			var ptr = (void*)Marshal.AllocHGlobal(size);
+#endif
+			DebugMemAlloc(ptr, size);
+
+			return new SafePtr(ptr, size);
+		}
+
+		[INLINE(256)]
+		public static SafePtr<T> MemAlloc<T>() where T : unmanaged
+		{
+			var size = TSize<T>.size;
+#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
+			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
+#else
+			var ptr = (T*)Marshal.AllocHGlobal(size);
+#endif
+			DebugMemAlloc(ptr, size);
+
+			return new SafePtr<T>(ptr, 1);
+		}
+
+		[INLINE(256)]
+		public static SafePtr<T> MemAllocAndClear<T>() where T : unmanaged
+		{
+			var size = TSize<T>.size;
+#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
+			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
+#else
+			var ptr = (T*)Marshal.AllocHGlobal(size);
+#endif
+			DebugMemAlloc(ptr, size);
+
+			var safePtr = new SafePtr<T>(ptr, 1);
+			MemClear(safePtr, size);
+
+			return safePtr;
+		}
+
+		[INLINE(256)]
+		public static void MemFree(SafePtr memory)
+		{
+			DebugMemFree(memory.ptr);
+#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, Unity.Collections.Allocator.Persistent);
+#else
+			Marshal.FreeHGlobal((IntPtr)memory.ptr);
 #endif
 		}
 
 		[INLINE(256)]
-		public static void* MemAlloc(long size, int align)
+		public static void MemSet(SafePtr destination, byte value, int size)
 		{
-#if UNITY_5_3_OR_NEWER
-			return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, Unity.Collections.Allocator.Persistent);
-#else
-			return (void*)Marshal.AllocHGlobal((int)size);
+#if DEBUG
+			E.ASSERT(destination.IsValidLength(size));
+			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
-		}
-
-		[INLINE(256)]
-		public static T* MemAlloc<T>(long size) where T : unmanaged
-		{
 #if UNITY_5_3_OR_NEWER
-			return (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSet(destination.ptr, value, size);
 #else
-			return (T*)Marshal.AllocHGlobal((int)size);
-#endif
-		}
-
-		[INLINE(256)]
-		public static T* MemAlloc<T>() where T : unmanaged
-		{
-#if UNITY_5_3_OR_NEWER
-			return (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(TSize<T>.size, UnsafeExt.AlignOf<T>(), Unity.Collections.Allocator.Persistent);
-#else
-			return (T*)Marshal.AllocHGlobal(TSize<T>.size);
-#endif
-		}
-
-		[INLINE(256)]
-		public static void MemFree(void* memory)
-		{
-#if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory, Unity.Collections.Allocator.Persistent);
-#else
-			Marshal.FreeHGlobal((IntPtr)memory);
-#endif
-		}
-
-		[INLINE(256)]
-		public static void MemSet(void* destination, byte value, long size)
-		{
-#if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSet(destination, value, size);
-#else
-			var span = new Span<byte>(destination, (int)size);
+			var span = new Span<byte>(destination.ptr, size);
 			span.Fill(value);
 #endif
 		}
 
 		[INLINE(256)]
-		public static void MemFill<T>(T* source, void* destination, int count) where T: unmanaged
+		public static void MemFill<T>(T source, SafePtr<T> destination, int count) where T: unmanaged
 		{
+#if DEBUG
+			E.ASSERT(destination.IsLengthInRange(count));
+#endif
+			var sourcePtr = &source;
 #if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(source, destination, TSize<T>.size, count);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(destination.ptr, sourcePtr, TSize<T>.size, count);
 #else
-			var span = new Span<T>(destination, count);
-			span.Fill(*source);
+			var span = new Span<T>(destination.ptr, count);
+			span.Fill(*source.ptr);
 #endif
 		}
 
 		[INLINE(256)]
-		public static void MemClear(void* destination, long size)
+		public static void MemFill<T>(SafePtr<T> source, SafePtr<T> destination, int count) where T: unmanaged
 		{
+#if DEBUG
+			E.ASSERT(source.IsLengthInRange(count));
+			E.ASSERT(destination.IsLengthInRange(count));
+#endif
 #if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSet(destination, 0, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(destination.ptr, source.ptr, TSize<T>.size, count);
 #else
-			var span = new Span<byte>(destination, (int)size);
+			var span = new Span<T>(destination.ptr, count);
+			span.Fill(*source.ptr);
+#endif
+		}
+
+		[INLINE(256)]
+		public static void MemClear(SafePtr destination, int size)
+		{
+#if DEBUG
+			E.ASSERT(destination.IsValidLength(size));
+			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
+#endif
+#if UNITY_5_3_OR_NEWER
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemClear(destination.ptr, size);
+#else
+			var span = new Span<byte>(destination.ptr, size);
 			span.Clear();
 #endif
 		}
 
 		[INLINE(256)]
-		public static void MemCopy(void* source, void* destination, long size)
+		public static void MemCopy<T>(SafePtr<T> source, SafePtr<T> destination, int length) where T: unmanaged
 		{
+#if DEBUG
+			E.ASSERT(source.IsLengthInRange(length));
+			E.ASSERT(destination.IsLengthInRange(length));
+#endif
+			var size = length * TSize<T>.size;
 #if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination, source, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination.ptr, source.ptr, size);
 #else
-			Buffer.MemoryCopy(source, destination, size, size);
+			Buffer.MemoryCopy(source.ptr, source.ptr, size, size);
 #endif
 		}
 
 		[INLINE(256)]
-		public static void MemSwap(void* a, void* b, long size)
+		public static void MemCopy(SafePtr source, SafePtr destination, int size)
 		{
+#if DEBUG
+			E.ASSERT(source.IsValidLength(size));
+			E.ASSERT(destination.IsValidLength(size));
+#endif
 #if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSwap(a, b, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination.ptr, source.ptr, size);
 #else
-			Span<byte> spanA = new Span<byte>(a, (int)size);
-			Span<byte> spanB = new Span<byte>(b, (int)size);
-			Span<byte> temp = stackalloc byte[(int)size];
+			Buffer.MemoryCopy(source.ptr, destination.ptr, size, size);
+#endif
+		}
+
+		[INLINE(256)]
+		public static void MemSwap(SafePtr a, SafePtr b, int size)
+		{
+#if DEBUG
+			E.ASSERT(a.IsValidLength(size));
+			E.ASSERT(b.IsValidLength(size));
+#endif
+#if UNITY_5_3_OR_NEWER
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSwap(a.ptr, b.ptr, size);
+#else
+			Span<byte> spanA = new Span<byte>(a.ptr, size);
+			Span<byte> spanB = new Span<byte>(b.ptr, size);
+			Span<byte> temp = stackalloc byte[size];
 
 			spanA.CopyTo(temp);
 			spanB.CopyTo(spanA);
@@ -124,10 +270,20 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static void MemMove(void* source, void* destination, long size)
+		public static void MemMove<T>(SafePtr<T> source, SafePtr<T> destination, int count) where T: unmanaged
 		{
+			MemMove((SafePtr)source, (SafePtr)destination, count * TSize<T>.size);
+		}
+
+		[INLINE(256)]
+		public static void MemMove(SafePtr source, SafePtr destination, int size)
+		{
+#if DEBUG
+			E.ASSERT(source.IsValidLength(size));
+			E.ASSERT(destination.IsValidLength(size));
+#endif
 #if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemMove(destination, source, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemMove(destination.ptr, source.ptr, size);
 #else
 			var intSize = (int)size;
 			var sourceSpan = new Span<byte>(source, intSize);
@@ -140,86 +296,69 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static T* MakeArray<T>(in T firstElement, int length, bool clearMemory = false) where T : unmanaged
+		public static SafePtr<T> MakeArray<T>(in T firstElement, int length, bool clearMemory = false) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
-			var ptr = MemAlloc(size, TAlign<T>.align);
+			var ptr = (SafePtr<T>)MemAlloc(size, TAlign<T>.align);
 			if (clearMemory)
 				MemClear(ptr, size);
 
-			var tPtr = (T*)ptr;
-			*tPtr = firstElement;
-
-			return tPtr;
+			ptr[0] = firstElement;
+			return ptr;
 		}
 
-#if UNITY_5_3_OR_NEWER
 		[INLINE(256)]
-		public static T* MakeArray<T>(int length, bool clearMemory = true) where T : unmanaged
+		public static SafePtr<T> MakeArray<T>(int length, bool clearMemory = true) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
-			var ptr = MemAlloc(size, TAlign<T>.align);
+			var ptr = (SafePtr<T>)MemAlloc(size, TAlign<T>.align);
 			if (clearMemory)
-				Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemClear(ptr, size);
+				MemClear(ptr, size);
 
-			return (T*)ptr;
+			return ptr;
 		}
-#else
-		[INLINE(256)]
-		public static T* MakeArray<T>(int length, bool clearMemory = true) where T : unmanaged
-		{
-			var size = TSize<T>.size * length;
-			var ptr = MemAlloc(size, TAlign<T>.align);
-			if (clearMemory)
-				new Span<byte>(ptr, size).Clear();
-
-			return (T*)ptr;
-		}
-#endif
 
 		[INLINE(256)]
-		public static void ResizeArray<T>(ref T** arr, int length, int newLength) where T : unmanaged
+		public static void ResizeArray(ref SafePtr arr, ref int length, int newLength, bool powerOfTwo = false, bool clearMemory = false)
 		{
-			var ptr = (T**)MemAlloc(newLength * sizeof(T*));
-			if (arr != null)
+			if (newLength <= length)
+				return;
+			if (powerOfTwo)
+				newLength = newLength.NextPowerOfTwo().Max(8);
+
+			var size = newLength;
+			var ptr = MemAlloc(size);
+			if (clearMemory)
+				MemClear(ptr, size);
+
+			if (arr != default)
 			{
-				for (var i = 0; i < length; ++i)
-				{
-					ptr[i] = arr[i];
-				}
-
+				MemCopy(arr, ptr, length);
 				MemFree(arr);
 			}
 
 			arr = ptr;
+			length = newLength;
 		}
 
 		[INLINE(256)]
-		public static void ResizeArray<T>(ref T* arr, ref uint length, uint newLength, bool free = true)
+		public static void ResizeArray<T>(ref SafePtr<T> arr, ref int length, int newLength, bool powerOfTwo = false, bool clearMemory = false)
 			where T : unmanaged
 		{
 			if (newLength <= length)
 				return;
+			if (powerOfTwo)
+				newLength = newLength.NextPowerOfTwo().Max(8);
 
 			var size = newLength * TSize<T>.size;
-			var ptr = MemAlloc<T>(size);
-			MemClear(ptr, size);
+			var ptr = (SafePtr<T>)MemAlloc(size, TAlign<T>.align);
+			if (clearMemory)
+				MemClear(ptr, size);
 
-			if (arr != null)
+			if (arr != default)
 			{
-				// MemCopy(arr, ptr, length * TSize<T>.size);
-				for (var i = 0; i < length; ++i)
-				{
-					*(ptr + i) = *(arr + i);
-				}
-
-				for (var i = length; i < newLength; ++i)
-				{
-					*(ptr + i) = default;
-				}
-
-				if (free)
-					MemFree(arr);
+				MemCopy<T>(arr, ptr, length);
+				MemFree(arr);
 			}
 
 			arr = ptr;
@@ -237,6 +376,7 @@ namespace Sapientia.Extensions
 		/// <param name="alignmentPowerOfTwo">A non-zero, positive power of two.</param>
 		/// <returns>The smallest integer that is greater than or equal to `size` and is a multiple of `alignmentPowerOfTwo`.</returns>
 		/// <exception cref="ArgumentException">Thrown if `alignmentPowerOfTwo` is not a non-zero, positive power of two.</exception>
+		[INLINE(256)]
 		public static int Align(int size, int alignmentPowerOfTwo)
 		{
 			// Copy of Unity CollectionHelper.Align

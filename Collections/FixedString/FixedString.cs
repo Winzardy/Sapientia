@@ -3,9 +3,10 @@ using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
-namespace Sapientia.Collections.Fixed
+namespace Sapientia.Collections.FixedString
 {
 	// A temporary copy of a struct is made before it is displayed in a C# debugger.
 	// However, only the first element of data members with names is copied at this time.
@@ -254,9 +255,9 @@ namespace Sapientia.Collections.Fixed
 		/// </summary>
 		/// <returns>A pointer to the character bytes.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public byte* GetUnsafePtr()
+		public SafePtr GetSafePtr()
 		{
-			return (byte*)bytes.AsPointer();
+			return bytes.AsSafePtr();
 		}
 
 		/// <summary>
@@ -279,7 +280,7 @@ namespace Sapientia.Collections.Fixed
 			{
 				CheckLengthInRange(value);
 				utf8LengthInBytes = (ushort)value;
-				GetUnsafePtr()[utf8LengthInBytes] = 0;
+				GetSafePtr()[utf8LengthInBytes] = 0;
 			}
 		}
 
@@ -318,14 +319,14 @@ namespace Sapientia.Collections.Fixed
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
 				if (newLength > utf8LengthInBytes)
-					MemoryExt.MemClear(GetUnsafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
+					MemoryExt.MemClear(GetSafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
 				else
-					MemoryExt.MemClear(GetUnsafePtr() + newLength, utf8LengthInBytes - newLength);
+					MemoryExt.MemClear(GetSafePtr() + newLength, utf8LengthInBytes - newLength);
 			}
 
 			utf8LengthInBytes = (ushort)newLength;
 			// always null terminate
-			GetUnsafePtr()[utf8LengthInBytes] = 0;
+			GetSafePtr()[utf8LengthInBytes] = 0;
 
 			return true;
 		}
@@ -348,14 +349,14 @@ namespace Sapientia.Collections.Fixed
 			get
 			{
 				CheckIndexInRange(index);
-				return GetUnsafePtr()[index];
+				return GetSafePtr()[index];
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set
 			{
 				CheckIndexInRange(index);
-				GetUnsafePtr()[index] = value;
+				GetSafePtr()[index] = value;
 			}
 		}
 
@@ -368,7 +369,7 @@ namespace Sapientia.Collections.Fixed
 		public ref byte ElementAt(int index)
 		{
 			CheckIndexInRange(index);
-			return ref GetUnsafePtr()[index];
+			return ref GetSafePtr()[index];
 		}
 
 		/// <summary>
@@ -426,7 +427,7 @@ namespace Sapientia.Collections.Fixed
 				if (_offset >= _target.Length)
 					return false;
 
-				Unicode.Utf8ToUcs(out _current, _target.GetUnsafePtr(), ref _offset, _target.Length);
+				Unicode.Utf8ToUcs(out _current, _target.GetSafePtr(), ref _offset, _target.Length);
 
 				return true;
 			}
@@ -493,9 +494,10 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.Length;
-			byte* aptr = (byte*)bytes.AsPointer();
-			fixed (char* bptr = other)
+			SafePtr aptr = bytes.AsSafePtr();
+			fixed (char* bptrRaw = other)
 			{
+				var bptr = new SafePtr<Char>(bptrRaw, blen);
 				return UTF8Ext.StrCmp(aptr, alen, bptr, blen) == 0;
 			}
 		}
@@ -526,9 +528,10 @@ namespace Sapientia.Collections.Fixed
 		{
 			bytes = default;
 			utf8LengthInBytes = 0;
-			fixed (char* sourceptr = source)
+			fixed (char* sourceptrRaw = source)
 			{
-				var error = UTF8Ext.Copy(GetUnsafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
+				var sourceptr = new SafePtr<Char>(sourceptrRaw, source.Length);
+				var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 					sourceptr, source.Length);
 				if (error != CopyError.None)
 					return (int)error;
@@ -598,8 +601,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -620,8 +623,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -662,8 +665,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -684,8 +687,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -726,8 +729,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -748,8 +751,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -790,8 +793,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -806,8 +809,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -848,8 +851,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -870,8 +873,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -1136,9 +1139,9 @@ namespace Sapientia.Collections.Fixed
 		/// </summary>
 		/// <returns>A pointer to the character bytes.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public byte* GetUnsafePtr()
+		public SafePtr GetSafePtr()
 		{
-			return (byte*)bytes.AsPointer();
+			return bytes.AsSafePtr();
 		}
 
 		/// <summary>
@@ -1161,7 +1164,7 @@ namespace Sapientia.Collections.Fixed
 			{
 				CheckLengthInRange(value);
 				utf8LengthInBytes = (ushort)value;
-				GetUnsafePtr()[utf8LengthInBytes] = 0;
+				GetSafePtr()[utf8LengthInBytes] = 0;
 			}
 		}
 
@@ -1200,14 +1203,14 @@ namespace Sapientia.Collections.Fixed
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
 				if (newLength > utf8LengthInBytes)
-					MemoryExt.MemClear(GetUnsafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
+					MemoryExt.MemClear(GetSafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
 				else
-					MemoryExt.MemClear(GetUnsafePtr() + newLength, utf8LengthInBytes - newLength);
+					MemoryExt.MemClear(GetSafePtr() + newLength, utf8LengthInBytes - newLength);
 			}
 
 			utf8LengthInBytes = (ushort)newLength;
 			// always null terminate
-			GetUnsafePtr()[utf8LengthInBytes] = 0;
+			GetSafePtr()[utf8LengthInBytes] = 0;
 
 			return true;
 		}
@@ -1230,14 +1233,14 @@ namespace Sapientia.Collections.Fixed
 			get
 			{
 				CheckIndexInRange(index);
-				return GetUnsafePtr()[index];
+				return GetSafePtr()[index];
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set
 			{
 				CheckIndexInRange(index);
-				GetUnsafePtr()[index] = value;
+				GetSafePtr()[index] = value;
 			}
 		}
 
@@ -1250,7 +1253,7 @@ namespace Sapientia.Collections.Fixed
 		public ref byte ElementAt(int index)
 		{
 			CheckIndexInRange(index);
-			return ref GetUnsafePtr()[index];
+			return ref GetSafePtr()[index];
 		}
 
 		/// <summary>
@@ -1308,7 +1311,7 @@ namespace Sapientia.Collections.Fixed
 				if (_offset >= _target.Length)
 					return false;
 
-				Unicode.Utf8ToUcs(out _current, _target.GetUnsafePtr(), ref _offset, _target.Length);
+				Unicode.Utf8ToUcs(out _current, _target.GetSafePtr(), ref _offset, _target.Length);
 
 				return true;
 			}
@@ -1373,9 +1376,10 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.Length;
-			byte* aptr = (byte*)bytes.AsPointer();
-			fixed (char* bptr = other)
+			SafePtr aptr = bytes.AsSafePtr();
+			fixed (char* bptrRaw = other)
 			{
+				var bptr = new SafePtr<Char>(bptrRaw, blen);
 				return UTF8Ext.StrCmp(aptr, alen, bptr, blen) == 0;
 			}
 		}
@@ -1406,9 +1410,10 @@ namespace Sapientia.Collections.Fixed
 		{
 			bytes = default;
 			utf8LengthInBytes = 0;
-			fixed (char* sourceptr = source)
+			fixed (char* sourceptrRaw = source)
 			{
-				var error = UTF8Ext.Copy(GetUnsafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
+				var sourceptr = new SafePtr<Char>(sourceptrRaw, source.Length);
+				var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 					sourceptr, source.Length);
 				if (error != CopyError.None)
 					return (int)error;
@@ -1478,8 +1483,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -1500,8 +1505,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -1542,8 +1547,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -1564,8 +1569,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -1606,8 +1611,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -1628,8 +1633,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -1670,8 +1675,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -1692,8 +1697,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -1734,8 +1739,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -1756,8 +1761,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -2042,9 +2047,9 @@ namespace Sapientia.Collections.Fixed
 		/// </summary>
 		/// <returns>A pointer to the character bytes.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public byte* GetUnsafePtr()
+		public SafePtr GetSafePtr()
 		{
-			return (byte*)bytes.AsPointer();
+			return bytes.AsSafePtr();
 		}
 
 		/// <summary>
@@ -2067,7 +2072,7 @@ namespace Sapientia.Collections.Fixed
 			{
 				CheckLengthInRange(value);
 				utf8LengthInBytes = (ushort)value;
-				GetUnsafePtr()[utf8LengthInBytes] = 0;
+				GetSafePtr()[utf8LengthInBytes] = 0;
 			}
 		}
 
@@ -2106,14 +2111,14 @@ namespace Sapientia.Collections.Fixed
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
 				if (newLength > utf8LengthInBytes)
-					MemoryExt.MemClear(GetUnsafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
+					MemoryExt.MemClear(GetSafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
 				else
-					MemoryExt.MemClear(GetUnsafePtr() + newLength, utf8LengthInBytes - newLength);
+					MemoryExt.MemClear(GetSafePtr() + newLength, utf8LengthInBytes - newLength);
 			}
 
 			utf8LengthInBytes = (ushort)newLength;
 			// always null terminate
-			GetUnsafePtr()[utf8LengthInBytes] = 0;
+			GetSafePtr()[utf8LengthInBytes] = 0;
 
 			return true;
 		}
@@ -2136,13 +2141,13 @@ namespace Sapientia.Collections.Fixed
 			get
 			{
 				CheckIndexInRange(index);
-				return GetUnsafePtr()[index];
+				return GetSafePtr()[index];
 			}
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set
 			{
 				CheckIndexInRange(index);
-				GetUnsafePtr()[index] = value;
+				GetSafePtr()[index] = value;
 			}
 		}
 
@@ -2155,7 +2160,7 @@ namespace Sapientia.Collections.Fixed
 		public ref byte ElementAt(int index)
 		{
 			CheckIndexInRange(index);
-			return ref GetUnsafePtr()[index];
+			return ref GetSafePtr()[index];
 		}
 
 		/// <summary>
@@ -2213,7 +2218,7 @@ namespace Sapientia.Collections.Fixed
 				if (_offset >= _target.Length)
 					return false;
 
-				Unicode.Utf8ToUcs(out _current, _target.GetUnsafePtr(), ref _offset, _target.Length);
+				Unicode.Utf8ToUcs(out _current, _target.GetSafePtr(), ref _offset, _target.Length);
 
 				return true;
 			}
@@ -2278,9 +2283,10 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.Length;
-			byte* aptr = (byte*)bytes.AsPointer();
-			fixed (char* bptr = other)
+			SafePtr aptr = bytes.AsSafePtr();
+			fixed (char* bptrRaw = other)
 			{
+				var bptr = new SafePtr<Char>(bptrRaw, blen);
 				return UTF8Ext.StrCmp(aptr, alen, bptr, blen) == 0;
 			}
 		}
@@ -2311,9 +2317,10 @@ namespace Sapientia.Collections.Fixed
 		{
 			bytes = default;
 			utf8LengthInBytes = 0;
-			fixed (char* sourceptr = source)
+			fixed (char* sourceptrRaw = source)
 			{
-				var error = UTF8Ext.Copy(GetUnsafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
+				var sourceptr = new SafePtr<Char>(sourceptrRaw, source.Length);
+				var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 					sourceptr, source.Length);
 				if (error != CopyError.None)
 					return (int)error;
@@ -2383,8 +2390,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -2405,8 +2412,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -2447,8 +2454,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -2469,8 +2476,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -2511,8 +2518,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -2533,8 +2540,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -2575,8 +2582,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -2597,8 +2604,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -2639,8 +2646,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -2661,8 +2668,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -3067,9 +3074,9 @@ namespace Sapientia.Collections.Fixed
 		/// </summary>
 		/// <returns>A pointer to the character bytes.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public byte* GetUnsafePtr()
+		public SafePtr GetSafePtr()
 		{
-			return (byte*)bytes.AsPointer();
+			return bytes.AsSafePtr();
 		}
 
 		/// <summary>
@@ -3092,7 +3099,7 @@ namespace Sapientia.Collections.Fixed
 			{
 				CheckLengthInRange(value);
 				utf8LengthInBytes = (ushort)value;
-				GetUnsafePtr()[utf8LengthInBytes] = 0;
+				GetSafePtr()[utf8LengthInBytes] = 0;
 			}
 		}
 
@@ -3131,14 +3138,14 @@ namespace Sapientia.Collections.Fixed
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
 				if (newLength > utf8LengthInBytes)
-					MemoryExt.MemClear(GetUnsafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
+					MemoryExt.MemClear(GetSafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
 				else
-					MemoryExt.MemClear(GetUnsafePtr() + newLength, utf8LengthInBytes - newLength);
+					MemoryExt.MemClear(GetSafePtr() + newLength, utf8LengthInBytes - newLength);
 			}
 
 			utf8LengthInBytes = (ushort)newLength;
 			// always null terminate
-			GetUnsafePtr()[utf8LengthInBytes] = 0;
+			GetSafePtr()[utf8LengthInBytes] = 0;
 
 			return true;
 		}
@@ -3161,14 +3168,14 @@ namespace Sapientia.Collections.Fixed
 			get
 			{
 				CheckIndexInRange(index);
-				return GetUnsafePtr()[index];
+				return GetSafePtr()[index];
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set
 			{
 				CheckIndexInRange(index);
-				GetUnsafePtr()[index] = value;
+				GetSafePtr()[index] = value;
 			}
 		}
 
@@ -3181,7 +3188,7 @@ namespace Sapientia.Collections.Fixed
 		public ref byte ElementAt(int index)
 		{
 			CheckIndexInRange(index);
-			return ref GetUnsafePtr()[index];
+			return ref GetSafePtr()[index];
 		}
 
 		/// <summary>
@@ -3239,7 +3246,7 @@ namespace Sapientia.Collections.Fixed
 				if (_offset >= _target.Length)
 					return false;
 
-				Unicode.Utf8ToUcs(out _current, _target.GetUnsafePtr(), ref _offset, _target.Length);
+				Unicode.Utf8ToUcs(out _current, _target.GetSafePtr(), ref _offset, _target.Length);
 
 				return true;
 			}
@@ -3304,9 +3311,10 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.Length;
-			byte* aptr = (byte*)bytes.AsPointer();
-			fixed (char* bptr = other)
+			SafePtr aptr = bytes.AsSafePtr();
+			fixed (char* bptrRaw = other)
 			{
+				var bptr = new SafePtr<Char>(bptrRaw, blen);
 				return UTF8Ext.StrCmp(aptr, alen, bptr, blen) == 0;
 			}
 		}
@@ -3337,9 +3345,10 @@ namespace Sapientia.Collections.Fixed
 		{
 			bytes = default;
 			utf8LengthInBytes = 0;
-			fixed (char* sourceptr = source)
+			fixed (char* sourceptrRaw = source)
 			{
-				var error = UTF8Ext.Copy(GetUnsafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
+				var sourceptr = new SafePtr<Char>(sourceptrRaw, source.Length);
+				var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 					sourceptr, source.Length);
 				if (error != CopyError.None)
 					return (int)error;
@@ -3409,8 +3418,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -3431,8 +3440,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -3473,8 +3482,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -3495,8 +3504,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -3537,8 +3546,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -3559,8 +3568,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -3601,8 +3610,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -3623,8 +3632,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -3665,8 +3674,8 @@ namespace Sapientia.Collections.Fixed
 			bytes = default;
 			utf8LengthInBytes = 0;
 			int len = 0;
-			byte* dstBytes = GetUnsafePtr();
-			byte* srcBytes = (byte*)other.bytes.AsPointer();
+			SafePtr dstBytes = GetSafePtr();
+			SafePtr srcBytes = other.bytes.AsSafePtr();
 			var srcLength = other.utf8LengthInBytes;
 			var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 				srcLength);
@@ -3687,8 +3696,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -5213,9 +5222,9 @@ namespace Sapientia.Collections.Fixed
 		/// </summary>
 		/// <returns>A pointer to the character bytes.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe byte* GetUnsafePtr()
+		public unsafe SafePtr GetSafePtr()
 		{
-			return (byte*)bytes.AsPointer();
+			return bytes.AsSafePtr();
 		}
 
 		/// <summary>
@@ -5240,7 +5249,7 @@ namespace Sapientia.Collections.Fixed
 				utf8LengthInBytes = (ushort)value;
 				unsafe
 				{
-					GetUnsafePtr()[utf8LengthInBytes] = 0;
+					GetSafePtr()[utf8LengthInBytes] = 0;
 				}
 			}
 		}
@@ -5282,14 +5291,14 @@ namespace Sapientia.Collections.Fixed
 				if (clearOptions == ClearOptions.ClearMemory)
 				{
 					if (newLength > utf8LengthInBytes)
-						MemoryExt.MemClear(GetUnsafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
+						MemoryExt.MemClear(GetSafePtr() + utf8LengthInBytes, newLength - utf8LengthInBytes);
 					else
-						MemoryExt.MemClear(GetUnsafePtr() + newLength, utf8LengthInBytes - newLength);
+						MemoryExt.MemClear(GetSafePtr() + newLength, utf8LengthInBytes - newLength);
 				}
 
 				utf8LengthInBytes = (ushort)newLength;
 				// always null terminate
-				GetUnsafePtr()[utf8LengthInBytes] = 0;
+				GetSafePtr()[utf8LengthInBytes] = 0;
 			}
 
 			return true;
@@ -5315,7 +5324,7 @@ namespace Sapientia.Collections.Fixed
 				unsafe
 				{
 					CheckIndexInRange(index);
-					return GetUnsafePtr()[index];
+					return GetSafePtr()[index];
 				}
 			}
 
@@ -5325,7 +5334,7 @@ namespace Sapientia.Collections.Fixed
 				unsafe
 				{
 					CheckIndexInRange(index);
-					GetUnsafePtr()[index] = value;
+					GetSafePtr()[index] = value;
 				}
 			}
 		}
@@ -5341,7 +5350,7 @@ namespace Sapientia.Collections.Fixed
 			unsafe
 			{
 				CheckIndexInRange(index);
-				return ref GetUnsafePtr()[index];
+				return ref GetSafePtr()[index];
 			}
 		}
 
@@ -5402,7 +5411,7 @@ namespace Sapientia.Collections.Fixed
 
 				unsafe
 				{
-					Unicode.Utf8ToUcs(out _current, _target.GetUnsafePtr(), ref _offset, _target.Length);
+					Unicode.Utf8ToUcs(out _current, _target.GetSafePtr(), ref _offset, _target.Length);
 				}
 
 				return true;
@@ -5470,9 +5479,10 @@ namespace Sapientia.Collections.Fixed
 			{
 				int alen = utf8LengthInBytes;
 				int blen = other.Length;
-				byte* aptr = (byte*)bytes.AsPointer();
-				fixed (char* bptr = other)
+				SafePtr aptr = bytes.AsSafePtr();
+				fixed (char* bptrRaw = other)
 				{
+					var bptr = new SafePtr<char>(bptrRaw, blen);
 					return UTF8Ext.StrCmp(aptr, alen, bptr, blen) == 0;
 				}
 			}
@@ -5506,9 +5516,10 @@ namespace Sapientia.Collections.Fixed
 			utf8LengthInBytes = 0;
 			unsafe
 			{
-				fixed (char* sourceptr = source)
+				fixed (char* sourceptrRaw = source)
 				{
-					var error = UTF8Ext.Copy(GetUnsafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
+					var sourceptr = new SafePtr<char>(sourceptrRaw, source.Length);
+					var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 						sourceptr, source.Length);
 					if (error != CopyError.None)
 						return (int)error;
@@ -5581,8 +5592,8 @@ namespace Sapientia.Collections.Fixed
 			unsafe
 			{
 				int len = 0;
-				byte* dstBytes = GetUnsafePtr();
-				byte* srcBytes = (byte*)other.bytes.AsPointer();
+				SafePtr dstBytes = GetSafePtr();
+				SafePtr srcBytes = other.bytes.AsSafePtr();
 				var srcLength = other.utf8LengthInBytes;
 				var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 					srcLength);
@@ -5604,8 +5615,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -5648,8 +5659,8 @@ namespace Sapientia.Collections.Fixed
 			unsafe
 			{
 				int len = 0;
-				byte* dstBytes = GetUnsafePtr();
-				byte* srcBytes = (byte*)other.bytes.AsPointer();
+				SafePtr dstBytes = GetSafePtr();
+				SafePtr srcBytes = other.bytes.AsSafePtr();
 				var srcLength = other.utf8LengthInBytes;
 				var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 					srcLength);
@@ -5671,8 +5682,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -5715,8 +5726,8 @@ namespace Sapientia.Collections.Fixed
 			unsafe
 			{
 				int len = 0;
-				byte* dstBytes = GetUnsafePtr();
-				byte* srcBytes = (byte*)other.bytes.AsPointer();
+				SafePtr dstBytes = GetSafePtr();
+				SafePtr srcBytes = other.bytes.AsSafePtr();
 				var srcLength = other.utf8LengthInBytes;
 				var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 					srcLength);
@@ -5738,8 +5749,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -5782,8 +5793,8 @@ namespace Sapientia.Collections.Fixed
 			unsafe
 			{
 				int len = 0;
-				byte* dstBytes = GetUnsafePtr();
-				byte* srcBytes = (byte*)other.bytes.AsPointer();
+				SafePtr dstBytes = GetSafePtr();
+				SafePtr srcBytes = other.bytes.AsSafePtr();
 				var srcLength = other.utf8LengthInBytes;
 				var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 					srcLength);
@@ -5805,8 +5816,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 
@@ -5849,8 +5860,8 @@ namespace Sapientia.Collections.Fixed
 			unsafe
 			{
 				int len = 0;
-				byte* dstBytes = GetUnsafePtr();
-				byte* srcBytes = (byte*)other.bytes.AsPointer();
+				SafePtr dstBytes = GetSafePtr();
+				SafePtr srcBytes = other.bytes.AsSafePtr();
 				var srcLength = other.utf8LengthInBytes;
 				var error = UTF8Ext.AppendUTF8Bytes(dstBytes, ref len, utf8MaxLengthInBytes, srcBytes,
 					srcLength);
@@ -5872,8 +5883,8 @@ namespace Sapientia.Collections.Fixed
 		{
 			int alen = utf8LengthInBytes;
 			int blen = other.utf8LengthInBytes;
-			byte* aptr = (byte*)bytes.AsPointer();
-			byte* bptr = (byte*)other.bytes.AsPointer();
+			SafePtr aptr = bytes.AsSafePtr();
+			SafePtr bptr = other.bytes.AsSafePtr();
 			return UTF8Ext.EqualsUTF8Bytes(aptr, alen, bptr, blen);
 		}
 

@@ -11,7 +11,7 @@ namespace Sapientia.Messaging
 	/// <summary>
 	/// Messenger hub responsible for taking subscriptions/publications and delivering of messages.
 	/// </summary>
-	public sealed partial class MessengerHub : AsyncClass
+	internal sealed partial class MessengerHub : AsyncClass
 	{
 		private readonly Dictionary<Type, SubscriptionGroup> _typeToSubscriptionGroup = new();
 

@@ -1,12 +1,12 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.Data
 {
-	public unsafe struct ProxyEvent<T> : IEnumerable<IntPtr> where T: unmanaged, IProxy
+	public unsafe struct ProxyEvent<T> : IEnumerable<SafePtr> where T: unmanaged, IProxy
 	{
 		private HashSet<ProxyPtr<T>> _proxies;
 
@@ -17,18 +17,18 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator* GetAllocatorPtr()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
 			return _proxies.GetAllocatorPtr();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ProxyEvent(Allocator* allocator, int capacity)
+		public ProxyEvent(SafePtr<Allocator> allocator, int capacity = 8)
 		{
 			_proxies = new HashSet<ProxyPtr<T>>(allocator, capacity);
 		}
 
-		public bool Subscribe(Allocator* allocator, in ProxyPtr<T> proxyPtr)
+		public bool Subscribe(SafePtr<Allocator> allocator, in ProxyPtr<T> proxyPtr)
 		{
 			return _proxies.Add(allocator, proxyPtr);
 		}
@@ -43,25 +43,25 @@ namespace Sapientia.MemoryAllocator.Data
 			return _proxies.Remove(proxyPtr);
 		}
 
-		public bool UnSubscribe(Allocator* allocator, in ProxyPtr<T> proxyPtr)
+		public bool UnSubscribe(SafePtr<Allocator> allocator, in ProxyPtr<T> proxyPtr)
 		{
 			return _proxies.Remove(allocator, proxyPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable(Allocator* allocator)
+		public Enumerable<SafePtr<ProxyPtr<T>>, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return _proxies.GetPtrEnumerable(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<IntPtr, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable()
+		public Enumerable<SafePtr<ProxyPtr<T>>, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable()
 		{
 			return _proxies.GetPtrEnumerable();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<ProxyPtr<T>> GetEnumerator(Allocator* allocator)
+		public HashSetPtrEnumerator<ProxyPtr<T>> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return _proxies.GetPtrEnumerator(allocator);
 		}
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<IntPtr> IEnumerable<IntPtr>.GetEnumerator()
+		IEnumerator<SafePtr> IEnumerable<SafePtr>.GetEnumerator()
 		{
 			return _proxies.GetPtrEnumerator();
 		}
@@ -85,14 +85,21 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
+		public void Dispose(bool disposeProxies = true)
 		{
-			_proxies.Dispose();
+			Dispose(_proxies.GetAllocatorPtr(), disposeProxies);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator* allocator)
+		public void Dispose(SafePtr<Allocator> allocator, bool disposeProxies = true)
 		{
+			if (disposeProxies)
+			{
+				foreach (ProxyPtr<T>* proxy in _proxies.GetPtrEnumerable(allocator))
+				{
+					proxy->Dispose(allocator);
+				}
+			}
 			_proxies.Dispose(allocator);
 		}
 	}

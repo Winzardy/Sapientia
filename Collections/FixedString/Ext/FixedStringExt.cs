@@ -1,7 +1,8 @@
 using System;
+using Sapientia.Data;
 using Sapientia.Extensions;
 
-namespace Sapientia.Collections.Fixed
+namespace Sapientia.Collections.FixedString
 {
 	/// <summary>
 	/// Provides extension methods for FixedString*N*.
@@ -22,10 +23,10 @@ namespace Sapientia.Collections.Fixed
 #if BURST
 		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
 #endif
-		public static int IndexOf<T>(ref this T fs, byte* bytes, int bytesLen)
+		public static int IndexOf<T>(ref this T fs, SafePtr bytes, int bytesLen)
 			where T : struct, IFixedString
 		{
-			var dst = fs.GetUnsafePtr();
+			var dst = fs.GetSafePtr();
 			var dstLen = fs.Length;
 			for (var i = 0; i <= dstLen - bytesLen; ++i)
 			{
@@ -54,11 +55,11 @@ namespace Sapientia.Collections.Fixed
 #if BURST
 		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
 #endif
-		public static int IndexOf<T>(ref this T fs, byte* bytes, int bytesLen, int startIndex,
+		public static int IndexOf<T>(ref this T fs, SafePtr bytes, int bytesLen, int startIndex,
 			int distance = int.MaxValue)
 			where T : struct, IFixedString
 		{
-			var dst = fs.GetUnsafePtr();
+			var dst = fs.GetSafePtr();
 			var dstLen = fs.Length;
 			var searchRange = (distance - 1).Min(dstLen - bytesLen);
 			for (var i = startIndex; i <= searchRange; ++i)
@@ -91,7 +92,7 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
 		{
-			return fs.IndexOf(other.GetUnsafePtr(), other.Length);
+			return fs.IndexOf(other.GetSafePtr(), other.Length);
 		}
 
 		/// <summary>
@@ -112,7 +113,7 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
 		{
-			return fs.IndexOf(other.GetUnsafePtr(), other.Length, startIndex, distance);
+			return fs.IndexOf(other.GetSafePtr(), other.Length, startIndex, distance);
 		}
 
 		/// <summary>
@@ -145,10 +146,10 @@ namespace Sapientia.Collections.Fixed
 #if BURST
 		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
 #endif
-		public static int LastIndexOf<T>(ref this T fs, byte* bytes, int bytesLen)
+		public static int LastIndexOf<T>(ref this T fs, SafePtr bytes, int bytesLen)
 			where T : struct, IFixedString
 		{
-			var dst = fs.GetUnsafePtr();
+			var dst = fs.GetSafePtr();
 			var dstLen = fs.Length;
 			for (var i = dstLen - bytesLen; i >= 0; --i)
 			{
@@ -177,11 +178,11 @@ namespace Sapientia.Collections.Fixed
 #if BURST
 		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
 #endif
-		public static int LastIndexOf<T>(ref this T fs, byte* bytes, int bytesLen, int startIndex,
+		public static int LastIndexOf<T>(ref this T fs, SafePtr bytes, int bytesLen, int startIndex,
 			int distance = int.MaxValue)
 			where T : struct, IFixedString
 		{
-			var dst = fs.GetUnsafePtr();
+			var dst = fs.GetSafePtr();
 			var dstLen = fs.Length;
 			startIndex = Math.Min(dstLen - bytesLen, startIndex);
 			var searchrange = Math.Max(0, startIndex - distance);
@@ -215,7 +216,7 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
 		{
-			return fs.LastIndexOf(other.GetUnsafePtr(), other.Length);
+			return fs.LastIndexOf(other.GetSafePtr(), other.Length);
 		}
 
 		/// <summary>
@@ -236,7 +237,7 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
 		{
-			return fs.LastIndexOf(other.GetUnsafePtr(), other.Length, startIndex, distance);
+			return fs.LastIndexOf(other.GetSafePtr(), other.Length, startIndex, distance);
 		}
 
 		/// <summary>
@@ -255,10 +256,10 @@ namespace Sapientia.Collections.Fixed
 #if BURST
 		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
 #endif
-		public static int CompareTo<T>(ref this T fs, byte* bytes, int bytesLen)
+		public static int CompareTo<T>(ref this T fs, SafePtr bytes, int bytesLen)
 			where T : struct, IFixedString
 		{
-			var a = fs.GetUnsafePtr();
+			var a = fs.GetSafePtr();
 			var aa = fs.Length;
 			int chars = aa < bytesLen ? aa : bytesLen;
 			for (var i = 0; i < chars; ++i)
@@ -297,7 +298,7 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
 		{
-			return fs.CompareTo(other.GetUnsafePtr(), other.Length);
+			return fs.CompareTo(other.GetSafePtr(), other.Length);
 		}
 
 		/// <summary>
@@ -311,10 +312,10 @@ namespace Sapientia.Collections.Fixed
 #if BURST
 		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
 #endif
-		public static bool Equals<T>(ref this T fs, byte* bytes, int bytesLen)
+		public static bool Equals<T>(ref this T fs, SafePtr bytes, int bytesLen)
 			where T : struct, IFixedString
 		{
-			var a = fs.GetUnsafePtr();
+			var a = fs.GetSafePtr();
 			var aa = fs.Length;
 			if (aa != bytesLen)
 				return false;
@@ -339,7 +340,7 @@ namespace Sapientia.Collections.Fixed
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
 		{
-			return fs.Equals(other.GetUnsafePtr(), other.Length);
+			return fs.Equals(other.GetSafePtr(), other.Length);
 		}
 
 		/// <summary>
@@ -358,7 +359,7 @@ namespace Sapientia.Collections.Fixed
 		{
 			if (index >= fs.Length)
 				return Unicode.BadRune;
-			Unicode.Utf8ToUcs(out var rune, fs.GetUnsafePtr(), ref index, fs.Capacity);
+			Unicode.Utf8ToUcs(out var rune, fs.GetSafePtr(), ref index, fs.Capacity);
 			return rune;
 		}
 
@@ -378,7 +379,7 @@ namespace Sapientia.Collections.Fixed
 		{
 			if (index >= fs.Length)
 				return Unicode.BadRune;
-			Unicode.Utf8ToUcs(out var rune, fs.GetUnsafePtr(), ref index, fs.Capacity);
+			Unicode.Utf8ToUcs(out var rune, fs.GetSafePtr(), ref index, fs.Capacity);
 			return rune;
 		}
 
@@ -396,7 +397,7 @@ namespace Sapientia.Collections.Fixed
 		public static FormatError Write<T>(ref this T fs, ref int index, Unicode.Rune rune)
 			where T : struct, IFixedString
 		{
-			var err = Unicode.UcsToUtf8(fs.GetUnsafePtr(), ref index, fs.Capacity, rune);
+			var err = Unicode.UcsToUtf8(fs.GetSafePtr(), ref index, fs.Capacity, rune);
 			if (err != ConversionError.None)
 				return FormatError.Overflow;
 			return FormatError.None;
@@ -414,10 +415,11 @@ namespace Sapientia.Collections.Fixed
 		public static String ConvertToString<T>(ref this T fs)
 			where T : struct, IFixedString
 		{
-			var c = stackalloc char[fs.Length * 2];
+			var cRaw = stackalloc char[fs.Length * 2];
+			var c = new SafePtr<char>(cRaw, fs.Length * 2);
 			int length = 0;
-			Unicode.Utf8ToUtf16(fs.GetUnsafePtr(), fs.Length, c, out length, fs.Length * 2);
-			return new String(c, 0, length);
+			Unicode.Utf8ToUtf16(fs.GetSafePtr(), fs.Length, c, out length, fs.Length * 2);
+			return new String(c.ptr, 0, length);
 		}
 
 		/// <summary>
@@ -432,7 +434,7 @@ namespace Sapientia.Collections.Fixed
 		public static int ComputeHashCode<T>(ref this T fs)
 			where T : struct, IFixedString
 		{
-			return (int)UnsafeExt.Hash(fs.GetUnsafePtr(), fs.Length);
+			return (int)UnsafeExt.Hash(fs.GetSafePtr().ptr, fs.Length);
 		}
 
 		/// <summary>

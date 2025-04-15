@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
-using Sapientia.Collections;
 
-namespace Sapientia.Extensions
+namespace Sapientia.Collections
 {
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#5dd46b19b2fa4e1c8d6ac4fabf6a19cd
@@ -203,5 +202,7 @@ namespace Sapientia.Extensions
 		}
 
 		public static int IndexOf<T>(this T[] array, T element) => Array.IndexOf(array, element);
+
+		public static int FindIndex<T>(this T[] array, Predicate<T> match) => Array.FindIndex(array, match);
 	}
 }

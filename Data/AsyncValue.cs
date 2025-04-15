@@ -51,38 +51,43 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetBusy()
+		public void SetBusy(bool ignoreThreadId = false)
 		{
 			var currentThreadId = Environment.CurrentManagedThreadId;
-			while (_count > 0 && _threadId != currentThreadId)
+			if (ignoreThreadId)
 			{
-				Thread.Sleep(_millisecondsTimeout);
+				var threadId = _threadId;
+				while (_count > 0 || Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) != threadId)
+				{
+					Thread.Sleep(_millisecondsTimeout);
+					threadId = _threadId;
+				}
 			}
-			Interlocked.Increment(ref _count);
-			Interlocked.Exchange(ref _threadId, currentThreadId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetBusyIgnoreThread()
-		{
-			while (_count > 0)
+			else
 			{
-				Thread.Sleep(_millisecondsTimeout);
+				while (true)
+				{
+					if (_count == 0)
+					{
+						var threadId = _threadId;
+						if (Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) == threadId)
+							break;
+					}
+					else if (_threadId == currentThreadId)
+						break;
+
+					Thread.Sleep(_millisecondsTimeout);
+				}
 			}
+
 			Interlocked.Increment(ref _count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetFree()
+		public void SetFree(bool ignoreThreadId = false)
 		{
-			Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
-			Debug.Assert(_count > 0);
-			Interlocked.Decrement(ref _count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetFreeIgnoreThread()
-		{
+			if (!ignoreThreadId)
+				Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
 			Debug.Assert(_count > 0);
 			Interlocked.Decrement(ref _count);
 		}

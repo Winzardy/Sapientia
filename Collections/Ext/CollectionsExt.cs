@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sapientia.Collections;
-using Sapientia.Collections.Archetypes;
 #if UNITY_5_3_OR_NEWER
 using Random = UnityEngine.Random;
 #endif
 
-namespace Sapientia.Extensions
+namespace Sapientia.Collections
 {
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#b48166b7e5c44ce8957d060d93577fe3
@@ -27,7 +25,7 @@ namespace Sapientia.Extensions
 			}
 		}
 
-		public static void SetCount<T>(this List<T> list, int targetCount, in T defaultValue)
+		public static void SetCount<T>(this List<T> list, int targetCount, in T defaultValue = default)
 		{
 			if (list.Count > targetCount)
 				list.RemoveRange(targetCount, list.Count - targetCount);
@@ -55,15 +53,6 @@ namespace Sapientia.Extensions
 			for (var i = 0; i < length; i++)
 			{
 				list.AddWithoutExpand(i);
-			}
-		}
-
-		public static void FillEntities(this SimpleList<Entity> list, int length, string entitiesName)
-		{
-			list.Expand(length);
-			for (var i = 0; i < length; i++)
-			{
-				list.AddWithoutExpand(Entity.Create(entitiesName));
 			}
 		}
 
