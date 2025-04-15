@@ -7,11 +7,11 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IWorldSystemProxy : IProxy
 	{
-		public static readonly ProxyId proxyId = 14;
+		public static readonly ProxyId ProxyId = 14;
 		ProxyId IProxy.ProxyId
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-			get => proxyId;
+			get => ProxyId;
 		}
 
 		private DelegateIndex _firstDelegateIndex;
