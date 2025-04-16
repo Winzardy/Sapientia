@@ -68,7 +68,8 @@ namespace Sapientia.MemoryAllocator.State
 		public void AddKillParent(Entity child, Entity parent)
 		{
 			E.ASSERT(IsAlive(child));
-			E.ASSERT(IsAlive(parent));
+			E.ASSERT(!destroyRequestArchetype.HasElement(parent));
+			E.ASSERT(entityStatePart.ptr->IsEntityExist(allocator, parent));
 
 			ref var childElement = ref killElementArchetype.GetElement(child);
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
