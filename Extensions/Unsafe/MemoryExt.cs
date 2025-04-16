@@ -6,6 +6,10 @@ using Sapientia.Collections;
 using Sapientia.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
+#if !UNITY_5_3_OR_NEWER || FORCE_MARSHAL_ALLOC
+using System.Runtime.InteropServices;
+#endif
+
 namespace Sapientia.Extensions
 {
 	public enum ClearOptions
@@ -186,7 +190,7 @@ namespace Sapientia.Extensions
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(destination.ptr, sourcePtr, TSize<T>.size, count);
 #else
 			var span = new Span<T>(destination.ptr, count);
-			span.Fill(*source.ptr);
+			span.Fill(source);
 #endif
 		}
 
@@ -286,8 +290,8 @@ namespace Sapientia.Extensions
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemMove(destination.ptr, source.ptr, size);
 #else
 			var intSize = (int)size;
-			var sourceSpan = new Span<byte>(source, intSize);
-			var destinationSpan = new Span<byte>(destination, intSize);
+			var sourceSpan = new Span<byte>(source.ptr, intSize);
+			var destinationSpan = new Span<byte>(destination.ptr, intSize);
 			Span<byte> temp = stackalloc byte[intSize];
 
 			sourceSpan.CopyTo(temp);
