@@ -165,7 +165,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr<T> GetServicePtr<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context) where T: unmanaged
 		{
 			var result = _typeToPtr.GetValue(allocator, context, out var success).GetPtr<T>(allocator);
-			E.ASSERT(success, $"Service not found: {typeof(T).Name}");
+			E.ASSERT(success);
 
 			return result;
 		}
