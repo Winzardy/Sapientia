@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Debug = UnityEngine.Debug;
 
 namespace Sapientia.MemoryAllocator.State
 {
@@ -48,7 +49,8 @@ namespace Sapientia.MemoryAllocator.State
 			updateStatePart.worldTimeDebt += deltaTime;
 
 			var ticksToUpdate = (updateStatePart.worldTimeDebt / tickTime).FloorToInt_Positive();
-			E.ASSERT(ticksToUpdate <= MAX_TICKS_PER_FRAME, $"{ticksToUpdate} ticks was scheduled in this frame.");
+			if (ticksToUpdate <= MAX_TICKS_PER_FRAME)
+				Debug.LogWarning($"{ticksToUpdate} ticks was scheduled in this frame.");
 
 			if (ticksToUpdate > 0)
 			{

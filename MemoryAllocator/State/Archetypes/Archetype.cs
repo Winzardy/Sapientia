@@ -327,10 +327,13 @@ namespace Sapientia.MemoryAllocator.State
 			if (_elements.Has(allocator, entity.id))
 			{
 				ref var element = ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id);
-				E.ASSERT(element.entity == entity);
+				if (element.entity.generation == entity.generation)
+				{
+					E.ASSERT(element.entity == entity);
 
-				isExist = true;
-				return ref element.value;
+					isExist = true;
+					return ref element.value;
+				}
 			}
 			isExist = false;
 			return ref TDefaultValue<T>.value;
