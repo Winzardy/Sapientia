@@ -13,7 +13,7 @@ namespace Sapientia.MemoryAllocator
 		public ref T GetService<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context) where T: unmanaged
 		{
 			ref var result = ref _typeToPtr.GetValue(allocator, context, out var success).GetValue<T>(allocator);
-			E.ASSERT(success, $"Service not found: {typeof(T).Name}");
+			E.ASSERT(success);
 			return ref result;
 		}
 
@@ -68,7 +68,7 @@ namespace Sapientia.MemoryAllocator
 		public ref T GetService<T>(SafePtr<Allocator> allocator, ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
 		{
 			ref var result = ref _typeToPtr.GetValue(allocator, proxyPtr.indexedPtr.typeIndex, out var success).GetValue<T>(allocator);
-			E.ASSERT(success, $"Service not found: {typeof(T).Name}");
+			E.ASSERT(success);
 			return ref result;
 		}
 
@@ -103,7 +103,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			var typeIndex = TypeIndex.Create<TBase>();
 			ref var result = ref _typeToPtr.GetValue(allocator, typeIndex, out var success).GetValue<T>(allocator);
-			E.ASSERT(success, $"Service not found: {typeof(T).Name}");
+			E.ASSERT(success);
 
 			return ref result;
 		}
@@ -119,7 +119,7 @@ namespace Sapientia.MemoryAllocator
 		public IndexedPtr GetServiceIndexedPtr<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context) where T: unmanaged
 		{
 			var result = _typeToPtr.GetValue(allocator, context, out var success);
-			E.ASSERT(success, $"Service not found: {typeof(T).Name}");
+			E.ASSERT(success);
 			return result;
 		}
 
@@ -142,7 +142,7 @@ namespace Sapientia.MemoryAllocator
 		public Ptr<T> GetServiceCachedPtr<T>(SafePtr<Allocator> allocator, ServiceRegistryContext context) where T: unmanaged
 		{
 			var result = _typeToPtr.GetValue(allocator, context, out var success).GetCachedPtr<T>();
-			E.ASSERT(success, $"Service not found: {typeof(T).Name}");
+			E.ASSERT(success);
 			return result;
 		}
 
@@ -201,7 +201,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			var typeIndex = TypeIndex.Create<TBase>();
 			var result = _typeToPtr.GetValue(allocator, typeIndex, out var success).GetPtr<T>(allocator);
-			E.ASSERT(success, $"Service not found: {typeof(T).Name}");
+			E.ASSERT(success);
 
 			return result;
 		}

@@ -149,9 +149,21 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddRange<T1>(T1[] values) where T1: T
 		{
-			Expand(_count + values.Length);
-			Array.Copy(values, 0, _array, _count, values.Length);
-			_count += values.Length;
+			AddRange(values, 0, values.Length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange<T1>(T1[] values, int count) where T1: T
+		{
+			AddRange(values, 0, count);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange<T1>(T1[] values, int sourceIndex, int count) where T1: T
+		{
+			Expand(_count + count);
+			Array.Copy(values, sourceIndex, _array, _count, count);
+			_count += count;
 		}
 
 		public void AddRange(T value, int count)
