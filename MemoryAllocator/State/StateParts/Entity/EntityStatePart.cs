@@ -30,6 +30,8 @@ namespace Sapientia.MemoryAllocator.State
 
 		public string GetEntityName(SafePtr<Allocator> allocator, in Entity entity)
 		{
+			if (!IsEntityExist(entity))
+				return "[Destroyed]";
 			return entityIdToName[allocator, entity.id].ToString();
 		}
 #endif
