@@ -288,7 +288,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Contains<T, TU>(SafePtr<Allocator> allocator, in TU obj) where T: unmanaged where TU : unmanaged, IEquatable<T>
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 
 			var safePtr = GetPtr(allocator).Cast<T>();
 			for (int i = 0, cnt = Length; i < cnt; ++i)

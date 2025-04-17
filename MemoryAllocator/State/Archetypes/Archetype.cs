@@ -327,7 +327,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (_elements.Has(allocator, entity.id))
 			{
 				ref var element = ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id);
-				Debug.Assert(element.entity == entity);
+				E.ASSERT(element.entity == entity);
 
 				isExist = true;
 				return ref element.value;
@@ -342,7 +342,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (_elements.Has(allocator, entity.id))
 			{
 				ref var element = ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id);
-				Debug.Assert(element.entity == entity);
+				E.ASSERT(element.entity == entity);
 
 				isCreated = false;
 				return ref element.value;
@@ -387,7 +387,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (_elements.Has(allocator, entity.id))
 			{
 				ref var element = ref _elements.Get<ArchetypeElement<T>>(allocator, entity.id);
-				Debug.Assert(element.entity == entity);
+				E.ASSERT(element.entity == entity);
 
 				return ref element.value;
 			}

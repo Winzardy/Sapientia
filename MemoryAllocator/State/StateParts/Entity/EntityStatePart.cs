@@ -135,7 +135,7 @@ namespace Sapientia.MemoryAllocator.State
 #if DEBUG
 			for (var i = 0; i < count; i++)
 			{
-				Debug.Assert(IsEntityExist(allocator, entities[i]));
+				E.ASSERT(IsEntityExist(allocator, entities[i]));
 			}
 
 #endif

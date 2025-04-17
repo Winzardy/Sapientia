@@ -471,7 +471,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public int EnsureCapacity(SafePtr<Allocator> allocator, int capacity)
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 
 			var num = entries.Length;
 			if (num >= capacity)

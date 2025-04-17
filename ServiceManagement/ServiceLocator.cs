@@ -66,7 +66,7 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Register(TService service)
 		{
-			Debug.Assert(Instance == null);
+			E.ASSERT(Instance == null);
 			Instance = service;
 
 			return Instance;

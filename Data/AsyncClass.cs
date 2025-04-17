@@ -114,8 +114,8 @@ namespace Sapientia.Data
 		public void SetFree(bool ignoreThreadId = false)
 		{
 			if (!ignoreThreadId)
-				Debug.Assert(_threadId == Environment.CurrentManagedThreadId);
-			Debug.Assert(_count > 0);
+				E.ASSERT(_threadId == Environment.CurrentManagedThreadId);
+			E.ASSERT(_count > 0);
 			Interlocked.Decrement(ref _count);
 		}
 

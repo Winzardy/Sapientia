@@ -74,63 +74,63 @@ namespace Sapientia.MemoryAllocator.Data
 		[INLINE(256)]
 		public ref T GetValue<T>() where T : unmanaged
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return ref _ptr.Get<T>();
 		}
 
 		[INLINE(256)]
 		public ref T GetValue<T>(SafePtr<Allocator> allocator) where T : unmanaged
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return ref _ptr.Get<T>(allocator);
 		}
 
 		[INLINE(256)]
 		public SafePtr GetPtr()
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return _ptr.GetPtr();
 		}
 
 		[INLINE(256)]
 		public SafePtr GetPtr(SafePtr<Allocator> allocator)
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return _ptr.GetPtr(allocator);
 		}
 
 		[INLINE(256)]
 		public SafePtr<T> GetPtr<T>() where T: unmanaged
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return _ptr.GetPtr();
 		}
 
 		[INLINE(256)]
 		public SafePtr<T> GetPtr<T>(SafePtr<Allocator> allocator) where T: unmanaged
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return _ptr.GetPtr(allocator);
 		}
 
 		[INLINE(256)]
 		public readonly MemPtr GetMemPtr()
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return _ptr.memPtr;
 		}
 
 		[INLINE(256)]
 		public readonly Ptr GetCachedPtr()
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return _ptr;
 		}
 
 		[INLINE(256)]
 		public readonly Ptr<T> GetCachedPtr<T>() where T : unmanaged
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			return _ptr;
 		}
 

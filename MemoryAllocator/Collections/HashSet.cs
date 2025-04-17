@@ -58,7 +58,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public HashSet(SafePtr<Allocator> allocator, in HashSet<T> other)
 		{
-			Debug.Assert(other.IsCreated);
+			E.ASSERT(other.IsCreated);
 
 			this = other;
 			buckets = new MemArray<int>(allocator, other.buckets);

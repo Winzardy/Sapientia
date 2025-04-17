@@ -192,24 +192,19 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Add(T obj)
+		public void Add(T value)
 		{
-			Debug.Assert(IsCreated);
-
 			var allocator = GetAllocatorPtr();
-			++_count;
-			EnsureCapacity(allocator, _count);
-
-			_arr[allocator, _count - 1] = obj;
+			Add(allocator, value);
 		}
 
 		[INLINE(256)]
-		public void Add(SafePtr<Allocator> allocator, in T obj)
+		public void Add(SafePtr<Allocator> allocator, in T value)
 		{
-			Debug.Assert(IsCreated);
 			EnsureCapacity(allocator, _count + 1);
 
-			_arr[allocator, _count] = obj;
+			E.ASSERT(IsCreated);
+			_arr[allocator, _count] = value;
 			_count++;
 		}
 
@@ -232,7 +227,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly bool Contains<TU>(SafePtr<Allocator> allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			for (int i = 0, cnt = _count; i < cnt; ++i)
 			{
 				if (obj.Equals(_arr[allocator, i]))
@@ -247,7 +242,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public bool Remove<TU>(SafePtr<Allocator> allocator, TU obj) where TU : unmanaged, IEquatable<T>
 		{
-			Debug.Assert(IsCreated);
+			E.ASSERT(IsCreated);
 			for (int i = 0, cnt = _count; i < cnt; ++i)
 			{
 				if (obj.Equals(_arr[allocator, i]))

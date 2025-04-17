@@ -149,7 +149,7 @@ namespace Sapientia.TypeIndexer
 						var genericParametersString = CodeGenExt.GetGenericParametersString(genericArguments);
 
 						var body = $"				{baseType.Name}Proxy<{child.GetFullName()}>.Create{methodInfo.Name}Delegate{genericParametersString}(),";
-						Debug.Assert(duplicates.Add(body));
+						E.ASSERT(duplicates.Add(body));
 						sourceBuilder.AppendLine(body);
 					}
 				}
@@ -182,7 +182,7 @@ namespace Sapientia.TypeIndexer
 						? $"				{{ (types[Type.GetType(\"{child.AssemblyQualifiedName}\")], {i}), {delegateIndex}}},"
 						: $"				{{ (types[typeof({child.GetFullName()})], {i}), {delegateIndex}}},";
 
-					Debug.Assert(duplicates.Add(body));
+					E.ASSERT(duplicates.Add(body));
 					sourceBuilder.AppendLine(body);
 					delegateIndex += methodsCount;
 				}
