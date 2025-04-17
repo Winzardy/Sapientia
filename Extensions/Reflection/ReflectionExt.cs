@@ -28,6 +28,13 @@ namespace Sapientia.Extensions.Reflection
 		private static readonly Dictionary<(Type baseType, bool insertNull, bool includeInterfaces, bool interfacesOnly), Type[]> TYPES = new ();
 		private static readonly Dictionary<Type[], Dictionary<string, Type>> NAMES_TO_TYPES = new ();
 
+		public static bool HasDefaultConstructor(this Type type)
+		{
+			if (type.IsArray)
+				return false;
+			return type == typeof(string) || type.IsValueType || type.GetConstructor(Type.EmptyTypes) != null;
+		}
+
 		public static string GetGenericTypeName(this Type type)
 		{
 			var name = type.Name;
