@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator.State
 			updateStatePart.worldTimeDebt += deltaTime;
 
 			var ticksToUpdate = (updateStatePart.worldTimeDebt / tickTime).FloorToInt_Positive();
-			if (ticksToUpdate <= MAX_TICKS_PER_FRAME)
+			if (ticksToUpdate > MAX_TICKS_PER_FRAME)
 				Debug.LogWarning($"{ticksToUpdate} ticks was scheduled in this frame.");
 
 			if (ticksToUpdate > 0)
