@@ -172,10 +172,10 @@ namespace Sapientia.MemoryAllocator.Data
 		public bool IsValid() => memPtr.IsValid();
 
 		[INLINE(256)]
-		public Ptr(MemPtr memPtr) : this(0, default, memPtr) {}
+		public Ptr(MemPtr memPtr) : this(0, memPtr, default) {}
 
 		[INLINE(256)]
-		public Ptr(ushort version, SafePtr<T> cachedPtr, MemPtr memPtr)
+		public Ptr(ushort version, MemPtr memPtr, SafePtr<T> cachedPtr)
 		{
 			_version = version;
 			_cachedPtr = cachedPtr;
@@ -183,7 +183,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public Ptr(SafePtr<Allocator> allocator, SafePtr<T> cachedPtr, MemPtr memPtr)
+		public Ptr(SafePtr<Allocator> allocator, MemPtr memPtr, SafePtr<T> cachedPtr)
 		{
 			_version = allocator.Value().version;
 			_cachedPtr = cachedPtr;
@@ -191,7 +191,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public Ptr(SafePtr<Allocator> allocator, SafePtr<T> cachedPtr, MemPtr memPtr, in T value)
+		public Ptr(SafePtr<Allocator> allocator, MemPtr memPtr, SafePtr<T> cachedPtr, in T value)
 		{
 			_version = allocator.Value().version;
 			_cachedPtr = cachedPtr;
@@ -204,21 +204,21 @@ namespace Sapientia.MemoryAllocator.Data
 		public static Ptr<T> Create(SafePtr<Allocator> allocator)
 		{
 			var memPtr = allocator.Value().MemAlloc<T>(out var cachedPtr);
-			return new Ptr<T>(allocator, cachedPtr, memPtr);
+			return new Ptr<T>(allocator, memPtr, cachedPtr);
 		}
 
 		[INLINE(256)]
 		public static Ptr<T> Create(SafePtr<Allocator> allocator, in T value)
 		{
 			var memPtr = allocator.Value().MemAlloc<T>(out var cachedPtr);
-			return new Ptr<T>(allocator, cachedPtr, memPtr, value);
+			return new Ptr<T>(allocator, memPtr, cachedPtr, value);
 		}
 
 		[INLINE(256)]
 		public static SafePtr<T> Create(SafePtr<Allocator> allocator, out Ptr<T> ptr)
 		{
 			var memPtr = allocator.Value().MemAlloc<T>(out var cachedPtr);
-			ptr = new Ptr<T>(allocator, cachedPtr, memPtr);
+			ptr = new Ptr<T>(allocator, memPtr, cachedPtr);
 			return cachedPtr;
 		}
 
@@ -227,13 +227,13 @@ namespace Sapientia.MemoryAllocator.Data
 		{
 			var allocator = AllocatorManager.CurrentAllocatorPtr;
 			var memPtr = allocator.Value().MemAlloc<T>(out var cachedPtr);
-			return new Ptr<T>(allocator, cachedPtr, memPtr);
+			return new Ptr<T>(allocator, memPtr, cachedPtr);
 		}
 
 		[INLINE(256)]
 		public Ptr<T1> ToCachedPtr<T1>() where T1 : unmanaged
 		{
-			return new Ptr<T1>(_version, _cachedPtr.Cast<T1>(), memPtr);
+			return new Ptr<T1>(_version, memPtr, _cachedPtr.Cast<T1>());
 		}
 
 		[INLINE(256)]

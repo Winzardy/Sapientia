@@ -30,12 +30,12 @@ namespace Sapientia.MemoryAllocator
 			for (var i = 0; i < freeBlockPools.count; i++)
 			{
 				stream.Write(freeBlockPools[i].ptr->blockSize);
-				stream.Write(freeBlockPools[i].ptr->freeBlocks.count);
+				stream.Write(freeBlockPools[i].ptr->Count);
 
-				if (freeBlockPools[i].ptr->freeBlocks.count == 0)
+				if (freeBlockPools[i].ptr->Count == 0)
 					continue;
 
-				stream.Write(freeBlockPools[i].ptr->freeBlocks.array, freeBlockPools[i].ptr->freeBlocks.count);
+				stream.Write(freeBlockPools[i].ptr->GetInnerArray(), freeBlockPools[i].ptr->Count);
 			}
 		}
 
@@ -75,10 +75,10 @@ namespace Sapientia.MemoryAllocator
 				if (blocksCount == 0)
 					continue;
 
-				ref var freeBlocks = ref freeBlockPools[i].ptr->freeBlocks;
-				freeBlocks.count = blocksCount;
+				ref var freeBlocks = ref freeBlockPools[i].Value();
+				freeBlocks.Count = blocksCount;
 
-				var arrayPtr = freeBlocks.array;
+				var arrayPtr = freeBlocks.GetInnerArray();
 				stream.Read(ref arrayPtr, blocksCount);
 			}
 

@@ -64,7 +64,7 @@ namespace Sapientia.MemoryAllocator
 
 			for (var i = 0; i < freeBlockPools.count; i++)
 			{
-				freeBlockPools[i].Value().freeBlocks.Clear();
+				freeBlockPools[i].Value().Reset();
 			}
 
 			for (var i = 0; i < zonesList.count; i++)
@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator
 
 				// Reset first block
 				zone.memory.Cast<MemoryBlock>().Value() = memoryBlock;
-				pool.freeBlocks.Add(new MemoryBlockRef(i, 0));
+				pool.AddBlock(new MemoryBlockRef(i, 0));
 			}
 
 			serviceRegistry = ServiceRegistry.Create(this.AsSafePtr());

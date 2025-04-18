@@ -1,5 +1,6 @@
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -10,27 +11,28 @@ namespace Sapientia.MemoryAllocator
 	{
 		private const int _bitsInUlong = sizeof(ulong) * 8;
 
-		public MemPtr memPtr;
+		public Ptr<ulong> ptr;
 		public int length;
-#if UNITY_5_3_OR_NEWER
-		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
-#endif
-		private SafePtr<ulong> _cachedPtr;
 
-		public bool IsCreated => memPtr.IsCreated();
+		public bool IsCreated => ptr.IsCreated();
+
+		[INLINE(256)]
+		public SafePtr<ulong> GetPtr(SafePtr<Allocator> allocator)
+		{
+			return ptr.GetPtr(allocator);
+		}
 
 		[INLINE(256)]
 		public BitArray(SafePtr<Allocator> allocator, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(length);
-			_cachedPtr = default;
-			this.memPtr = allocator.Value().MemAlloc(sizeInBytes, out var safePtr);
-			_cachedPtr = safePtr;
+
+			ptr = new Ptr<ulong>(allocator, allocator.Value().MemAlloc(sizeInBytes, out var safePtr), safePtr);
 			this.length = length;
 
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
-				allocator.Value().MemClear(this.memPtr, 0, sizeInBytes);
+				allocator.Value().MemClear(ptr.memPtr, 0, sizeInBytes);
 			}
 		}
 
@@ -38,13 +40,11 @@ namespace Sapientia.MemoryAllocator
 		public BitArray(SafePtr<Allocator> allocator, BitArray source)
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(source.length);
-			_cachedPtr = default;
-			this.memPtr = allocator.Value().MemAlloc(sizeInBytes, out var safePtr);
-			_cachedPtr = safePtr;
-			length = source.length;
-			var sourcePtr = allocator.Value().GetSafePtr(source.memPtr);
 
-			MemoryExt.MemCopy(sourcePtr, safePtr, sizeInBytes);
+			ptr = new Ptr<ulong>(allocator, allocator.Value().MemAlloc(sizeInBytes, out var safePtr), safePtr);
+			length = source.length;
+
+			MemoryExt.MemCopy(source.ptr.GetPtr(allocator).Cast<byte>(), safePtr.Cast<byte>(), sizeInBytes);
 		}
 
 		[INLINE(256)]
@@ -52,17 +52,16 @@ namespace Sapientia.MemoryAllocator
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(source.length);
 			Resize(allocator, source.length);
-			var sourcePtr = allocator.Value().GetSafePtr(in source.memPtr);
 
-			MemoryExt.MemCopy(sourcePtr, allocator.Value().GetSafePtr(in memPtr), sizeInBytes);
+			MemoryExt.MemCopy(source.ptr.GetPtr(allocator).Cast<byte>(), ptr.GetPtr(allocator).Cast<byte>(), sizeInBytes);
 		}
 
 		[INLINE(256)]
 		public bool ContainsAll(SafePtr<Allocator> allocator, BitArray other)
 		{
 			var len = Bitwise.GetMinLength(other.length, length);
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
-			var ptrOther = allocator.Value().GetSafePtr<ulong>(in other.memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
+			var ptrOther = other.ptr.GetPtr(allocator);
 			for (var index = 0; index < len; index++)
 			{
 				if ((unsafePtr[index] & ptrOther[index]) != ptrOther[index])
@@ -77,29 +76,16 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (newLength > length)
 			{
-				memPtr = allocator.Value().MemReAlloc(in memPtr, TSize<ulong>.size * Bitwise.AlignULongBits(length), out var rawPtr);
-				_cachedPtr = rawPtr;
+				var memPtr = allocator.Value().MemReAlloc(ptr.memPtr, TSize<ulong>.size * Bitwise.AlignULongBits(length), out var rawPtr);
+				ptr = new Ptr<ulong>(allocator, memPtr, rawPtr);
 
 				if (clearOptions == ClearOptions.ClearMemory)
 				{
 					var clearSize = Bitwise.AlignULongBits(newLength - length);
-					MemoryExt.MemClear((_cachedPtr + Bitwise.AlignULongBits(length)), clearSize);
+					MemoryExt.MemClear((rawPtr.Cast<ulong>() + Bitwise.AlignULongBits(length)), clearSize);
 				}
 
 				length = newLength;
-			}
-		}
-
-		[INLINE(256)]
-		public void BurstMode(SafePtr<Allocator> allocator, bool state)
-		{
-			if (state && IsCreated)
-			{
-				_cachedPtr = allocator.Value().GetSafePtr<ulong>(memPtr);
-			}
-			else
-			{
-				_cachedPtr = default;
 			}
 		}
 
@@ -111,7 +97,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void SetAllBits(SafePtr<Allocator> allocator, bool value)
 		{
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
 			var len = Bitwise.GetLength(length);
 			var setValue = value ? ulong.MaxValue : ulong.MinValue;
 			for (var index = 0; index < len; index++)
@@ -130,7 +116,17 @@ namespace Sapientia.MemoryAllocator
 		public bool IsSet(SafePtr<Allocator> allocator, int index)
 		{
 			E.RANGE(index, 0, length);
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
+			return (unsafePtr[index / _bitsInUlong] & (0x1ul << (index % _bitsInUlong))) > 0;
+		}
+
+		/// <summary>
+		/// Gets the value of the bit at the specified index.
+		/// </summary>
+		/// <returns>The value of the bit at the specified index.</returns>
+		[INLINE(256)]
+		public static bool IsSet(SafePtr<ulong> unsafePtr, int index)
+		{
 			return (unsafePtr[index / _bitsInUlong] & (0x1ul << (index % _bitsInUlong))) > 0;
 		}
 
@@ -145,7 +141,7 @@ namespace Sapientia.MemoryAllocator
 		public void Set(SafePtr<Allocator> allocator, int index, bool value)
 		{
 			E.RANGE(index, 0, length);
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
 			if (value)
 			{
 				unsafePtr[index / _bitsInUlong] |= 0x1ul << (index % _bitsInUlong);
@@ -154,6 +150,18 @@ namespace Sapientia.MemoryAllocator
 			{
 				unsafePtr[index / _bitsInUlong] &= ~(0x1ul << (index % _bitsInUlong));
 			}
+		}
+
+		[INLINE(256)]
+		public static void Add(SafePtr<ulong> unsafePtr, int index)
+		{
+			unsafePtr[index / _bitsInUlong] |= 0x1ul << (index % _bitsInUlong);
+		}
+
+		[INLINE(256)]
+		public static void Remove(SafePtr<ulong> unsafePtr, int index)
+		{
+			unsafePtr[index / _bitsInUlong] &= ~(0x1ul << (index % _bitsInUlong));
 		}
 
 		/// <summary>
@@ -167,8 +175,8 @@ namespace Sapientia.MemoryAllocator
 		{
 			Resize(allocator, bitmap.length > length ? bitmap.length : length);
 			E.RANGE(bitmap.length - 1, 0, length);
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
-			var otherPtr = allocator.Value().GetSafePtr<ulong>(in bitmap.memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
+			var otherPtr = bitmap.ptr.GetPtr(allocator);
 			var len = Bitwise.GetMinLength(bitmap.length, length);
 
 			for (var index = 0; index < len; ++index)
@@ -187,8 +195,8 @@ namespace Sapientia.MemoryAllocator
 		public void Intersect(SafePtr<Allocator> allocator, BitArray bitmap)
 		{
 			E.RANGE(bitmap.length - 1, 0, length);
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
-			var otherPtr = allocator.Value().GetSafePtr<ulong>(in bitmap.memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
+			var otherPtr = bitmap.ptr.GetPtr(allocator);
 			var len = Bitwise.GetMinLength(bitmap.length, length);
 			for (var index = 0; index < len; ++index)
 			{
@@ -199,8 +207,8 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Remove(SafePtr<Allocator> allocator, BitArray bitmap)
 		{
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
-			var otherPtr = allocator.Value().GetSafePtr<ulong>(in bitmap.memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
+			var otherPtr = bitmap.ptr.GetPtr(allocator);
 			var len = Bitwise.GetMinLength(bitmap.length, length);
 			for (var index = 0; index < len; ++index)
 			{
@@ -214,7 +222,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Invert(SafePtr<Allocator> allocator)
 		{
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
 			var len = Bitwise.GetLength(length);
 			for (var index = 0; index < len; ++index)
 			{
@@ -238,7 +246,7 @@ namespace Sapientia.MemoryAllocator
 				return;
 			}
 
-			var unsafePtr = allocator.Value().GetSafePtr<ulong>(in memPtr);
+			var unsafePtr = ptr.GetPtr(allocator);
 			var startBucket = start / _bitsInUlong;
 			var startOffset = start % _bitsInUlong;
 			var endBucket = end / _bitsInUlong;
@@ -277,7 +285,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Dispose(SafePtr<Allocator> allocator)
 		{
-			allocator.Value().MemFree(memPtr);
+			allocator.Value().MemFree(ptr.memPtr);
 			this = default;
 		}
 

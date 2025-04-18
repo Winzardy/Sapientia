@@ -1108,19 +1108,19 @@ namespace Sapientia.MemoryAllocator
 			_data = data;
 		}
 
-		/*public bool[] Bits
+		public bool[] Bits
 		{
 			get
 			{
-				var allocator = Context.world.state->allocator;
-				var array = new bool[Data.Length];
-				for (var i = 0; i < Data.Length; ++i)
+				var allocator = AllocatorManager.CurrentAllocatorPtr;
+				var array = new bool[_data.length];
+				for (var i = 0; i < _data.length; ++i)
 				{
-					array[i] = Data.IsSet(in allocator, i);
+					array[i] = _data.IsSet(allocator, i);
 				}
 
 				return array;
 			}
-		}*/
+		}
 	}
 }

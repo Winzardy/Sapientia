@@ -74,7 +74,7 @@ namespace Sapientia.MemoryAllocator
 			var memoryBlock = MemoryBlock.CreateFirstBlock(blockId, zoneSize);
 			var zone = new MemoryZone(memoryBlock, zoneSize);
 
-			freeBlockPools[freeBlockPools.count - 1].ptr->freeBlocks.Add(new MemoryBlockRef(zonesList.count, 0));
+			freeBlockPools[freeBlockPools.count - 1].ptr->AddBlock(new MemoryBlockRef(zonesList.count, 0));
 			zonesList.Add(zone);
 
 #if UNITY_5_3_OR_NEWER

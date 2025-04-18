@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
+using UnityEngine;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -13,26 +14,104 @@ namespace Sapientia.MemoryAllocator
 		public struct MemoryBlockPtrCollection : IDisposable
 		{
 			public readonly int blockSize;
-			public UnsafeList<MemoryBlockRef> freeBlocks;
+			private UnsafeList<MemoryBlockRef> _freeBlocks;
+
+#if DEBUG
+			public int allocatedCount;
+			public int maxAllocatedCount;
+#endif
 
 			public int Count
 			{
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => freeBlocks.count;
+				get => _freeBlocks.count;
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				set => _freeBlocks.count = value;
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public MemoryBlockPtrCollection(int blockSize, int capacity = 8)
 			{
+				this = default;
 				this.blockSize = blockSize;
-				this.freeBlocks = new UnsafeList<MemoryBlockRef>(capacity);
+				this._freeBlocks = new UnsafeList<MemoryBlockRef>(capacity);
 			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public SafePtr<MemoryBlockRef> GetInnerArray()
+			{
+				return _freeBlocks.array;
+			}
+
+			public ref MemoryBlockRef this[int index]
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => ref _freeBlocks[index].Value();
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void AddBlock(in MemoryBlockRef blockRef)
+			{
+#if DEBUG
+				DecrementAllocatedCount();
+#endif
+				_freeBlocks.Add(blockRef);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public MemoryBlockRef RemoveAtSwapBackBlock(int index)
+			{
+#if DEBUG
+				IncrementAllocatedCount();
+#endif
+				return _freeBlocks.RemoveAtSwapBack(index);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public MemoryBlockRef RemoveLastBlock()
+			{
+#if DEBUG
+				IncrementAllocatedCount();
+#endif
+				return _freeBlocks.RemoveLast();
+			}
+
+#if DEBUG
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void IncrementAllocatedCount()
+			{
+				allocatedCount++;
+				if (allocatedCount > maxAllocatedCount)
+				{
+					maxAllocatedCount = allocatedCount;
+					if (maxAllocatedCount % 1000 == 0)
+					{
+						Debug.LogWarning($"Allocated {maxAllocatedCount} blocks of size {blockSize}.");
+					}
+				}
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void DecrementAllocatedCount()
+			{
+				allocatedCount--;
+			}
+#endif
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Reset()
+			{
+				_freeBlocks.Clear();
+#if DEBUG
+				allocatedCount = 0;
+				maxAllocatedCount = 0;
+#endif
+			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Dispose()
 			{
-				freeBlocks.Dispose();
+				_freeBlocks.Dispose();
 				this = default;
 			}
 		}
@@ -63,10 +142,10 @@ namespace Sapientia.MemoryAllocator
 			// Создаём свободный блок из остатка памяти
 			blockPtr.ptr->blockSize = blockSize;
 			blockPtr.ptr->prevBlockOffset = prevBlockOffset;
-			blockPtr.ptr->id = new BlockId(sizeId, sizeBlocksCollection.ptr->freeBlocks.count);
+			blockPtr.ptr->id = new BlockId(sizeId, sizeBlocksCollection.ptr->Count);
 
 			// Добавляем ссылку на новый блок в список свободных блоков
-			sizeBlocksCollection.ptr->freeBlocks.Add(blockRef);
+			sizeBlocksCollection.ptr->AddBlock(blockRef);
 
 			// Если существует следующий блок, то обновляем его ссылку на предыдущий блок
 			var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
@@ -83,10 +162,10 @@ namespace Sapientia.MemoryAllocator
 
 			E.ASSERT(blockPtr.ptr->blockSize >= freeBlocksCollection.ptr->blockSize);
 
-			ref var freeBlocks = ref freeBlocksCollection.ptr->freeBlocks;
-			blockPtr.ptr->id.freeId = freeBlocks.count;
+			ref var freeBlocks = ref freeBlocksCollection.Value();
+			blockPtr.ptr->id.freeId = freeBlocks.Count;
 
-			freeBlocks.Add(blockRef);
+			freeBlocks.AddBlock(blockRef);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -95,8 +174,7 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(sizeId >= 0 && sizeId < freeBlockPools.count);
 			E.ASSERT(freeBlockPools[sizeId].ptr->Count > 0);
 
-			ref var freeBlocks = ref freeBlockPools[sizeId].ptr->freeBlocks;
-			var blockRef = freeBlocks.RemoveLast();
+			var blockRef = freeBlockPools[sizeId].ptr->RemoveLastBlock();
 
 			zone = zonesList[blockRef.memoryZoneId];
 			blockPtr = (zone.ptr->memory + blockRef.memoryZoneOffset).Cast<MemoryBlock>();
@@ -105,6 +183,9 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(blockPtr.ptr < zone.ptr->zoneEnd);
 
 			blockPtr.ptr->id.freeId = -1;
+#if DEBUG
+			freeBlockPools[sizeId].ptr->DecrementAllocatedCount();
+#endif
 			return blockRef;
 		}
 
@@ -114,16 +195,16 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(blockId.sizeId >= 0 && blockId.sizeId < freeBlockPools.count);
 			E.ASSERT(blockId.IsFree);
 
-			ref var freeBlocks = ref freeBlockPools[blockId.sizeId].ptr->freeBlocks;
-			var blockRef = freeBlocks.RemoveAtSwapBack(blockId.freeId);
+			ref var pool = ref freeBlockPools[blockId.sizeId].Value();
+			var blockRef = pool.RemoveAtSwapBackBlock(blockId.freeId);
 
 			// Если ссылка на блок удалена из середины, то меняем freeId блока этой ссылки
-			if (freeBlocks.count > blockId.freeId)
+			if (pool.Count > blockId.freeId)
 			{
-				var swappedBlockRef = freeBlocks[blockId.freeId];
-				var zone = zonesList[swappedBlockRef.ptr->memoryZoneId];
+				ref var swappedBlockRef = ref pool[blockId.freeId];
+				var zone = zonesList[swappedBlockRef.memoryZoneId];
 
-				var swappedBlockPtr = (zone.ptr->memory + swappedBlockRef.ptr->memoryZoneOffset).Cast<MemoryBlock>();
+				var swappedBlockPtr = (zone.ptr->memory + swappedBlockRef.memoryZoneOffset).Cast<MemoryBlock>();
 				swappedBlockPtr.ptr->id.freeId = blockId.freeId;
 			}
 
@@ -177,6 +258,9 @@ namespace Sapientia.MemoryAllocator
 				blockPtr.ptr->id.sizeId = requiredBlockSizeId;
 			}
 
+#if DEBUG
+			freeBlockPools[blockPtr.ptr->id.sizeId].ptr->IncrementAllocatedCount();
+#endif
 			return blockRef;
 		}
 
