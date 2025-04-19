@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
-using UnityEngine;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -81,14 +80,16 @@ namespace Sapientia.MemoryAllocator
 			public void IncrementAllocatedCount()
 			{
 				allocatedCount++;
+#if UNITY_5_3_OR_NEWER
 				if (allocatedCount > maxAllocatedCount)
 				{
 					maxAllocatedCount = allocatedCount;
 					if (maxAllocatedCount % 1000 == 0)
 					{
-						Debug.LogWarning($"Allocated {maxAllocatedCount} blocks of size {blockSize}.");
+						UnityEngine.Debug.LogWarning($"Allocated {maxAllocatedCount} blocks of size {blockSize}.");
 					}
 				}
+#endif
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
