@@ -61,6 +61,8 @@ namespace Sapientia.Reflection
 		public static implicit operator MemberReflectionReference<T>(MemberReferencePathStep[] steps) => new() {steps = steps};
 
 		public override string ToString() => string.Join(".", steps ?? Array.Empty<MemberReferencePathStep>());
+
+		public string ToString(bool type) => string.Join(".", steps ?? Array.Empty<MemberReferencePathStep>()) + (type ? $" ({typeof(T).Name})" : "");
 	}
 
 	[Serializable]
