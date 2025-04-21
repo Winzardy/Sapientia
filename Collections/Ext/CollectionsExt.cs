@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sapientia.Extensions;
 #if UNITY_5_3_OR_NEWER
 using Random = UnityEngine.Random;
 #endif
@@ -74,6 +75,22 @@ namespace Sapientia.Collections
 		{
 			var length = list.Count;
 			for (var i = 0; i < length; i++)
+			{
+#if UNITY_5_3_OR_NEWER
+				var indexToSwap = Random.Range(i, length);
+#else
+				var indexToSwap = System.Random.Shared.Next(i, length);
+#endif
+				(list[i], list[indexToSwap]) = (list[indexToSwap], list[i]);
+			}
+		}
+
+		public static void Shuffle<T>(this SimpleList<T> list, int count)
+		{
+			var length = list.Count;
+			count = count.Min(length);
+
+			for (var i = 0; i < count; i++)
 			{
 #if UNITY_5_3_OR_NEWER
 				var indexToSwap = Random.Range(i, length);
