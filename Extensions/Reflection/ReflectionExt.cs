@@ -498,5 +498,7 @@ namespace Sapientia.Extensions.Reflection
 
 			return allMethods;
 		}
+
+		public static bool IsPolymorphic(this Type type) => type.IsInterface || type.IsAbstract;
 	}
 }

@@ -46,22 +46,25 @@ namespace Sapientia.Reflection
 			_fieldToInfo.Clear();
 		}
 
-		public static object GetReflectionValue(this object obj, string name)
+		public static object GetValueByReflection(this object obj, string name)
 			=> GetFieldInfo(obj.GetType(), name).GetValue(obj);
 
 		public static object GetValue(this Type type, string name, object obj)
 			=> GetFieldInfo(type, name).GetValue(obj);
 
-		public static object GetReflectionValueSafe(this object obj, string name)
+		public static object GetValueByReflectionSafe(this object obj, string name)
 			=> GetFieldInfo(obj.GetType(), name)?.GetValue(obj);
 
 		public static object GetValueSafe(this Type type, string name, object obj)
 			=> GetFieldInfo(type, name)?.GetValue(obj);
 
-		public static void SetValue(this Type type, string name, object obj, object value)
+		public static void SetValueByReflection(this object obj, string name, object value)
+			=> GetFieldInfo(obj.GetType(), name).SetValue(obj, value);
+
+		public static void SetValueByReflection(this Type type, string name, object obj, object value)
 			=> GetFieldInfo(type, name).SetValue(obj, value);
 
-		public static void SetValueSafe(this Type type, string name, object obj, object value)
+		public static void SetValueByReflectionSafe(this Type type, string name, object obj, object value)
 			=> GetFieldInfo(type, name)?.SetValue(obj, value);
 
 		private static FieldInfo GetFieldInfo(this Type type, string name)

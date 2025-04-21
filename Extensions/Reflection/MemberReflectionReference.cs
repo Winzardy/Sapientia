@@ -35,7 +35,7 @@ namespace Sapientia.Reflection
 
 				if (step.IsArray) //In Array
 				{
-					obj = obj.GetReflectionValueSafe(step.name);
+					obj = obj.GetValueByReflectionSafe(step.name);
 					if (obj is IList list)
 						obj = list[step.ArrayIndex];
 					else
@@ -43,7 +43,7 @@ namespace Sapientia.Reflection
 				}
 				else
 				{
-					obj = obj.GetReflectionValueSafe(step.name);
+					obj = obj.GetValueByReflectionSafe(step.name);
 				}
 			}
 
