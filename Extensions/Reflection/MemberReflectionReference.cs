@@ -33,11 +33,11 @@ namespace Sapientia.Reflection
 				if (obj == null)
 					return default;
 
-				if (step.IsArray) //In Array
+				if (step.IsArrayElement) //In Array
 				{
 					obj = obj.GetValueByReflectionSafe(step.name);
 					if (obj is IList list)
-						obj = list[step.ArrayIndex];
+						obj = list[step.ArrayElementIndex];
 					else
 						return default;
 				}
@@ -75,8 +75,8 @@ namespace Sapientia.Reflection
 		/// </summary>
 		public int index;
 
-		public bool IsArray => index > 0;
-		public int ArrayIndex => index - 1;
+		public bool IsArrayElement => index > 0;
+		public int ArrayElementIndex => index - 1;
 
 		public MemberReferencePathStep(string name, int index = -1)
 		{
@@ -87,7 +87,7 @@ namespace Sapientia.Reflection
 		public static implicit operator MemberReferencePathStep(string name) => new(name);
 		public static implicit operator MemberReferencePathStep((string name, int index) tuple) => new(tuple.name, tuple.index);
 
-		public override string ToString() => IsArray ? $"{name}[{ArrayIndex}]" : name;
+		public override string ToString() => IsArrayElement ? $"{name}[{ArrayElementIndex}]" : name;
 	}
 
 	public interface IMemberReflectionReference
