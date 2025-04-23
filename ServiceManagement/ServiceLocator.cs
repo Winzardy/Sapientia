@@ -32,7 +32,7 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService Get<T>() where T: TService, new()
+		public static TService GetOrCreate<T>() where T: TService, new()
 		{
 			if (Instance == null)
 				return Create<T>();
@@ -117,15 +117,15 @@ namespace Sapientia.ServiceManagement
 		#region Get
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService Get<TService>() where TService : new()
+		public static TService GetOrCreate<TService>() where TService : new()
 		{
-			return ServiceLocator<TService>.Get<TService>();
+			return ServiceLocator<TService>.GetOrCreate<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService Get<TService, TConcrete>() where TConcrete : TService, new()
+		public static TService GetOrCreate<TService, TConcrete>() where TConcrete : TService, new()
 		{
-			return ServiceLocator<TService>.Get<TConcrete>();
+			return ServiceLocator<TService>.GetOrCreate<TConcrete>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -138,9 +138,16 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TService Get<TService>()
+		{
+			Get<TService>(out var service);
+			return service;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void GetOrCreate<TService>(out TService service) where TService : new()
 		{
-			service = ServiceLocator<TService>.Get<TService>();
+			service = ServiceLocator<TService>.GetOrCreate<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
