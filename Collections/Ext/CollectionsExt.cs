@@ -73,29 +73,23 @@ namespace Sapientia.Collections
 
 		public static void Shuffle<T>(this SimpleList<T> list)
 		{
-			var length = list.Count;
-			for (var i = 0; i < length; i++)
-			{
-#if UNITY_5_3_OR_NEWER
-				var indexToSwap = Random.Range(i, length);
-#else
-				var indexToSwap = System.Random.Shared.Next(i, length);
-#endif
-				(list[i], list[indexToSwap]) = (list[indexToSwap], list[i]);
-			}
+			ShuffleInternal(list, list.Count);
 		}
 
 		public static void Shuffle<T>(this SimpleList<T> list, int count)
 		{
-			var length = list.Count;
-			count = count.Min(length);
+			count = count.Min(list.Count);
+			ShuffleInternal(list, count);
+		}
 
+		private static void ShuffleInternal<T>(this SimpleList<T> list, int count)
+		{
 			for (var i = 0; i < count; i++)
 			{
 #if UNITY_5_3_OR_NEWER
-				var indexToSwap = Random.Range(i, length);
+				var indexToSwap = Random.Range(i, list.Count);
 #else
-				var indexToSwap = System.Random.Shared.Next(i, length);
+				var indexToSwap = System.Random.Shared.Next(i, list.Count);
 #endif
 				(list[i], list[indexToSwap]) = (list[indexToSwap], list[i]);
 			}
