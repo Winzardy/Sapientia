@@ -14,7 +14,7 @@ namespace Sapientia.MemoryAllocator.State
 	/// <summary>
 	/// Если настройки есть, то они будут доступны через `allocator.GetService<TGlobalSettings>()`
 	/// </summary>
-	public interface IGlobalSettings : IIndexedType
+	public interface IConfigurationEntry : IIndexedType
 	{
 	}
 
