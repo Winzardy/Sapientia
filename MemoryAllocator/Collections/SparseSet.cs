@@ -203,7 +203,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T EnsureGet<T>(int id) where T: unmanaged
 		{
-			ExpandSparseIfNeeded(id);
+			ExpandSparseIfNeeded(id + 1);
 			ref var denseId = ref _sparse[id];
 			if (denseId >= _count || _dense[denseId] != id)
 			{
