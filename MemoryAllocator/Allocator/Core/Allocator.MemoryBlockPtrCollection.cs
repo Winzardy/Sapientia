@@ -348,6 +348,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				E.ASSERT(prevBlockPtr.ptr >= zone.ptr->memory.ptr);
 
+				E.ASSERT(prevBlockPtr.ptr->blockSize == -blockPtr.ptr->prevBlockOffset);
 				prevBlockPtr.ptr->blockSize += blockPtr.ptr->blockSize;
 				E.ASSERT((SafePtr)blockPtr + blockPtr.ptr->blockSize == (SafePtr)prevBlockPtr + prevBlockPtr.ptr->blockSize);
 
@@ -357,6 +358,8 @@ namespace Sapientia.MemoryAllocator
 				{
 					prevBlockPtr.ptr->blockSize += nextBlockPtr->blockSize;
 					RemoveFreeBlock(ref nextBlockPtr->id);
+
+					nextBlockPtr = (MemoryBlock*)((byte*)prevBlockPtr.ptr + prevBlockPtr.ptr->blockSize);
 				}
 
 				// Если размер изменился, то перемещаем ссылку на блок в другую коллекцию
@@ -368,6 +371,8 @@ namespace Sapientia.MemoryAllocator
 
 					AddFreeBlock(prevBlockPtr, prevBlockRef);
 				}
+
+				nextBlockPtr->prevBlockOffset = -prevBlockPtr.ptr->blockSize;
 			}
 			else
 			{
@@ -382,6 +387,9 @@ namespace Sapientia.MemoryAllocator
 					blockPtr.ptr->id.sizeId = GetBlockSizeId(blockPtr.ptr->blockSize);
 
 					RemoveFreeBlock(ref nextBlockPtr->id);
+
+					nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
+					nextBlockPtr->prevBlockOffset = -blockPtr.ptr->blockSize;
 				}
 
 				// Восстанавливаем блок как свободный
