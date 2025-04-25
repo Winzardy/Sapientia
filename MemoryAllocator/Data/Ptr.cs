@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Sapientia.TypeIndexer;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator.Data
@@ -292,11 +293,19 @@ namespace Sapientia.MemoryAllocator.Data
 			return ref _cachedPtr.Value();
 		}
 
+		[INLINE(256)]
+		public ProxyPtr<TProxy> ToProxy<TProxy>() where TProxy : unmanaged, IProxy
+		{
+			return new ProxyPtr<TProxy>(this);
+		}
+
+		[INLINE(256)]
 		public Ptr<T> CopyTo(SafePtr<Allocator> srsAllocator, SafePtr<Allocator> dstAllocator)
 		{
 			return new Ptr<T>(memPtr.CopyTo(srsAllocator, dstAllocator));
 		}
 
+		[INLINE(256)]
 		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			memPtr.Dispose(allocator);
@@ -345,14 +354,25 @@ namespace Sapientia.MemoryAllocator.Data
 			return a.memPtr != b.memPtr;
 		}
 
+		[INLINE(256)]
 		public bool Equals(Ptr<T> other)
 		{
 			return memPtr == other.memPtr;
 		}
 
+		[INLINE(256)]
 		public override int GetHashCode()
 		{
 			return memPtr.GetHashCode();
+		}
+	}
+
+	public static class PtrExt
+	{
+		[INLINE(256)]
+		public static Ptr<T> CreatePtr<T>(this SafePtr<Allocator> allocator) where T : unmanaged
+		{
+			return Ptr<T>.Create(allocator);
 		}
 	}
 }

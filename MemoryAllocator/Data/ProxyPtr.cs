@@ -36,6 +36,12 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ProxyPtr<T> Create<TInstance>(in Ptr<TInstance> value) where TInstance: unmanaged
+		{
+			return new ProxyPtr<T>(value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProxyPtr<T> Create<TInstance>(in TInstance value) where TInstance: unmanaged
 		{
 			return new ProxyPtr<T>(IndexedPtr.Create(value));
