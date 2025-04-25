@@ -4,7 +4,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct Allocator
+	public unsafe partial class Allocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int Align(int size)
@@ -51,7 +51,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (size == 0)
 			{
-				valuePtr = this.AsSafePtr();
+				valuePtr = default;
 				return MemPtr.CreateZeroSized(allocatorId);
 			}
 
@@ -105,7 +105,7 @@ namespace Sapientia.MemoryAllocator
 			return true;
 		}
 
-		public readonly void MemSwap(in MemPtr a, int aOffset, in MemPtr b, int bOffset, int length)
+		public void MemSwap(in MemPtr a, int aOffset, in MemPtr b, int bOffset, int length)
 		{
 			if (length == 0)
 				return;
@@ -116,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemSwap(bRawPtr, aRawPtr, length);
 		}
 
-		public readonly void MemCopy(in MemPtr source, int sourceOffset, in MemPtr dest, int destOffset, int length)
+		public void MemCopy(in MemPtr source, int sourceOffset, in MemPtr dest, int destOffset, int length)
 		{
 			if (length == 0)
 				return;
@@ -127,7 +127,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemCopy(sourcePtr, destPtr, length);
 		}
 
-		public readonly void MemCopy<T>(in MemPtr source, int sourceIndex, in MemPtr dest, int destIndex, int length) where T : unmanaged
+		public void MemCopy<T>(in MemPtr source, int sourceIndex, in MemPtr dest, int destIndex, int length) where T : unmanaged
 		{
 			if (length == 0)
 				return;
@@ -138,7 +138,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemCopy<T>(sourcePtr, destPtr, length);
 		}
 
-		public readonly void MemMove(in MemPtr source, int sourceOffset, in MemPtr dest, int destOffset, int length)
+		public void MemMove(in MemPtr source, int sourceOffset, in MemPtr dest, int destOffset, int length)
 		{
 			if (length == 0)
 				return;
@@ -149,7 +149,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemMove(sourcePtr, destPtr, length);
 		}
 
-		public readonly void MemMove<T>(in MemPtr source, int sourceIndex, in MemPtr dest, int destIndex, int length) where T : unmanaged
+		public void MemMove<T>(in MemPtr source, int sourceIndex, in MemPtr dest, int destIndex, int length) where T : unmanaged
 		{
 			if (length == 0)
 				return;
@@ -160,7 +160,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemMove<T>(sourcePtr, destPtr, length);
 		}
 
-		public readonly void MemFill<T>(in MemPtr dest, in T value, int index, int length) where T : unmanaged
+		public void MemFill<T>(in MemPtr dest, in T value, int index, int length) where T : unmanaged
 		{
 			if (length == 0)
 				return;
@@ -170,7 +170,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemFill<T>(value, destPtr, length);
 		}
 
-		public readonly void MemClear(in MemPtr dest, int index, int size)
+		public void MemClear(in MemPtr dest, int index, int size)
 		{
 			if (size == 0)
 				return;

@@ -13,7 +13,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = _arr.GetAllocatorPtr();
+				var allocator = _arr.GetAllocator();
 				var arr = new T[_arr.Length];
 				for (var i = 0; i < _arr.Length; ++i)
 				{
@@ -42,7 +42,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = _arr.GetAllocatorPtr();
+				var allocator = _arr.GetAllocator();
 				var arr = new T[_arr.Count];
 				for (int i = 0; i < _arr.Count; ++i)
 				{
@@ -99,7 +99,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = _arr.GetAllocatorPtr();
+				var allocator = _arr.GetAllocator();
 				var arr = new T[_arr.Count];
 				var i = 0;
 				var e = _arr.GetEnumerator(allocator);

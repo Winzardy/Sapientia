@@ -5,12 +5,12 @@ using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct Allocator
+	public unsafe partial class Allocator
 	{
-		public readonly void Serialize(ref StreamBufferWriter stream)
+		public void Serialize(ref StreamBufferWriter stream)
 		{
 			stream.Write(allocatorId);
-			stream.Write(serviceRegistry);
+			stream.Write(dataAccessor);
 			stream.Write(version);
 
 			// Записываем память
@@ -39,31 +39,31 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		public static SafePtr<Allocator> Deserialize(ref StreamBufferReader stream)
+		public static Allocator Deserialize(ref StreamBufferReader stream)
 		{
-			var allocator = MemoryExt.MemAlloc<Allocator>();
+			var allocator = new Allocator();
 
-			stream.Read(ref allocator.Value().allocatorId);
-			stream.Read(ref allocator.Value().serviceRegistry);
-			stream.Read(ref allocator.Value().version);
+			stream.Read(ref allocator.allocatorId);
+			stream.Read(ref allocator.dataAccessor);
+			stream.Read(ref allocator.version);
 
-			allocator.Value().version++;
+			allocator.version++;
 
 			var zonesCount = stream.Read<int>();
-			allocator.Value().zonesList = new UnsafeList<MemoryZone>(zonesCount.Max(8));
+			allocator.zonesList = new UnsafeList<MemoryZone>(zonesCount.Max(8));
 			for (var i = 0; i < zonesCount; ++i)
 			{
 				var zoneSize = stream.Read<int>();
 				E.ASSERT(zoneSize > 0);
 
-				allocator.Value().zonesList.Add(new MemoryZone(default, zoneSize));
-				var zoneMemoryPtr = allocator.Value().zonesList[i].ptr->memory;
+				allocator.zonesList.Add(new MemoryZone(default, zoneSize));
+				var zoneMemoryPtr = allocator.zonesList[i].ptr->memory;
 
 				stream.Read(ref zoneMemoryPtr, zoneSize);
 			}
 
 			var blockCollectionsCount = stream.Read<int>();
-			ref var freeBlockPools = ref allocator.Value().freeBlockPools;
+			ref var freeBlockPools = ref allocator.freeBlockPools;
 			freeBlockPools = new UnsafeList<MemoryBlockPtrCollection>(blockCollectionsCount);
 
 			for (var i = 0; i < blockCollectionsCount; i++)

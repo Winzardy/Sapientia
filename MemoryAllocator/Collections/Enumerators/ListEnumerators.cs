@@ -10,10 +10,10 @@ namespace Sapientia.MemoryAllocator
 	{
 		public int Count { get; }
 		public SafePtr<T> GetValuePtr();
-		public SafePtr<T> GetValuePtr(SafePtr<Allocator> allocator);
+		public SafePtr<T> GetValuePtr(Allocator allocator);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator(SafePtr<Allocator> allocator)
+		public ListEnumerator<T> GetEnumerator(Allocator allocator)
 		{
 			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
 		}
@@ -25,7 +25,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(SafePtr<Allocator> allocator)
+		public ListPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
 		{
 			return new ListPtrEnumerator<T>(GetValuePtr(allocator), 0, Count);
 		}
@@ -37,7 +37,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
 		{
 			return new (new (GetValuePtr(allocator), Count));
 		}
@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
 		{
 			return new (new (GetValuePtr(allocator), 0, Count));
 		}

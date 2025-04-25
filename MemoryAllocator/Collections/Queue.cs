@@ -41,14 +41,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Queue(SafePtr<Allocator> allocator, int capacity)
+		public Queue(Allocator allocator, int capacity)
 		{
 			this = default;
 			_array = new MemArray<T>(allocator, capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(SafePtr<Allocator> allocator)
+		public void Dispose(Allocator allocator)
 		{
 			_array.Dispose(allocator);
 			this = default;
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr(SafePtr<Allocator> allocator)
+		public SafePtr<T> GetValuePtr(Allocator allocator)
 		{
 			return _array.GetValuePtr(allocator);
 		}
@@ -75,7 +75,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Enqueue(SafePtr<Allocator> allocator, T item)
+		public void Enqueue(Allocator allocator, T item)
 		{
 			if (_count == _array.Length)
 			{
@@ -94,7 +94,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Dequeue(SafePtr<Allocator> allocator)
+		public T Dequeue(Allocator allocator)
 		{
 			var removed = _array[allocator, _headIndex];
 			_array[allocator, _headIndex] = default;
@@ -104,12 +104,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Peek(SafePtr<Allocator> allocator)
+		public T Peek(Allocator allocator)
 		{
 			return _array[allocator, _headIndex];
 		}
 
-		public bool Contains<TU>(SafePtr<Allocator> allocator, TU item) where TU : System.IEquatable<T>
+		public bool Contains<TU>(Allocator allocator, TU item) where TU : System.IEquatable<T>
 		{
 			var index = _headIndex;
 			var count = _count;
@@ -128,13 +128,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private T GetElement(SafePtr<Allocator> allocator, int i)
+		private T GetElement(Allocator allocator, int i)
 		{
 			return _array[allocator, (_headIndex + i) % _array.Length];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void SetCapacity(SafePtr<Allocator> allocator, int capacity)
+		private void SetCapacity(Allocator allocator, int capacity)
 		{
 			_array.Resize(allocator, capacity);
 			_headIndex = 0;
@@ -142,7 +142,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(SafePtr<Allocator> allocator)
+		public CircularBufferEnumerator<T> GetEnumerator(Allocator allocator)
 		{
 			return new CircularBufferEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
 		}
@@ -154,7 +154,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(SafePtr<Allocator> allocator)
+		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
 		{
 			return new CircularBufferPtrEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
 		}
@@ -166,7 +166,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(Allocator allocator)
 		{
 			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
 		}
@@ -178,7 +178,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
+		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
 		{
 			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
 		}

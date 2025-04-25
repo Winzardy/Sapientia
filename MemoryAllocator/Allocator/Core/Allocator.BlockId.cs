@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct Allocator
+	public unsafe partial class Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
 		public struct BlockId

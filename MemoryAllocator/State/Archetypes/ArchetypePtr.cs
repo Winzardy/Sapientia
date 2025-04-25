@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		private Ptr<Archetype> _archetypePtr;
 
-		public ref Archetype GetArchetype(SafePtr<Allocator> allocator)
+		public ref Archetype GetArchetype(Allocator allocator)
 		{
 			return ref _archetypePtr.GetValue(allocator);
 		}
@@ -17,7 +17,7 @@ namespace Sapientia.MemoryAllocator.State
 			return ref _archetypePtr.GetValue();
 		}
 
-		public ArchetypeContext<T> GetArchetypeContext(SafePtr<Allocator> allocator)
+		public ArchetypeContext<T> GetArchetypeContext(Allocator allocator)
 		{
 			return new ArchetypeContext<T>(allocator, _archetypePtr.GetPtr(allocator));
 		}
