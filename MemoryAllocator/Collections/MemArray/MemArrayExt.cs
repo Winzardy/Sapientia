@@ -11,31 +11,31 @@ namespace Sapientia.MemoryAllocator
 	public static unsafe class MemArrayExt
 	{
 		[INLINE(256)]
-		public static void Copy<T>(SafePtr<Allocator> allocator, MemArray<T> fromArr, ref MemArray<T> arr) where T : unmanaged
+		public static void Copy<T>(Allocator allocator, MemArray<T> fromArr, ref MemArray<T> arr) where T : unmanaged
 		{
 			Copy(allocator, fromArr.As<MemArray<T>, MemArray>(), 0, ref arr.As<MemArray<T>, MemArray>(), 0, fromArr.Length);
 		}
 
 		[INLINE(256)]
-		public static void Copy(SafePtr<Allocator> allocator, in MemArray fromArr, ref MemArray arr)
+		public static void Copy(Allocator allocator, in MemArray fromArr, ref MemArray arr)
 		{
 			Copy(allocator, fromArr, 0, ref arr, 0, fromArr.Length);
 		}
 
 		[INLINE(256)]
-		public static void CopyExact<T>(SafePtr<Allocator> allocator, in MemArray<T> fromArr, ref MemArray<T> arr) where T : unmanaged
+		public static void CopyExact<T>(Allocator allocator, in MemArray<T> fromArr, ref MemArray<T> arr) where T : unmanaged
 		{
 			Copy(allocator, fromArr, 0, ref arr, 0, fromArr.Length, true);
 		}
 
 		[INLINE(256)]
-		public static void Copy<T>(SafePtr<Allocator> allocator, MemArray<T> fromArr, int sourceIndex, ref MemArray<T> arr, int destIndex, int length, bool copyExact = false) where T : unmanaged
+		public static void Copy<T>(Allocator allocator, MemArray<T> fromArr, int sourceIndex, ref MemArray<T> arr, int destIndex, int length, bool copyExact = false) where T : unmanaged
 		{
 			Copy(allocator, fromArr.As<MemArray<T>, MemArray>(), sourceIndex, ref arr.As<MemArray<T>, MemArray>(), destIndex, length, copyExact);
 		}
 
 		[INLINE(256)]
-		public static void Copy(SafePtr<Allocator> allocator, in MemArray fromArr, int sourceIndex, ref MemArray arr, int destIndex, int length, bool copyExact = false)
+		public static void Copy(Allocator allocator, in MemArray fromArr, int sourceIndex, ref MemArray arr, int destIndex, int length, bool copyExact = false)
 		{
 			switch (fromArr.IsCreated)
 			{
@@ -55,29 +55,29 @@ namespace Sapientia.MemoryAllocator
 				arr = new MemArray(allocator, size, fromArr.Length);
 			}
 
-			allocator.Value().MemMove(arr.ptr.memPtr, destIndex * size, fromArr.ptr.memPtr, sourceIndex * size, length * size);
+			allocator.MemMove(arr.ptr.memPtr, destIndex * size, fromArr.ptr.memPtr, sourceIndex * size, length * size);
 		}
 
 		[INLINE(256)]
-		public static void CopyNoChecks<T>(SafePtr<Allocator> allocator, MemArray<T> fromArr, int sourceIndex, ref MemArray<T> arr, int destIndex, int length) where T : unmanaged
+		public static void CopyNoChecks<T>(Allocator allocator, MemArray<T> fromArr, int sourceIndex, ref MemArray<T> arr, int destIndex, int length) where T : unmanaged
 		{
 			CopyNoChecks(allocator, fromArr.As<MemArray<T>, MemArray>(), sourceIndex, ref arr.As<MemArray<T>, MemArray>(), destIndex, length);
 		}
 
 		[INLINE(256)]
-		public static void CopyNoChecks(SafePtr<Allocator> allocator, in MemArray fromArr, int sourceIndex, ref MemArray destArr, int destIndex, int length)
+		public static void CopyNoChecks(Allocator allocator, in MemArray fromArr, int sourceIndex, ref MemArray destArr, int destIndex, int length)
 		{
 			E.ASSERT(fromArr.ElementSize == destArr.ElementSize);
 
 			var size = fromArr.ElementSize;
-			allocator.Value().MemCopy(fromArr.ptr.memPtr, sourceIndex * size, destArr.ptr.memPtr, destIndex * size, length * size);
+			allocator.MemCopy(fromArr.ptr.memPtr, sourceIndex * size, destArr.ptr.memPtr, destIndex * size, length * size);
 		}
 
 		[INLINE(256)]
-		public static void SwapElements(SafePtr<Allocator> allocator, in MemArray aArr, int aIndex, in MemArray bArr, int bIndex)
+		public static void SwapElements(Allocator allocator, in MemArray aArr, int aIndex, in MemArray bArr, int bIndex)
 		{
 			var size = aArr.ElementSize;
-			allocator.Value().MemSwap(aArr.ptr.memPtr, aIndex * size, bArr.ptr.memPtr, bIndex * size, size);
+			allocator.MemSwap(aArr.ptr.memPtr, aIndex * size, bArr.ptr.memPtr, bIndex * size, size);
 		}
 	}
 }

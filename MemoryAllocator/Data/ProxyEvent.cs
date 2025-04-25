@@ -17,18 +17,18 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<Allocator> GetAllocatorPtr()
+		public Allocator GetAllocator()
 		{
-			return _proxies.GetAllocatorPtr();
+			return _proxies.GetAllocator();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ProxyEvent(SafePtr<Allocator> allocator, int capacity = 8)
+		public ProxyEvent(Allocator allocator, int capacity = 8)
 		{
 			_proxies = new HashSet<ProxyPtr<T>>(allocator, capacity);
 		}
 
-		public bool Subscribe(SafePtr<Allocator> allocator, in ProxyPtr<T> proxyPtr)
+		public bool Subscribe(Allocator allocator, in ProxyPtr<T> proxyPtr)
 		{
 			return _proxies.Add(allocator, proxyPtr);
 		}
@@ -43,13 +43,13 @@ namespace Sapientia.MemoryAllocator.Data
 			return _proxies.Remove(proxyPtr);
 		}
 
-		public bool UnSubscribe(SafePtr<Allocator> allocator, in ProxyPtr<T> proxyPtr)
+		public bool UnSubscribe(Allocator allocator, in ProxyPtr<T> proxyPtr)
 		{
 			return _proxies.Remove(allocator, proxyPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<ProxyPtr<T>>, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable(SafePtr<Allocator> allocator)
+		public Enumerable<SafePtr<ProxyPtr<T>>, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable(Allocator allocator)
 		{
 			return _proxies.GetPtrEnumerable(allocator);
 		}
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<ProxyPtr<T>> GetEnumerator(SafePtr<Allocator> allocator)
+		public HashSetPtrEnumerator<ProxyPtr<T>> GetEnumerator(Allocator allocator)
 		{
 			return _proxies.GetPtrEnumerator(allocator);
 		}
@@ -87,11 +87,11 @@ namespace Sapientia.MemoryAllocator.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(bool disposeProxies = true)
 		{
-			Dispose(_proxies.GetAllocatorPtr(), disposeProxies);
+			Dispose(_proxies.GetAllocator(), disposeProxies);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(SafePtr<Allocator> allocator, bool disposeProxies = true)
+		public void Dispose(Allocator allocator, bool disposeProxies = true)
 		{
 			if (disposeProxies)
 			{
