@@ -2,12 +2,8 @@
 
 namespace Sapientia.Messaging
 {
-	public static class MessengerExt
+	public static class MessengerExtenstions
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SendAndUnsubscribeAll<TMessage>(this TMessage msg) where TMessage : struct
-			=> Messenger.SendAndUnsubscribeAll(ref msg);
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Send<TMessage>(this TMessage msg) where TMessage : struct
 			=> Messenger.Send(ref msg);

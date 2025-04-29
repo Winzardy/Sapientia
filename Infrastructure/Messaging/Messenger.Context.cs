@@ -10,15 +10,6 @@ namespace Sapientia.Messaging
 		/// </summary>
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SendAndUnsubscribeAll<TMessage>(in TContext context, ref TMessage msg)
-			where TMessage : struct =>
-			ServiceContext<TContext>.GetOrCreateService<MessengerHub>(context).SendAndUnsubscribeAll(ref msg);
-
-		/// <summary>
-		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(System.Action{TMessage})"/>
-		/// </summary>
-		/// <typeparam name="TMessage">Тип сообщения</typeparam>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Send<TMessage>(in TContext context, ref TMessage msg)
 			where TMessage : struct
 		{
