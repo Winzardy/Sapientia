@@ -2,7 +2,7 @@ using Sapientia.Messaging;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public partial struct  WorldState
+	public partial struct WorldState
 	{
 		public struct StartedMessage
 		{
@@ -18,36 +18,6 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			new StartedMessage(allocatorId).Send();
 		}
-
-		/*public struct LateUpdateMessage
-		{
-			public readonly AllocatorId allocatorId;
-
-			public LateUpdateMessage(AllocatorId allocatorId)
-			{
-				this.allocatorId = allocatorId;
-			}
-		}
-
-		private void SendLateUpdateMessage()
-		{
-			new LateUpdateMessage(allocatorId).Send();
-		}*/
-
-		/*public struct LateUpdateOnceMessage
-		{
-			public readonly AllocatorId allocatorId;
-
-			public LateUpdateOnceMessage(AllocatorId allocatorId)
-			{
-				this.allocatorId = allocatorId;
-			}
-		}
-
-		private void SendLateUpdateOnceMessage()
-		{
-			new LateUpdateOnceMessage(allocatorId).SendAndUnsubscribeAll();
-		}*/
 
 		public struct BeginDisposeMessage
 		{

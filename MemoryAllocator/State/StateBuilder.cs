@@ -51,9 +51,9 @@ namespace Sapientia.MemoryAllocator.State
 			return new State(_allocator.allocatorId);
 		}
 
-		protected virtual void InitializeWorld(SafePtr<WorldState> world)
+		protected virtual void InitializeWorld(SafePtr<WorldState> worldState)
 		{
-			world.Value().Initialize(_stateParts, _systems);
+			worldState.Value().Initialize(_stateParts, _systems);
 		}
 
 		protected virtual void AddStateParts()
