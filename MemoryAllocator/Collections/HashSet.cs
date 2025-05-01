@@ -43,43 +43,43 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
+		public World GetAllocator()
 		{
 			return buckets.GetAllocator();
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator allocator, int capacity = 8)
+		public HashSet(World world, int capacity = 8)
 		{
 			this = default;
-			Initialize(allocator, capacity);
+			Initialize(world, capacity);
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator allocator, in HashSet<T> other)
+		public HashSet(World world, in HashSet<T> other)
 		{
 			E.ASSERT(other.IsCreated);
 
 			this = other;
-			buckets = new MemArray<int>(allocator, other.buckets);
-			slots = new MemArray<Slot>(allocator, other.slots);
+			buckets = new MemArray<int>(world, other.buckets);
+			slots = new MemArray<Slot>(world, other.slots);
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator allocator, in ICollection<T> other) : this(allocator, other.Count)
+		public HashSet(World world, in ICollection<T> other) : this(world, other.Count)
 		{
 			foreach (var value in other)
 			{
-				Add(allocator, value);
+				Add(world, value);
 			}
 		}
 
 		[INLINE(256)]
-		public HashSet(Allocator allocator, in IEnumerable<T> other, int capacity) : this(allocator, capacity)
+		public HashSet(World world, in IEnumerable<T> other, int capacity) : this(world, capacity)
 		{
 			foreach (var value in other)
 			{
-				Add(allocator, value);
+				Add(world, value);
 			}
 		}
 
@@ -87,14 +87,14 @@ namespace Sapientia.MemoryAllocator
 		/// Initializes buckets and slots arrays. Uses suggested capacity by finding next prime
 		/// greater than or equal to capacity.
 		/// </summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="capacity"></param>
 		[INLINE(256)]
-		private void Initialize(Allocator allocator, int capacity)
+		private void Initialize(World world, int capacity)
 		{
 			var size = capacity.GetPrime();
-			buckets = new MemArray<int>(allocator, size);
-			slots = new MemArray<Slot>(allocator, size);
+			buckets = new MemArray<int>(world, size);
+			slots = new MemArray<Slot>(world, size);
 			freeList = -1;
 		}
 
@@ -106,17 +106,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<Slot> GetSlotPtr(Allocator allocator)
+		public SafePtr<Slot> GetSlotPtr(World world)
 		{
 			E.ASSERT(IsCreated);
-			return slots.GetValuePtr(allocator);
+			return slots.GetValuePtr(world);
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			buckets.Dispose(allocator);
-			slots.Dispose(allocator);
+			buckets.Dispose(world);
+			slots.Dispose(world);
 			this = default;
 		}
 
@@ -127,21 +127,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemPtr GetMemPtr()
+		public WPtr GetMemPtr()
 		{
 			E.ASSERT(IsCreated);
-			return buckets.innerArray.ptr.memPtr;
+			return buckets.innerArray.ptr.wPtr;
 		}
 
 		[INLINE(256)]
-		public void ReplaceWith(Allocator allocator, ref HashSet<T> other)
+		public void ReplaceWith(World world, ref HashSet<T> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 			{
 				return;
 			}
 
-			Dispose(allocator);
+			Dispose(world);
 			this = other;
 		}
 
@@ -149,16 +149,16 @@ namespace Sapientia.MemoryAllocator
 		/// Remove all items from this set. This clears the elements but not the underlying
 		/// buckets and slots array. Follow this call by TrimExcess to release these.
 		/// </summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		[INLINE(256)]
-		public void Clear(Allocator allocator)
+		public void Clear(World world)
 		{
 			if (lastIndex > 0)
 			{
 				// clear the elements so that the gc can reclaim the references.
 				// clear only up to m_lastIndex for m_slots
-				slots.Clear(allocator, 0, lastIndex);
-				buckets.Clear(allocator, 0, buckets.Length);
+				slots.Clear(world, 0, lastIndex);
+				buckets.Clear(world, 0, buckets.Length);
 				lastIndex = 0;
 				count = 0;
 				freeList = -1;
@@ -169,13 +169,13 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Checks if this hashset contains the item
 		/// </summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="item">item to check for containment</param>
 		/// <returns>true if item contained; false if not</returns>
 		[INLINE(256)]
-		public bool Contains(Allocator allocator, in T item)
+		public bool Contains(World world, in T item)
 		{
-			return Contains(item, slots.GetValuePtr(allocator), buckets.GetValuePtr(allocator));
+			return Contains(item, slots.GetValuePtr(world), buckets.GetValuePtr(world));
 		}
 
 		[INLINE(256)]
@@ -197,32 +197,32 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Add(Allocator allocator, ref HashSet<T> other)
+		public void Add(World world, ref HashSet<T> other)
 		{
-			var slotsPtr = slots.GetValuePtr(allocator);
+			var slotsPtr = slots.GetValuePtr(world);
 			for (var i = 0; i < other.lastIndex; i++)
 			{
 				ref var slot = ref (slotsPtr + i).Value();
 				if (slot.hashCode >= 0)
 				{
-					Add(allocator, slot.value);
+					Add(world, slot.value);
 				}
 			}
 		}
 
 		[INLINE(256)]
-		public void RemoveExcept(Allocator allocator, ref HashSet<T> other)
+		public void RemoveExcept(World world, ref HashSet<T> other)
 		{
-			var slotsPtr = slots.GetValuePtr(allocator);
+			var slotsPtr = slots.GetValuePtr(world);
 			for (var i = 0; i < lastIndex; i++)
 			{
 				ref var slot = ref slotsPtr[i];
 				if (slot.hashCode >= 0)
 				{
 					var item = slot.value;
-					if (!other.Contains(allocator, item))
+					if (!other.Contains(world, item))
 					{
-						Remove(allocator, item);
+						Remove(world, item);
 						if (count == 0)
 							return;
 					}
@@ -231,20 +231,20 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Remove(Allocator allocator, ref HashSet<T> other)
+		public void Remove(World world, ref HashSet<T> other)
 		{
 			E.ASSERT(IsCreated);
 
-			var slotsPtr = slots.GetValuePtr(allocator);
+			var slotsPtr = slots.GetValuePtr(world);
 			for (var i = 0; i < lastIndex; i++)
 			{
 				ref var slot = ref (slotsPtr + i).Value();
 				if (slot.hashCode >= 0)
 				{
 					var item = slot.value;
-					if (other.Contains(allocator, item))
+					if (other.Contains(world, item))
 					{
-						Remove(allocator, item);
+						Remove(world, item);
 						if (count == 0)
 							return;
 					}
@@ -266,17 +266,17 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Remove item from this hashset
 		/// </summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="item">item to remove</param>
 		/// <returns>true if removed; false if not (i.e. if the item wasn't in the HashSet)</returns>
 		[INLINE(256)]
-		public bool Remove(Allocator allocator, in T item)
+		public bool Remove(World world, in T item)
 		{
 			if (!buckets.IsCreated)
 				return false;
 
-			var slotsPtr = slots.GetValuePtr(allocator);
-			var bucketsPtr = buckets.GetValuePtr(allocator);
+			var slotsPtr = slots.GetValuePtr(world);
+			var bucketsPtr = buckets.GetValuePtr(world);
 
 			var hashCode = item.GetHashCode() & _hashCodeMask;
 			var bucket = hashCode % buckets.Length;
@@ -322,14 +322,14 @@ namespace Sapientia.MemoryAllocator
 		/// defragmentation, allowing faster execution; note that this is reasonable since
 		/// AddIfNotPresent attempts to insert new elements in re-opened spots.
 		/// </summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		[INLINE(256)]
-		private void IncreaseCapacity(Allocator allocator)
+		private void IncreaseCapacity(World world)
 		{
 			var newSize = count.ExpandPrime();
 
 			// Able to increase capacity; copy elements to larger array and rehash
-			SetCapacity(allocator, newSize);
+			SetCapacity(world, newSize);
 		}
 
 		/// <summary>
@@ -338,26 +338,26 @@ namespace Sapientia.MemoryAllocator
 		/// instead of this method.
 		/// </summary>
 		[INLINE(256)]
-		private void SetCapacity(Allocator allocator, int newSize)
+		private void SetCapacity(World world, int newSize)
 		{
-			var newSlots = new MemArray<Slot>(allocator, newSize);
+			var newSlots = new MemArray<Slot>(world, newSize);
 			if (slots.IsCreated)
 			{
-				MemArrayExt.CopyNoChecks<HashSet<T>.Slot>(allocator, slots, 0, ref newSlots, 0, lastIndex);
+				MemArrayExt.CopyNoChecks<HashSet<T>.Slot>(world, slots, 0, ref newSlots, 0, lastIndex);
 			}
 
-			var newBuckets = new MemArray<int>(allocator, newSize);
+			var newBuckets = new MemArray<int>(world, newSize);
 			for (var i = 0; i < lastIndex; i++)
 			{
-				var bucket = newSlots[allocator, i].hashCode % newSize;
-				newSlots[allocator, i].next = newBuckets[allocator, bucket] - 1;
-				newBuckets[allocator, bucket] = i + 1;
+				var bucket = newSlots[world, i].hashCode % newSize;
+				newSlots[world, i].next = newBuckets[world, bucket] - 1;
+				newBuckets[world, bucket] = i + 1;
 			}
 
 			if (slots.IsCreated)
-				slots.Dispose(allocator);
+				slots.Dispose(world);
 			if (buckets.IsCreated)
-				buckets.Dispose(allocator);
+				buckets.Dispose(world);
 			slots = newSlots;
 			buckets = newBuckets;
 		}
@@ -379,19 +379,19 @@ namespace Sapientia.MemoryAllocator
 		/// Add item to this HashSet. Returns bool indicating whether item was added (won't be
 		/// added if already present)
 		/// </summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="value"></param>
 		/// <returns>true if added, false if already present</returns>
 		[INLINE(256)]
-		public bool Add(Allocator allocator, in T value)
+		public bool Add(World world, in T value)
 		{
 			if (!buckets.IsCreated)
 			{
-				Initialize(allocator, 0);
+				Initialize(world, 0);
 			}
 
-			var bucketsPtr = buckets.GetValuePtr(allocator);
-			var slotsPtr = slots.GetValuePtr(allocator);
+			var bucketsPtr = buckets.GetValuePtr(world);
+			var slotsPtr = slots.GetValuePtr(world);
 
 			var hashCode = value.GetHashCode() & _hashCodeMask;
 			var bucket = hashCode % buckets.Length;
@@ -414,12 +414,12 @@ namespace Sapientia.MemoryAllocator
 			{
 				if (lastIndex == slots.Length)
 				{
-					IncreaseCapacity(allocator);
+					IncreaseCapacity(world);
 					// this will change during resize
 					bucket = hashCode % buckets.Length;
 
-					bucketsPtr = buckets.GetValuePtr(allocator);
-					slotsPtr = slots.GetValuePtr(allocator);
+					bucketsPtr = buckets.GetValuePtr(world);
+					slotsPtr = slots.GetValuePtr(world);
 				}
 				index = lastIndex;
 				lastIndex++;
@@ -442,11 +442,11 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(Allocator allocator, in HashSet<T> other)
+		public void CopyFrom(World world, in HashSet<T> other)
 		{
-			MemArrayExt.CopyExact(allocator, in other.buckets, ref buckets);
+			MemArrayExt.CopyExact(world, in other.buckets, ref buckets);
 
-			slots.CopyFrom(allocator, other.slots);
+			slots.CopyFrom(world, other.slots);
 			var thisBuckets = buckets;
 			var thisSlots = slots;
 			this = other;
@@ -456,9 +456,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSetEnumerator<T> GetEnumerator(Allocator allocator)
+		public HashSetEnumerator<T> GetEnumerator(World world)
 		{
-			return new HashSetEnumerator<T>(GetSlotPtr(allocator), LastIndex);
+			return new HashSetEnumerator<T>(GetSlotPtr(world), LastIndex);
 		}
 
 		[INLINE(256)]
@@ -468,9 +468,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSetPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public HashSetPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new HashSetPtrEnumerator<T>(GetSlotPtr(allocator), LastIndex);
+			return new HashSetPtrEnumerator<T>(GetSlotPtr(world), LastIndex);
 		}
 
 		[INLINE(256)]
@@ -480,9 +480,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(World world)
 		{
-			return new (new (GetSlotPtr(allocator), LastIndex));
+			return new (new (GetSlotPtr(world), LastIndex));
 		}
 
 		[INLINE(256)]
@@ -492,9 +492,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new (new (GetSlotPtr(allocator), LastIndex));
+			return new (new (GetSlotPtr(world), LastIndex));
 		}
 
 		[INLINE(256)]

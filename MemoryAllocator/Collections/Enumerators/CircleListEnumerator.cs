@@ -12,12 +12,12 @@ namespace Sapientia.MemoryAllocator
 		public int Count { get; }
 		public int Capacity { get; }
 		public SafePtr<T> GetValuePtr();
-		public SafePtr<T> GetValuePtr(Allocator allocator);
+		public SafePtr<T> GetValuePtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(Allocator allocator)
+		public CircularBufferEnumerator<T> GetEnumerator(World world)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,9 +27,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
+			return new CircularBufferPtrEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,9 +39,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(World world)
 		{
-			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
+			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,9 +51,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
+			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

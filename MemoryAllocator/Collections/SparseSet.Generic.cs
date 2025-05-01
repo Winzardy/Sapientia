@@ -47,24 +47,24 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator GetAllocator()
+		public World GetAllocator()
 		{
 			return _innerSet.GetAllocator();
 		}
 
-		public SparseSet(int capacity, int sparseCapacity, int expandStep = 0) : this(AllocatorManager.CurrentAllocator, capacity, sparseCapacity, expandStep) {}
+		public SparseSet(int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorld, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(AllocatorId allocatorId, int capacity, int sparseCapacity, int expandStep = 0) : this(allocatorId.GetAllocator(), capacity, sparseCapacity, expandStep) {}
+		public SparseSet(WorldId worldId, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorld(), capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(Allocator allocator, int capacity, int sparseCapacity, int expandStep = 0)
+		public SparseSet(World world, int capacity, int sparseCapacity, int expandStep = 0)
 		{
-			_innerSet = new SparseSet(allocator, TSize<T>.size, capacity, sparseCapacity, expandStep);
+			_innerSet = new SparseSet(world, TSize<T>.size, capacity, sparseCapacity, expandStep);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr(Allocator allocator)
+		public SafePtr<T> GetValuePtr(World world)
 		{
-			return _innerSet.GetValuePtr<T>(allocator);
+			return _innerSet.GetValuePtr<T>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,9 +74,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get(Allocator allocator, int id)
+		public ref T Get(World world, int id)
 		{
-			return ref _innerSet.Get<T>(allocator, id);
+			return ref _innerSet.Get<T>(world, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,15 +86,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int GetIdByIndex(Allocator allocator, int denseId)
+		public int GetIdByIndex(World world, int denseId)
 		{
-			return _innerSet.GetIdByIndex(allocator, denseId);
+			return _innerSet.GetIdByIndex(world, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(Allocator allocator, int id)
+		public bool Has(World world, int id)
 		{
-			return _innerSet.Has(allocator, id);
+			return _innerSet.Has(world, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -104,9 +104,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T EnsureGet(Allocator allocator, int id)
+		public ref T EnsureGet(World world, int id)
 		{
-			return ref _innerSet.EnsureGet<T>(allocator, id);
+			return ref _innerSet.EnsureGet<T>(world, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -116,9 +116,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBack(Allocator allocator, int id)
+		public void RemoveSwapBack(World world, int id)
 		{
-			_innerSet.RemoveSwapBack(allocator, id);
+			_innerSet.RemoveSwapBack(world, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,9 +134,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			_innerSet.Dispose(allocator);
+			_innerSet.Dispose(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -152,9 +152,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(World world)
 		{
-			return new (new (GetValuePtr(allocator), Count));
+			return new (new (GetValuePtr(world), Count));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -164,9 +164,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new (new (GetValuePtr(allocator), 0, Count));
+			return new (new (GetValuePtr(world), 0, Count));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

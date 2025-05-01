@@ -8,16 +8,16 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public readonly unsafe struct ArchetypeContext<T> : IEnumerable<T> where T: unmanaged, IComponent
 	{
-		public readonly Allocator allocator;
+		public readonly World world;
 		public readonly SafePtr<Archetype> innerArchetype;
 
-		public ArchetypeContext(Allocator allocator) : this(allocator, allocator.GetArchetypePtr<T>())
+		public ArchetypeContext(World world) : this(world, world.GetArchetypePtr<T>())
 		{
 		}
 
-		public ArchetypeContext(Allocator allocator, SafePtr<Archetype> innerArchetype)
+		public ArchetypeContext(World world, SafePtr<Archetype> innerArchetype)
 		{
-			this.allocator = allocator;
+			this.world = world;
 			this.innerArchetype = innerArchetype;
 		}
 
@@ -30,61 +30,61 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetDestroyHandler<THandler>() where THandler : unmanaged, IElementDestroyHandler
 		{
-			innerArchetype.ptr->SetDestroyHandler<THandler>(allocator);
+			innerArchetype.ptr->SetDestroyHandler<THandler>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<ArchetypeElement<T>> GetRawElements()
 		{
-			return innerArchetype.ptr->GetRawElements<T>(allocator);
+			return innerArchetype.ptr->GetRawElements<T>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement(Entity entity)
 		{
-			return ref innerArchetype.ptr->ReadElement<T>(allocator, entity);
+			return ref innerArchetype.ptr->ReadElement<T>(world, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement(Entity entity, out bool isExist)
 		{
-			return ref innerArchetype.ptr->ReadElement<T>(allocator, entity, out isExist);
+			return ref innerArchetype.ptr->ReadElement<T>(world, entity, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElementNoCheck(Entity entity)
 		{
-			return ref innerArchetype.ptr->ReadElementNoCheck<T>(allocator, entity);
+			return ref innerArchetype.ptr->ReadElementNoCheck<T>(world, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SimpleList<T> ReadElements<TEnumerable>(in TEnumerable entities) where TEnumerable: IEnumerable<Entity>
 		{
-			return innerArchetype.ptr->ReadElements<T, TEnumerable>(allocator, entities);
+			return innerArchetype.ptr->ReadElements<T, TEnumerable>(world, entities);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasElement(Entity entity)
 		{
-			return innerArchetype.ptr->HasElement(allocator, entity);
+			return innerArchetype.ptr->HasElement(world, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement(Entity entity)
 		{
-			return ref innerArchetype.ptr->GetElement<T>(allocator, entity);
+			return ref innerArchetype.ptr->GetElement<T>(world, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement(Entity entity, out bool isCreated)
 		{
-			return ref innerArchetype.ptr->GetElement<T>(allocator, entity, out isCreated);
+			return ref innerArchetype.ptr->GetElement<T>(world, entity, out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T TryGetElement(Entity entity, out bool isExist)
 		{
-			return ref innerArchetype.ptr->TryGetElement<T>(allocator, entity, out isExist);
+			return ref innerArchetype.ptr->TryGetElement<T>(world, entity, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -102,19 +102,19 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveSwapBackElement(Entity entity)
 		{
-			innerArchetype.ptr->RemoveSwapBackElement(allocator, entity);
+			innerArchetype.ptr->RemoveSwapBackElement(world, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			innerArchetype.ptr->Dispose(allocator);
+			innerArchetype.ptr->Dispose(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListEnumerator<T> GetEnumerator()
 		{
-			return new ListEnumerator<T>(innerArchetype.ptr->_elements.GetValuePtr<T>(allocator), innerArchetype.ptr->Count);
+			return new ListEnumerator<T>(innerArchetype.ptr->_elements.GetValuePtr<T>(world), innerArchetype.ptr->Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -12,37 +12,37 @@ namespace Sapientia.MemoryAllocator.State
 
 		public readonly ushort id;
 		public readonly ushort generation;
-		public AllocatorId allocatorId;
+		public WorldId worldId;
 
 #if ENABLE_ENTITY_NAMES
 		public string Name
 		{
 			get
 			{
-				var allocator = allocatorId.GetAllocator();
+				var allocator = worldId.GetWorld();
 				return allocator.GetService<EntityStatePart>().GetEntityName(allocator, this);
 			}
 		}
 #endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator GetAllocator()
+		public World GetAllocator()
 		{
-			return allocatorId.GetAllocator();
+			return worldId.GetWorld();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Entity(ushort id, ushort generation, AllocatorId allocatorId)
+		internal Entity(ushort id, ushort generation, WorldId worldId)
 		{
 			this.id = id;
 			this.generation = generation;
-			this.allocatorId = allocatorId;
+			this.worldId = worldId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(string name)
 		{
-			var allocator = AllocatorManager.CurrentAllocator;
+			var allocator = WorldManager.CurrentWorld;
 #if UNITY_EDITOR
 			return allocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
@@ -53,13 +53,30 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create()
 		{
-			var allocator = AllocatorManager.CurrentAllocator;
+			var allocator = WorldManager.CurrentWorld;
 			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(Allocator allocator, string name)
+		public static Entity Create(World world, string name)
 		{
+#if UNITY_EDITOR
+			return world.GetService<EntityStatePart>().CreateEntity(world, name);
+#else
+			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Entity Create(World world)
+		{
+			return world.GetService<EntityStatePart>().CreateEntity(world);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Entity Create(WorldId worldId, string name)
+		{
+			var allocator = worldId.GetWorld();
 #if UNITY_EDITOR
 			return allocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
 #else
@@ -68,26 +85,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(Allocator allocator)
+		public static Entity Create(WorldId worldId)
 		{
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(AllocatorId allocatorId, string name)
-		{
-			var allocator = allocatorId.GetAllocator();
-#if UNITY_EDITOR
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
-#else
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
-#endif
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(AllocatorId allocatorId)
-		{
-			var allocator = allocatorId.GetAllocator();
+			var allocator = worldId.GetWorld();
 			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
 		}
 
@@ -100,7 +100,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Entity a, Entity b)
 		{
-			return a.id == b.id && a.generation == b.generation && a.allocatorId.id == b.allocatorId.id;
+			return a.id == b.id && a.generation == b.generation && a.worldId.id == b.worldId.id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,7 +135,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(this.As<Entity, int>(), allocatorId.id);
+			return HashCode.Combine(this.As<Entity, int>(), worldId.id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

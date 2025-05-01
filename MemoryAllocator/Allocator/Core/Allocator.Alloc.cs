@@ -4,7 +4,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int Align(int size)
@@ -14,14 +14,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemPtr MemAlloc<T>()
+		public AllocatorPtr MemAlloc<T>()
 			where T : unmanaged
 		{
 			return MemAlloc(TSize<T>.size, out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemPtr MemAlloc<T>(out SafePtr<T> tValuePtr)
+		public AllocatorPtr MemAlloc<T>(out SafePtr<T> tValuePtr)
 			where T : unmanaged
 		{
 			var result = MemAlloc(TSize<T>.size, out var valuePtr);
@@ -31,7 +31,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemPtr MemAlloc<T>(in T value, out SafePtr<T> tValuePtr)
+		public AllocatorPtr MemAlloc<T>(in T value, out SafePtr<T> tValuePtr)
 			where T : unmanaged
 		{
 			var result = MemAlloc(TSize<T>.size, out var valuePtr);
@@ -42,17 +42,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemPtr MemAlloc(int size)
+		public AllocatorPtr MemAlloc(int size)
 		{
 			return MemAlloc(size, out _);
 		}
 
-		public MemPtr MemAlloc(int size, out SafePtr valuePtr)
+		public AllocatorPtr MemAlloc(int size, out SafePtr valuePtr)
 		{
 			if (size == 0)
 			{
 				valuePtr = default;
-				return MemPtr.CreateZeroSized(allocatorId);
+				return AllocatorPtr.CreateZeroSized();
 			}
 
 			var blockSize = Align(size + TSize<MemoryBlock>.size);
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(blockPtr.ptr->blockSize >= TSize<MemoryBlock>.size + BLOCK_ALIGN);
 			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
 
-			var memPtr = new MemPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size, allocatorId);
+			var memPtr = new AllocatorPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
 			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
 
 			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size);
@@ -70,20 +70,20 @@ namespace Sapientia.MemoryAllocator
 			return memPtr;
 		}
 
-		public MemPtr MemReAlloc(in MemPtr memPtr, int size, out SafePtr valuePtr)
+		public AllocatorPtr MemReAlloc(in AllocatorPtr worldPtr, int size, out SafePtr valuePtr)
 		{
-			if (!memPtr.IsCreated() || memPtr.IsZeroSized())
+			if (!worldPtr.IsValid() || worldPtr.IsZeroSized())
 				return MemAlloc(size, out valuePtr);
 
 			var blockSize = Align(size + TSize<MemoryBlock>.size);
-			var blockRef = (MemoryBlockRef)memPtr;
+			var blockRef = (MemoryBlockRef)worldPtr;
 
 			var newBlockRef = ReAllocateBlock(blockRef, blockSize, out var blockPtr);
 
 			E.ASSERT(blockPtr.ptr->blockSize >= MIN_BLOCK_SIZE);
 			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
 
-			var newMemPtr = new MemPtr(newBlockRef.memoryZoneId, newBlockRef.memoryZoneOffset + TSize<MemoryBlock>.size, allocatorId);
+			var newMemPtr = new AllocatorPtr(newBlockRef.memoryZoneId, newBlockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
 			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
 
 			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size);
@@ -92,20 +92,20 @@ namespace Sapientia.MemoryAllocator
 			return newMemPtr;
 		}
 
-		public bool MemFree(MemPtr memPtr)
+		public bool MemFree(AllocatorPtr allocatorPtr)
 		{
-			if (!memPtr.IsCreated())
+			if (!allocatorPtr.IsValid())
 				return false;
-			if (memPtr.IsZeroSized())
+			if (allocatorPtr.IsZeroSized())
 				return true;
 
-			var blockRef = (MemoryBlockRef)memPtr;
+			var blockRef = (MemoryBlockRef)allocatorPtr;
 			FreeBlock(blockRef);
 
 			return true;
 		}
 
-		public void MemSwap(in MemPtr a, int aOffset, in MemPtr b, int bOffset, int length)
+		public void MemSwap(in AllocatorPtr a, int aOffset, in AllocatorPtr b, int bOffset, int length)
 		{
 			if (length == 0)
 				return;
@@ -116,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemSwap(bRawPtr, aRawPtr, length);
 		}
 
-		public void MemCopy(in MemPtr source, int sourceOffset, in MemPtr dest, int destOffset, int length)
+		public void MemCopy(in AllocatorPtr source, int sourceOffset, in AllocatorPtr dest, int destOffset, int length)
 		{
 			if (length == 0)
 				return;
@@ -127,7 +127,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemCopy(sourcePtr, destPtr, length);
 		}
 
-		public void MemCopy<T>(in MemPtr source, int sourceIndex, in MemPtr dest, int destIndex, int length) where T : unmanaged
+		public void MemCopy<T>(in AllocatorPtr source, int sourceIndex, in AllocatorPtr dest, int destIndex, int length) where T : unmanaged
 		{
 			if (length == 0)
 				return;
@@ -138,7 +138,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemCopy<T>(sourcePtr, destPtr, length);
 		}
 
-		public void MemMove(in MemPtr source, int sourceOffset, in MemPtr dest, int destOffset, int length)
+		public void MemMove(in AllocatorPtr source, int sourceOffset, in AllocatorPtr dest, int destOffset, int length)
 		{
 			if (length == 0)
 				return;
@@ -149,7 +149,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemMove(sourcePtr, destPtr, length);
 		}
 
-		public void MemMove<T>(in MemPtr source, int sourceIndex, in MemPtr dest, int destIndex, int length) where T : unmanaged
+		public void MemMove<T>(in AllocatorPtr source, int sourceIndex, in AllocatorPtr dest, int destIndex, int length) where T : unmanaged
 		{
 			if (length == 0)
 				return;
@@ -160,7 +160,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemMove<T>(sourcePtr, destPtr, length);
 		}
 
-		public void MemFill<T>(in MemPtr dest, in T value, int index, int length) where T : unmanaged
+		public void MemFill<T>(in AllocatorPtr dest, in T value, int index, int length) where T : unmanaged
 		{
 			if (length == 0)
 				return;
@@ -170,7 +170,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemFill<T>(value, destPtr, length);
 		}
 
-		public void MemClear(in MemPtr dest, int index, int size)
+		public void MemClear(in AllocatorPtr dest, int index, int size)
 		{
 			if (size == 0)
 				return;

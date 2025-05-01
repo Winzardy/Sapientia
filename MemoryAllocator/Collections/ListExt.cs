@@ -30,33 +30,33 @@ namespace Sapientia.MemoryAllocator
 			public int Compare(T x, T y) => x.CompareTo(y);
 		}
 
-		public static void Sort<T>(this List<T> list, Allocator allocator, Comparison<T> comparison) where T: unmanaged
+		public static void Sort<T>(this List<T> list, World world, Comparison<T> comparison) where T: unmanaged
 		{
-			list.Sort(allocator, new LambdaComparer<T>(comparison));
+			list.Sort(world, new LambdaComparer<T>(comparison));
 		}
 
-		public static void Sort<T>(this List<T> list, Allocator allocator) where T: unmanaged, IComparable<T>
+		public static void Sort<T>(this List<T> list, World world) where T: unmanaged, IComparable<T>
 		{
-			list.Sort(allocator, 0, list.Count, new DefaultComparer<T>());
+			list.Sort(world, 0, list.Count, new DefaultComparer<T>());
 		}
 
-		public static void Sort<T>(this List<T> list, Allocator allocator, int index, int count) where T: unmanaged, IComparable<T>
+		public static void Sort<T>(this List<T> list, World world, int index, int count) where T: unmanaged, IComparable<T>
 		{
-			list.Sort(allocator, index, count, new DefaultComparer<T>());
+			list.Sort(world, index, count, new DefaultComparer<T>());
 		}
 
-		public static void Sort<T, TComparer>(this List<T> list, Allocator allocator, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
+		public static void Sort<T, TComparer>(this List<T> list, World world, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
 		{
-			list.Sort(allocator, 0, list.Count, comparer);
+			list.Sort(world, 0, list.Count, comparer);
 		}
 
-		public static void Sort<T, TComparer>(this List<T> list, Allocator allocator, int index, int count, TComparer comparer)
+		public static void Sort<T, TComparer>(this List<T> list, World world, int index, int count, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
 			if (count <= 1)
 				return;
-			var array = list.GetValuePtr(allocator);
+			var array = list.GetValuePtr(world);
 
 			// Используем алгоритм быстрой сортировки
 			var stack = stackalloc int[2 * 32];
@@ -102,22 +102,22 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		public static void BinaryRemove<T>(this List<T> list, Allocator allocator, T value) where T: unmanaged, IComparable<T>
+		public static void BinaryRemove<T>(this List<T> list, World world, T value) where T: unmanaged, IComparable<T>
 		{
-			BinaryRemove(list, allocator, value, new DefaultComparer<T>());
+			BinaryRemove(list, world, value, new DefaultComparer<T>());
 		}
 
-		public static void BinaryRemove<T, TComparer>(this List<T> list, Allocator allocator, T value, TComparer comparer)
+		public static void BinaryRemove<T, TComparer>(this List<T> list, World world, T value, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
-			var index = BinarySearch(list, allocator, list.Count, value, comparer);
+			var index = BinarySearch(list, world, list.Count, value, comparer);
 			if (index < 0)
 				return;
 
 			if (list[index].Equals(value))
 			{
-				list.RemoveAt(allocator, index);
+				list.RemoveAt(world, index);
 				return;
 			}
 
@@ -126,7 +126,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				if (list[indexToBottom].Equals(value))
 				{
-					list.RemoveAt(allocator, indexToBottom);
+					list.RemoveAt(world, indexToBottom);
 					return;
 				}
 				indexToBottom--;
@@ -137,41 +137,41 @@ namespace Sapientia.MemoryAllocator
 			{
 				if (list[indexToTop].Equals(value))
 				{
-					list.RemoveAt(allocator, indexToTop);
+					list.RemoveAt(world, indexToTop);
 					return;
 				}
 				indexToTop++;
 			}
 		}
 
-		public static void BinaryInsert<T>(this List<T> list, Allocator allocator, T value) where T: unmanaged, IComparable<T>
+		public static void BinaryInsert<T>(this List<T> list, World world, T value) where T: unmanaged, IComparable<T>
 		{
-			BinaryInsert(list, allocator, value, new DefaultComparer<T>());
+			BinaryInsert(list, world, value, new DefaultComparer<T>());
 		}
 
-		public static void BinaryInsert<T, TComparer>(this List<T> list, Allocator allocator, T value, TComparer comparer)
+		public static void BinaryInsert<T, TComparer>(this List<T> list, World world, T value, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
-			var index = BinarySearch(list, allocator, list.Count, value, comparer);
+			var index = BinarySearch(list, world, list.Count, value, comparer);
 			if (index < 0)
 				index = ~index;
-			list.Insert(allocator, index, value);
+			list.Insert(world, index, value);
 		}
 
-		public static int BinarySearch<T>(this List<T> list, Allocator allocator, T value) where T: unmanaged, IComparable<T>
+		public static int BinarySearch<T>(this List<T> list, World world, T value) where T: unmanaged, IComparable<T>
 		{
-			return BinarySearch(list, allocator, list.Count, value, new DefaultComparer<T>());
+			return BinarySearch(list, world, list.Count, value, new DefaultComparer<T>());
 		}
 
-		public static int BinarySearch<T, TComparer>(this List<T> list, Allocator allocator, T value, TComparer comparer)
+		public static int BinarySearch<T, TComparer>(this List<T> list, World world, T value, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
-			return BinarySearch(list, allocator, list.Count, value, comparer);
+			return BinarySearch(list, world, list.Count, value, comparer);
 		}
 
-		public static int BinarySearch<T, TComparer>(this List<T> list, Allocator allocator, int length, T value, TComparer comparer)
+		public static int BinarySearch<T, TComparer>(this List<T> list, World world, int length, T value, TComparer comparer)
 			where TComparer: IComparer<T>
 			where T: unmanaged
 		{
@@ -180,7 +180,7 @@ namespace Sapientia.MemoryAllocator
 			for (var l = length; l != 0; l >>= 1)
 			{
 				var idx = offset + (l >> 1);
-				var curr = list[allocator, idx];
+				var curr = list[world, idx];
 				var r = comparer.Compare(value, curr);
 				if (r == 0)
 				{

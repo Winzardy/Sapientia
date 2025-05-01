@@ -10,12 +10,12 @@ namespace Sapientia.MemoryAllocator
 	{
 		public int Count { get; }
 		public SafePtr<T> GetValuePtr();
-		public SafePtr<T> GetValuePtr(Allocator allocator);
+		public SafePtr<T> GetValuePtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator(Allocator allocator)
+		public ListEnumerator<T> GetEnumerator(World world)
 		{
-			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
+			return new ListEnumerator<T>(GetValuePtr(world), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -25,9 +25,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(allocator), 0, Count);
+			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -37,9 +37,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(World world)
 		{
-			return new (new (GetValuePtr(allocator), Count));
+			return new (new (GetValuePtr(world), Count));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -49,9 +49,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new (new (GetValuePtr(allocator), 0, Count));
+			return new (new (GetValuePtr(world), 0, Count));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

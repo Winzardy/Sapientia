@@ -3,7 +3,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
 		public readonly struct MemoryBlockRef
@@ -17,9 +17,9 @@ namespace Sapientia.MemoryAllocator
 				this.memoryZoneOffset = memoryZoneOffset;
 			}
 
-			public static implicit operator MemoryBlockRef(MemPtr memPtr)
+			public static implicit operator MemoryBlockRef(AllocatorPtr allocatorPtr)
 			{
-				return new MemoryBlockRef(memPtr.zoneId, memPtr.zoneOffset - TSize<MemoryBlock>.size);
+				return new MemoryBlockRef(allocatorPtr.zoneId, allocatorPtr.zoneOffset - TSize<MemoryBlock>.size);
 			}
 		}
 	}

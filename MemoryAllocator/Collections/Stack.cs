@@ -35,16 +35,16 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
+		public World GetAllocator()
 		{
 			return _array.GetAllocator();
 		}
 
 		[INLINE(256)]
-		public Stack(Allocator allocator, int capacity)
+		public Stack(World world, int capacity)
 		{
 			this = default;
-			_array = new MemArray<T>(allocator, capacity);
+			_array = new MemArray<T>(world, capacity);
 		}
 
 		[INLINE(256)]
@@ -54,9 +54,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr(Allocator allocator)
+		public SafePtr<T> GetValuePtr(World world)
 		{
-			return _array.GetValuePtr(allocator);
+			return _array.GetValuePtr(world);
 		}
 
 		[INLINE(256)]
@@ -66,9 +66,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			_array.Dispose(allocator);
+			_array.Dispose(world);
 			this = default;
 		}
 
@@ -79,12 +79,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Contains<TU>(Allocator allocator, TU item) where TU : IEquatable<T>
+		public bool Contains<TU>(World world, TU item) where TU : IEquatable<T>
 		{
 			var count = _count;
 			while (count-- > 0)
 			{
-				if (item.Equals(_array[allocator, count]))
+				if (item.Equals(_array[world, count]))
 				{
 					return true;
 				}
@@ -94,28 +94,28 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly T Peek(Allocator allocator)
+		public readonly T Peek(World world)
 		{
-			return _array[allocator, _count - 1];
+			return _array[world, _count - 1];
 		}
 
 		[INLINE(256)]
-		public T Pop(Allocator allocator)
+		public T Pop(World world)
 		{
-			var item = _array[allocator, --_count];
-			_array[allocator, _count] = default;
+			var item = _array[world, --_count];
+			_array[world, _count] = default;
 			return item;
 		}
 
 		[INLINE(256)]
-		public void Push(Allocator allocator, T item)
+		public void Push(World world, T item)
 		{
 			if (_count == _array.Length)
 			{
-				_array.Resize(allocator, _array.Length == 0 ? _defaultCapacity : 2 * _array.Length);
+				_array.Resize(world, _array.Length == 0 ? _defaultCapacity : 2 * _array.Length);
 			}
 
-			_array[allocator, _count++] = item;
+			_array[world, _count++] = item;
 		}
 
 		[INLINE(256)]
@@ -132,9 +132,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListEnumerator<T> GetEnumerator(Allocator allocator)
+		public ListEnumerator<T> GetEnumerator(World world)
 		{
-			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
+			return new ListEnumerator<T>(GetValuePtr(world), Count);
 		}
 
 		[INLINE(256)]
@@ -144,9 +144,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(allocator), 0, Count);
+			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
 		}
 
 		[INLINE(256)]
@@ -156,9 +156,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(World world)
 		{
-			return new (new (GetValuePtr(allocator), Count));
+			return new (new (GetValuePtr(world), Count));
 		}
 
 		[INLINE(256)]
@@ -168,9 +168,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new (new (GetValuePtr(allocator), 0, Count));
+			return new (new (GetValuePtr(world), 0, Count));
 		}
 
 		[INLINE(256)]

@@ -1,22 +1,21 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct DataAccessor
+	public unsafe partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService(DataAccessorContext context)
+		public void RemoveService(ServiceRegistryContext context)
 		{
 			_typeToPtr.Remove(context);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService(Allocator allocator, DataAccessorContext context)
+		public void RemoveService(World world, ServiceRegistryContext context)
 		{
-			_typeToPtr.Remove(allocator, context);
+			_typeToPtr.Remove(world, context);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,10 +26,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService<T>(Allocator allocator) where T: unmanaged, IIndexedType
+		public void RemoveService<T>(World world) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
-			_typeToPtr.Remove(allocator, typeIndex);
+			_typeToPtr.Remove(world, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -40,9 +39,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService(Allocator allocator, IndexedPtr indexedPtr)
+		public void RemoveService(World world, IndexedPtr indexedPtr)
 		{
-			_typeToPtr.Remove(allocator, indexedPtr.typeIndex);
+			_typeToPtr.Remove(world, indexedPtr.typeIndex);
 		}
 	}
 }

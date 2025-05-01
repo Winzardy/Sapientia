@@ -30,15 +30,15 @@ namespace Sapientia.MemoryAllocator
 			get => _sparseSet.IsFull;
 		}
 
-		public IndexAllocSparseSet(Allocator allocator, int capacity, int sparseCapacity, int expandStep = 0)
+		public IndexAllocSparseSet(World world, int capacity, int sparseCapacity, int expandStep = 0)
 		{
-			_ids = new Stack<int>(allocator, capacity);
-			_sparseSet = new SparseSet<T>(allocator, capacity, sparseCapacity, expandStep);
+			_ids = new Stack<int>(world, capacity);
+			_sparseSet = new SparseSet<T>(world, capacity, sparseCapacity, expandStep);
 			_count = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator GetAllocator()
+		public World GetAllocator()
 		{
 			return _ids.GetAllocator();
 		}
@@ -50,27 +50,27 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr(Allocator allocator)
+		public SafePtr<T> GetValuePtr(World world)
 		{
-			return _sparseSet.GetValuePtr(allocator);
+			return _sparseSet.GetValuePtr(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get(Allocator allocator, int id)
+		public ref T Get(World world, int id)
 		{
-			return ref _sparseSet.Get(allocator, id);
+			return ref _sparseSet.Get(world, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T EnsureGet(Allocator allocator, int id)
+		public ref T EnsureGet(World world, int id)
 		{
-			return ref _sparseSet.EnsureGet(allocator, id);
+			return ref _sparseSet.EnsureGet(world, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(Allocator allocator, int id)
+		public bool Has(World world, int id)
 		{
-			return _sparseSet.Has(allocator, id);
+			return _sparseSet.Has(world, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,28 +80,28 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int AllocateId(Allocator allocator)
+		public int AllocateId(World world)
 		{
 			if (_ids.Count <= 0)
-				_ids.Push(allocator, _count + 1);
+				_ids.Push(world, _count + 1);
 
-			var id = _ids.Pop(allocator);
+			var id = _ids.Pop(world);
 			_count++;
 			return id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ReleaseIndex(Allocator allocator, int index)
+		public void ReleaseIndex(World world, int index)
 		{
-			var id = _sparseSet.GetIdByIndex(allocator, index);
-			ReleaseId(allocator, id);
+			var id = _sparseSet.GetIdByIndex(world, index);
+			ReleaseId(world, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ReleaseId(Allocator allocator, int id)
+		public void ReleaseId(World world, int id)
 		{
-			_sparseSet.RemoveSwapBack(allocator, id);
-			_ids.Push(allocator, id);
+			_sparseSet.RemoveSwapBack(world, id);
+			_ids.Push(world, id);
 			_count--;
 		}
 
@@ -112,10 +112,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			_ids.Dispose(allocator);
-			_sparseSet.Dispose(allocator);
+			_ids.Dispose(world);
+			_sparseSet.Dispose(world);
 			_count = 0;
 		}
 

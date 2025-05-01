@@ -1,27 +1,26 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
 	public readonly unsafe ref struct DestroyLogic
 	{
-		public readonly Allocator allocator;
+		public readonly World world;
 
 		public readonly SafePtr<EntityStatePart> entityStatePart;
 		public readonly ArchetypeContext<KillElement> killElementArchetype;
 		public readonly ArchetypeContext<DestroyRequest> destroyRequestArchetype;
 		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
 
-		public DestroyLogic(Allocator allocator)
+		public DestroyLogic(World world)
 		{
-			this.allocator = allocator;
-			entityStatePart = allocator.GetServicePtr<EntityStatePart>();
-			killElementArchetype = new ArchetypeContext<KillElement>(allocator);
-			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(allocator);
-			killRequestArchetype = new ArchetypeContext<KillRequest>(allocator);
+			this.world = world;
+			entityStatePart = world.GetServicePtr<EntityStatePart>();
+			killElementArchetype = new ArchetypeContext<KillElement>(world);
+			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(world);
+			killRequestArchetype = new ArchetypeContext<KillRequest>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,7 +47,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void RequestKill(Entity entity, float delay)
 		{
 			E.ASSERT(IsAlive(entity));
-			ref var request = ref entity.Get<DelayKillRequest>(allocator, out var hasRequest);
+			ref var request = ref entity.Get<DelayKillRequest>(world, out var hasRequest);
 			if (!hasRequest || request.delay > delay)
 				request.delay = delay;
 		}
@@ -69,18 +68,18 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			E.ASSERT(IsAlive(child));
 			E.ASSERT(!destroyRequestArchetype.HasElement(parent));
-			E.ASSERT(entityStatePart.ptr->IsEntityExist(allocator, parent));
+			E.ASSERT(entityStatePart.ptr->IsEntityExist(world, parent));
 
 			ref var childElement = ref killElementArchetype.GetElement(child);
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
 
 			if (!childElement.parents.IsCreated)
-				childElement.parents = new List<Entity>(allocator);
+				childElement.parents = new List<Entity>(world);
 			if (!childElement.children.IsCreated)
-				childElement.children = new List<Entity>(allocator);
+				childElement.children = new List<Entity>(world);
 
-			childElement.parents.Add(allocator, parent);
-			parentElement.children.Add(allocator, child);
+			childElement.parents.Add(world, parent);
+			parentElement.children.Add(world, child);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -96,16 +95,16 @@ namespace Sapientia.MemoryAllocator.State
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
 
 			if (!parentElement.children.IsCreated)
-				parentElement.children = new List<Entity>(allocator);
-			parentElement.children.AddRange(allocator, children);
+				parentElement.children = new List<Entity>(world);
+			parentElement.children.AddRange(world, children);
 
 			foreach (var child in children)
 			{
 				E.ASSERT(IsAlive(child));
 				ref var childElement = ref killElementArchetype.GetElement(child);
 				if (!childElement.parents.IsCreated)
-					childElement.parents = new List<Entity>(allocator);
-				childElement.parents.Add(allocator, parent);
+					childElement.parents = new List<Entity>(world);
+				childElement.parents.Add(world, parent);
 			}
 		}
 
@@ -114,17 +113,17 @@ namespace Sapientia.MemoryAllocator.State
 			ref var holderElement = ref killElementArchetype.GetElement(holder);
 
 			if (!holderElement.killCallbacks.IsCreated)
-				holderElement.killCallbacks = new List<KillCallback>(allocator);
-			holderElement.killCallbacks.Add(allocator, new KillCallback
+				holderElement.killCallbacks = new List<KillCallback>(world);
+			holderElement.killCallbacks.Add(world, new KillCallback
 			{
-				callback = ProxyPtr<IKillSubscriberProxy>.Create(allocator, callback),
+				callback = ProxyPtr<IKillSubscriberProxy>.Create(world, callback),
 				target = target,
 			});
 
 			ref var targetElement = ref killElementArchetype.GetElement(target);
 			if (!targetElement.killCallbackHolders.IsCreated)
-				targetElement.killCallbackHolders = new List<Entity>(allocator);
-			targetElement.killCallbackHolders.Add(allocator, holder);
+				targetElement.killCallbackHolders = new List<Entity>(world);
+			targetElement.killCallbackHolders.Add(world, holder);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,13 +133,13 @@ namespace Sapientia.MemoryAllocator.State
 				return false;
 			if (killRequestArchetype.HasElement(entity))
 				return false;
-			return entityStatePart.ptr->IsEntityExist(allocator, entity);
+			return entityStatePart.ptr->IsEntityExist(world, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsExist(Entity entity)
 		{
-			return entityStatePart.ptr->IsEntityExist(allocator, entity);
+			return entityStatePart.ptr->IsEntityExist(world, entity);
 		}
 	}
 }

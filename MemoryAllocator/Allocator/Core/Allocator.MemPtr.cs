@@ -4,25 +4,25 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetRef<T>(in MemPtr ptr) where T : unmanaged
+		public ref T GetRef<T>(in AllocatorPtr allocatorPtr) where T : unmanaged
 		{
-			return ref *(T*)GetSafePtr(ptr).ptr;
+			return ref *(T*)GetSafePtr(allocatorPtr).ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetSafePtr<T>(in MemPtr memPtr) where T : unmanaged
+		public SafePtr<T> GetSafePtr<T>(in AllocatorPtr allocatorPtr) where T : unmanaged
 		{
-			return GetSafePtr(memPtr);
+			return GetSafePtr(allocatorPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetSafePtr(in MemPtr memPtr)
+		public SafePtr GetSafePtr(in AllocatorPtr allocatorPtr)
 		{
-			var memory = zonesList[memPtr.zoneId].ptr->memory;
-			var safePtr = memory + memPtr.zoneOffset;
+			var memory = _zonesList[allocatorPtr.zoneId].ptr->memory;
+			var safePtr = memory + allocatorPtr.zoneOffset;
 #if DEBUG
 			var size = (safePtr.Cast<MemoryBlock>() - 1).ptr->blockSize - TSize<MemoryBlock>.size;
 			return new SafePtr(safePtr.ptr, size);
@@ -32,25 +32,24 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private int GetPtrSize(in MemPtr memPtr)
+		private int GetPtrSize(in AllocatorPtr allocatorPtr)
 		{
-			return GetBlockSize(memPtr) - TSize<MemoryBlock>.size;
+			return GetBlockSize(allocatorPtr) - TSize<MemoryBlock>.size;
 		}
 
-		public MemPtr CopyPtrTo(Allocator dstAllocator, MemPtr memPtr)
+		public AllocatorPtr CopyPtrTo(ref Allocator dstAllocator, AllocatorPtr srsAllocatorPtr)
 		{
-			if (!memPtr.IsCreated())
-				return MemPtr.Invalid;
-			if (memPtr.IsZeroSized())
+			if (!srsAllocatorPtr.IsValid())
+				return AllocatorPtr.Invalid;
+			if (srsAllocatorPtr.IsZeroSized())
 			{
-				memPtr.allocatorId = dstAllocator.allocatorId;
-				return memPtr;
+				return srsAllocatorPtr;
 			}
 
-			var size = GetPtrSize(memPtr);
+			var size = GetPtrSize(srsAllocatorPtr);
 			var dstMemPtr = dstAllocator.MemAlloc(size);
 
-			var srcData = GetSafePtr(memPtr);
+			var srcData = GetSafePtr(srsAllocatorPtr);
 			var dstData = dstAllocator.GetSafePtr(dstMemPtr);
 
 			MemoryExt.MemCopy(srcData, dstData, size);

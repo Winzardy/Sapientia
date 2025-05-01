@@ -3,33 +3,33 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-	public struct AllocatorId : IEquatable<AllocatorId>
+	public struct WorldId : IEquatable<WorldId>
 	{
 		// Always more then 0
 		public readonly ushort id;
 		public ushort index;
 
 		[INLINE(256)]
-		public AllocatorId(ushort index, ushort id)
+		public WorldId(ushort index, ushort id)
 		{
 			this.index = index;
 			this.id = id;
 		}
 
 		[INLINE(256)]
-		public static implicit operator AllocatorId((ushort index, ushort id) indexId)
+		public static implicit operator WorldId((ushort index, ushort id) indexId)
 		{
-			return new AllocatorId(indexId.index, indexId.id);
+			return new WorldId(indexId.index, indexId.id);
 		}
 
 		[INLINE(256)]
-		public static bool operator ==(AllocatorId a, AllocatorId b)
+		public static bool operator ==(WorldId a, WorldId b)
 		{
 			return a.id == b.id;
 		}
 
 		[INLINE(256)]
-		public static bool operator !=(AllocatorId a, AllocatorId b)
+		public static bool operator !=(WorldId a, WorldId b)
 		{
 			return a.id != b.id;
 		}
@@ -38,7 +38,7 @@ namespace Sapientia.MemoryAllocator
 		public override string ToString() => $"index: {index}, id: {id}";
 
 		[INLINE(256)]
-		public bool Equals(AllocatorId other)
+		public bool Equals(WorldId other)
 		{
 			return id == other.id;
 		}
@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public override bool Equals(object obj)
 		{
-			return obj is AllocatorId other && Equals(other);
+			return obj is WorldId other && Equals(other);
 		}
 
 		[INLINE(256)]

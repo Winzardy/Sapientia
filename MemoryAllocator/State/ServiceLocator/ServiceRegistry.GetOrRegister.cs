@@ -1,32 +1,31 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct DataAccessor
+	public unsafe partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(Allocator allocator, DataAccessorContext context) where T: unmanaged
+		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
 		{
-			ref var result = ref _typeToPtr.GetValue(allocator, context, out var exist);
+			ref var result = ref _typeToPtr.GetValue(world, context, out var exist);
 			if (!exist)
 			{
-				result = new IndexedPtr(Ptr<T>.Create(allocator), context.typeIndex);
-				RegisterService(allocator, context, result);
+				result = new IndexedPtr(CWPtr<T>.Create(world), context.typeIndex);
+				RegisterService(world, context, result);
 			}
 			return result;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(Allocator allocator, DataAccessorContext context, out bool exist) where T: unmanaged
+		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(World world, ServiceRegistryContext context, out bool exist) where T: unmanaged
 		{
-			ref var result = ref _typeToPtr.GetValue(allocator, context, out exist);
+			ref var result = ref _typeToPtr.GetValue(world, context, out exist);
 			if (!exist)
 			{
-				result = new IndexedPtr(Ptr<T>.Create(allocator), context.typeIndex);
-				RegisterService(allocator, context, result);
+				result = new IndexedPtr(CWPtr<T>.Create(world), context.typeIndex);
+				RegisterService(world, context, result);
 			}
 			return result;
 		}
@@ -41,36 +40,36 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator allocator, DataAccessorContext context) where T: unmanaged
+		public ref T GetOrRegisterService<T>(World world, ServiceRegistryContext context) where T: unmanaged
 		{
-			return ref GetOrRegisterServiceIndexedPtr<T>(allocator, context).GetValue<T>(allocator);
+			return ref GetOrRegisterServiceIndexedPtr<T>(world, context).GetValue<T>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator allocator, DataAccessorContext context, out bool exist) where T: unmanaged
+		public ref T GetOrRegisterService<T>(World world, ServiceRegistryContext context, out bool exist) where T: unmanaged
 		{
-			return ref GetOrRegisterServiceIndexedPtr<T>(allocator, context, out exist).GetValue<T>(allocator);
+			return ref GetOrRegisterServiceIndexedPtr<T>(world, context, out exist).GetValue<T>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator allocator) where T: unmanaged, IIndexedType
+		public ref T GetOrRegisterService<T>(World world) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
-			return ref GetOrRegisterService<T>(allocator, typeIndex);
+			return ref GetOrRegisterService<T>(world, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrRegisterServicePtr<T>(Allocator allocator) where T: unmanaged, IIndexedType
+		public SafePtr<T> GetOrRegisterServicePtr<T>(World world) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
-			return GetOrRegisterServicePtr<T>(allocator, typeIndex);
+			return GetOrRegisterServicePtr<T>(world, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator allocator, out bool exist) where T: unmanaged, IIndexedType
+		public ref T GetOrRegisterService<T>(World world, out bool exist) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
-			return ref GetOrRegisterService<T>(allocator, typeIndex, out exist);
+			return ref GetOrRegisterService<T>(world, typeIndex, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -102,9 +101,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(Allocator allocator, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
+		public ref T GetOrRegisterService<T>(World world, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
 		{
-			return ref GetOrRegisterService<T>(allocator, proxyPtr.indexedPtr.typeIndex, out exist);
+			return ref GetOrRegisterService<T>(world, proxyPtr.indexedPtr.typeIndex, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -117,13 +116,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Ptr<T> GetOrRegisterServiceCachedPtr<T>(Allocator allocator, DataAccessorContext context) where T: unmanaged
+		public CWPtr<T> GetOrRegisterServiceCachedPtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
 		{
-			return GetOrRegisterServiceIndexedPtr<T>(allocator, context).GetCachedPtr<T>();
+			return GetOrRegisterServiceIndexedPtr<T>(world, context).GetCachedPtr<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Ptr<T> GetOrRegisterServiceCachedPtr<T>() where T: unmanaged, IIndexedType
+		public CWPtr<T> GetOrRegisterServiceCachedPtr<T>() where T: unmanaged, IIndexedType
 		{
 			var allocator = _typeToPtr.GetAllocator();
 			var typeIndex = TypeIndex.Create<T>();
@@ -132,9 +131,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrRegisterServicePtr<T>(Allocator allocator, DataAccessorContext context) where T: unmanaged
+		public SafePtr<T> GetOrRegisterServicePtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
 		{
-			return GetOrRegisterServiceIndexedPtr<T>(allocator, context).GetPtr<T>();
+			return GetOrRegisterServiceIndexedPtr<T>(world, context).GetPtr<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

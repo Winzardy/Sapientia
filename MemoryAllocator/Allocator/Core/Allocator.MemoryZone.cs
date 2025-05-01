@@ -7,7 +7,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
 		public readonly struct MemoryZone : IDisposable
@@ -42,7 +42,7 @@ namespace Sapientia.MemoryAllocator
 
 		private int GetMemoryZoneSize(int zoneId, out int usedSize, out int freeSize)
 		{
-			var zone = zonesList[zoneId];
+			var zone = _zonesList[zoneId];
 			var blockPtr = zone.ptr->memory.Cast<MemoryBlock>();
 			var totalSize = 0;
 
@@ -70,12 +70,12 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void AllocateMemoryZone(int zoneSize)
 		{
-			var blockId = new BlockId(freeBlockPools.count - 1, freeBlockPools[freeBlockPools.count - 1].ptr->Count);
+			var blockId = new BlockId(_freeBlockPools.count - 1, _freeBlockPools[_freeBlockPools.count - 1].ptr->Count);
 			var memoryBlock = MemoryBlock.CreateFirstBlock(blockId, zoneSize);
 			var zone = new MemoryZone(memoryBlock, zoneSize);
 
-			freeBlockPools[freeBlockPools.count - 1].ptr->AddBlock(new MemoryBlockRef(zonesList.count, 0));
-			zonesList.Add(zone);
+			_freeBlockPools[_freeBlockPools.count - 1].ptr->AddBlock(new MemoryBlockRef(_zonesList.count, 0));
+			_zonesList.Add(zone);
 
 #if UNITY_5_3_OR_NEWER
 			UnityEngine.Debug.LogWarning($"Zone allocated with Size: {zoneSize}");

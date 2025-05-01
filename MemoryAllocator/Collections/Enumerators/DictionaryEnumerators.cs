@@ -12,12 +12,12 @@ namespace Sapientia.MemoryAllocator
 	{
 		public int LastIndex { get; }
 		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr();
-		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(Allocator allocator);
+		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(Allocator allocator)
+		public DictionaryEnumerator<TKey, TValue> GetEnumerator(World world)
 		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
+			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,9 +27,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(Allocator allocator)
+		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(World world)
 		{
-			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
+			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,9 +39,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(Allocator allocator)
+		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(World world)
 		{
-			return new (new (GetEntryPtr(allocator), LastIndex));
+			return new (new (GetEntryPtr(world), LastIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,9 +51,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(World world)
 		{
-			return new (new (GetEntryPtr(allocator), LastIndex));
+			return new (new (GetEntryPtr(world), LastIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
@@ -14,9 +11,9 @@ namespace Sapientia.MemoryAllocator
 	[DebuggerTypeProxy(typeof(MemArrayProxy<>))]
 	public unsafe struct MemArray
 	{
-		public static readonly MemArray Empty = new () { ptr = Ptr.Invalid, Length = 0, };
+		public static readonly MemArray Empty = new () { ptr = CWPtr.Invalid, Length = 0, };
 
-		public Ptr ptr;
+		public CWPtr ptr;
 		public int Length { get; private set; }
 		public int ElementSize { get; private set; }
 
@@ -31,40 +28,40 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
+		public World GetAllocator()
 		{
 			return ptr.GetAllocator();
 		}
 
 		[INLINE(256)]
-		public MemArray(int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory) : this(AllocatorManager.CurrentAllocator, elementSize, length, clearOptions)
+		public MemArray(int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory) : this(WorldManager.CurrentWorld, elementSize, length, clearOptions)
 		{
 
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator allocator, int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
+		public MemArray(World world, int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			this = default;
 			ptr = default;
-			var memPtr = allocator.MemAlloc(elementSize * length, out var tPtr);
-			ptr = new Ptr(allocator, tPtr, memPtr);
+			var memPtr = world.MemAlloc(elementSize * length, out var tPtr);
+			ptr = new CWPtr(world, tPtr, memPtr);
 			ElementSize = elementSize;
 			Length = length;
 
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
-				Clear(allocator);
+				Clear(world);
 			}
 		}
 
 		[INLINE(256)]
-		public MemArray(in MemArray arr) : this(AllocatorManager.CurrentAllocator, arr)
+		public MemArray(in MemArray arr) : this(WorldManager.CurrentWorld, arr)
 		{
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator allocator, in MemArray arr)
+		public MemArray(World world, in MemArray arr)
 		{
 			if (arr.Length == 0u)
 			{
@@ -76,65 +73,65 @@ namespace Sapientia.MemoryAllocator
 			Length = arr.Length;
 			ElementSize = arr.ElementSize;
 
-			var memPtr = allocator.MemAlloc(arr.ElementSize * arr.Length, out var tPtr);
-			ptr = new Ptr(allocator, tPtr, memPtr);
-			MemArrayExt.CopyNoChecks(allocator, in arr, 0, ref this, 0, arr.Length);
+			var memPtr = world.MemAlloc(arr.ElementSize * arr.Length, out var tPtr);
+			ptr = new CWPtr(world, tPtr, memPtr);
+			MemArrayExt.CopyNoChecks(world, in arr, 0, ref this, 0, arr.Length);
 		}
 
 		[INLINE(256)]
-		public MemArray(MemPtr memPtr, int elementSize, int length)
+		public MemArray(WPtr wPtr, int elementSize, int length)
 		{
-			ptr = new Ptr(memPtr);
+			ptr = new CWPtr(wPtr);
 			Length = length;
 			ElementSize = elementSize;
 			ptr = default;
 		}
 
 		[INLINE(256)]
-		public void ReplaceWith(Allocator allocator, in MemArray other)
+		public void ReplaceWith(World world, in MemArray other)
 		{
-			if (other.ptr.memPtr == ptr.memPtr)
+			if (other.ptr.wPtr == ptr.wPtr)
 			{
 				return;
 			}
 
-			Dispose(allocator);
+			Dispose(world);
 			this = other;
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(Allocator allocator, in MemArray other)
+		public void CopyFrom(World world, in MemArray other)
 		{
-			if (other.ptr.memPtr == ptr.memPtr) return;
-			if (!ptr.memPtr.IsCreated() && !other.ptr.memPtr.IsCreated())
+			if (other.ptr.wPtr == ptr.wPtr) return;
+			if (!ptr.wPtr.IsCreated() && !other.ptr.wPtr.IsCreated())
 				return;
-			if (ptr.memPtr.IsCreated() && !other.ptr.memPtr.IsCreated())
+			if (ptr.wPtr.IsCreated() && !other.ptr.wPtr.IsCreated())
 			{
-				Dispose(allocator);
+				Dispose(world);
 				return;
 			}
 
-			if (ptr.memPtr.IsCreated() == false)
-				this = new MemArray(allocator, other.ElementSize, other.Length, ClearOptions.ClearMemory);
+			if (ptr.wPtr.IsCreated() == false)
+				this = new MemArray(world, other.ElementSize, other.Length, ClearOptions.ClearMemory);
 
-			MemArrayExt.Copy(allocator, in other, ref this);
+			MemArrayExt.Copy(world, in other, ref this);
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			if (ptr.memPtr.IsCreated())
+			if (ptr.wPtr.IsCreated())
 			{
-				allocator.MemFree(ptr.memPtr);
+				world.MemFree(ptr.wPtr);
 			}
 
 			this = default;
 		}
 
 		[INLINE(256)]
-		public SafePtr GetPtr(Allocator allocator)
+		public SafePtr GetPtr(World world)
 		{
-			return ptr.GetPtr(allocator);
+			return ptr.GetPtr(world);
 		}
 
 		[INLINE(256)]
@@ -144,15 +141,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemPtr GetAllocPtr(int index)
+		public WPtr GetAllocPtr(int index)
 		{
-			return ptr.memPtr.GetArrayElement(ElementSize, index);
+			return ptr.wPtr.GetArrayElement(ElementSize, index);
 		}
 
 		[INLINE(256)]
-		public ref T GetValue<T>(Allocator allocator, int index) where T: unmanaged
+		public ref T GetValue<T>(World world, int index) where T: unmanaged
 		{
-			return ref (GetPtr(allocator).Cast<T>() + index).Value();
+			return ref (GetPtr(world).Cast<T>() + index).Value();
 		}
 
 		[INLINE(256)]
@@ -168,14 +165,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr<T>(Allocator allocator) where T: unmanaged
+		public SafePtr<T> GetValuePtr<T>(World world) where T: unmanaged
 		{
-			return GetPtr(allocator);
+			return GetPtr(world);
 		}
 
-		public Span<T> GetSpan<T>(Allocator allocator) where T: unmanaged
+		public Span<T> GetSpan<T>(World world) where T: unmanaged
 		{
-			return new Span<T>(GetValuePtr<T>(allocator).ptr, Length);
+			return new Span<T>(GetValuePtr<T>(world).ptr, Length);
 		}
 
 		[INLINE(256)]
@@ -185,9 +182,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr<T>(Allocator allocator, int index) where T: unmanaged
+		public SafePtr<T> GetValuePtr<T>(World world, int index) where T: unmanaged
 		{
-			return GetPtr(allocator).Cast<T>() + index;
+			return GetPtr(world).Cast<T>() + index;
 		}
 
 		public SafePtr GetValuePtr()
@@ -196,9 +193,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr GetValuePtr(Allocator allocator)
+		public SafePtr GetValuePtr(World world)
 		{
-			return GetPtr(allocator);
+			return GetPtr(world);
 		}
 
 		[INLINE(256)]
@@ -208,17 +205,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr GetValuePtr(Allocator allocator, int index)
+		public SafePtr GetValuePtr(World world, int index)
 		{
-			return GetPtr(allocator) + (index * ElementSize);
+			return GetPtr(world) + (index * ElementSize);
 		}
 
 		[INLINE(256)]
-		public bool Resize(Allocator allocator, int newLength, int elementSize, ClearOptions options = ClearOptions.ClearMemory)
+		public bool Resize(World world, int newLength, int elementSize, ClearOptions options = ClearOptions.ClearMemory)
 		{
 			if (!IsCreated)
 			{
-				this = new MemArray(allocator, elementSize, newLength, options);
+				this = new MemArray(world, elementSize, newLength, options);
 				return true;
 			}
 
@@ -230,12 +227,12 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(elementSize == ElementSize);
 
 			var prevLength = Length;
-			var arrPtr = allocator.MemReAlloc(ptr.memPtr, elementSize * newLength, out var rawPtr);
-			ptr = new Ptr(allocator, rawPtr, arrPtr);
+			var arrPtr = world.MemReAlloc(ptr.wPtr, elementSize * newLength, out var rawPtr);
+			ptr = new CWPtr(world, rawPtr, arrPtr);
 
 			if (options == ClearOptions.ClearMemory)
 			{
-				Clear(allocator, prevLength, newLength - prevLength);
+				Clear(world, prevLength, newLength - prevLength);
 			}
 
 			Length = newLength;
@@ -243,30 +240,30 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Resize<T>(Allocator allocator, int newLength, ClearOptions options = ClearOptions.ClearMemory)
+		public bool Resize<T>(World world, int newLength, ClearOptions options = ClearOptions.ClearMemory)
 			where T : unmanaged
 		{
 			var elementSize = TSize<T>.size;
-			return Resize(allocator, newLength, elementSize, options);
+			return Resize(world, newLength, elementSize, options);
 		}
 
 		[INLINE(256)]
-		public void Fill<T>(Allocator allocator, in T value, int fromIndex, int count) where T: unmanaged
+		public void Fill<T>(World world, in T value, int fromIndex, int count) where T: unmanaged
 		{
-			allocator.MemFill<T>(ptr.memPtr, value, fromIndex, count);
+			world.MemFill<T>(ptr.wPtr, value, fromIndex, count);
 		}
 
 		[INLINE(256)]
-		public void Clear(Allocator allocator)
+		public void Clear(World world)
 		{
-			Clear(allocator, 0, Length);
+			Clear(world, 0, Length);
 		}
 
 		[INLINE(256)]
-		public void Clear(Allocator allocator, int index, int length)
+		public void Clear(World world, int index, int length)
 		{
 			var size = ElementSize;
-			allocator.MemClear(ptr.memPtr, index * size, length * size);
+			world.MemClear(ptr.wPtr, index * size, length * size);
 		}
 
 		[INLINE(256)]
@@ -281,16 +278,16 @@ namespace Sapientia.MemoryAllocator
 			if (!IsCreated)
 				return;
 			var size = ElementSize;
-			var allocator = ptr.memPtr.GetAllocator();
-			allocator.MemClear(ptr.memPtr, index * size, length * size);
+			var allocator = ptr.wPtr.GetWorld();
+			allocator.MemClear(ptr.wPtr, index * size, length * size);
 		}
 
 		[INLINE(256)]
-		public bool Contains<T, TU>(Allocator allocator, in TU obj) where T: unmanaged where TU : unmanaged, IEquatable<T>
+		public bool Contains<T, TU>(World world, in TU obj) where T: unmanaged where TU : unmanaged, IEquatable<T>
 		{
 			E.ASSERT(IsCreated);
 
-			var safePtr = GetPtr(allocator).Cast<T>();
+			var safePtr = GetPtr(world).Cast<T>();
 			for (int i = 0, cnt = Length; i < cnt; ++i)
 			{
 				if (obj.Equals((safePtr + i).Value()))
@@ -309,9 +306,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListEnumerator<T> GetEnumerator<T>(Allocator allocator) where T: unmanaged
+		public ListEnumerator<T> GetEnumerator<T>(World world) where T: unmanaged
 		{
-			return new ListEnumerator<T>(GetValuePtr<T>(allocator), Count);
+			return new ListEnumerator<T>(GetValuePtr<T>(world), Count);
 		}
 
 		[INLINE(256)]
@@ -321,9 +318,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator<T>(Allocator allocator) where T: unmanaged
+		public ListPtrEnumerator<T> GetPtrEnumerator<T>(World world) where T: unmanaged
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(allocator), ElementSize, Count);
+			return new ListPtrEnumerator<T>(GetValuePtr(world), ElementSize, Count);
 		}
 
 		[INLINE(256)]
@@ -333,9 +330,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>(Allocator allocator) where T: unmanaged
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>(World world) where T: unmanaged
 		{
-			return new (new (GetValuePtr<T>(allocator), Count));
+			return new (new (GetValuePtr<T>(world), Count));
 		}
 
 		[INLINE(256)]
@@ -345,9 +342,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>(Allocator allocator) where T: unmanaged
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>(World world) where T: unmanaged
 		{
-			return new (new (GetValuePtr(allocator), ElementSize, Count));
+			return new (new (GetValuePtr(world), ElementSize, Count));
 		}
 
 		[INLINE(256)]

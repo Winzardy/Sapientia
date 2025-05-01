@@ -1,6 +1,5 @@
 using Sapientia.Collections;
 using Sapientia.Data;
-using Sapientia.MemoryAllocator.Data;
 using Sapientia.ServiceManagement;
 using Sapientia.TypeIndexer;
 
@@ -24,9 +23,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 	}
 
-	public abstract unsafe class StateBuilder
+	public abstract class StateBuilder
 	{
-		protected Allocator _allocator;
+		protected World _world;
 
 		private readonly SimpleList<ProxyPtr<IWorldStatePartProxy>> _stateParts = new();
 		private readonly SimpleList<ProxyPtr<IWorldSystemProxy>> _systems = new();
@@ -40,15 +39,15 @@ namespace Sapientia.MemoryAllocator.State
 
 		public State Build(int initialSize = -1)
 		{
-			_allocator = AllocatorManager.CreateAllocator(initialSize);
-			var world = WorldState.Create(_allocator);
+			_world = WorldManager.CreateAllocator(initialSize);
+			var world = WorldState.Create(_world);
 
 			AddStateParts();
 			AddSystems();
 
 			InitializeWorld(world);
 
-			return new State(_allocator.allocatorId);
+			return new State(_world.worldId);
 		}
 
 		protected virtual void InitializeWorld(SafePtr<WorldState> worldState)
@@ -73,13 +72,13 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
 		{
-			LocalStatePartService.AddStatePart(_allocator, value);
-			ServiceContext<AllocatorId>.SetService(_allocator.allocatorId, value);
+			LocalStatePartService.AddStatePart(_world, value);
+			ServiceContext<WorldId>.SetService(_world.worldId, value);
 		}
 
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart
 		{
-			var proxy = ProxyPtr<IWorldStatePartProxy>.Create(_allocator, value);
+			var proxy = ProxyPtr<IWorldStatePartProxy>.Create(_world, value);
 			_stateParts.Add(proxy);
 		}
 
@@ -91,7 +90,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void AddSystem<T>() where T: unmanaged, IWorldSystem
 		{
-			var proxy = ProxyPtr<IWorldSystemProxy>.Create<T>(_allocator);
+			var proxy = ProxyPtr<IWorldSystemProxy>.Create<T>(_world);
 			_systems.Add(proxy);
 		}
 

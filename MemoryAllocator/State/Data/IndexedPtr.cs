@@ -1,74 +1,73 @@
 using System;
-using System.Diagnostics;
 using Sapientia.Data;
 using Sapientia.TypeIndexer;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
-namespace Sapientia.MemoryAllocator.Data
+namespace Sapientia.MemoryAllocator
 {
-	public unsafe struct IndexedPtr : IEquatable<IndexedPtr>
+	public struct IndexedPtr : IEquatable<IndexedPtr>
 	{
 		public readonly TypeIndex typeIndex;
-		private Ptr _ptr;
+		private CWPtr _ptr;
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => _ptr.memPtr.IsCreated();
+			[INLINE(256)] get => _ptr.wPtr.IsCreated();
 		}
 
 		[INLINE(256)]
-		public IndexedPtr(MemPtr memPtr, TypeIndex typeIndex)
+		public IndexedPtr(WPtr wPtr, TypeIndex typeIndex)
 		{
-			_ptr = new (memPtr);
+			_ptr = new (wPtr);
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public IndexedPtr(Ptr ptr, TypeIndex typeIndex)
+		public IndexedPtr(CWPtr ptr, TypeIndex typeIndex)
 		{
 			_ptr = ptr;
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public IndexedPtr(Allocator allocator, SafePtr cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
+		public IndexedPtr(World world, SafePtr cachedPtr, WPtr wPtr, TypeIndex typeIndex)
 		{
-			_ptr = new Ptr(allocator, cachedPtr, memPtr);
+			_ptr = new CWPtr(world, cachedPtr, wPtr);
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(Ptr<T> ptr) where T : unmanaged
+		public static IndexedPtr Create<T>(CWPtr<T> ptr) where T : unmanaged
 		{
 			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(Ptr ptr) where T : unmanaged
+		public static IndexedPtr Create<T>(CWPtr ptr) where T : unmanaged
 		{
 			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(Allocator allocator) where T : unmanaged
+		public static IndexedPtr Create<T>(World world) where T : unmanaged
 		{
-			var memPtr = allocator.MemAlloc<T>(out var rawPtr);
-			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			var memPtr = world.MemAlloc<T>(out var rawPtr);
+			return new IndexedPtr(world, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(Allocator allocator, in T value) where T : unmanaged
+		public static IndexedPtr Create<T>(World world, in T value) where T : unmanaged
 		{
-			var memPtr = allocator.MemAlloc<T>(value, out var rawPtr);
-			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			var memPtr = world.MemAlloc<T>(value, out var rawPtr);
+			return new IndexedPtr(world, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
 		public static IndexedPtr Create<T>(in T value) where T : unmanaged
 		{
-			var allocator = AllocatorManager.CurrentAllocator;
-			var memPtr = allocator.MemAlloc<T>(value, out var rawPtr);
-			return new IndexedPtr(allocator, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			var world = WorldManager.CurrentWorld;
+			var memPtr = world.MemAlloc<T>(value, out var rawPtr);
+			return new IndexedPtr(world, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
@@ -79,10 +78,10 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public ref T GetValue<T>(Allocator allocator) where T : unmanaged
+		public ref T GetValue<T>(World world) where T : unmanaged
 		{
 			E.ASSERT(IsCreated);
-			return ref _ptr.Get<T>(allocator);
+			return ref _ptr.Get<T>(world);
 		}
 
 		[INLINE(256)]
@@ -93,10 +92,10 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public SafePtr GetPtr(Allocator allocator)
+		public SafePtr GetPtr(World world)
 		{
 			E.ASSERT(IsCreated);
-			return _ptr.GetPtr(allocator);
+			return _ptr.GetPtr(world);
 		}
 
 		[INLINE(256)]
@@ -107,43 +106,43 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetPtr<T>(Allocator allocator) where T: unmanaged
+		public SafePtr<T> GetPtr<T>(World world) where T: unmanaged
 		{
 			E.ASSERT(IsCreated);
-			return _ptr.GetPtr(allocator);
+			return _ptr.GetPtr(world);
 		}
 
 		[INLINE(256)]
-		public readonly MemPtr GetMemPtr()
+		public readonly WPtr GetMemPtr()
 		{
 			E.ASSERT(IsCreated);
-			return _ptr.memPtr;
+			return _ptr.wPtr;
 		}
 
 		[INLINE(256)]
-		public readonly Ptr GetCachedPtr()
-		{
-			E.ASSERT(IsCreated);
-			return _ptr;
-		}
-
-		[INLINE(256)]
-		public readonly Ptr<T> GetCachedPtr<T>() where T : unmanaged
+		public readonly CWPtr GetCachedPtr()
 		{
 			E.ASSERT(IsCreated);
 			return _ptr;
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
+		public readonly CWPtr<T> GetCachedPtr<T>() where T : unmanaged
+		{
+			E.ASSERT(IsCreated);
+			return _ptr;
+		}
+
+		[INLINE(256)]
+		public World GetAllocator()
 		{
 			return _ptr.GetAllocator();
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			_ptr.Dispose(allocator);
+			_ptr.Dispose(world);
 			this = default;
 		}
 
@@ -155,9 +154,9 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[INLINE(256)]
-		public IndexedPtr CopyTo(Allocator srsAllocator, Allocator dstAllocator)
+		public IndexedPtr CopyTo(World srsWorld, World dstWorld)
 		{
-			return new IndexedPtr(_ptr.CopyTo(srsAllocator, dstAllocator), typeIndex);
+			return new IndexedPtr(_ptr.CopyTo(srsWorld, dstWorld), typeIndex);
 		}
 
 		public static bool operator ==(IndexedPtr a, IndexedPtr b)

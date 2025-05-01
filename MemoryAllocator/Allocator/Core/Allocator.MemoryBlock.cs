@@ -4,7 +4,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
 		public struct MemoryBlock

@@ -1,6 +1,5 @@
 using Sapientia.Data;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -11,57 +10,57 @@ namespace Sapientia.MemoryAllocator
 	{
 		private const int _bitsInUlong = sizeof(ulong) * 8;
 
-		public Ptr<ulong> ptr;
+		public CWPtr<ulong> ptr;
 		public int length;
 
 		public bool IsCreated => ptr.IsCreated();
 
 		[INLINE(256)]
-		public SafePtr<ulong> GetPtr(Allocator allocator)
+		public SafePtr<ulong> GetPtr(World world)
 		{
-			return ptr.GetPtr(allocator);
+			return ptr.GetPtr(world);
 		}
 
 		[INLINE(256)]
-		public BitArray(Allocator allocator, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
+		public BitArray(World world, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(length);
 
-			ptr = new Ptr<ulong>(allocator, allocator.MemAlloc(sizeInBytes, out var safePtr), safePtr);
+			ptr = new CWPtr<ulong>(world, world.MemAlloc(sizeInBytes, out var safePtr), safePtr);
 			this.length = length;
 
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
-				allocator.MemClear(ptr.memPtr, 0, sizeInBytes);
+				world.MemClear(ptr.wPtr, 0, sizeInBytes);
 			}
 		}
 
 		[INLINE(256)]
-		public BitArray(Allocator allocator, BitArray source)
+		public BitArray(World world, BitArray source)
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(source.length);
 
-			ptr = new Ptr<ulong>(allocator, allocator.MemAlloc(sizeInBytes, out var safePtr), safePtr);
+			ptr = new CWPtr<ulong>(world, world.MemAlloc(sizeInBytes, out var safePtr), safePtr);
 			length = source.length;
 
-			MemoryExt.MemCopy(source.ptr.GetPtr(allocator).Cast<byte>(), safePtr.Cast<byte>(), sizeInBytes);
+			MemoryExt.MemCopy(source.ptr.GetPtr(world).Cast<byte>(), safePtr.Cast<byte>(), sizeInBytes);
 		}
 
 		[INLINE(256)]
-		public void Set(Allocator allocator, BitArray source)
+		public void Set(World world, BitArray source)
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(source.length);
-			Resize(allocator, source.length);
+			Resize(world, source.length);
 
-			MemoryExt.MemCopy(source.ptr.GetPtr(allocator).Cast<byte>(), ptr.GetPtr(allocator).Cast<byte>(), sizeInBytes);
+			MemoryExt.MemCopy(source.ptr.GetPtr(world).Cast<byte>(), ptr.GetPtr(world).Cast<byte>(), sizeInBytes);
 		}
 
 		[INLINE(256)]
-		public bool ContainsAll(Allocator allocator, BitArray other)
+		public bool ContainsAll(World world, BitArray other)
 		{
 			var len = Bitwise.GetMinLength(other.length, length);
-			var unsafePtr = ptr.GetPtr(allocator);
-			var ptrOther = other.ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
+			var ptrOther = other.ptr.GetPtr(world);
 			for (var index = 0; index < len; index++)
 			{
 				if ((unsafePtr[index] & ptrOther[index]) != ptrOther[index])
@@ -72,12 +71,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Resize(Allocator allocator, int newLength, ClearOptions clearOptions = ClearOptions.ClearMemory)
+		public void Resize(World world, int newLength, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			if (newLength > length)
 			{
-				var memPtr = allocator.MemReAlloc(ptr.memPtr, TSize<ulong>.size * Bitwise.AlignULongBits(length), out var rawPtr);
-				ptr = new Ptr<ulong>(allocator, memPtr, rawPtr);
+				var memPtr = world.MemReAlloc(ptr.wPtr, TSize<ulong>.size * Bitwise.AlignULongBits(length), out var rawPtr);
+				ptr = new CWPtr<ulong>(world, memPtr, rawPtr);
 
 				if (clearOptions == ClearOptions.ClearMemory)
 				{
@@ -95,9 +94,9 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="value">The value to set each bit to.</param>
 		/// <returns>The instance of the modified bitmap.</returns>
 		[INLINE(256)]
-		public void SetAllBits(Allocator allocator, bool value)
+		public void SetAllBits(World world, bool value)
 		{
-			var unsafePtr = ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
 			var len = Bitwise.GetLength(length);
 			var setValue = value ? ulong.MaxValue : ulong.MinValue;
 			for (var index = 0; index < len; index++)
@@ -109,14 +108,14 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Gets the value of the bit at the specified index.
 		/// </summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="index">The index of the bit.</param>
 		/// <returns>The value of the bit at the specified index.</returns>
 		[INLINE(256)]
-		public bool IsSet(Allocator allocator, int index)
+		public bool IsSet(World world, int index)
 		{
 			E.RANGE(index, 0, length);
-			var unsafePtr = ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
 			return (unsafePtr[index / _bitsInUlong] & (0x1ul << (index % _bitsInUlong))) > 0;
 		}
 
@@ -133,15 +132,15 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Sets the value of the bit at the specified index to the specified value.
 		/// </summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="index">The index of the bit to set.</param>
 		/// <param name="value">The value to set the bit to.</param>
 		/// <returns>The instance of the modified bitmap.</returns>
 		[INLINE(256)]
-		public void Set(Allocator allocator, int index, bool value)
+		public void Set(World world, int index, bool value)
 		{
 			E.RANGE(index, 0, length);
-			var unsafePtr = ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
 			if (value)
 			{
 				unsafePtr[index / _bitsInUlong] |= 0x1ul << (index % _bitsInUlong);
@@ -171,12 +170,12 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="bitmap">The bitmap to union with this instance.</param>
 		/// <returns>A reference to this instance.</returns>
 		[INLINE(256)]
-		public void Union(Allocator allocator, BitArray bitmap)
+		public void Union(World world, BitArray bitmap)
 		{
-			Resize(allocator, bitmap.length > length ? bitmap.length : length);
+			Resize(world, bitmap.length > length ? bitmap.length : length);
 			E.RANGE(bitmap.length - 1, 0, length);
-			var unsafePtr = ptr.GetPtr(allocator);
-			var otherPtr = bitmap.ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
+			var otherPtr = bitmap.ptr.GetPtr(world);
 			var len = Bitwise.GetMinLength(bitmap.length, length);
 
 			for (var index = 0; index < len; ++index)
@@ -192,11 +191,11 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="bitmap">The bitmap to intersect with this instance.</param>
 		/// <returns>A reference to this instance.</returns>
 		[INLINE(256)]
-		public void Intersect(Allocator allocator, BitArray bitmap)
+		public void Intersect(World world, BitArray bitmap)
 		{
 			E.RANGE(bitmap.length - 1, 0, length);
-			var unsafePtr = ptr.GetPtr(allocator);
-			var otherPtr = bitmap.ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
+			var otherPtr = bitmap.ptr.GetPtr(world);
 			var len = Bitwise.GetMinLength(bitmap.length, length);
 			for (var index = 0; index < len; ++index)
 			{
@@ -205,10 +204,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Remove(Allocator allocator, BitArray bitmap)
+		public void Remove(World world, BitArray bitmap)
 		{
-			var unsafePtr = ptr.GetPtr(allocator);
-			var otherPtr = bitmap.ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
+			var otherPtr = bitmap.ptr.GetPtr(world);
 			var len = Bitwise.GetMinLength(bitmap.length, length);
 			for (var index = 0; index < len; ++index)
 			{
@@ -220,9 +219,9 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <returns>A reference to this instance.</returns>
 		[INLINE(256)]
-		public void Invert(Allocator allocator)
+		public void Invert(World world)
 		{
-			var unsafePtr = ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
 			var len = Bitwise.GetLength(length);
 			for (var index = 0; index < len; ++index)
 			{
@@ -238,15 +237,15 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="value">The value to set the bits to.</param>
 		/// <returns>A reference to this instance.</returns>
 		[INLINE(256)]
-		public void SetRange(Allocator allocator, int start, int end, bool value)
+		public void SetRange(World world, int start, int end, bool value)
 		{
 			if (start == end)
 			{
-				Set(allocator, start, value);
+				Set(world, start, value);
 				return;
 			}
 
-			var unsafePtr = ptr.GetPtr(allocator);
+			var unsafePtr = ptr.GetPtr(world);
 			var startBucket = start / _bitsInUlong;
 			var startOffset = start % _bitsInUlong;
 			var endBucket = end / _bitsInUlong;
@@ -277,15 +276,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Clear(Allocator allocator)
+		public void Clear(World world)
 		{
-			SetAllBits(allocator, false);
+			SetAllBits(world, false);
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			allocator.MemFree(ptr.memPtr);
+			world.MemFree(ptr.wPtr);
 			this = default;
 		}
 
@@ -309,7 +308,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = AllocatorManager.CurrentAllocator;
+				var allocator = WorldManager.CurrentWorld;
 				var array = new bool[_data.length];
 				for (var i = 0; i < _data.length; ++i)
 				{
@@ -324,7 +323,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = AllocatorManager.CurrentAllocator;
+				var allocator = WorldManager.CurrentWorld;
 				var array = new System.Collections.Generic.List<int>(_data.length);
 				for (var i = 0; i < _data.length; ++i)
 				{

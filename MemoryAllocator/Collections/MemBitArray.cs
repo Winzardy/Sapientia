@@ -523,7 +523,7 @@ namespace Sapientia.MemoryAllocator
 		/// <value>Pointer to the data.</value>
 		//[NativeDisableUnsafePtrRestriction]
 		//public ulong* Ptr;
-		public MemPtr ptr;
+		public WPtr ptr;
 
 		/// <summary>
 		/// The number of bits.
@@ -538,7 +538,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="allocator">The allocator that was used to allocate the bytes. Needed to dispose this array.</param>
 		/// <param name="sizeInBytes">The number of bytes. The length will be `sizeInBytes * 8`.</param>
 		[INLINE(256)]
-		public MemBitArray(MemPtr ptr, int sizeInBytes)
+		public MemBitArray(WPtr ptr, int sizeInBytes)
 		{
 			this.ptr = ptr;
 			length = sizeInBytes * 8;
@@ -548,29 +548,29 @@ namespace Sapientia.MemoryAllocator
 		/// Initializes and returns an instance of UnsafeBitArray.
 		/// </summary>
 		/// <param name="numBits">Number of bits.</param>
-		/// <param name="allocator">The allocator to use.</param>
+		/// <param name="worldator">The allocator to use.</param>
 		/// <param name="options">Whether newly allocated bytes should be zeroed out.</param>
 		[INLINE(256)]
-		public MemBitArray(Allocator allocator, int numBits, ClearOptions options = ClearOptions.ClearMemory)
+		public MemBitArray(World world, int numBits, ClearOptions options = ClearOptions.ClearMemory)
 		{
 			var sizeInBytes = Bitwise.AlignUp(numBits, 64) / 8;
-			ptr = allocator.MemAlloc(sizeInBytes);
+			ptr = world.MemAlloc(sizeInBytes);
 			length = numBits;
 
 			if (options == ClearOptions.ClearMemory)
 			{
-				allocator.MemClear(ptr, 0, sizeInBytes);
+				world.MemClear(ptr, 0, sizeInBytes);
 			}
 		}
 
 		[INLINE(256)]
-		public void Resize(Allocator allocator, int numBits)
+		public void Resize(World world, int numBits)
 		{
 			if (numBits > length)
 			{
-				var newList = new MemBitArray(allocator, numBits, ClearOptions.ClearMemory);
-				newList.Copy(allocator, 0, ref this, 0, length);
-				Dispose(allocator);
+				var newList = new MemBitArray(world, numBits, ClearOptions.ClearMemory);
+				newList.Copy(world, 0, ref this, 0, length);
+				Dispose(world);
 				this = newList;
 			}
 		}
@@ -585,9 +585,9 @@ namespace Sapientia.MemoryAllocator
 		/// Releases all resources (memory and safety handles).
 		/// </summary>
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			allocator.MemFree(ptr);
+			world.MemFree(ptr);
 			this = default;
 		}
 
@@ -595,10 +595,10 @@ namespace Sapientia.MemoryAllocator
 		/// Sets all the bits to 0.
 		/// </summary>
 		[INLINE(256)]
-		public void Clear(Allocator allocator)
+		public void Clear(World world)
 		{
 			var sizeInBytes = Bitwise.AlignUp(length, 64) / 8;
-			allocator.MemClear(ptr, 0, sizeInBytes);
+			world.MemClear(ptr, 0, sizeInBytes);
 		}
 
 		/// <summary>
@@ -607,9 +607,9 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="pos">Index of the bit to set.</param>
 		/// <param name="value">True for 1, false for 0.</param>
 		[INLINE(256)]
-		public void Set(Allocator allocator, int pos, bool value)
+		public void Set(World world, int pos, bool value)
 		{
-			var ptr = allocator.GetSafePtr<ulong>(in this.ptr);
+			var ptr = world.GetSafePtr<ulong>(in this.ptr);
 			var idx = pos >> 6;
 			var shift = pos & 0x3f;
 			var mask = 1ul << shift;
@@ -645,9 +645,9 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits to set.</param>
 		/// <exception cref="System.ArgumentException">Thrown if pos is out of bounds or if numBits is less than 1.</exception>
 		[INLINE(256)]
-		public void SetBits(Allocator allocator, int pos, bool value, int numBits)
+		public void SetBits(World world, int pos, bool value, int numBits)
 		{
-			var rawPtr = allocator.GetSafePtr<ulong>(in ptr);
+			var rawPtr = world.GetSafePtr<ulong>(in ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -695,9 +695,9 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits to set (must be between 1 and 64).</param>
 		/// <exception cref="System.ArgumentException">Thrown if pos is out of bounds or if numBits is not between 1 and 64.</exception>
 		[INLINE(256)]
-		public void SetBits(Allocator allocator, int pos, ulong value, int numBits = 1)
+		public void SetBits(World world, int pos, ulong value, int numBits = 1)
 		{
-			var ptr = allocator.GetSafePtr<ulong>(in this.ptr);
+			var ptr = world.GetSafePtr<ulong>(in this.ptr);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
 
@@ -735,9 +735,9 @@ namespace Sapientia.MemoryAllocator
 		/// <exception cref="System.ArgumentException">Thrown if pos is out of bounds or if numBits is not between 1 and 64.</exception>
 		/// <returns>A ulong which has bits copied from this array.</returns>
 		[INLINE(256)]
-		public ulong GetBits(Allocator allocator, int pos, int numBits = 1)
+		public ulong GetBits(World world, int pos, int numBits = 1)
 		{
-			var ptr = allocator.GetSafePtr<ulong>(in this.ptr);
+			var ptr = world.GetSafePtr<ulong>(in this.ptr);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
 
@@ -767,9 +767,9 @@ namespace Sapientia.MemoryAllocator
 		/// <returns>True if the bit at the index is 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds.</exception>
 		[INLINE(256)]
-		public bool IsSet(Allocator allocator, int pos)
+		public bool IsSet(World world, int pos)
 		{
-			var ptr = allocator.GetSafePtr<ulong>(in this.ptr);
+			var ptr = world.GetSafePtr<ulong>(in this.ptr);
 			var idx = pos >> 6;
 			var shift = pos & 0x3f;
 			var mask = 1ul << shift;
@@ -777,10 +777,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		internal void CopyUlong(Allocator allocator, int dstPos, ref MemBitArray srcBitArray, int srcPos,
+		internal void CopyUlong(World world, int dstPos, ref MemBitArray srcBitArray, int srcPos,
 			int numBits)
 		{
-			SetBits(allocator, dstPos, srcBitArray.GetBits(allocator, srcPos, numBits), numBits);
+			SetBits(world, dstPos, srcBitArray.GetBits(world, srcPos, numBits), numBits);
 		}
 
 		/// <summary>
@@ -797,14 +797,14 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits to copy.</param>
 		/// <exception cref="System.ArgumentException">Thrown if either `dstPos + numBits` or `srcPos + numBits` exceed the length of this array.</exception>
 		[INLINE(256)]
-		public void Copy(Allocator allocator, int dstPos, int srcPos, int numBits)
+		public void Copy(World world, int dstPos, int srcPos, int numBits)
 		{
 			if (dstPos == srcPos)
 			{
 				return;
 			}
 
-			Copy(allocator, dstPos, ref this, srcPos, numBits);
+			Copy(world, dstPos, ref this, srcPos, numBits);
 		}
 
 		/// <summary>
@@ -822,9 +822,9 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">The number of bits to copy.</param>
 		/// <exception cref="System.ArgumentException">Thrown if either `dstPos + numBits` or `srcBitArray + numBits` exceed the length of this array.</exception>
 		[INLINE(256)]
-		public void Copy(Allocator allocator, int dstPos, ref MemBitArray srcBitArray, int srcPos, int numBits)
+		public void Copy(World world, int dstPos, ref MemBitArray srcBitArray, int srcPos, int numBits)
 		{
-			var ptr = allocator.GetSafePtr<ulong>(in this.ptr);
+			var ptr = world.GetSafePtr<ulong>(in this.ptr);
 			if (numBits == 0)
 			{
 				return;
@@ -832,16 +832,16 @@ namespace Sapientia.MemoryAllocator
 
 			if (numBits <= 64) // 1x CopyUlong
 			{
-				CopyUlong(allocator, dstPos, ref srcBitArray, srcPos, numBits);
+				CopyUlong(world, dstPos, ref srcBitArray, srcPos, numBits);
 			}
 			else if (numBits <= 128) // 2x CopyUlong
 			{
-				CopyUlong(allocator, dstPos, ref srcBitArray, srcPos, 64);
+				CopyUlong(world, dstPos, ref srcBitArray, srcPos, 64);
 				numBits -= 64;
 
 				if (numBits > 0)
 				{
-					CopyUlong(allocator, dstPos + 64, ref srcBitArray, srcPos + 64, numBits);
+					CopyUlong(world, dstPos + 64, ref srcBitArray, srcPos + 64, numBits);
 				}
 			}
 			else if ((dstPos & 7) == (srcPos & 7)) // aligned copy
@@ -852,7 +852,7 @@ namespace Sapientia.MemoryAllocator
 
 				if (numPreBits > 0)
 				{
-					CopyUlong(allocator, dstPos, ref srcBitArray, srcPos, numPreBits);
+					CopyUlong(world, dstPos, ref srcBitArray, srcPos, numPreBits);
 				}
 
 				var numBitsLeft = numBits - numPreBits;
@@ -860,14 +860,14 @@ namespace Sapientia.MemoryAllocator
 
 				if (numBytes > 0)
 				{
-					allocator.MemMove(srcBitArray.ptr, srcPosInBytes, this.ptr, dstPosInBytes, numBytes);
+					world.MemMove(srcBitArray.ptr, srcPosInBytes, this.ptr, dstPosInBytes, numBytes);
 				}
 
 				var numPostBits = numBitsLeft & 7;
 
 				if (numPostBits > 0)
 				{
-					CopyUlong(allocator, (dstPosInBytes + numBytes) * 8, ref srcBitArray, (srcPosInBytes + numBytes) * 8, numPostBits);
+					CopyUlong(world, (dstPosInBytes + numBytes) * 8, ref srcBitArray, (srcPosInBytes + numBytes) * 8, numPostBits);
 				}
 			}
 			else // unaligned copy
@@ -877,7 +877,7 @@ namespace Sapientia.MemoryAllocator
 
 				if (numPreBits > 0)
 				{
-					CopyUlong(allocator, dstPos, ref srcBitArray, srcPos, numPreBits);
+					CopyUlong(world, dstPos, ref srcBitArray, srcPos, numPreBits);
 					numBits -= numPreBits;
 					dstPos += numPreBits;
 					srcPos += numPreBits;
@@ -885,12 +885,12 @@ namespace Sapientia.MemoryAllocator
 
 				for (; numBits >= 64; numBits -= 64, dstPos += 64, srcPos += 64)
 				{
-					ptr[dstPos >> 6] = srcBitArray.GetBits(allocator, srcPos, 64);
+					ptr[dstPos >> 6] = srcBitArray.GetBits(world, srcPos, 64);
 				}
 
 				if (numBits > 0)
 				{
-					CopyUlong(allocator, dstPos, ref srcBitArray, srcPos, numBits);
+					CopyUlong(world, dstPos, ref srcBitArray, srcPos, numBits);
 				}
 			}
 		}
@@ -903,9 +903,9 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of contiguous 0 bits to look for.</param>
 		/// <returns>The index of the first occurrence in this array of `numBits` contiguous 0 bits. Range is pos up to (but not including) the length of this array. Returns -1 if no occurrence is found.</returns>
 		[INLINE(256)]
-		public int Find(Allocator allocator, int pos, int numBits)
+		public int Find(World world, int pos, int numBits)
 		{
-			var safePtr = allocator.GetSafePtr<ulong>(in this.ptr);
+			var safePtr = world.GetSafePtr<ulong>(in this.ptr);
 			var count = length - pos;
 			return Bitwise.Find(safePtr.ptr, pos, count, numBits);
 		}
@@ -919,9 +919,9 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="count">Number of indexes to consider as the return value.</param>
 		/// <returns>The index of the first occurrence in this array of `numBits` contiguous 0 bits. Range is pos up to (but not including) `pos + count`. Returns -1 if no occurrence is found.</returns>
 		[INLINE(256)]
-		public int Find(Allocator allocator, int pos, int count, int numBits)
+		public int Find(World world, int pos, int count, int numBits)
 		{
-			var safePtr = allocator.GetSafePtr<ulong>(in this.ptr);
+			var safePtr = world.GetSafePtr<ulong>(in this.ptr);
 			return Bitwise.Find(safePtr.ptr, pos, count, numBits);
 		}
 
@@ -933,9 +933,9 @@ namespace Sapientia.MemoryAllocator
 		/// <returns>Returns true if none of the bits in range `pos` up to (but not including) `pos + numBits` are 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds or `numBits` is less than 1.</exception>
 		[INLINE(256)]
-		public bool TestNone(Allocator allocator, int pos, int numBits = 1)
+		public bool TestNone(World world, int pos, int numBits = 1)
 		{
-			var rawPtr = allocator.GetSafePtr<ulong>(in ptr);
+			var rawPtr = world.GetSafePtr<ulong>(in ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -974,9 +974,9 @@ namespace Sapientia.MemoryAllocator
 		/// <returns>True if one or more of the bits in range `pos` up to (but not including) `pos + numBits` are 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds or `numBits` is less than 1.</exception>
 		[INLINE(256)]
-		public bool TestAny(Allocator allocator, int pos, int numBits = 1)
+		public bool TestAny(World world, int pos, int numBits = 1)
 		{
-			var rawPtr = allocator.GetSafePtr<ulong>(in ptr);
+			var rawPtr = world.GetSafePtr<ulong>(in ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -1015,9 +1015,9 @@ namespace Sapientia.MemoryAllocator
 		/// <returns>True if all of the bits in range `pos` up to (but not including) `pos + numBits` are 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds or `numBits` is less than 1.</exception>
 		[INLINE(256)]
-		public bool TestAll(Allocator allocator, int pos, int numBits = 1)
+		public bool TestAll(World world, int pos, int numBits = 1)
 		{
-			var rawPtr = allocator.GetSafePtr<ulong>(in ptr);
+			var rawPtr = world.GetSafePtr<ulong>(in ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -1056,9 +1056,9 @@ namespace Sapientia.MemoryAllocator
 		/// <returns>The number of bits in a range of bits that are 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds or `numBits` is less than 1.</exception>
 		[INLINE(256)]
-		public int CountBits(Allocator allocator, int pos, int numBits = 1)
+		public int CountBits(World world, int pos, int numBits = 1)
 		{
-			var rawPtr = allocator.GetSafePtr<ulong>(in ptr);
+			var rawPtr = world.GetSafePtr<ulong>(in ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -1086,10 +1086,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void RemoveExcept(Allocator allocator, MemBitArray bits)
+		public void RemoveExcept(World world, MemBitArray bits)
 		{
-			var p = allocator.GetSafePtr<ulong>(ptr);
-			var p2 = allocator.GetSafePtr<ulong>(bits.ptr);
+			var p = world.GetSafePtr<ulong>(ptr);
+			var p2 = world.GetSafePtr<ulong>(bits.ptr);
 			var length = this.length / 64;
 			for (var i = 0; i < length; ++i)
 			{
@@ -1112,7 +1112,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = AllocatorManager.CurrentAllocator;
+				var allocator = WorldManager.CurrentWorld;
 				var array = new bool[_data.length];
 				for (var i = 0; i < _data.length; ++i)
 				{

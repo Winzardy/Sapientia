@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Sapientia.Data;
-using Sapientia.MemoryAllocator.Data;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
@@ -11,34 +10,34 @@ namespace Sapientia.MemoryAllocator.State
 		public float Time { get; private set; }
 		public bool ScheduleLateUpdate { get; private set; }
 
-		public AllocatorId allocatorId;
+		public WorldId worldId;
 
 		public List<ProxyPtr<IWorldElementProxy>> worldElements;
 		public List<ProxyPtr<IWorldSystemProxy>> worldSystems;
 
 		public bool IsStarted { get; private set; }
 
-		public static SafePtr<WorldState> Create(Allocator allocator, int elementsCapacity = 64)
+		public static SafePtr<WorldState> Create(World world, int elementsCapacity = 64)
 		{
-			var worldPtr = allocator.MemAlloc<WorldState>(out var worldSafePtr);
-			ref var world = ref worldSafePtr.Value();
-			world.Tick = 0u;
-			world.Time = 0f;
-			world.ScheduleLateUpdate = false;
-			world.IsStarted = false;
+			var worldPtr = world.MemAlloc<WorldState>(out var worldSafePtr);
+			ref var worldState = ref worldSafePtr.Value();
+			worldState.Tick = 0u;
+			worldState.Time = 0f;
+			worldState.ScheduleLateUpdate = false;
+			worldState.IsStarted = false;
 
-			world.allocatorId = allocator.allocatorId;
-			world.worldElements = new (allocator, elementsCapacity);
-			world.worldSystems = new (allocator, elementsCapacity);
+			worldState.worldId = world.worldId;
+			worldState.worldElements = new (world, elementsCapacity);
+			worldState.worldSystems = new (world, elementsCapacity);
 
-			allocator.RegisterService<WorldState>(worldPtr);
+			world.RegisterService<WorldState>(worldPtr);
 
 			return worldSafePtr;
 		}
 
 		public void Initialize(IEnumerable<ProxyPtr<IWorldStatePartProxy>> stateParts, IEnumerable<ProxyPtr<IWorldSystemProxy>> systems)
 		{
-			using var scope = allocatorId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetAllocatorScope(out var allocator);
 
 			foreach (var statePart in stateParts)
 			{
@@ -63,17 +62,17 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		private void AddWorldElement(Allocator allocator, ProxyPtr<IWorldElementProxy> element)
+		private void AddWorldElement(World world, ProxyPtr<IWorldElementProxy> element)
 		{
-			worldElements.Add(allocator, element);
-			allocator.RegisterService(element);
+			worldElements.Add(world, element);
+			world.RegisterService(element);
 		}
 
 		public void Start()
 		{
 			E.ASSERT(!IsStarted);
 
-			using var scope = allocatorId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetAllocatorScope(out var allocator);
 
 			foreach (var element in worldElements.GetPtrEnumerable(allocator))
 			{
@@ -88,7 +87,7 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			E.ASSERT(IsStarted);
 
-			using var scope = allocatorId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetAllocatorScope(out var allocator);
 
 			Tick++;
 			Time += deltaTime;
@@ -107,7 +106,7 @@ namespace Sapientia.MemoryAllocator.State
 				return;
 			ScheduleLateUpdate = false;
 
-			using var scope = allocatorId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetAllocatorScope(out var allocator);
 
 			foreach (var system in worldSystems.GetPtrEnumerable(allocator))
 			{
@@ -120,7 +119,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void Dispose()
 		{
-			using var scope = allocatorId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetAllocatorScope(out var allocator);
 			SendBeginDisposeMessage();
 
 			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))
@@ -130,29 +129,29 @@ namespace Sapientia.MemoryAllocator.State
 
 			SendDisposedMessage();
 
-			allocatorId.RemoveAllocator();
+			worldId.RemoveAllocator();
 			this = default;
 		}
 	}
 
 	public unsafe interface IWorldElement : IInterfaceProxyType
 	{
-		public virtual void Initialize(Allocator allocator, IndexedPtr self) {}
+		public virtual void Initialize(World world, IndexedPtr self) {}
 
-		public virtual void LateInitialize(Allocator allocator, IndexedPtr self) {}
+		public virtual void LateInitialize(World world, IndexedPtr self) {}
 
 		/// <summary>
 		/// Right before first world update
 		/// </summary>
-		public virtual void Start(Allocator allocator, IndexedPtr self) {}
+		public virtual void Start(World world, IndexedPtr self) {}
 
-		public virtual void Dispose(Allocator allocator, IndexedPtr self) {}
+		public virtual void Dispose(World world, IndexedPtr self) {}
 	}
 
 	public unsafe interface IWorldSystem : IWorldElement
 	{
-		public virtual void Update(Allocator allocator, IndexedPtr self, float deltaTime) {}
-		public virtual void LateUpdate(Allocator allocator, IndexedPtr self) {}
+		public virtual void Update(World world, IndexedPtr self, float deltaTime) {}
+		public virtual void LateUpdate(World world, IndexedPtr self) {}
 	}
 
 	public interface IWorldStatePart : IWorldElement

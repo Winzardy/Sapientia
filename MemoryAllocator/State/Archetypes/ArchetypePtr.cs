@@ -1,15 +1,14 @@
 using Sapientia.Data;
-using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe struct ArchetypePtr<T> where T: unmanaged, IComponent
 	{
-		private Ptr<Archetype> _archetypePtr;
+		private CWPtr<Archetype> _archetypePtr;
 
-		public ref Archetype GetArchetype(Allocator allocator)
+		public ref Archetype GetArchetype(World world)
 		{
-			return ref _archetypePtr.GetValue(allocator);
+			return ref _archetypePtr.GetValue(world);
 		}
 
 		public ref Archetype GetArchetype()
@@ -17,12 +16,12 @@ namespace Sapientia.MemoryAllocator.State
 			return ref _archetypePtr.GetValue();
 		}
 
-		public ArchetypeContext<T> GetArchetypeContext(Allocator allocator)
+		public ArchetypeContext<T> GetArchetypeContext(World world)
 		{
-			return new ArchetypeContext<T>(allocator, _archetypePtr.GetPtr(allocator));
+			return new ArchetypeContext<T>(world, _archetypePtr.GetPtr(world));
 		}
 
-		public static implicit operator ArchetypePtr<T>(Ptr<Archetype> ptr)
+		public static implicit operator ArchetypePtr<T>(CWPtr<Archetype> ptr)
 		{
 			return new ArchetypePtr<T>
 			{
@@ -30,14 +29,14 @@ namespace Sapientia.MemoryAllocator.State
 			};
 		}
 
-		public static implicit operator Ptr<Archetype>(ArchetypePtr<T> archetypePtr)
+		public static implicit operator CWPtr<Archetype>(ArchetypePtr<T> archetypePtr)
 		{
 			return archetypePtr._archetypePtr;
 		}
 
-		public static implicit operator MemPtr(ArchetypePtr<T> archetypePtr)
+		public static implicit operator WPtr(ArchetypePtr<T> archetypePtr)
 		{
-			return archetypePtr._archetypePtr.memPtr;
+			return archetypePtr._archetypePtr.wPtr;
 		}
 	}
 }

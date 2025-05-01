@@ -58,33 +58,33 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator GetAllocator()
+		public World GetAllocator()
 		{
 			return _values.GetAllocator();
 		}
 
-		public SparseSet(int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(AllocatorManager.CurrentAllocator, valueSize, capacity, sparseCapacity, expandStep) {}
+		public SparseSet(int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorld, valueSize, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(AllocatorId allocatorId, int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(allocatorId.GetAllocator(), valueSize, capacity, sparseCapacity, expandStep) {}
+		public SparseSet(WorldId worldId, int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorld(), valueSize, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(Allocator allocator, int valueSize, int capacity, int sparseCapacity, int expandStep = 0)
+		public SparseSet(World world, int valueSize, int capacity, int sparseCapacity, int expandStep = 0)
 		{
 			this.expandStep = expandStep == 0 ? capacity : expandStep;
 
 			_count = 0;
 
-			_values = new (allocator, valueSize, capacity, ClearOptions.ClearMemory);
-			_dense = new (allocator, capacity, ClearOptions.ClearMemory);
-			_sparse = new (allocator, sparseCapacity, ClearOptions.ClearMemory);
+			_values = new (world, valueSize, capacity, ClearOptions.ClearMemory);
+			_dense = new (world, capacity, ClearOptions.ClearMemory);
+			_sparse = new (world, sparseCapacity, ClearOptions.ClearMemory);
 
 			_capacity = _dense.Length.Min(_values.Length);
 			_sparseCapacity = _sparse.Length;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr<T>(Allocator allocator) where T: unmanaged
+		public SafePtr<T> GetValuePtr<T>(World world) where T: unmanaged
 		{
-			return _values.GetValuePtr<T>(allocator);
+			return _values.GetValuePtr<T>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -100,9 +100,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetValuePtr(Allocator allocator)
+		public SafePtr GetValuePtr(World world)
 		{
-			return _values.GetValuePtr(allocator);
+			return _values.GetValuePtr(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -112,39 +112,39 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetValuePtr(Allocator allocator, int id)
+		public SafePtr GetValuePtr(World world, int id)
 		{
-			return _values.GetValuePtr(allocator, _sparse[allocator, id]);
+			return _values.GetValuePtr(world, _sparse[world, id]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr<T>(Allocator allocator, int id) where T: unmanaged
+		public SafePtr<T> GetValuePtr<T>(World world, int id) where T: unmanaged
 		{
-			return _values.GetValuePtr<T>(allocator, _sparse[allocator, id]);
+			return _values.GetValuePtr<T>(world, _sparse[world, id]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetValuePtrByDenseId(Allocator allocator, int denseId)
+		public SafePtr GetValuePtrByDenseId(World world, int denseId)
 		{
-			return _values.GetValuePtr(allocator, denseId);
+			return _values.GetValuePtr(world, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtrByDenseId<T>(Allocator allocator, int denseId) where T: unmanaged
+		public SafePtr<T> GetValuePtrByDenseId<T>(World world, int denseId) where T: unmanaged
 		{
-			return _values.GetValuePtr<T>(allocator, denseId);
+			return _values.GetValuePtr<T>(world, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int GetIdByIndex(Allocator allocator, int denseId)
+		public int GetIdByIndex(World world, int denseId)
 		{
-			return _sparse[allocator, denseId];
+			return _sparse[world, denseId];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get<T>(Allocator allocator, int id) where T: unmanaged
+		public ref T Get<T>(World world, int id) where T: unmanaged
 		{
-			return ref _values.GetValue<T>(allocator, _sparse[allocator, id]);
+			return ref _values.GetValue<T>(world, _sparse[world, id]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -154,30 +154,30 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetByDenseId<T>(Allocator allocator, int denseId) where T: unmanaged
+		public ref T GetByDenseId<T>(World world, int denseId) where T: unmanaged
 		{
-			return ref _values.GetValue<T>(allocator, denseId);
+			return ref _values.GetValue<T>(world, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TryGetDenseId(Allocator allocator, int id, out int denseId)
+		public bool TryGetDenseId(World world, int id, out int denseId)
 		{
 			if (_sparseCapacity <= id)
 			{
 				denseId = 0;
 				return false;
 			}
-			denseId = _sparse[allocator, id];
-			return denseId < _count && _dense[allocator, denseId] == id;
+			denseId = _sparse[world, id];
+			return denseId < _count && _dense[world, denseId] == id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(Allocator allocator, int id)
+		public bool Has(World world, int id)
 		{
 			if (_sparseCapacity <= id)
 				return false;
-			var denseId = _sparse[allocator, id];
-			return denseId < _count && _dense[allocator, denseId] == id;
+			var denseId = _sparse[world, id];
+			return denseId < _count && _dense[world, denseId] == id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -187,17 +187,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T EnsureGet<T>(Allocator allocator, int id) where T: unmanaged
+		public ref T EnsureGet<T>(World world, int id) where T: unmanaged
 		{
 			ExpandSparseIfNeeded(id + 1);
-			ref var denseId = ref _sparse[allocator, id];
-			if (denseId >= _count || _dense[allocator, denseId] != id)
+			ref var denseId = ref _sparse[world, id];
+			if (denseId >= _count || _dense[world, denseId] != id)
 			{
 				ExpandIfNeeded(_count + 1);
-				_dense[allocator, _count] = id;
+				_dense[world, _count] = id;
 				denseId = _count++;
 			}
-			return ref _values.GetValue<T>(allocator, denseId);
+			return ref _values.GetValue<T>(world, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -222,23 +222,23 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveSwapBack(Allocator allocator, int id)
+		public bool RemoveSwapBack(World world, int id)
 		{
 			if (id >= _sparseCapacity)
 				return false;
-			var denseId = _sparse[allocator, id];
+			var denseId = _sparse[world, id];
 			if (denseId >= _count)
 				return false;
 
-			var denseRaw = _dense.GetValuePtr(allocator);
+			var denseRaw = _dense.GetValuePtr(world);
 			if (denseRaw[denseId] != id)
 				return false;
 
 			var sparseId = denseRaw[denseId] = denseRaw[--_count];
-			_sparse[allocator, sparseId] = denseId;
+			_sparse[world, sparseId] = denseId;
 
-			var valueA = _values.GetValuePtr(allocator, denseId);
-			var valueB = _values.GetValuePtr(allocator, _count);
+			var valueA = _values.GetValuePtr(world, denseId);
+			var valueB = _values.GetValuePtr(world, _count);
 			var size = _values.ElementSize;
 
 			MemoryExt.MemMove(valueB, valueA, size);
@@ -249,15 +249,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveSwapBackByDenseId(Allocator allocator, int denseId)
+		public bool RemoveSwapBackByDenseId(World world, int denseId)
 		{
-			var denseRaw = _dense.GetValuePtr(allocator);
+			var denseRaw = _dense.GetValuePtr(world);
 
 			var sparseId = denseRaw[denseId] = denseRaw[--_count];
-			_sparse[allocator, sparseId] = denseId;
+			_sparse[world, sparseId] = denseId;
 
-			var valueA = _values.GetValuePtr(allocator, denseId);
-			var valueB = _values.GetValuePtr(allocator, _count);
+			var valueA = _values.GetValuePtr(world, denseId);
+			var valueB = _values.GetValuePtr(world, _count);
 			var size = _values.ElementSize;
 
 			MemoryExt.MemMove(valueB, valueA, size);
@@ -279,9 +279,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ExpandSparse(Allocator allocator, int newCapacity)
+		private void ExpandSparse(World world, int newCapacity)
 		{
-			_sparse.Resize(allocator, newCapacity, ClearOptions.ClearMemory);
+			_sparse.Resize(world, newCapacity, ClearOptions.ClearMemory);
 			_sparseCapacity = _sparse.Length;
 		}
 
@@ -295,10 +295,10 @@ namespace Sapientia.MemoryAllocator
 			Expand(GetAllocator(), newCapacity);
 		}
 
-		private void Expand(Allocator allocator, int newCapacity)
+		private void Expand(World world, int newCapacity)
 		{
-			_dense.Resize(allocator, newCapacity, ClearOptions.ClearMemory);
-			_values.Resize(allocator, newCapacity, ElementSize, ClearOptions.ClearMemory);
+			_dense.Resize(world, newCapacity, ClearOptions.ClearMemory);
+			_values.Resize(world, newCapacity, ElementSize, ClearOptions.ClearMemory);
 
 			_capacity = _dense.Length.Min(_values.Length);
 		}
@@ -316,17 +316,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			_sparse.Dispose(allocator);
-			_dense.Dispose(allocator);
-			_values.Dispose(allocator);
+			_sparse.Dispose(world);
+			_dense.Dispose(world);
+			_values.Dispose(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear(Allocator allocator)
+		public void Clear(World world)
 		{
-			_values.Clear(allocator, 0, _count);
+			_values.Clear(world, 0, _count);
 			_count = 0;
 		}
 
@@ -344,9 +344,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator<T>(Allocator allocator) where T: unmanaged
+		public ListEnumerator<T> GetEnumerator<T>(World world) where T: unmanaged
 		{
-			return new ListEnumerator<T>(GetValuePtr<T>(allocator), Count);
+			return new ListEnumerator<T>(GetValuePtr<T>(world), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -356,9 +356,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator<T>(Allocator allocator) where T: unmanaged
+		public ListPtrEnumerator<T> GetPtrEnumerator<T>(World world) where T: unmanaged
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(allocator), ElementSize, Count);
+			return new ListPtrEnumerator<T>(GetValuePtr(world), ElementSize, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -368,9 +368,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>(Allocator allocator) where T: unmanaged
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>(World world) where T: unmanaged
 		{
-			return new (new (GetValuePtr<T>(allocator), Count));
+			return new (new (GetValuePtr<T>(world), Count));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -380,9 +380,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>(Allocator allocator) where T: unmanaged
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>(World world) where T: unmanaged
 		{
-			return new (new (GetValuePtr(allocator), ElementSize, Count));
+			return new (new (GetValuePtr(world), ElementSize, Count));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
