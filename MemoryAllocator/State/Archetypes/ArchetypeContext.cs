@@ -8,14 +8,14 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public readonly unsafe struct ArchetypeContext<T> : IEnumerable<T> where T: unmanaged, IComponent
 	{
-		public readonly Allocator allocator;
+		public readonly SafePtr<Allocator> allocator;
 		public readonly SafePtr<Archetype> innerArchetype;
 
-		public ArchetypeContext(Allocator allocator) : this(allocator, allocator.GetArchetypePtr<T>())
+		public ArchetypeContext(SafePtr<Allocator> allocator) : this(allocator, ArchetypeExt.GetArchetypePtr<T>(allocator))
 		{
 		}
 
-		public ArchetypeContext(Allocator allocator, SafePtr<Archetype> innerArchetype)
+		public ArchetypeContext(SafePtr<Allocator> allocator, SafePtr<Archetype> innerArchetype)
 		{
 			this.allocator = allocator;
 			this.innerArchetype = innerArchetype;

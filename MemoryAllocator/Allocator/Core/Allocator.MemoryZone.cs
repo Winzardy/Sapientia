@@ -7,7 +7,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
 		public readonly struct MemoryZone : IDisposable
@@ -40,7 +40,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		private int GetMemoryZoneSize(int zoneId, out int usedSize, out int freeSize)
+		private readonly int GetMemoryZoneSize(int zoneId, out int usedSize, out int freeSize)
 		{
 			var zone = zonesList[zoneId];
 			var blockPtr = zone.ptr->memory.Cast<MemoryBlock>();

@@ -12,10 +12,10 @@ namespace Sapientia.MemoryAllocator
 	{
 		public int LastIndex { get; }
 		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr();
-		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(Allocator allocator);
+		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(SafePtr<Allocator> allocator);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(Allocator allocator)
+		public DictionaryEnumerator<TKey, TValue> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
 		}
@@ -27,7 +27,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(Allocator allocator)
+		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
 		}
@@ -39,7 +39,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(Allocator allocator)
+		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetEntryPtr(allocator), LastIndex));
 		}
@@ -51,7 +51,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetEntryPtr(allocator), LastIndex));
 		}

@@ -5,6 +5,6 @@ namespace Sapientia.TypeIndexer.BaseProxies
 {
 	public unsafe interface IAction : IInterfaceProxyType
 	{
-		public void Invoke(Allocator allocator);
+		public void Invoke(SafePtr<Allocator> allocator);
 	}
 }

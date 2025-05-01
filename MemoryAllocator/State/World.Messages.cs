@@ -2,7 +2,7 @@ using Sapientia.Messaging;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public partial struct  WorldState
+	public partial struct  World
 	{
 		public struct StartedMessage
 		{

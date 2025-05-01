@@ -11,10 +11,10 @@ namespace Sapientia.MemoryAllocator
 	{
 		public int LastIndex { get; }
 		public SafePtr<HashSet<T>.Slot> GetSlotPtr();
-		public SafePtr<HashSet<T>.Slot> GetSlotPtr(Allocator allocator);
+		public SafePtr<HashSet<T>.Slot> GetSlotPtr(SafePtr<Allocator> allocator);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerator<T> GetEnumerator(Allocator allocator)
+		public HashSetEnumerator<T> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new HashSetEnumerator<T>(GetSlotPtr(allocator), LastIndex);
 		}
@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public HashSetPtrEnumerator<T> GetPtrEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new HashSetPtrEnumerator<T>(GetSlotPtr(allocator), LastIndex);
 		}
@@ -38,7 +38,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}
@@ -50,7 +50,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetSlotPtr(allocator), LastIndex));
 		}

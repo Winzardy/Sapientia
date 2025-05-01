@@ -195,7 +195,7 @@ namespace Sapientia.TypeIndexer
 				}
 
 				{
-					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(Allocator).FullName} __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
+					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(SafePtr).FullName}<{typeof(Allocator).FullName}> __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
 					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr(__allocator).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
@@ -231,7 +231,7 @@ namespace Sapientia.TypeIndexer
 				}
 
 				{
-					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent, {typeof(Allocator).FullName} __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
+					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent, {typeof(SafePtr).FullName}<{typeof(Allocator).FullName}> __allocator" + (parameters.Length > 0 ? ", " : string.Empty));
 					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr(__allocator).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
@@ -284,7 +284,6 @@ namespace Sapientia.TypeIndexer
 				sourceBuilder.AppendLine("#if BURST");
 				sourceBuilder.AppendLine($"		{BurstAttribute}");
 				sourceBuilder.AppendLine("#endif");
-				sourceBuilder.AppendLine($"		[AOT.MonoPInvokeCallbackAttribute(typeof({baseType.Name}Proxy.{methodInfo.Name}Delegate))]");
 				sourceBuilder.AppendLine("#endif");
 				sourceBuilder.AppendLine($"		private static {returnTypeString} {methodInfo.Name}{genericParametersString}{parametersString}");
 				sourceBuilder.AppendLine("		{");

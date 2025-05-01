@@ -35,13 +35,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
-			return _array.GetAllocator();
+			return _array.GetAllocatorPtr();
 		}
 
 		[INLINE(256)]
-		public Stack(Allocator allocator, int capacity)
+		public Stack(SafePtr<Allocator> allocator, int capacity)
 		{
 			this = default;
 			_array = new MemArray<T>(allocator, capacity);
@@ -54,7 +54,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr(Allocator allocator)
+		public SafePtr<T> GetValuePtr(SafePtr<Allocator> allocator)
 		{
 			return _array.GetValuePtr(allocator);
 		}
@@ -62,11 +62,11 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Dispose()
 		{
-			Dispose(GetAllocator());
+			Dispose(GetAllocatorPtr());
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			_array.Dispose(allocator);
 			this = default;
@@ -79,7 +79,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Contains<TU>(Allocator allocator, TU item) where TU : IEquatable<T>
+		public bool Contains<TU>(SafePtr<Allocator> allocator, TU item) where TU : IEquatable<T>
 		{
 			var count = _count;
 			while (count-- > 0)
@@ -94,13 +94,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly T Peek(Allocator allocator)
+		public readonly T Peek(SafePtr<Allocator> allocator)
 		{
 			return _array[allocator, _count - 1];
 		}
 
 		[INLINE(256)]
-		public T Pop(Allocator allocator)
+		public T Pop(SafePtr<Allocator> allocator)
 		{
 			var item = _array[allocator, --_count];
 			_array[allocator, _count] = default;
@@ -108,7 +108,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Push(Allocator allocator, T item)
+		public void Push(SafePtr<Allocator> allocator, T item)
 		{
 			if (_count == _array.Length)
 			{
@@ -132,7 +132,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListEnumerator<T> GetEnumerator(Allocator allocator)
+		public ListEnumerator<T> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
 		}
@@ -144,7 +144,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public ListPtrEnumerator<T> GetPtrEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new ListPtrEnumerator<T>(GetValuePtr(allocator), 0, Count);
 		}
@@ -156,7 +156,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetValuePtr(allocator), Count));
 		}
@@ -168,7 +168,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetValuePtr(allocator), 0, Count));
 		}

@@ -6,14 +6,14 @@ namespace Sapientia.MemoryAllocator.State
 {
 	internal readonly unsafe ref struct DestroyUpdater
 	{
-		private readonly Allocator _allocator;
+		private readonly SafePtr<Allocator> _allocator;
 		private readonly SafePtr<EntityStatePart> _entitiesStatePart;
 		private readonly ArchetypeContext<DestroyRequest> _destroyRequestArchetype;
 		private readonly ArchetypeContext<KillRequest> _killRequestArchetype;
 		private readonly ArchetypeContext<DelayKillRequest> _delayKillRequestArchetype;
 		private readonly ArchetypeContext<KillElement> _killElementsArchetype;
 
-		public DestroyUpdater(Allocator allocator)
+		public DestroyUpdater(SafePtr<Allocator> allocator)
 		{
 			_allocator = allocator;
 			_entitiesStatePart = _allocator.GetServicePtr<EntityStatePart>();
