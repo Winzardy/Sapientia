@@ -63,7 +63,7 @@ namespace Sapientia.MemoryAllocator.State
 #if UNITY_EDITOR
 			return world.GetService<EntityStatePart>().CreateEntity(world, name);
 #else
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return world.GetService<EntityStatePart>().CreateEntity(world);
 #endif
 		}
 
@@ -76,11 +76,11 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(WorldId worldId, string name)
 		{
-			var allocator = worldId.GetWorld();
+			var world = worldId.GetWorld();
 #if UNITY_EDITOR
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
+			return world.GetService<EntityStatePart>().CreateEntity(world, name);
 #else
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return world.GetService<EntityStatePart>().CreateEntity(world);
 #endif
 		}
 
