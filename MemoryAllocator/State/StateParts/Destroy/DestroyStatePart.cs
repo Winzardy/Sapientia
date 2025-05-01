@@ -6,7 +6,7 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe interface IKillSubscriber : IInterfaceProxyType
 	{
-		public void EntityKilled(Allocator allocator, in Entity entity);
+		public void EntityKilled(SafePtr<Allocator> allocator, in Entity entity);
 	}
 
 	public struct KillCallback
@@ -35,7 +35,7 @@ namespace Sapientia.MemoryAllocator.State
 
 	public struct DestroyStatePart : IWorldStatePart
 	{
-		public unsafe void Initialize(Allocator allocator, IndexedPtr self)
+		public unsafe void Initialize(SafePtr<Allocator> allocator, IndexedPtr self)
 		{
 			Archetype.RegisterArchetype<KillElement>(allocator, 2048).SetDestroyHandler<KillElementDestroyHandler>();
 			Archetype.RegisterArchetype<KillRequest>(allocator, 256);
@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator.State
 
 	public unsafe struct KillElementDestroyHandler : IElementDestroyHandler<KillElement>
 	{
-		public void EntityPtrArrayDestroyed(Allocator allocator, ArchetypeElement<KillElement>** elementsPtr, int count)
+		public void EntityPtrArrayDestroyed(SafePtr<Allocator> allocator, ArchetypeElement<KillElement>** elementsPtr, int count)
 		{
 			for (var i = 0; i < count; i++)
 			{
@@ -65,7 +65,7 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		public void EntityArrayDestroyed(Allocator allocator, ArchetypeElement<KillElement>* elementsPtr, int count)
+		public void EntityArrayDestroyed(SafePtr<Allocator> allocator, ArchetypeElement<KillElement>* elementsPtr, int count)
 		{
 			for (var i = 0; i < count; i++)
 			{

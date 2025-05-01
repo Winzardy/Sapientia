@@ -4,7 +4,7 @@ namespace Sapientia.MemoryAllocator
 {
 	public static unsafe class CollectionsExt
 	{
-		public static void FillIndexes(this ref List<int> list, Allocator allocator)
+		public static void FillIndexes(this ref List<int> list, SafePtr<Allocator> allocator)
 		{
 			var values = list.GetValuePtr(allocator);
 			for (var i = 0; i < list.Count; i++)
@@ -13,7 +13,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		public static void Shuffle<T>(this ref List<T> list, Allocator allocator) where T: unmanaged
+		public static void Shuffle<T>(this ref List<T> list, SafePtr<Allocator> allocator) where T: unmanaged
 		{
 			var values = list.GetValuePtr(allocator);
 			var count = list.Count;

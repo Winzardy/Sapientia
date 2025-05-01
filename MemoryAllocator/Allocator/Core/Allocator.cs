@@ -1,18 +1,22 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator : IDisposable
+	[DebuggerTypeProxy(typeof(AllocatorProxy))]
+	[StructLayout(LayoutKind.Sequential)]
+	public unsafe partial struct Allocator : IDisposable
 	{
 		public AllocatorId allocatorId;
 
 		public UnsafeList<MemoryZone> zonesList;
 		public UnsafeList<MemoryBlockPtrCollection> freeBlockPools;
 
-		internal DataAccessor dataAccessor;
+		public ServiceRegistry serviceRegistry;
 
 		public ushort version;
 
@@ -48,7 +52,7 @@ namespace Sapientia.MemoryAllocator
 
 			AllocateMemoryZone(zoneSize);
 
-			dataAccessor = DataAccessor.Create(this);
+			serviceRegistry = ServiceRegistry.Create(this.AsSafePtr());
 		}
 
 		public void Reset(AllocatorId allocatorId)
@@ -75,7 +79,7 @@ namespace Sapientia.MemoryAllocator
 				pool.AddBlock(new MemoryBlockRef(i, 0));
 			}
 
-			dataAccessor = DataAccessor.Create(this);
+			serviceRegistry = ServiceRegistry.Create(this.AsSafePtr());
 		}
 
 		public void Dispose()
@@ -92,12 +96,11 @@ namespace Sapientia.MemoryAllocator
 			}
 			zonesList.Dispose();
 
-			freeBlockPools = default;
-			zonesList = default;
+			this = default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void GetSize(out int reservedSize, out int usedSize, out int freeSize)
+		public readonly void GetSize(out int reservedSize, out int usedSize, out int freeSize)
 		{
 			usedSize = 0;
 			reservedSize = 0;
@@ -113,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int GetReservedSize()
+		public readonly int GetReservedSize()
 		{
 			var size = 0;
 			for (var i = 0; i < zonesList.count; i++)
@@ -125,14 +128,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int GetUsedSize()
+		public readonly int GetUsedSize()
 		{
 			GetSize(out var reservedSize, out var usedSize, out var freeSize);
 			return usedSize;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int GetFreeSize()
+		public readonly int GetFreeSize()
 		{
 			GetSize(out var reservedSize, out var usedSize, out var freeSize);
 			return freeSize;

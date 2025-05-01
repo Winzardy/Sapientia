@@ -8,14 +8,14 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public readonly unsafe ref struct DestroyLogic
 	{
-		public readonly Allocator allocator;
+		public readonly SafePtr<Allocator> allocator;
 
 		public readonly SafePtr<EntityStatePart> entityStatePart;
 		public readonly ArchetypeContext<KillElement> killElementArchetype;
 		public readonly ArchetypeContext<DestroyRequest> destroyRequestArchetype;
 		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
 
-		public DestroyLogic(Allocator allocator)
+		public DestroyLogic(SafePtr<Allocator> allocator)
 		{
 			this.allocator = allocator;
 			entityStatePart = allocator.GetServicePtr<EntityStatePart>();

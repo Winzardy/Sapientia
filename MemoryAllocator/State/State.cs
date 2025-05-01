@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Sapientia.Data;
 using Sapientia.Extensions;
 #if UNITY_EDITOR
@@ -14,7 +15,7 @@ namespace Sapientia.MemoryAllocator.State
 		private AllocatorId _allocatorId;
 
 		public AllocatorId AllocatorId => _allocatorId;
-		public Allocator Allocator => _allocatorId.GetAllocator();
+		public SafePtr<Allocator> AllocatorPtr => _allocatorId.GetAllocatorPtr();
 		public bool IsValid => _allocatorId.IsValid();
 
 		public State(AllocatorId allocatorId)
@@ -22,9 +23,9 @@ namespace Sapientia.MemoryAllocator.State
 			_allocatorId = allocatorId;
 		}
 
-		private SafePtr<WorldState> GetWorld()
+		private SafePtr<World> GetWorld()
 		{
-			return _allocatorId.GetAllocator().GetServicePtr<WorldState>();
+			return _allocatorId.GetAllocatorPtr().GetServicePtr<World>();
 		}
 
 		public void Start()
@@ -90,7 +91,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (!IsValid)
 				return;
 
-			LocalStatePartService.Dispose(_allocatorId.GetAllocator());
+			LocalStatePartService.Dispose(_allocatorId.GetAllocatorPtr());
 			GetWorld().Value().Dispose();
 		}
 	}

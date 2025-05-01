@@ -30,27 +30,27 @@ namespace Sapientia.MemoryAllocator
 			public int Compare(T x, T y) => x.CompareTo(y);
 		}
 
-		public static void Sort<T>(this List<T> list, Allocator allocator, Comparison<T> comparison) where T: unmanaged
+		public static void Sort<T>(this List<T> list, SafePtr<Allocator> allocator, Comparison<T> comparison) where T: unmanaged
 		{
 			list.Sort(allocator, new LambdaComparer<T>(comparison));
 		}
 
-		public static void Sort<T>(this List<T> list, Allocator allocator) where T: unmanaged, IComparable<T>
+		public static void Sort<T>(this List<T> list, SafePtr<Allocator> allocator) where T: unmanaged, IComparable<T>
 		{
 			list.Sort(allocator, 0, list.Count, new DefaultComparer<T>());
 		}
 
-		public static void Sort<T>(this List<T> list, Allocator allocator, int index, int count) where T: unmanaged, IComparable<T>
+		public static void Sort<T>(this List<T> list, SafePtr<Allocator> allocator, int index, int count) where T: unmanaged, IComparable<T>
 		{
 			list.Sort(allocator, index, count, new DefaultComparer<T>());
 		}
 
-		public static void Sort<T, TComparer>(this List<T> list, Allocator allocator, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
+		public static void Sort<T, TComparer>(this List<T> list, SafePtr<Allocator> allocator, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
 		{
 			list.Sort(allocator, 0, list.Count, comparer);
 		}
 
-		public static void Sort<T, TComparer>(this List<T> list, Allocator allocator, int index, int count, TComparer comparer)
+		public static void Sort<T, TComparer>(this List<T> list, SafePtr<Allocator> allocator, int index, int count, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
@@ -102,12 +102,12 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		public static void BinaryRemove<T>(this List<T> list, Allocator allocator, T value) where T: unmanaged, IComparable<T>
+		public static void BinaryRemove<T>(this List<T> list, SafePtr<Allocator> allocator, T value) where T: unmanaged, IComparable<T>
 		{
 			BinaryRemove(list, allocator, value, new DefaultComparer<T>());
 		}
 
-		public static void BinaryRemove<T, TComparer>(this List<T> list, Allocator allocator, T value, TComparer comparer)
+		public static void BinaryRemove<T, TComparer>(this List<T> list, SafePtr<Allocator> allocator, T value, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
@@ -144,12 +144,12 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		public static void BinaryInsert<T>(this List<T> list, Allocator allocator, T value) where T: unmanaged, IComparable<T>
+		public static void BinaryInsert<T>(this List<T> list, SafePtr<Allocator> allocator, T value) where T: unmanaged, IComparable<T>
 		{
 			BinaryInsert(list, allocator, value, new DefaultComparer<T>());
 		}
 
-		public static void BinaryInsert<T, TComparer>(this List<T> list, Allocator allocator, T value, TComparer comparer)
+		public static void BinaryInsert<T, TComparer>(this List<T> list, SafePtr<Allocator> allocator, T value, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
@@ -159,19 +159,19 @@ namespace Sapientia.MemoryAllocator
 			list.Insert(allocator, index, value);
 		}
 
-		public static int BinarySearch<T>(this List<T> list, Allocator allocator, T value) where T: unmanaged, IComparable<T>
+		public static int BinarySearch<T>(this List<T> list, SafePtr<Allocator> allocator, T value) where T: unmanaged, IComparable<T>
 		{
 			return BinarySearch(list, allocator, list.Count, value, new DefaultComparer<T>());
 		}
 
-		public static int BinarySearch<T, TComparer>(this List<T> list, Allocator allocator, T value, TComparer comparer)
+		public static int BinarySearch<T, TComparer>(this List<T> list, SafePtr<Allocator> allocator, T value, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
 			return BinarySearch(list, allocator, list.Count, value, comparer);
 		}
 
-		public static int BinarySearch<T, TComparer>(this List<T> list, Allocator allocator, int length, T value, TComparer comparer)
+		public static int BinarySearch<T, TComparer>(this List<T> list, SafePtr<Allocator> allocator, int length, T value, TComparer comparer)
 			where TComparer: IComparer<T>
 			where T: unmanaged
 		{

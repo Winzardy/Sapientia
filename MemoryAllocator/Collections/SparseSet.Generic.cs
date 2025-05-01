@@ -47,22 +47,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator GetAllocator()
+		public SafePtr<Allocator> GetAllocatorPtr()
 		{
-			return _innerSet.GetAllocator();
+			return _innerSet.GetAllocatorPtr();
 		}
 
-		public SparseSet(int capacity, int sparseCapacity, int expandStep = 0) : this(AllocatorManager.CurrentAllocator, capacity, sparseCapacity, expandStep) {}
+		public SparseSet(int capacity, int sparseCapacity, int expandStep = 0) : this(AllocatorManager.CurrentAllocatorPtr, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(AllocatorId allocatorId, int capacity, int sparseCapacity, int expandStep = 0) : this(allocatorId.GetAllocator(), capacity, sparseCapacity, expandStep) {}
+		public SparseSet(AllocatorId allocatorId, int capacity, int sparseCapacity, int expandStep = 0) : this(allocatorId.GetAllocatorPtr(), capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(Allocator allocator, int capacity, int sparseCapacity, int expandStep = 0)
+		public SparseSet(SafePtr<Allocator> allocator, int capacity, int sparseCapacity, int expandStep = 0)
 		{
 			_innerSet = new SparseSet(allocator, TSize<T>.size, capacity, sparseCapacity, expandStep);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr(Allocator allocator)
+		public SafePtr<T> GetValuePtr(SafePtr<Allocator> allocator)
 		{
 			return _innerSet.GetValuePtr<T>(allocator);
 		}
@@ -74,7 +74,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get(Allocator allocator, int id)
+		public ref T Get(SafePtr<Allocator> allocator, int id)
 		{
 			return ref _innerSet.Get<T>(allocator, id);
 		}
@@ -86,13 +86,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int GetIdByIndex(Allocator allocator, int denseId)
+		public int GetIdByIndex(SafePtr<Allocator> allocator, int denseId)
 		{
 			return _innerSet.GetIdByIndex(allocator, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(Allocator allocator, int id)
+		public bool Has(SafePtr<Allocator> allocator, int id)
 		{
 			return _innerSet.Has(allocator, id);
 		}
@@ -104,7 +104,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T EnsureGet(Allocator allocator, int id)
+		public ref T EnsureGet(SafePtr<Allocator> allocator, int id)
 		{
 			return ref _innerSet.EnsureGet<T>(allocator, id);
 		}
@@ -116,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBack(Allocator allocator, int id)
+		public void RemoveSwapBack(SafePtr<Allocator> allocator, int id)
 		{
 			_innerSet.RemoveSwapBack(allocator, id);
 		}
@@ -134,7 +134,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(SafePtr<Allocator> allocator)
 		{
 			_innerSet.Dispose(allocator);
 		}
@@ -152,7 +152,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetValuePtr(allocator), Count));
 		}
@@ -164,7 +164,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetValuePtr(allocator), 0, Count));
 		}

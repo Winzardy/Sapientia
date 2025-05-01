@@ -1,5 +1,5 @@
 using System;
-using Sapientia.Collections;
+using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
 using Sapientia.ServiceManagement;
@@ -9,26 +9,33 @@ namespace Sapientia.MemoryAllocator
 {
 	public static unsafe class AllocatorManager
 	{
-		private static Allocator _currentAllocator = null;
+		private static SafePtr<Allocator> _currentAllocator = default;
 
-		private static Allocator[] _allocators = Array.Empty<Allocator>();
+		private static SafePtr<SafePtr<Allocator>> _allocators = default;
 		private static int _count = 0;
+		private static int _capacity = 0;
 		private static int _currentId = 0;
 
-		public static Allocator CurrentAllocator
+		public static SafePtr<Allocator> CurrentAllocatorPtr
 		{
 			[INLINE(256)]
 			get => _currentAllocator;
 		}
 
+		public static ref Allocator CurrentAllocator
+		{
+			[INLINE(256)]
+			get => ref _currentAllocator.Value();
+		}
+
 		public static AllocatorId CurrentAllocatorId
 		{
 			[INLINE(256)]
-			get => _currentAllocator.allocatorId;
+			get => _currentAllocator.Value().allocatorId;
 		}
 
 		[INLINE(256)]
-		public static AllocatorScope GetAllocatorScope(this ref AllocatorId allocatorId, out Allocator allocator)
+		public static AllocatorScope GetAllocatorScope(this ref AllocatorId allocatorId, out SafePtr<Allocator> allocator)
 		{
 			var scope = new AllocatorScope(_currentAllocator == default ? default : CurrentAllocatorId);
 			allocatorId.SetCurrentAllocator();
@@ -39,7 +46,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public static void SetCurrentAllocator(this ref AllocatorId allocatorId)
 		{
-			SetCurrentAllocator(allocatorId.GetAllocator());
+			SetCurrentAllocator(allocatorId.GetAllocatorPtr());
 		}
 
 		[INLINE(256)]
@@ -47,23 +54,23 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!allocatorId.IsValid())
 				return;
-			SetCurrentAllocator(allocatorId.GetAllocator());
+			SetCurrentAllocator(allocatorId.GetAllocatorPtr());
 		}
 
 		[INLINE(256)]
-		public static void SetCurrentAllocator(Allocator allocator)
+		public static void SetCurrentAllocator(SafePtr<Allocator> allocator)
 		{
 			_currentAllocator = allocator;
 
-			var context = allocator?.allocatorId ?? default;
+			var context = allocator == default ? default : allocator.Value().allocatorId;
 			ServiceContext<AllocatorId>.SetContext(context);
 		}
 
-		public static Allocator DeserializeAllocator(ref StreamBufferReader stream)
+		public static SafePtr<Allocator> DeserializeAllocator(ref StreamBufferReader stream)
 		{
 			var allocator = Allocator.Deserialize(ref stream);
 
-			ref var allocatorId = ref allocator.allocatorId;
+			ref var allocatorId = ref allocator.Value().allocatorId;
 
 			// На момент создания не должно существовать аллокатора с таким же Id
 			if (allocatorId.IsValid())
@@ -79,22 +86,22 @@ namespace Sapientia.MemoryAllocator
 			return allocator;
 		}
 
-		public static Allocator CreateAllocator(int initialSize = -1)
+		public static SafePtr<Allocator> CreateAllocator(int initialSize = -1)
 		{
 			Prewarm(_count);
 
 			var allocatorId = new AllocatorId((ushort)_count++, (ushort)++_currentId);
 			ref var allocator = ref _allocators[allocatorId.index];
 
-			if (allocator != null)
+			if (allocator.IsValid)
 			{
 				// Переиспользуем память
-				allocator.Reset(allocatorId);
+				allocator.Value().Reset(allocatorId);
 			}
 			else
 			{
-				allocator = new Allocator();
-				allocator.Initialize(allocatorId, initialSize);
+				allocator = MemoryExt.MemAllocAndClear<Allocator>();
+				allocator.Value().Initialize(allocatorId, initialSize);
 			}
 
 			return allocator;
@@ -102,9 +109,7 @@ namespace Sapientia.MemoryAllocator
 
 		private static void Prewarm(int index)
 		{
-			if (index < _allocators.Length)
-				return;
-			ArrayExt.Expand(ref _allocators, index + 1);
+			MemoryExt.ResizeArray(ref _allocators, ref _capacity, index + 1, true, true);
 		}
 
 		public static void RemoveAllocator(this ref AllocatorId allocatorId)
@@ -113,7 +118,7 @@ namespace Sapientia.MemoryAllocator
 				throw new ArgumentException($"{nameof(AllocatorId)} with such Id [id: {allocatorId.id}] doesn't exist.");
 
 			if (_currentAllocator == _allocators[allocatorId.index])
-				SetCurrentAllocator(null);
+				SetCurrentAllocator(default(SafePtr<Allocator>));
 
 			if (_count > 1)
 			{
@@ -132,7 +137,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!allocatorId.IsValid())
 				throw new ArgumentException($"{nameof(AllocatorId)} with such Id [id: {allocatorId.id}] doesn't exist.");
-			return ref _allocators[allocatorId.index];
+			return ref _allocators[allocatorId.index].Value();
 		}
 
 		[INLINE(256)]
@@ -140,18 +145,26 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!allocatorId.IsValid())
 				throw new ArgumentException($"{nameof(AllocatorId)} with such Id [id: {allocatorId.id}] doesn't exist.");
-			return ref _allocators[allocatorId.index];
+			return ref _allocators[allocatorId.index].Value();
+		}
+
+		[INLINE(256)]
+		public static SafePtr<Allocator> GetAllocatorPtr(this ref AllocatorId allocatorId)
+		{
+			if (!allocatorId.IsValid())
+				throw new ArgumentException($"{nameof(AllocatorId)} with such Id [id: {allocatorId.id}] doesn't exist.");
+			return _allocators[allocatorId.index];
 		}
 
 		[INLINE(256)]
 		public static bool IsValid(this ref AllocatorId allocatorId)
 		{
-			if (allocatorId.index < _count && _allocators[allocatorId.index].allocatorId.id == allocatorId.id)
+			if (allocatorId.index < _count && _allocators[allocatorId.index].Value().allocatorId.id == allocatorId.id)
 				return true;
 
 			for (ushort i = 0; i < _count; i++)
 			{
-				if (_allocators[i].allocatorId.id != allocatorId.id)
+				if (_allocators[i].Value().allocatorId.id != allocatorId.id)
 					continue;
 				allocatorId.index = i;
 				return true;

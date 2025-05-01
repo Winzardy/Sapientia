@@ -12,10 +12,10 @@ namespace Sapientia.MemoryAllocator
 		public int Count { get; }
 		public int Capacity { get; }
 		public SafePtr<T> GetValuePtr();
-		public SafePtr<T> GetValuePtr(Allocator allocator);
+		public SafePtr<T> GetValuePtr(SafePtr<Allocator> allocator);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(Allocator allocator)
+		public CircularBufferEnumerator<T> GetEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new CircularBufferEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
 		}
@@ -27,7 +27,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(SafePtr<Allocator> allocator)
 		{
 			return new CircularBufferPtrEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
 		}
@@ -39,7 +39,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(Allocator allocator)
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
 		}
@@ -51,7 +51,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
+		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(SafePtr<Allocator> allocator)
 		{
 			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
 		}

@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Sapientia.MemoryAllocator
 {
-	public static unsafe partial class LocalDataAccessorExt
+	public static unsafe partial class LocalServiceRegistryExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetLocalService<T>(this ref AllocatorId allocatorId, T service)

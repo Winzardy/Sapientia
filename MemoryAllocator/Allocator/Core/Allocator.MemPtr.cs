@@ -4,22 +4,22 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetRef<T>(in MemPtr ptr) where T : unmanaged
+		public readonly ref T GetRef<T>(in MemPtr ptr) where T : unmanaged
 		{
 			return ref *(T*)GetSafePtr(ptr).ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetSafePtr<T>(in MemPtr memPtr) where T : unmanaged
+		public readonly SafePtr<T> GetSafePtr<T>(in MemPtr memPtr) where T : unmanaged
 		{
 			return GetSafePtr(memPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetSafePtr(in MemPtr memPtr)
+		public readonly SafePtr GetSafePtr(in MemPtr memPtr)
 		{
 			var memory = zonesList[memPtr.zoneId].ptr->memory;
 			var safePtr = memory + memPtr.zoneOffset;
@@ -37,21 +37,21 @@ namespace Sapientia.MemoryAllocator
 			return GetBlockSize(memPtr) - TSize<MemoryBlock>.size;
 		}
 
-		public MemPtr CopyPtrTo(Allocator dstAllocator, MemPtr memPtr)
+		public MemPtr CopyPtrTo(SafePtr<Allocator> dstAllocator, MemPtr memPtr)
 		{
 			if (!memPtr.IsCreated())
 				return MemPtr.Invalid;
 			if (memPtr.IsZeroSized())
 			{
-				memPtr.allocatorId = dstAllocator.allocatorId;
+				memPtr.allocatorId = dstAllocator.Value().allocatorId;
 				return memPtr;
 			}
 
 			var size = GetPtrSize(memPtr);
-			var dstMemPtr = dstAllocator.MemAlloc(size);
+			var dstMemPtr = dstAllocator.Value().MemAlloc(size);
 
 			var srcData = GetSafePtr(memPtr);
-			var dstData = dstAllocator.GetSafePtr(dstMemPtr);
+			var dstData = dstAllocator.Value().GetSafePtr(dstMemPtr);
 
 			MemoryExt.MemCopy(srcData, dstData, size);
 
