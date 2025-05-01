@@ -5,7 +5,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public unsafe partial struct World : IIndexedType
+	public unsafe partial struct WorldState : IIndexedType
 	{
 		public uint Tick { get; private set; }
 		public float Time { get; private set; }
@@ -18,20 +18,20 @@ namespace Sapientia.MemoryAllocator.State
 
 		public bool IsStarted { get; private set; }
 
-		public static SafePtr<World> Create(SafePtr<Allocator> allocator, int elementsCapacity = 64)
+		public static SafePtr<WorldState> Create(Allocator allocator, int elementsCapacity = 64)
 		{
-			var worldPtr = allocator.Value().MemAlloc<World>(out var worldSafePtr);
+			var worldPtr = allocator.MemAlloc<WorldState>(out var worldSafePtr);
 			ref var world = ref worldSafePtr.Value();
 			world.Tick = 0u;
 			world.Time = 0f;
 			world.ScheduleLateUpdate = false;
 			world.IsStarted = false;
 
-			world.allocatorId = allocator.Value().allocatorId;
+			world.allocatorId = allocator.allocatorId;
 			world.worldElements = new (allocator, elementsCapacity);
 			world.worldSystems = new (allocator, elementsCapacity);
 
-			allocator.RegisterService<World>(worldPtr);
+			allocator.RegisterService<WorldState>(worldPtr);
 
 			return worldSafePtr;
 		}
@@ -63,7 +63,7 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		private void AddWorldElement(SafePtr<Allocator> allocator, ProxyPtr<IWorldElementProxy> element)
+		private void AddWorldElement(Allocator allocator, ProxyPtr<IWorldElementProxy> element)
 		{
 			worldElements.Add(allocator, element);
 			allocator.RegisterService(element);
@@ -137,22 +137,22 @@ namespace Sapientia.MemoryAllocator.State
 
 	public unsafe interface IWorldElement : IInterfaceProxyType
 	{
-		public virtual void Initialize(SafePtr<Allocator> allocator, IndexedPtr self) {}
+		public virtual void Initialize(Allocator allocator, IndexedPtr self) {}
 
-		public virtual void LateInitialize(SafePtr<Allocator> allocator, IndexedPtr self) {}
+		public virtual void LateInitialize(Allocator allocator, IndexedPtr self) {}
 
 		/// <summary>
 		/// Right before first world update
 		/// </summary>
-		public virtual void Start(SafePtr<Allocator> allocator, IndexedPtr self) {}
+		public virtual void Start(Allocator allocator, IndexedPtr self) {}
 
-		public virtual void Dispose(SafePtr<Allocator> allocator, IndexedPtr self) {}
+		public virtual void Dispose(Allocator allocator, IndexedPtr self) {}
 	}
 
 	public unsafe interface IWorldSystem : IWorldElement
 	{
-		public virtual void Update(SafePtr<Allocator> allocator, IndexedPtr self, float deltaTime) {}
-		public virtual void LateUpdate(SafePtr<Allocator> allocator, IndexedPtr self) {}
+		public virtual void Update(Allocator allocator, IndexedPtr self, float deltaTime) {}
+		public virtual void LateUpdate(Allocator allocator, IndexedPtr self) {}
 	}
 
 	public interface IWorldStatePart : IWorldElement

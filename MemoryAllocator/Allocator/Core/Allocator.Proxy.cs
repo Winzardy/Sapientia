@@ -2,7 +2,7 @@ using Sapientia.Collections;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct Allocator
+	public unsafe partial class Allocator
 	{
 		public unsafe class AllocatorProxy
 		{

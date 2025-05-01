@@ -69,34 +69,34 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<Allocator> GetAllocatorPtr()
+		public Allocator GetAllocator()
 		{
-			return allocatorId.GetAllocatorPtr();
+			return allocatorId.GetAllocator();
 		}
 
 		[INLINE(256)]
 		public SafePtr GetPtr()
 		{
-			return GetAllocatorPtr().ptr->GetSafePtr(in this);
+			return GetAllocator().GetSafePtr(in this);
 		}
 
 		[INLINE(256)]
-		public void Dispose(SafePtr<Allocator> allocator)
+		public void Dispose(Allocator allocator)
 		{
-			allocator.Value().MemFree(this);
+			allocator.MemFree(this);
 			this = Invalid;
 		}
 
 		[INLINE(256)]
 		public void Dispose()
 		{
-			GetAllocatorPtr().ptr->MemFree(this);
+			GetAllocator().MemFree(this);
 			this = Invalid;
 		}
 
-		public MemPtr CopyTo(SafePtr<Allocator> srsAllocator, SafePtr<Allocator> dstAllocator)
+		public MemPtr CopyTo(Allocator srsAllocator, Allocator dstAllocator)
 		{
-			return srsAllocator.Value().CopyPtrTo(dstAllocator, this);
+			return srsAllocator.CopyPtrTo(dstAllocator, this);
 		}
 
 		public override string ToString() => $"zoneId: {zoneId}, offset: {zoneOffset}, allocatorId: [{allocatorId}]";
