@@ -4,7 +4,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public unsafe struct Entity : IEquatable<Entity>
+	public struct Entity : IEquatable<Entity>
 	{
 		public const ushort GENERATION_ZERO = 0;
 
@@ -19,8 +19,8 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			get
 			{
-				var allocator = worldId.GetWorld();
-				return allocator.GetService<EntityStatePart>().GetEntityName(allocator, this);
+				var world = worldId.GetWorld();
+				return world.GetService<EntityStatePart>().GetEntityName(world, this);
 			}
 		}
 #endif
@@ -42,11 +42,11 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(string name)
 		{
-			var allocator = WorldManager.CurrentWorld;
+			var world = WorldManager.CurrentWorld;
 #if UNITY_EDITOR
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator, name);
+			return world.GetService<EntityStatePart>().CreateEntity(world, name);
 #else
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			return world.GetService<EntityStatePart>().CreateEntity(world);
 #endif
 		}
 
