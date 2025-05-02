@@ -68,7 +68,7 @@ namespace Sapientia.MemoryAllocator.State
 #if ENABLE_ENTITY_NAMES
 			WorldEntity = CreateEntity(world, "World");
 #else
-			WorldEntity = CreateEntity(allocator);
+			WorldEntity = CreateEntity(world);
 #endif
 		}
 
@@ -96,12 +96,12 @@ namespace Sapientia.MemoryAllocator.State
 		public Entity CreateEntity(World world, in FixedString64Bytes name = default)
 #else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Entity CreateEntity(Allocator allocator, in FixedString64Bytes name)
+		public Entity CreateEntity(World world, in FixedString64Bytes name)
 		{
-			return CreateEntity(allocator);
+			return CreateEntity(world);
 		}
 
-		public Entity CreateEntity(Allocator allocator, string name = null)
+		public Entity CreateEntity(World world, string name = null)
 #endif
 		{
 			EnsureCapacity(world, EntitiesCount);
