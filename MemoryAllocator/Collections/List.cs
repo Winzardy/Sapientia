@@ -7,7 +7,7 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-	[DebuggerTypeProxy(typeof(ListProxy<>))]
+	[DebuggerTypeProxy(typeof(List<>.ListProxy))]
 	public struct List<T> : IListEnumerable<T> where T : unmanaged
 	{
 		private MemArray<T> _arr;
@@ -50,13 +50,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			AddRange(world, enumerable);
 		}
-
-#if UNITY_EDITOR
-		internal World GetWorld()
-		{
-			return _arr.GetWorld();
-		}
-#endif
 
 		[INLINE(256)]
 		public void ReplaceWith(World world, in List<T> other)
@@ -333,6 +326,39 @@ namespace Sapientia.MemoryAllocator
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), 0, Count));
+		}
+
+		private class ListProxy
+		{
+			private List<T> _list;
+
+			public ListProxy(List<T> list)
+			{
+				_list = list;
+			}
+
+			public int Capacity => _list.Capacity;
+
+			public int Count => _list.Count;
+
+			public T[] Items
+			{
+				get
+				{
+#if DEBUG
+					var world = _list._arr.GetWorld_DEBUG();
+					var arr = new T[_list.Count];
+					for (int i = 0; i < _list.Count; ++i)
+					{
+						arr[i] = _list[world, i];
+					}
+
+					return arr;
+#else
+					return Array.Empty<T>();
+#endif
+				}
+			}
 		}
 	}
 }

@@ -6,7 +6,7 @@ using Sapientia.Extensions;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe struct SparseSet<T> : IListEnumerable<T> where T : unmanaged
+	public struct SparseSet<T> : IListEnumerable<T> where T : unmanaged
 	{
 		private SparseSet _innerSet;
 
@@ -45,14 +45,6 @@ namespace Sapientia.MemoryAllocator
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _innerSet.expandStep;
 		}
-
-#if UNITY_EDITOR
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal World GetWorld()
-		{
-			return _innerSet.GetWorld();
-		}
-#endif
 
 		public SparseSet(int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorld, capacity, sparseCapacity, expandStep) {}
 

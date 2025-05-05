@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
@@ -8,7 +9,6 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	[DebuggerTypeProxy(typeof(MemArrayProxy<>))]
 	public unsafe struct MemArray
 	{
 		public static readonly MemArray Empty = new () { ptr = CachedPtr.Invalid, Length = 0, };
@@ -16,10 +16,6 @@ namespace Sapientia.MemoryAllocator
 		public CachedPtr ptr;
 		public int Length { get; private set; }
 		public int ElementSize { get; private set; }
-
-#if UNITY_EDITOR
-		private WorldId _worldId;
-#endif
 
 		public int Count
 		{
@@ -47,10 +43,6 @@ namespace Sapientia.MemoryAllocator
 			ElementSize = elementSize;
 			Length = length;
 
-#if UNITY_EDITOR
-			_worldId = world.worldId;
-#endif
-
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
 				Clear(world);
@@ -75,21 +67,10 @@ namespace Sapientia.MemoryAllocator
 			Length = arr.Length;
 			ElementSize = arr.ElementSize;
 
-#if UNITY_EDITOR
-			_worldId = world.worldId;
-#endif
-
 			var memPtr = world.MemAlloc(arr.ElementSize * arr.Length, out var tPtr);
 			ptr = new CachedPtr(world, tPtr, memPtr);
 			MemArrayExt.CopyNoChecks(world, in arr, 0, ref this, 0, arr.Length);
 		}
-
-#if UNITY_EDITOR
-		internal World GetWorld()
-		{
-			return _worldId.GetWorld();
-		}
-#endif
 
 		[INLINE(256)]
 		public void ReplaceWith(World world, in MemArray other)

@@ -54,14 +54,6 @@ namespace Sapientia.MemoryAllocator
 			get => _values.ElementSize;
 		}
 
-#if UNITY_EDITOR
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal World GetWorld()
-		{
-			return _values.GetWorld();
-		}
-#endif
-
 		public SparseSet(int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorld, valueSize, capacity, sparseCapacity, expandStep) {}
 
 		public SparseSet(WorldId worldId, int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorld(), valueSize, capacity, sparseCapacity, expandStep) {}

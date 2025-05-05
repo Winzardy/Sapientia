@@ -15,8 +15,8 @@ namespace Sapientia.MemoryAllocator
 		ThrowOnExisting,
 	}
 
-	[DebuggerTypeProxy(typeof(EquatableDictionaryProxy<,>))]
-	public unsafe struct Dictionary<TKey, TValue> : IDictionaryEnumerable<TKey, TValue>
+	[DebuggerTypeProxy(typeof(Dictionary<,>.EquatableDictionaryProxy))]
+	public struct Dictionary<TKey, TValue> : IDictionaryEnumerable<TKey, TValue>
 		where TKey : unmanaged, IEquatable<TKey>
 		where TValue : unmanaged
 	{
@@ -55,14 +55,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			[INLINE(256)] get => count;
 		}
-
-#if UNITY_EDITOR
-		[INLINE(256)]
-		internal World GetWorld()
-		{
-			return buckets.GetWorld();
-		}
-#endif
 
 		[INLINE(256)]
 		public Dictionary(World world, int capacity)
@@ -465,6 +457,43 @@ namespace Sapientia.MemoryAllocator
 		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(World world)
 		{
 			return new(new(GetEntryPtr(world), LastIndex));
+		}
+
+		private class EquatableDictionaryProxy
+		{
+			private Dictionary<TKey, TValue> _dictionary;
+
+			public EquatableDictionaryProxy(Dictionary<TKey, TValue> dictionary)
+			{
+				_dictionary = dictionary;
+			}
+
+			public MemArray<int> Buckets => _dictionary.buckets;
+			public MemArray<Entry> Entries => _dictionary.entries;
+			public int Count => _dictionary.count;
+			public int FreeList => _dictionary.freeList;
+			public int FreeCount => _dictionary.freeCount;
+
+			public KeyValuePair<TKey, TValue>[] Items
+			{
+				get
+				{
+#if DEBUG
+					var arr = new KeyValuePair<TKey, TValue>[_dictionary.Count];
+					var i = 0;
+					var world = _dictionary.buckets.GetWorld_DEBUG();
+					var e = _dictionary.GetEnumerator(world);
+					while (e.MoveNext())
+					{
+						arr[i++] = new KeyValuePair<TKey, TValue>(e.Current.key, e.Current.value);
+					}
+
+					return arr;
+#else
+					return Array.Empty<KeyValuePair<TKey, TValue>>();
+#endif
+				}
+			}
 		}
 	}
 }

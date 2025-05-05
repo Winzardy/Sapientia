@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
@@ -9,12 +7,15 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemArrayProxy<>))]
+	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemArray<>.MemArrayProxy))]
 	public unsafe struct MemArray<T> : IListEnumerable<T> where T : unmanaged
 	{
 		public static readonly MemArray<T> Empty = new () { innerArray = MemArray.Empty };
 
 		public MemArray innerArray;
+#if DEBUG
+		private WorldId _worldId;
+#endif
 
 		public readonly int Length
 		{
@@ -43,12 +44,18 @@ namespace Sapientia.MemoryAllocator
 		{
 			innerArray = new MemArray(world, TSize<T>.size, length, ClearOptions.UninitializedMemory);
 			innerArray.Fill(world, defaultValue, 0, innerArray.Length);
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
 		[INLINE(256)]
 		public MemArray(World world, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			innerArray = new MemArray(world, TSize<T>.size, length, clearOptions);
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
 		[INLINE(256)]
@@ -62,6 +69,9 @@ namespace Sapientia.MemoryAllocator
 		public MemArray(World world, int elementSize, int length, ClearOptions clearOptions)
 		{
 			innerArray = new MemArray(world, elementSize, length, clearOptions);
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
 		[INLINE(256)]
@@ -73,6 +83,9 @@ namespace Sapientia.MemoryAllocator
 		public MemArray(World world, MemArray<T> arr)
 		{
 			innerArray = new MemArray(world, arr.As<MemArray<T>, MemArray>());
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
 		[INLINE(256)]
@@ -80,12 +93,15 @@ namespace Sapientia.MemoryAllocator
 		{
 			innerArray = new MemArray(world, TSize<T>.size, arr.Length, ClearOptions.UninitializedMemory);
 			arr.CopyTo(new Span<T>(innerArray.GetValuePtr(world).ptr, arr.Length));
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
-#if UNITY_EDITOR
-		public World GetWorld()
+#if DEBUG
+		internal World GetWorld_DEBUG()
 		{
-			return innerArray.GetWorld();
+			return _worldId.GetWorld();
 		}
 #endif
 
@@ -120,7 +136,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public MemPtr GetWPtr(int index)
+		public MemPtr GetMemPtr(int index)
 		{
 			return innerArray.GetWPtr(index);
 		}
@@ -213,6 +229,34 @@ namespace Sapientia.MemoryAllocator
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), 0, Count));
+		}
+
+		private class MemArrayProxy
+		{
+			private MemArray<T> _arr;
+
+			public MemArrayProxy(MemArray<T> arr)
+			{
+				_arr = arr;
+			}
+
+			public T[] Items
+			{
+				get
+				{
+#if DEBUG
+					var world = _arr._worldId.GetWorld();
+					var arr = new T[_arr.Length];
+					for (var i = 0; i < _arr.Length; ++i)
+					{
+						arr[i] = _arr[world, i];
+					}
+					return arr;
+#else
+					return Array.Empty<T>();
+#endif
+				}
+			}
 		}
 	}
 }

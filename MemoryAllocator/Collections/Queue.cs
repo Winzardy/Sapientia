@@ -1,10 +1,11 @@
+using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(QueueProxy<>))]
-	public unsafe struct Queue<T> : ICircularBufferEnumerable<T> where T : unmanaged
+	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(Queue<>.QueueProxy))]
+	public struct Queue<T> : ICircularBufferEnumerable<T> where T : unmanaged
 	{
 		private const int _minimumGrow = 4;
 		private const int _growFactor = 200;
@@ -37,13 +38,6 @@ namespace Sapientia.MemoryAllocator
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _array.Length;
 		}
-
-#if UNITY_EDITOR
-		internal World GetWorld()
-		{
-			return _array.GetWorld();
-		}
-#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Queue(World world, int capacity)
@@ -162,6 +156,41 @@ namespace Sapientia.MemoryAllocator
 		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
+		}
+
+		private class QueueProxy
+		{
+			private Queue<T> _queue;
+
+			public QueueProxy(Queue<T> queue)
+			{
+				_queue = queue;
+			}
+
+			public int Count => _queue.Count;
+
+			public T[] Items
+			{
+				get
+				{
+#if DEBUG
+					var arr = new T[_queue.Count];
+					var i = 0;
+					var world = _queue._array.GetWorld_DEBUG();
+					var e = _queue.GetEnumerator(world);
+					while (e.MoveNext())
+					{
+						arr[i++] = e.Current;
+					}
+
+					e.Dispose();
+
+					return arr;
+#else
+					return Array.Empty<T>();
+#endif
+				}
+			}
 		}
 	}
 }

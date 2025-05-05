@@ -37,14 +37,6 @@ namespace Sapientia.MemoryAllocator
 			_count = 0;
 		}
 
-#if UNITY_EDITOR
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal World GetWorld()
-		{
-			return _ids.GetWorld();
-		}
-#endif
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetValuePtr(World world)
 		{

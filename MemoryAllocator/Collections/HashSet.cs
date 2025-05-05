@@ -7,8 +7,8 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-	[DebuggerTypeProxy(typeof(HashSetProxy<>))]
-	public unsafe struct HashSet<T> : IHashSetEnumerable<T>
+	[DebuggerTypeProxy(typeof(HashSet<>.HashSetProxy))]
+	public struct HashSet<T> : IHashSetEnumerable<T>
 		where T : unmanaged, IEquatable<T>
 	{
 		public struct Slot
@@ -41,13 +41,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			[INLINE(256)] get => lastIndex;
 		}
-
-#if UNITY_EDITOR
-		public World GetWorld()
-		{
-			return buckets.GetWorld();
-		}
-#endif
 
 		[INLINE(256)]
 		public HashSet(World world, int capacity = 8)
@@ -441,6 +434,45 @@ namespace Sapientia.MemoryAllocator
 		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetSlotPtr(world), LastIndex));
+		}
+
+		private class HashSetProxy
+		{
+			private HashSet<T> _hashSet;
+
+			public HashSetProxy(HashSet<T> hashSet)
+			{
+				_hashSet = hashSet;
+			}
+
+			public MemArray<int> Buckets => _hashSet.buckets;
+			public MemArray<HashSet<T>.Slot> Slots => _hashSet.slots;
+			public int Count => _hashSet.count;
+			public int FreeList => _hashSet.freeList;
+			public int LastIndex => _hashSet.lastIndex;
+
+			public T[] Items
+			{
+				get
+				{
+#if DEBUG
+					var arr = new T[_hashSet.Count];
+					var i = 0;
+					var world = _hashSet.buckets.GetWorld_DEBUG();
+					var e = _hashSet.GetEnumerator(world);
+					while (e.MoveNext())
+					{
+						arr[i++] = e.Current;
+					}
+
+					e.Dispose();
+
+					return arr;
+#else
+					return Array.Empty<T>();
+#endif
+				}
+			}
 		}
 	}
 }

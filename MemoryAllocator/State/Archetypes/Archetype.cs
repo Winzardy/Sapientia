@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Collections;
@@ -91,14 +90,6 @@ namespace Sapientia.MemoryAllocator.State
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _elements.Count;
 		}
-
-#if UNITY_EDITOR
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal World GetWorld()
-		{
-			return _elements.GetWorld();
-		}
-#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype RegisterArchetype<T>(World world, int elementsCount) where T: unmanaged, IIndexedType

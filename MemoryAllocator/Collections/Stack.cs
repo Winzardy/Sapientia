@@ -4,7 +4,7 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(StackProxy<>))]
+	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(Stack<>.StackProxy))]
 	public unsafe struct Stack<T> : IListEnumerable<T> where T : unmanaged
 	{
 		private const int _defaultCapacity = 4;
@@ -31,14 +31,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			[INLINE(256)] get => _array.Length <= _count;
 		}
-
-#if UNITY_EDITOR
-		[INLINE(256)]
-		internal World GetWorld()
-		{
-			return _array.GetWorld();
-		}
-#endif
 
 		[INLINE(256)]
 		public Stack(World world, int capacity)
@@ -141,6 +133,41 @@ namespace Sapientia.MemoryAllocator
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), 0, Count));
+		}
+
+		private class StackProxy
+		{
+			private Stack<T> _stack;
+
+			public StackProxy(Stack<T> stack)
+			{
+				_stack = stack;
+			}
+
+			public int Count => _stack.Count;
+
+			public T[] Items
+			{
+				get
+				{
+#if DEBUG
+					var allocator = _stack._array.GetWorld_DEBUG();
+					var arr = new T[_stack.Count];
+					var i = 0;
+					var e = _stack.GetEnumerator(allocator);
+					while (e.MoveNext())
+					{
+						arr[i++] = e.Current;
+					}
+
+					e.Dispose();
+
+					return arr;
+#else
+					return Array.Empty<T>();
+#endif
+				}
+			}
 		}
 	}
 }
