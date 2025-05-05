@@ -8,42 +8,42 @@ namespace Sapientia.MemoryAllocator
 	public struct IndexedPtr : IEquatable<IndexedPtr>
 	{
 		public readonly TypeIndex typeIndex;
-		private CWPtr _ptr;
+		private CachedPtr _ptr;
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => _ptr.wPtr.IsCreated();
+			[INLINE(256)] get => _ptr.memPtr.IsValid();
 		}
 
 		[INLINE(256)]
-		public IndexedPtr(WPtr wPtr, TypeIndex typeIndex)
+		public IndexedPtr(MemPtr memPtr, TypeIndex typeIndex)
 		{
-			_ptr = new (wPtr);
+			_ptr = new (memPtr);
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public IndexedPtr(CWPtr ptr, TypeIndex typeIndex)
+		public IndexedPtr(CachedPtr ptr, TypeIndex typeIndex)
 		{
 			_ptr = ptr;
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public IndexedPtr(World world, SafePtr cachedPtr, WPtr wPtr, TypeIndex typeIndex)
+		public IndexedPtr(World world, SafePtr cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
 		{
-			_ptr = new CWPtr(world, cachedPtr, wPtr);
+			_ptr = new CachedPtr(world, cachedPtr, memPtr);
 			this.typeIndex = typeIndex;
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(CWPtr<T> ptr) where T : unmanaged
+		public static IndexedPtr Create<T>(CachedPtr<T> ptr) where T : unmanaged
 		{
 			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(CWPtr ptr) where T : unmanaged
+		public static IndexedPtr Create<T>(CachedPtr ptr) where T : unmanaged
 		{
 			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
@@ -92,21 +92,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly WPtr GetMemPtr()
+		public readonly MemPtr GetMemPtr()
 		{
 			E.ASSERT(IsCreated);
-			return _ptr.wPtr;
+			return _ptr.memPtr;
 		}
 
 		[INLINE(256)]
-		public readonly CWPtr GetCachedPtr()
+		public readonly CachedPtr GetCachedPtr()
 		{
 			E.ASSERT(IsCreated);
 			return _ptr;
 		}
 
 		[INLINE(256)]
-		public readonly CWPtr<T> GetCachedPtr<T>() where T : unmanaged
+		public readonly CachedPtr<T> GetCachedPtr<T>() where T : unmanaged
 		{
 			E.ASSERT(IsCreated);
 			return _ptr;

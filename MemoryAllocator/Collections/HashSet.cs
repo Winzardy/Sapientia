@@ -115,10 +115,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public WPtr GetMemPtr()
+		public MemPtr GetMemPtr()
 		{
 			E.ASSERT(IsCreated);
-			return buckets.innerArray.ptr.wPtr;
+			return buckets.innerArray.ptr.memPtr;
 		}
 
 		[INLINE(256)]

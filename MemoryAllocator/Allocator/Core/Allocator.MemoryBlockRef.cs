@@ -17,9 +17,9 @@ namespace Sapientia.MemoryAllocator
 				this.memoryZoneOffset = memoryZoneOffset;
 			}
 
-			public static implicit operator MemoryBlockRef(AllocatorPtr allocatorPtr)
+			public static implicit operator MemoryBlockRef(MemPtr memPtr)
 			{
-				return new MemoryBlockRef(allocatorPtr.zoneId, allocatorPtr.zoneOffset - TSize<MemoryBlock>.size);
+				return new MemoryBlockRef(memPtr.zoneId, memPtr.zoneOffset - TSize<MemoryBlock>.size);
 			}
 		}
 	}

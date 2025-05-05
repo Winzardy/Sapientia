@@ -6,7 +6,7 @@ namespace Sapientia.MemoryAllocator.State
 	public static unsafe class ArchetypeExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetDestroyHandler<THandler>(this ref CWPtr<Archetype> archetypePtr, World world) where THandler : unmanaged, IElementDestroyHandler
+		public static void SetDestroyHandler<THandler>(this ref CachedPtr<Archetype> archetypePtr, World world) where THandler : unmanaged, IElementDestroyHandler
 		{
 			archetypePtr.GetValue(world).SetDestroyHandler<THandler>(world);
 		}

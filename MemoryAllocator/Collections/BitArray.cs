@@ -10,10 +10,10 @@ namespace Sapientia.MemoryAllocator
 	{
 		private const int _bitsInUlong = sizeof(ulong) * 8;
 
-		public CWPtr<ulong> ptr;
+		public CachedPtr<ulong> ptr;
 		public int length;
 
-		public bool IsCreated => ptr.IsCreated();
+		public bool IsCreated => ptr.IsValid();
 
 		[INLINE(256)]
 		public SafePtr<ulong> GetPtr(World world)
@@ -26,12 +26,12 @@ namespace Sapientia.MemoryAllocator
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(length);
 
-			ptr = new CWPtr<ulong>(world, world.MemAlloc(sizeInBytes, out var safePtr), safePtr);
+			ptr = new CachedPtr<ulong>(world, world.MemAlloc(sizeInBytes, out var safePtr), safePtr);
 			this.length = length;
 
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
-				world.MemClear(ptr.wPtr, 0, sizeInBytes);
+				world.MemClear(ptr.memPtr, 0, sizeInBytes);
 			}
 		}
 
@@ -40,7 +40,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(source.length);
 
-			ptr = new CWPtr<ulong>(world, world.MemAlloc(sizeInBytes, out var safePtr), safePtr);
+			ptr = new CachedPtr<ulong>(world, world.MemAlloc(sizeInBytes, out var safePtr), safePtr);
 			length = source.length;
 
 			MemoryExt.MemCopy(source.ptr.GetPtr(world).Cast<byte>(), safePtr.Cast<byte>(), sizeInBytes);
@@ -75,8 +75,8 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (newLength > length)
 			{
-				var memPtr = world.MemReAlloc(ptr.wPtr, TSize<ulong>.size * Bitwise.AlignULongBits(length), out var rawPtr);
-				ptr = new CWPtr<ulong>(world, memPtr, rawPtr);
+				var memPtr = world.MemReAlloc(ptr.memPtr, TSize<ulong>.size * Bitwise.AlignULongBits(length), out var rawPtr);
+				ptr = new CachedPtr<ulong>(world, memPtr, rawPtr);
 
 				if (clearOptions == ClearOptions.ClearMemory)
 				{
@@ -284,7 +284,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Dispose(World world)
 		{
-			world.MemFree(ptr.wPtr);
+			world.MemFree(ptr.memPtr);
 			this = default;
 		}
 

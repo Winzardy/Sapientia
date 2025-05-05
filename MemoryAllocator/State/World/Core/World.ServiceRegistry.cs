@@ -7,19 +7,19 @@ namespace Sapientia.MemoryAllocator
 	public partial class World
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(WPtr ptr) where T: unmanaged, IIndexedType
+		public void RegisterService<T>(MemPtr ptr) where T: unmanaged, IIndexedType
 		{
 			_serviceRegistry.RegisterService<T>(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(CWPtr<T> ptr) where T: unmanaged, IIndexedType
+		public void RegisterService<T>(CachedPtr<T> ptr) where T: unmanaged, IIndexedType
 		{
 			_serviceRegistry.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(CWPtr ptr) where T: unmanaged, IIndexedType
+		public void RegisterService<T>(CachedPtr ptr) where T: unmanaged, IIndexedType
 		{
 			_serviceRegistry.RegisterService<T>(this, ptr);
 		}
@@ -37,7 +37,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterServiceAs<T, TBase>(CWPtr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
+		public void RegisterServiceAs<T, TBase>(CachedPtr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			_serviceRegistry.RegisterServiceAs<T, TBase>(this, ptr);
 		}
@@ -85,7 +85,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void GetService<T>(out CWPtr<T> ptr) where T: unmanaged, IIndexedType
+		public void GetService<T>(out CachedPtr<T> ptr) where T: unmanaged, IIndexedType
 		{
 			ptr = _serviceRegistry.GetServiceCachedPtr<T>(this);
 		}
@@ -103,7 +103,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T> GetServiceCachedPtr<T>() where T: unmanaged, IIndexedType
+		public CachedPtr<T> GetServiceCachedPtr<T>() where T: unmanaged, IIndexedType
 		{
 			return _serviceRegistry.GetServiceCachedPtr<T>(this);
 		}

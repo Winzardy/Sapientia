@@ -12,7 +12,7 @@ namespace Sapientia.MemoryAllocator
 			ref var result = ref _typeToPtr.GetValue(world, context, out var exist);
 			if (!exist)
 			{
-				result = new IndexedPtr(CWPtr<T>.Create(world), context.typeIndex);
+				result = new IndexedPtr(CachedPtr<T>.Create(world), context.typeIndex);
 				RegisterService(world, context, result);
 			}
 			return result;
@@ -24,7 +24,7 @@ namespace Sapientia.MemoryAllocator
 			ref var result = ref _typeToPtr.GetValue(world, context, out exist);
 			if (!exist)
 			{
-				result = new IndexedPtr(CWPtr<T>.Create(world), context.typeIndex);
+				result = new IndexedPtr(CachedPtr<T>.Create(world), context.typeIndex);
 				RegisterService(world, context, result);
 			}
 			return result;
@@ -70,7 +70,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T> GetOrRegisterServiceCachedPtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
+		public CachedPtr<T> GetOrRegisterServiceCachedPtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
 		{
 			return GetOrRegisterServiceIndexedPtr<T>(world, context).GetCachedPtr<T>();
 		}

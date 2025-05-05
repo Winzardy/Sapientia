@@ -51,13 +51,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(WPtr ptr)
+		public void RegisterService(MemPtr ptr)
 		{
 			WorldManager.CurrentWorld.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(CWPtr ptr)
+		public void RegisterService(CachedPtr ptr)
 		{
 			WorldManager.CurrentWorld.RegisterService(this, ptr);
 		}
@@ -93,7 +93,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T> GetServiceCachedPtr<T>() where T: unmanaged
+		public CachedPtr<T> GetServiceCachedPtr<T>() where T: unmanaged
 		{
 			return GetServiceCachedPtr<T>(WorldManager.CurrentWorld);
 		}
@@ -105,21 +105,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(World world, WPtr ptr)
+		public void RegisterService(World world, MemPtr ptr)
 		{
 			world.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(World world, CWPtr ptr)
+		public void RegisterService(World world, CachedPtr ptr)
 		{
 			world.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(World world, CWPtr<T> ptr) where T: unmanaged
+		public void RegisterService<T>(World world, CachedPtr<T> ptr) where T: unmanaged
 		{
-			world.RegisterService(this, (CWPtr)ptr);
+			world.RegisterService(this, (CachedPtr)ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -153,7 +153,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T> GetServiceCachedPtr<T>(World world) where T: unmanaged
+		public CachedPtr<T> GetServiceCachedPtr<T>(World world) where T: unmanaged
 		{
 			return world.GetServiceCachedPtr<T>(this);
 		}

@@ -154,9 +154,9 @@ namespace Sapientia.MemoryAllocator.State
 			return ref archetypePtr.GetArchetype(world);
 		}
 
-		public static CWPtr<Archetype> CreateArchetype<T>(World world, int elementsCount, int entitiesCapacity) where T: unmanaged
+		public static CachedPtr<Archetype> CreateArchetype<T>(World world, int elementsCount, int entitiesCapacity) where T: unmanaged
 		{
-			var archetypePtr = CWPtr<Archetype>.Create(world);
+			var archetypePtr = CachedPtr<Archetype>.Create(world);
 			ref var archetype = ref archetypePtr.GetValue(world);
 
 			archetype._elements = new SparseSet(world, TSize<ArchetypeElement<T>>.size, elementsCount, entitiesCapacity);
@@ -171,23 +171,23 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CWPtr<Archetype> RegisterArchetype(World world, ServiceRegistryContext context, int elementsCount)
+		public static CachedPtr<Archetype> RegisterArchetype(World world, ServiceRegistryContext context, int elementsCount)
 		{
 			var ptr = CreateArchetype(world, elementsCount, world.GetService<EntityStatePart>().EntitiesCapacity);
-			context.RegisterService(world, (CWPtr)ptr);
+			context.RegisterService(world, (CachedPtr)ptr);
 
 			return ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CWPtr<Archetype> CreateArchetype(World world, int elementsCount)
+		public static CachedPtr<Archetype> CreateArchetype(World world, int elementsCount)
 		{
 			return CreateArchetype(world, elementsCount, world.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
-		public static CWPtr<Archetype> CreateArchetype(World world, int elementsCount, int entitiesCapacity)
+		public static CachedPtr<Archetype> CreateArchetype(World world, int elementsCount, int entitiesCapacity)
 		{
-			var archetypePtr = CWPtr<Archetype>.Create(world);
+			var archetypePtr = CachedPtr<Archetype>.Create(world);
 			ref var archetype = ref archetypePtr.GetValue(world);
 
 			archetype._elements = new SparseSet(world, TSize<ArchetypeElement>.size, elementsCount, entitiesCapacity);

@@ -6,13 +6,13 @@ namespace Sapientia.MemoryAllocator
 	public partial class World
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(ServiceRegistryContext context, WPtr ptr)
+		public void RegisterService(ServiceRegistryContext context, MemPtr ptr)
 		{
 			_serviceRegistry.RegisterService(this, context, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(ServiceRegistryContext context, CWPtr ptr)
+		public void RegisterService(ServiceRegistryContext context, CachedPtr ptr)
 		{
 			_serviceRegistry.RegisterService(this, context, ptr);
 		}
@@ -48,7 +48,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T> GetServiceCachedPtr<T>(ServiceRegistryContext context) where T: unmanaged
+		public CachedPtr<T> GetServiceCachedPtr<T>(ServiceRegistryContext context) where T: unmanaged
 		{
 			return _serviceRegistry.GetServiceCachedPtr<T>(this, context);
 		}

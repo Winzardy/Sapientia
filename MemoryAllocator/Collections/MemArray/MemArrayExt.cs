@@ -55,7 +55,7 @@ namespace Sapientia.MemoryAllocator
 				arr = new MemArray(world, size, fromArr.Length);
 			}
 
-			world.MemMove(arr.ptr.wPtr, destIndex * size, fromArr.ptr.wPtr, sourceIndex * size, length * size);
+			world.MemMove(arr.ptr.memPtr, destIndex * size, fromArr.ptr.memPtr, sourceIndex * size, length * size);
 		}
 
 		[INLINE(256)]
@@ -70,14 +70,14 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(fromArr.ElementSize == destArr.ElementSize);
 
 			var size = fromArr.ElementSize;
-			world.MemCopy(fromArr.ptr.wPtr, sourceIndex * size, destArr.ptr.wPtr, destIndex * size, length * size);
+			world.MemCopy(fromArr.ptr.memPtr, sourceIndex * size, destArr.ptr.memPtr, destIndex * size, length * size);
 		}
 
 		[INLINE(256)]
 		public static void SwapElements(World world, in MemArray aArr, int aIndex, in MemArray bArr, int bIndex)
 		{
 			var size = aArr.ElementSize;
-			world.MemSwap(aArr.ptr.wPtr, aIndex * size, bArr.ptr.wPtr, bIndex * size, size);
+			world.MemSwap(aArr.ptr.memPtr, aIndex * size, bArr.ptr.memPtr, bIndex * size, size);
 		}
 	}
 }

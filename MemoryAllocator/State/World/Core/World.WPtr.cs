@@ -6,22 +6,21 @@ namespace Sapientia.MemoryAllocator
 	public partial class World
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetSafePtr(in WPtr wPtr)
+		public SafePtr GetSafePtr(in MemPtr memPtr)
 		{
-			return _allocator.GetSafePtr(wPtr);
+			return _allocator.GetSafePtr(memPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetSafePtr<T>(in WPtr wPtr) where T: unmanaged
+		public SafePtr<T> GetSafePtr<T>(in MemPtr memPtr) where T: unmanaged
 		{
-			return _allocator.GetSafePtr<T>(wPtr);
+			return _allocator.GetSafePtr<T>(memPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public WPtr CopyPtrTo(World dstWorld, in WPtr srsPtr)
+		public MemPtr CopyPtrTo(World dstWorld, in MemPtr srsPtr)
 		{
-			var dstMemPtr = _allocator.CopyPtrTo(ref dstWorld._allocator, srsPtr.allocatorPtr);
-			return new WPtr(dstMemPtr);
+			return _allocator.CopyPtrTo(ref dstWorld._allocator, srsPtr);
 		}
 	}
 }

@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void ReplaceWith(World world, in List<T> other)
 		{
-			if (other._arr.innerArray.ptr.wPtr == _arr.innerArray.ptr.wPtr)
+			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
 			{
 				return;
 			}
@@ -73,17 +73,17 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void CopyFrom(World world, in List<T> other)
 		{
-			if (other._arr.innerArray.ptr.wPtr == _arr.innerArray.ptr.wPtr)
+			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
 				return;
-			if (!_arr.innerArray.ptr.wPtr.IsCreated() && !other._arr.innerArray.ptr.wPtr.IsCreated())
+			if (!_arr.innerArray.ptr.memPtr.IsValid() && !other._arr.innerArray.ptr.memPtr.IsValid())
 				return;
-			if (_arr.innerArray.ptr.wPtr.IsCreated() && !other._arr.innerArray.ptr.wPtr.IsCreated())
+			if (_arr.innerArray.ptr.memPtr.IsValid() && !other._arr.innerArray.ptr.memPtr.IsValid())
 			{
 				Dispose(world);
 				return;
 			}
 
-			if (!_arr.innerArray.ptr.wPtr.IsCreated())
+			if (!_arr.innerArray.ptr.memPtr.IsValid())
 				this = new List<T>(world, other.Capacity);
 
 			MemArrayExt.Copy(world, in other._arr.innerArray, ref _arr.innerArray);
@@ -246,7 +246,7 @@ namespace Sapientia.MemoryAllocator
 				return true;
 			}
 
-			var ptr = _arr.innerArray.ptr.wPtr;
+			var ptr = _arr.innerArray.ptr.memPtr;
 			world.MemMove<T>(ptr, index + 1, ptr, index, (_count - index - 1));
 
 			--_count;
@@ -297,13 +297,13 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public readonly void CopyTo(World world, MemArray<T> arr, int srcOffset, int index, int count)
 		{
-			world.MemCopy<T>(_arr.innerArray.ptr.wPtr, srcOffset, arr.innerArray.ptr.wPtr, index, count);
+			world.MemCopy<T>(_arr.innerArray.ptr.memPtr, srcOffset, arr.innerArray.ptr.memPtr, index, count);
 		}
 
 		[INLINE(256)]
-		public readonly void CopyTo(World world, in WPtr arrPtr, int srcOffset, int index, int count)
+		public readonly void CopyTo(World world, in MemPtr arrPtr, int srcOffset, int index, int count)
 		{
-			world.MemCopy<T>(_arr.innerArray.ptr.wPtr, srcOffset, arrPtr, index, count);
+			world.MemCopy<T>(_arr.innerArray.ptr.memPtr, srcOffset, arrPtr, index, count);
 		}
 
 		public int GetReservedSizeInBytes()

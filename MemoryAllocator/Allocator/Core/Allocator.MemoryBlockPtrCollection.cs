@@ -118,9 +118,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private int GetBlockSize(in AllocatorPtr allocatorPtr)
+		private int GetBlockSize(in MemPtr memPtr)
 		{
-			var blockPtr = (_zonesList[allocatorPtr.zoneId].ptr->memory + allocatorPtr.zoneOffset - TSize<MemoryBlock>.size).Cast<MemoryBlock>();
+			var blockPtr = (_zonesList[memPtr.zoneId].ptr->memory + memPtr.zoneOffset - TSize<MemoryBlock>.size).Cast<MemoryBlock>();
 			return blockPtr.ptr->blockSize;
 		}
 

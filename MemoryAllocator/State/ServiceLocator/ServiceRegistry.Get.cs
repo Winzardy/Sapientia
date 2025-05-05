@@ -85,7 +85,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T> GetServiceCachedPtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
+		public CachedPtr<T> GetServiceCachedPtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
 		{
 			var result = _typeToPtr.GetValue(world, context, out var success).GetCachedPtr<T>();
 			E.ASSERT(success);
@@ -93,7 +93,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T> GetServiceCachedPtr<T>(World world) where T: unmanaged, IIndexedType
+		public CachedPtr<T> GetServiceCachedPtr<T>(World world) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
 			return GetServiceCachedPtr<T>(world, typeIndex);

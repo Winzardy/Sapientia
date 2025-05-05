@@ -95,9 +95,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly WPtr GetMemPtr()
+		public readonly MemPtr GetMemPtr()
 		{
-			return buckets.innerArray.ptr.wPtr;
+			return buckets.innerArray.ptr.memPtr;
 		}
 
 		[INLINE(256)]
@@ -114,15 +114,15 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 				return;
-			if (!GetMemPtr().IsCreated() && !other.GetMemPtr().IsCreated())
+			if (!GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
 				return;
-			if (GetMemPtr().IsCreated() && !other.GetMemPtr().IsCreated())
+			if (GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
 			{
 				Dispose(world);
 				return;
 			}
 
-			if (GetMemPtr().IsCreated() == false)
+			if (!GetMemPtr().IsValid())
 				this = new Dictionary<TKey, TValue>(world, other.Count);
 
 			MemArrayExt.CopyExact(world, other.buckets, ref buckets);

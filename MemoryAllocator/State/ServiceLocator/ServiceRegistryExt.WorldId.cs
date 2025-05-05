@@ -7,19 +7,19 @@ namespace Sapientia.MemoryAllocator
 	public static unsafe partial class ServiceRegistryExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterService<T>(this ref WorldId worldId, WPtr ptr) where T: unmanaged, IIndexedType
+		public static void RegisterService<T>(this ref WorldId worldId, MemPtr ptr) where T: unmanaged, IIndexedType
 		{
 			worldId.GetWorld().RegisterService<T>(ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterService<T>(this ref WorldId worldId, CWPtr<T> ptr) where T: unmanaged, IIndexedType
+		public static void RegisterService<T>(this ref WorldId worldId, CachedPtr<T> ptr) where T: unmanaged, IIndexedType
 		{
 			worldId.GetWorld().RegisterService(ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterService<T>(this ref WorldId worldId, CWPtr ptr) where T: unmanaged, IIndexedType
+		public static void RegisterService<T>(this ref WorldId worldId, CachedPtr ptr) where T: unmanaged, IIndexedType
 		{
 			worldId.GetWorld().RegisterService<T>(ptr);
 		}
@@ -37,7 +37,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterServiceAs<T, TBase>(this ref WorldId worldId, CWPtr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
+		public static void RegisterServiceAs<T, TBase>(this ref WorldId worldId, CachedPtr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			worldId.GetWorld().RegisterServiceAs<T, TBase>(ptr);
 		}
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void GetService<T>(this ref WorldId worldId, out CWPtr<T> ptr) where T: unmanaged, IIndexedType
+		public static void GetService<T>(this ref WorldId worldId, out CachedPtr<T> ptr) where T: unmanaged, IIndexedType
 		{
 			ptr = worldId.GetWorld().GetServiceCachedPtr<T>();
 		}
@@ -85,7 +85,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CWPtr<T> GetServiceCachedPtr<T>(this ref WorldId worldId) where T: unmanaged, IIndexedType
+		public static CachedPtr<T> GetServiceCachedPtr<T>(this ref WorldId worldId) where T: unmanaged, IIndexedType
 		{
 			return worldId.GetWorld().GetServiceCachedPtr<T>();
 		}

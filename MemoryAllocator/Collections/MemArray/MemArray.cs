@@ -11,9 +11,9 @@ namespace Sapientia.MemoryAllocator
 	[DebuggerTypeProxy(typeof(MemArrayProxy<>))]
 	public unsafe struct MemArray
 	{
-		public static readonly MemArray Empty = new () { ptr = CWPtr.Invalid, Length = 0, };
+		public static readonly MemArray Empty = new () { ptr = CachedPtr.Invalid, Length = 0, };
 
-		public CWPtr ptr;
+		public CachedPtr ptr;
 		public int Length { get; private set; }
 		public int ElementSize { get; private set; }
 
@@ -28,7 +28,7 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => ptr.IsCreated();
+			[INLINE(256)] get => ptr.IsValid();
 		}
 
 		[INLINE(256)]
@@ -43,7 +43,7 @@ namespace Sapientia.MemoryAllocator
 			this = default;
 			ptr = default;
 			var memPtr = world.MemAlloc(elementSize * length, out var tPtr);
-			ptr = new CWPtr(world, tPtr, memPtr);
+			ptr = new CachedPtr(world, tPtr, memPtr);
 			ElementSize = elementSize;
 			Length = length;
 
@@ -80,7 +80,7 @@ namespace Sapientia.MemoryAllocator
 #endif
 
 			var memPtr = world.MemAlloc(arr.ElementSize * arr.Length, out var tPtr);
-			ptr = new CWPtr(world, tPtr, memPtr);
+			ptr = new CachedPtr(world, tPtr, memPtr);
 			MemArrayExt.CopyNoChecks(world, in arr, 0, ref this, 0, arr.Length);
 		}
 
@@ -94,7 +94,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void ReplaceWith(World world, in MemArray other)
 		{
-			if (other.ptr.wPtr == ptr.wPtr)
+			if (other.ptr.memPtr == ptr.memPtr)
 			{
 				return;
 			}
@@ -106,16 +106,16 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void CopyFrom(World world, in MemArray other)
 		{
-			if (other.ptr.wPtr == ptr.wPtr) return;
-			if (!ptr.wPtr.IsCreated() && !other.ptr.wPtr.IsCreated())
+			if (other.ptr.memPtr == ptr.memPtr) return;
+			if (!ptr.memPtr.IsValid() && !other.ptr.memPtr.IsValid())
 				return;
-			if (ptr.wPtr.IsCreated() && !other.ptr.wPtr.IsCreated())
+			if (ptr.memPtr.IsValid() && !other.ptr.memPtr.IsValid())
 			{
 				Dispose(world);
 				return;
 			}
 
-			if (ptr.wPtr.IsCreated() == false)
+			if (!ptr.memPtr.IsValid())
 				this = new MemArray(world, other.ElementSize, other.Length, ClearOptions.ClearMemory);
 
 			MemArrayExt.Copy(world, in other, ref this);
@@ -124,9 +124,9 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Dispose(World world)
 		{
-			if (ptr.wPtr.IsCreated())
+			if (ptr.memPtr.IsValid())
 			{
-				world.MemFree(ptr.wPtr);
+				world.MemFree(ptr.memPtr);
 			}
 
 			this = default;
@@ -139,9 +139,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public WPtr GetWPtr(int index)
+		public MemPtr GetWPtr(int index)
 		{
-			return ptr.wPtr.GetArrayElement(ElementSize, index);
+			return ptr.memPtr.GetArrayElement(ElementSize, index);
 		}
 
 		[INLINE(256)]
@@ -196,8 +196,8 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(elementSize == ElementSize);
 
 			var prevLength = Length;
-			var arrPtr = world.MemReAlloc(ptr.wPtr, elementSize * newLength, out var rawPtr);
-			ptr = new CWPtr(world, rawPtr, arrPtr);
+			var arrPtr = world.MemReAlloc(ptr.memPtr, elementSize * newLength, out var rawPtr);
+			ptr = new CachedPtr(world, rawPtr, arrPtr);
 
 			if (options == ClearOptions.ClearMemory)
 			{
@@ -219,7 +219,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public void Fill<T>(World world, in T value, int fromIndex, int count) where T: unmanaged
 		{
-			world.MemFill<T>(ptr.wPtr, value, fromIndex, count);
+			world.MemFill<T>(ptr.memPtr, value, fromIndex, count);
 		}
 
 		[INLINE(256)]
@@ -232,7 +232,7 @@ namespace Sapientia.MemoryAllocator
 		public void Clear(World world, int index, int length)
 		{
 			var size = ElementSize;
-			world.MemClear(ptr.wPtr, index * size, length * size);
+			world.MemClear(ptr.memPtr, index * size, length * size);
 		}
 
 		[INLINE(256)]

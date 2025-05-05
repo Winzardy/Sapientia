@@ -120,7 +120,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public WPtr GetWPtr(int index)
+		public MemPtr GetWPtr(int index)
 		{
 			return innerArray.GetWPtr(index);
 		}

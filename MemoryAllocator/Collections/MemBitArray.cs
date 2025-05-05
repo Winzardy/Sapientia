@@ -523,7 +523,7 @@ namespace Sapientia.MemoryAllocator
 		/// <value>Pointer to the data.</value>
 		//[NativeDisableUnsafePtrRestriction]
 		//public ulong* Ptr;
-		public WPtr ptr;
+		public MemPtr ptr;
 
 		/// <summary>
 		/// The number of bits.
@@ -538,7 +538,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="allocator">The allocator that was used to allocate the bytes. Needed to dispose this array.</param>
 		/// <param name="sizeInBytes">The number of bytes. The length will be `sizeInBytes * 8`.</param>
 		[INLINE(256)]
-		public MemBitArray(WPtr ptr, int sizeInBytes)
+		public MemBitArray(MemPtr ptr, int sizeInBytes)
 		{
 			this.ptr = ptr;
 			length = sizeInBytes * 8;
@@ -579,7 +579,7 @@ namespace Sapientia.MemoryAllocator
 		/// Whether this array has been allocated (and not yet deallocated).
 		/// </summary>
 		/// <value>True if this array has been allocated (and not yet deallocated).</value>
-		public bool IsCreated => ptr.IsCreated();
+		public bool IsCreated => ptr.IsValid();
 
 		/// <summary>
 		/// Releases all resources (memory and safety handles).

@@ -36,7 +36,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProxyPtr<T> Create<TInstance>(in CWPtr<TInstance> value) where TInstance: unmanaged
+		public static ProxyPtr<T> Create<TInstance>(in CachedPtr<TInstance> value) where TInstance: unmanaged
 		{
 			return new ProxyPtr<T>(value);
 		}
@@ -60,9 +60,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T1> ToPtr<T1>() where T1: unmanaged
+		public CachedPtr<T1> ToPtr<T1>() where T1: unmanaged
 		{
-			return new CWPtr<T1>(indexedPtr.GetMemPtr());
+			return new CachedPtr<T1>(indexedPtr.GetMemPtr());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
