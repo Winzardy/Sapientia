@@ -21,7 +21,7 @@ namespace Sapientia.MemoryAllocator
 		public WPtr CopyPtrTo(World dstWorld, in WPtr srsPtr)
 		{
 			var dstMemPtr = _allocator.CopyPtrTo(ref dstWorld._allocator, srsPtr.allocatorPtr);
-			return new WPtr(dstMemPtr, worldId);
+			return new WPtr(dstMemPtr);
 		}
 	}
 }

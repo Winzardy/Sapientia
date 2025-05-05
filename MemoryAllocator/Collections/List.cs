@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Sapientia.Data;
@@ -9,7 +8,7 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 namespace Sapientia.MemoryAllocator
 {
 	[DebuggerTypeProxy(typeof(ListProxy<>))]
-	public unsafe struct List<T> : IListEnumerable<T> where T : unmanaged
+	public struct List<T> : IListEnumerable<T> where T : unmanaged
 	{
 		private MemArray<T> _arr;
 		private int _count;
@@ -28,12 +27,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			[INLINE(256)]
 			get => _arr.Length;
-		}
-
-		[INLINE(256)]
-		public World GetAllocator()
-		{
-			return _arr.GetAllocator();
 		}
 
 		[INLINE(256)]
@@ -57,6 +50,13 @@ namespace Sapientia.MemoryAllocator
 		{
 			AddRange(world, enumerable);
 		}
+
+#if UNITY_EDITOR
+		internal World GetWorld()
+		{
+			return _arr.GetWorld();
+		}
+#endif
 
 		[INLINE(256)]
 		public void ReplaceWith(World world, in List<T> other)
@@ -91,18 +91,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly WPtr GetMemPtr()
-		{
-			return _arr.innerArray.ptr.wPtr;
-		}
-
-		[INLINE(256)]
-		public SafePtr<T> GetValuePtr()
-		{
-			return _arr.GetValuePtr();
-		}
-
-		[INLINE(256)]
 		public SafePtr<T> GetValuePtr(World world)
 		{
 			return _arr.GetValuePtr(world);
@@ -128,12 +116,6 @@ namespace Sapientia.MemoryAllocator
 			_count = 0;
 		}
 
-		public ref T this[int index]
-		{
-			[INLINE(256)]
-			get => ref _arr[GetAllocator(), index];
-		}
-
 		public ref T this[World world, int index]
 		{
 			[INLINE(256)]
@@ -147,24 +129,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool EnsureCapacity(int capacity)
-		{
-			return EnsureCapacity(GetAllocator(), capacity);
-		}
-
-		[INLINE(256)]
 		public bool EnsureCapacity(World world, int capacity)
 		{
 			if (capacity <= Capacity)
 				return false;
 			capacity = capacity.NextPowerOfTwo();
 			return _arr.Resize(world, capacity, ClearOptions.UninitializedMemory);
-		}
-
-		[INLINE(256)]
-		public void EnsureCount(int count, in T defaultValue = default)
-		{
-			EnsureCount(GetAllocator(), count, defaultValue);
 		}
 
 		[INLINE(256)]
@@ -189,13 +159,6 @@ namespace Sapientia.MemoryAllocator
 		public void SetCountNoCheck(int count)
 		{
 			_count = count;
-		}
-
-		[INLINE(256)]
-		public void Add(T value)
-		{
-			var allocator = GetAllocator();
-			Add(allocator, value);
 		}
 
 		[INLINE(256)]
@@ -293,12 +256,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool RemoveAtSwapBack(int index)
-		{
-			return RemoveAtSwapBack(GetAllocator(), index);
-		}
-
-		[INLINE(256)]
 		public bool RemoveAtSwapBack(World world, int index)
 		{
 			if (index >= _count)
@@ -326,15 +283,6 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			return EnsureCapacity(world, newLength);
-		}
-
-		[INLINE(256)]
-		public void AddRange<TEnumerable>(TEnumerable collection) where TEnumerable: IEnumerable<T>
-		{
-			foreach (var value in collection)
-			{
-				Add(value);
-			}
 		}
 
 		[INLINE(256)]
@@ -370,21 +318,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListEnumerator<T> GetEnumerator()
-		{
-			return new ListEnumerator<T>(GetValuePtr(), Count);
-		}
-
-		[INLINE(256)]
 		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
 			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
-		}
-
-		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator()
-		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), 0, Count);
 		}
 
 		[INLINE(256)]
@@ -394,33 +330,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), Count));
-		}
-
-		[INLINE(256)]
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), 0, Count));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), 0, Count));
-		}
-
-		[INLINE(256)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[INLINE(256)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
 		}
 	}
 }

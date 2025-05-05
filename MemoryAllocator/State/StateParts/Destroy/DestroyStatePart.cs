@@ -36,7 +36,7 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public unsafe void Initialize(World world, IndexedPtr self)
 		{
-			Archetype.RegisterArchetype<KillElement>(world, 2048).SetDestroyHandler<KillElementDestroyHandler>();
+			Archetype.RegisterArchetype<KillElement>(world, 2048).SetDestroyHandler<KillElementDestroyHandler>(world);
 			Archetype.RegisterArchetype<KillRequest>(world, 256);
 			Archetype.RegisterArchetype<DelayKillRequest>(world, 64);
 			Archetype.RegisterArchetype<DestroyRequest>(world, 256);

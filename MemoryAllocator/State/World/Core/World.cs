@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator

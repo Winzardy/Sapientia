@@ -17,6 +17,10 @@ namespace Sapientia.MemoryAllocator
 		public int Length { get; private set; }
 		public int ElementSize { get; private set; }
 
+#if UNITY_EDITOR
+		private WorldId _worldId;
+#endif
+
 		public int Count
 		{
 			[INLINE(256)] get => Length;
@@ -25,12 +29,6 @@ namespace Sapientia.MemoryAllocator
 		public readonly bool IsCreated
 		{
 			[INLINE(256)] get => ptr.IsCreated();
-		}
-
-		[INLINE(256)]
-		public World GetAllocator()
-		{
-			return ptr.GetAllocator();
 		}
 
 		[INLINE(256)]
@@ -48,6 +46,10 @@ namespace Sapientia.MemoryAllocator
 			ptr = new CWPtr(world, tPtr, memPtr);
 			ElementSize = elementSize;
 			Length = length;
+
+#if UNITY_EDITOR
+			_worldId = world.worldId;
+#endif
 
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
@@ -73,19 +75,21 @@ namespace Sapientia.MemoryAllocator
 			Length = arr.Length;
 			ElementSize = arr.ElementSize;
 
+#if UNITY_EDITOR
+			_worldId = world.worldId;
+#endif
+
 			var memPtr = world.MemAlloc(arr.ElementSize * arr.Length, out var tPtr);
 			ptr = new CWPtr(world, tPtr, memPtr);
 			MemArrayExt.CopyNoChecks(world, in arr, 0, ref this, 0, arr.Length);
 		}
 
-		[INLINE(256)]
-		public MemArray(WPtr wPtr, int elementSize, int length)
+#if UNITY_EDITOR
+		internal World GetWorld()
 		{
-			ptr = new CWPtr(wPtr);
-			Length = length;
-			ElementSize = elementSize;
-			ptr = default;
+			return _worldId.GetWorld();
 		}
+#endif
 
 		[INLINE(256)]
 		public void ReplaceWith(World world, in MemArray other)
@@ -135,13 +139,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr GetPtr()
-		{
-			return ptr.GetPtr();
-		}
-
-		[INLINE(256)]
-		public WPtr GetAllocPtr(int index)
+		public WPtr GetWPtr(int index)
 		{
 			return ptr.wPtr.GetArrayElement(ElementSize, index);
 		}
@@ -150,18 +148,6 @@ namespace Sapientia.MemoryAllocator
 		public ref T GetValue<T>(World world, int index) where T: unmanaged
 		{
 			return ref (GetPtr(world).Cast<T>() + index).Value();
-		}
-
-		[INLINE(256)]
-		public ref T GetValue<T>(int index) where T: unmanaged
-		{
-			return ref (GetPtr().Cast<T>() + index).Value();
-		}
-
-		[INLINE(256)]
-		public SafePtr<T> GetValuePtr<T>() where T: unmanaged
-		{
-			return GetPtr();
 		}
 
 		[INLINE(256)]
@@ -176,32 +162,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr<T>(int index) where T: unmanaged
-		{
-			return GetPtr().Cast<T>() + index;
-		}
-
-		[INLINE(256)]
 		public SafePtr<T> GetValuePtr<T>(World world, int index) where T: unmanaged
 		{
 			return GetPtr(world).Cast<T>() + index;
-		}
-
-		public SafePtr GetValuePtr()
-		{
-			return GetPtr();
 		}
 
 		[INLINE(256)]
 		public SafePtr GetValuePtr(World world)
 		{
 			return GetPtr(world);
-		}
-
-		[INLINE(256)]
-		public SafePtr GetValuePtr(int index)
-		{
-			return GetPtr() + (index * ElementSize);
 		}
 
 		[INLINE(256)]
@@ -267,22 +236,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Clear()
-		{
-			Clear(0, Length);
-		}
-
-		[INLINE(256)]
-		public void Clear(int index, int length)
-		{
-			if (!IsCreated)
-				return;
-			var size = ElementSize;
-			var allocator = ptr.wPtr.GetWorld();
-			allocator.MemClear(ptr.wPtr, index * size, length * size);
-		}
-
-		[INLINE(256)]
 		public bool Contains<T, TU>(World world, in TU obj) where T: unmanaged where TU : unmanaged, IEquatable<T>
 		{
 			E.ASSERT(IsCreated);
@@ -312,21 +265,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListEnumerator<T> GetEnumerator<T>() where T: unmanaged
-		{
-			return new ListEnumerator<T>(GetValuePtr<T>(), Count);
-		}
-
-		[INLINE(256)]
 		public ListPtrEnumerator<T> GetPtrEnumerator<T>(World world) where T: unmanaged
 		{
 			return new ListPtrEnumerator<T>(GetValuePtr(world), ElementSize, Count);
-		}
-
-		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator<T>() where T: unmanaged
-		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), ElementSize, Count);
 		}
 
 		[INLINE(256)]
@@ -336,21 +277,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>() where T: unmanaged
-		{
-			return new (new (GetValuePtr<T>(), Count));
-		}
-
-		[INLINE(256)]
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>(World world) where T: unmanaged
 		{
 			return new (new (GetValuePtr(world), ElementSize, Count));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>() where T: unmanaged
-		{
-			return new (new (GetValuePtr(), ElementSize, Count));
 		}
 	}
 }

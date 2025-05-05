@@ -5,7 +5,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct ServiceRegistry
+	public partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(World world, ServiceRegistryContext context) where T: unmanaged
@@ -20,14 +20,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			var typeIndex = TypeIndex.Create<T>();
 			return ref GetService<T>(world, typeIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>() where T: unmanaged, IIndexedType
-		{
-			var allocator = _typeToPtr.GetAllocator();
-			var typeIndex = TypeIndex.Create<T>();
-			return ref GetService<T>(allocator, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,18 +43,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(out bool isExist) where T: unmanaged, IIndexedType
-		{
-			var allocator = _typeToPtr.GetAllocator();
-			var typeIndex = TypeIndex.Create<T>();
-
-			ref var ptr = ref _typeToPtr.GetValue(allocator, typeIndex, out isExist);
-			if (isExist)
-				return ref ptr.GetValue<T>(allocator);
-			return ref TDefaultValue<T>.value;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(World world, ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
 		{
 			ref var result = ref _typeToPtr.GetValue(world, proxyPtr.indexedPtr.typeIndex, out var success).GetValue<T>(world);
@@ -71,25 +51,8 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
-		{
-			var allocator = _typeToPtr.GetAllocator();
-			return ref _typeToPtr.GetValue(allocator, proxyPtr.indexedPtr.typeIndex).GetValue<T>(allocator);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(World world, ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
 		{
-			ref var ptr = ref _typeToPtr.GetValue(world, proxyPtr.indexedPtr.typeIndex, out isExist);
-			if (isExist)
-				return ref ptr.GetValue<T>(world);
-			return ref TDefaultValue<T>.value;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
-		{
-			var world = _typeToPtr.GetAllocator();
 			ref var ptr = ref _typeToPtr.GetValue(world, proxyPtr.indexedPtr.typeIndex, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(world);
@@ -104,13 +67,6 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(success);
 
 			return ref result;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetServiceAs<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
-		{
-			var allocator = _typeToPtr.GetAllocator();
-			return ref GetServiceAs<TBase, T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -129,27 +85,11 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetServiceIndexedPtr<T>() where T: unmanaged, IIndexedType
-		{
-			var allocator = _typeToPtr.GetAllocator();
-			var typeIndex = TypeIndex.Create<T>();
-			return GetServiceIndexedPtr<T>(allocator, typeIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CWPtr<T> GetServiceCachedPtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
 		{
 			var result = _typeToPtr.GetValue(world, context, out var success).GetCachedPtr<T>();
 			E.ASSERT(success);
 			return result;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CWPtr<T> GetServiceCachedPtr<T>() where T: unmanaged, IIndexedType
-		{
-			var allocator = _typeToPtr.GetAllocator();
-			var typeIndex = TypeIndex.Create<T>();
-			return GetServiceCachedPtr<T>(allocator, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -176,14 +116,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetServicePtr<T>() where T: unmanaged, IIndexedType
-		{
-			var allocator = _typeToPtr.GetAllocator();
-			var typeIndex = TypeIndex.Create<T>();
-			return GetServicePtr<T>(allocator, typeIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGetServicePtr<T>(World world, out SafePtr<T> ptr) where T: unmanaged, IIndexedType
 		{
 			ptr = default;
@@ -202,13 +134,6 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(success);
 
 			return result;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetServiceAsPtr<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
-		{
-			var allocator = _typeToPtr.GetAllocator();
-			return GetServiceAsPtr<TBase, T>(allocator);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

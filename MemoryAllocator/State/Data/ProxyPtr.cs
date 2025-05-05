@@ -60,12 +60,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T1 GetValue<T1>() where T1: unmanaged
-		{
-			return ref indexedPtr.GetValue<T1>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CWPtr<T1> ToPtr<T1>() where T1: unmanaged
 		{
 			return new CWPtr<T1>(indexedPtr.GetMemPtr());
@@ -75,24 +69,6 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr GetPtr(World world)
 		{
 			return indexedPtr.GetPtr(world);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetPtr()
-		{
-			return indexedPtr.GetPtr();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public World GetAllocator()
-		{
-			return indexedPtr.GetAllocator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			Dispose(GetAllocator());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

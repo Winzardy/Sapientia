@@ -5,11 +5,10 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface IListEnumerable<T> : IEnumerable<T>, IEnumerable<SafePtr<T>>
+	public interface IListEnumerable<T>
 		where T: unmanaged
 	{
 		public int Count { get; }
-		public SafePtr<T> GetValuePtr();
 		public SafePtr<T> GetValuePtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -19,21 +18,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new ListEnumerator<T> GetEnumerator()
-		{
-			return new ListEnumerator<T>(GetValuePtr(), Count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
 			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator()
-		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), 0, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -43,39 +30,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), 0, Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), 0, Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<SafePtr<T>> IEnumerable<SafePtr<T>>.GetEnumerator()
-		{
-			return GetPtrEnumerator();
 		}
 	}
 

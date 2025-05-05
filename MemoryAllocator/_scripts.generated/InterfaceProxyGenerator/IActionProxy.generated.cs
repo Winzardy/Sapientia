@@ -46,24 +46,9 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IActionProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Invoke(this ref ProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
-		{
-			__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr().ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Invoke(this ref ProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr(__world).ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Invoke(this ref ProxyEvent<IActionProxy> __proxyEvent, Sapientia.MemoryAllocator.World world)
-		{
-			foreach (ProxyPtr<IActionProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.Invoke(__proxyPtr->GetPtr().ptr, world);
-			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -76,24 +61,9 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
-		{
-			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__world).ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyEvent<IActionProxy> __proxyEvent, Sapientia.MemoryAllocator.World world)
-		{
-			foreach (ProxyPtr<IActionProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr().ptr, world);
-			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]

@@ -10,28 +10,26 @@ namespace Sapientia.MemoryAllocator
 	[StructLayout(LayoutKind.Sequential)]
 	public struct WPtr : System.IEquatable<WPtr>
 	{
-		public static readonly WPtr Invalid = new (default, default);
+		public static readonly WPtr Invalid = new (default);
 
 		public AllocatorPtr allocatorPtr;
-		public WorldId worldId;
 
 		[INLINE(256)]
-		public WPtr(AllocatorPtr allocatorPtr, WorldId worldId)
+		public WPtr(AllocatorPtr allocatorPtr)
 		{
 			this.allocatorPtr = allocatorPtr;
-			this.worldId = worldId;
 		}
 
 		[INLINE(256)]
 		public WPtr GetArrayElement(int elementSize, int index)
 		{
-			return new WPtr(allocatorPtr.GetArrayElement(elementSize, index), worldId);
+			return new WPtr(allocatorPtr.GetArrayElement(elementSize, index));
 		}
 
 		[INLINE(256)]
 		public readonly bool IsCreated() => allocatorPtr.IsValid();
 		[INLINE(256)]
-		public bool IsValid() => IsCreated() && worldId.IsValid();
+		public bool IsValid() => IsCreated();
 
 		[INLINE(256)]
 		public readonly bool IsZeroSized() => allocatorPtr.IsZeroSized();
@@ -67,15 +65,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public World GetWorld()
+		public SafePtr GetPtr(World world)
 		{
-			return worldId.GetWorld();
-		}
-
-		[INLINE(256)]
-		public SafePtr GetPtr()
-		{
-			return GetWorld().GetSafePtr(this);
+			return world.GetSafePtr(this);
 		}
 
 		[INLINE(256)]
@@ -86,19 +78,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Dispose()
-		{
-			Dispose(GetWorld());
-		}
-
-		[INLINE(256)]
 		public WPtr CopyTo(World srsWorld, World dstWorld)
 		{
 			return srsWorld.CopyPtrTo(dstWorld, this);
 		}
 
 		[INLINE(256)]
-		public override string ToString() => $"{allocatorPtr.ToString()}, {nameof(worldId)}: [{worldId}]";
+		public override string ToString() => $"{allocatorPtr.ToString()}";
 
 		[INLINE(256)]
 		public static implicit operator AllocatorPtr(WPtr ptr)

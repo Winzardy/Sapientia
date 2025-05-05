@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using Sapientia.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
@@ -34,11 +32,13 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)] get => _array.Length <= _count;
 		}
 
+#if UNITY_EDITOR
 		[INLINE(256)]
-		public World GetAllocator()
+		internal World GetWorld()
 		{
-			return _array.GetAllocator();
+			return _array.GetWorld();
 		}
+#endif
 
 		[INLINE(256)]
 		public Stack(World world, int capacity)
@@ -48,21 +48,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr()
-		{
-			return _array.GetValuePtr();
-		}
-
-		[INLINE(256)]
 		public SafePtr<T> GetValuePtr(World world)
 		{
 			return _array.GetValuePtr(world);
-		}
-
-		[INLINE(256)]
-		public void Dispose()
-		{
-			Dispose(GetAllocator());
 		}
 
 		[INLINE(256)]
@@ -138,21 +126,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public new ListEnumerator<T> GetEnumerator()
-		{
-			return new ListEnumerator<T>(GetValuePtr(), Count);
-		}
-
-		[INLINE(256)]
 		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
 			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
-		}
-
-		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator()
-		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), 0, Count);
 		}
 
 		[INLINE(256)]
@@ -162,33 +138,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), Count));
-		}
-
-		[INLINE(256)]
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), 0, Count));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), 0, Count));
-		}
-
-		[INLINE(256)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[INLINE(256)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
 		}
 	}
 }

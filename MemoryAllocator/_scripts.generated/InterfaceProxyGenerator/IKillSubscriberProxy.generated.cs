@@ -46,24 +46,9 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IKillSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
-		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr().ptr, world, in entity);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
 			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__world).ptr, world, in entity);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
-		{
-			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr().ptr, world, in entity);
-			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -76,24 +61,9 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
-		{
-			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__world).ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.World world)
-		{
-			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr().ptr, world);
-			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]

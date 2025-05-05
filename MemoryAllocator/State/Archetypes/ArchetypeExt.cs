@@ -1,21 +1,14 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator.State
 {
 	public static unsafe class ArchetypeExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetDestroyHandler<THandler>(this ref CWPtr<Archetype> archetypePtr) where THandler : unmanaged, IElementDestroyHandler
-		{
-			archetypePtr.GetValue().SetDestroyHandler<THandler>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetDestroyHandler<THandler>(this ref CWPtr<Archetype> archetypePtr, World world) where THandler : unmanaged, IElementDestroyHandler
 		{
-			archetypePtr.GetValue().SetDestroyHandler<THandler>(world);
+			archetypePtr.GetValue(world).SetDestroyHandler<THandler>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -71,13 +71,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref T GetValue<T>() where T : unmanaged
-		{
-			E.ASSERT(IsCreated);
-			return ref _ptr.Get<T>();
-		}
-
-		[INLINE(256)]
 		public ref T GetValue<T>(World world) where T : unmanaged
 		{
 			E.ASSERT(IsCreated);
@@ -85,24 +78,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr GetPtr()
-		{
-			E.ASSERT(IsCreated);
-			return _ptr.GetPtr();
-		}
-
-		[INLINE(256)]
 		public SafePtr GetPtr(World world)
 		{
 			E.ASSERT(IsCreated);
 			return _ptr.GetPtr(world);
-		}
-
-		[INLINE(256)]
-		public SafePtr<T> GetPtr<T>() where T: unmanaged
-		{
-			E.ASSERT(IsCreated);
-			return _ptr.GetPtr();
 		}
 
 		[INLINE(256)]
@@ -134,22 +113,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public World GetAllocator()
-		{
-			return _ptr.GetAllocator();
-		}
-
-		[INLINE(256)]
 		public void Dispose(World world)
 		{
 			_ptr.Dispose(world);
-			this = default;
-		}
-
-		[INLINE(256)]
-		public void Dispose()
-		{
-			_ptr.Dispose();
 			this = default;
 		}
 

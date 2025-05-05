@@ -55,24 +55,9 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IElementDestroyHandlerProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityPtrArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, void** elementsPtr, System.Int32 count)
-		{
-			__proxyPtr.proxy.EntityPtrArrayDestroyed(__proxyPtr.GetPtr().ptr, world, elementsPtr, count);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityPtrArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, void** elementsPtr, System.Int32 count)
 		{
 			__proxyPtr.proxy.EntityPtrArrayDestroyed(__proxyPtr.GetPtr(__world).ptr, world, elementsPtr, count);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityPtrArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, void** elementsPtr, System.Int32 count)
-		{
-			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.EntityPtrArrayDestroyed(__proxyPtr->GetPtr().ptr, world, elementsPtr, count);
-			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -85,24 +70,9 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, void* elementsPtr, System.Int32 count)
-		{
-			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr().ptr, world, elementsPtr, count);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityArrayDestroyed(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, void* elementsPtr, System.Int32 count)
 		{
 			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(__world).ptr, world, elementsPtr, count);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityArrayDestroyed(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, void* elementsPtr, System.Int32 count)
-		{
-			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr().ptr, world, elementsPtr, count);
-			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -115,24 +85,9 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
-		{
-			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyPtr<IElementDestroyHandlerProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__world).ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyEvent<IElementDestroyHandlerProxy> __proxyEvent, Sapientia.MemoryAllocator.World world)
-		{
-			foreach (ProxyPtr<IElementDestroyHandlerProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr().ptr, world);
-			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]

@@ -32,12 +32,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public World GetAllocator()
-		{
-			return innerArray.GetAllocator();
-		}
-
-		[INLINE(256)]
 		public MemArray(int length, ClearOptions clearOptions = ClearOptions.ClearMemory) :
 			this(WorldManager.CurrentWorld, length, clearOptions)
 		{
@@ -85,14 +79,15 @@ namespace Sapientia.MemoryAllocator
 		public MemArray(World world, ReadOnlySpan<T> arr)
 		{
 			innerArray = new MemArray(world, TSize<T>.size, arr.Length, ClearOptions.UninitializedMemory);
-			arr.CopyTo(new Span<T>(innerArray.GetValuePtr().ptr, arr.Length));
+			arr.CopyTo(new Span<T>(innerArray.GetValuePtr(world).ptr, arr.Length));
 		}
 
-		[INLINE(256)]
-		public MemArray(WPtr wPtr, int length)
+#if UNITY_EDITOR
+		public World GetWorld()
 		{
-			innerArray = new MemArray(wPtr, TSize<T>.size, length);
+			return innerArray.GetWorld();
 		}
+#endif
 
 		[INLINE(256)]
 		public ref TU As<TU>(World world, int index) where TU : unmanaged
@@ -125,21 +120,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr GetPtr()
+		public WPtr GetWPtr(int index)
 		{
-			return innerArray.GetPtr();
-		}
-
-		public ref T this[int index]
-		{
-			[INLINE(256)]
-			get => ref innerArray.GetValue<T>(index);
-		}
-
-		[INLINE(256)]
-		public WPtr GetAllocPtr(int index)
-		{
-			return innerArray.GetAllocPtr(index);
+			return innerArray.GetWPtr(index);
 		}
 
 		public ref T this[World world, int index]
@@ -151,12 +134,6 @@ namespace Sapientia.MemoryAllocator
 				E.RANGE(index, 0, this.Length);
 				return ref innerArray.GetValue<T> (world, index);
 			}
-		}
-
-		[INLINE(256)]
-		public SafePtr<T> GetValuePtr()
-		{
-			return innerArray.GetValuePtr<T>();
 		}
 
 		[INLINE(256)]
@@ -173,21 +150,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr(int index)
-		{
-			return innerArray.GetValuePtr<T>(index);
-		}
-
-		[INLINE(256)]
 		public SafePtr<T> GetValuePtr(World world, int index)
 		{
 			return innerArray.GetValuePtr<T>(world, index);
-		}
-
-		[INLINE(256)]
-		public bool Resize(int newLength, ClearOptions options = ClearOptions.ClearMemory)
-		{
-			return innerArray.Resize<T>(GetAllocator(), newLength, options);
 		}
 
 		[INLINE(256)]
@@ -215,18 +180,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Clear()
-		{
-			innerArray.Clear();
-		}
-
-		[INLINE(256)]
-		public void Clear(int index, int length)
-		{
-			innerArray.Clear(index, length);
-		}
-
-		[INLINE(256)]
 		public bool Contains<TU>(World world, in TU obj) where TU : unmanaged, System.IEquatable<T>
 		{
 			return innerArray.Contains<T, TU>(world, obj);
@@ -245,21 +198,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public new ListEnumerator<T> GetEnumerator()
-		{
-			return new ListEnumerator<T>(GetValuePtr(), Count);
-		}
-
-		[INLINE(256)]
 		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
 			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
-		}
-
-		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator()
-		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), 0, Count);
 		}
 
 		[INLINE(256)]
@@ -269,33 +210,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), Count));
-		}
-
-		[INLINE(256)]
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), 0, Count));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), 0, Count));
-		}
-
-		[INLINE(256)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[INLINE(256)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
 		}
 	}
 }

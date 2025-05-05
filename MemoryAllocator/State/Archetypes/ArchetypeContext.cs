@@ -90,13 +90,13 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
-			innerArchetype.ptr->Clear<T>();
+			innerArchetype.ptr->Clear<T>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ClearFast()
 		{
-			innerArchetype.ptr->ClearFast<T>();
+			innerArchetype.ptr->ClearFast<T>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -56,11 +56,13 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)] get => count;
 		}
 
+#if UNITY_EDITOR
 		[INLINE(256)]
-		public World GetAllocator()
+		internal World GetWorld()
 		{
-			return buckets.GetAllocator();
+			return buckets.GetWorld();
 		}
+#endif
 
 		[INLINE(256)]
 		public Dictionary(World world, int capacity)
@@ -84,12 +86,6 @@ namespace Sapientia.MemoryAllocator
 			buckets.Dispose(world);
 			entries.Dispose(world);
 			this = default;
-		}
-
-		[INLINE(256)]
-		public SafePtr<Entry> GetEntryPtr()
-		{
-			return entries.GetValuePtr();
 		}
 
 		[INLINE(256)]
@@ -154,31 +150,6 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
-		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public ref TValue this[in TKey key]
-		{
-			[INLINE(256)]
-			get
-			{
-				var allocator = GetAllocator();
-				var entry = FindEntry(allocator, key);
-				if (entry >= 0)
-				{
-					return ref entries[allocator, entry].value;
-				}
-
-				throw new KeyNotFoundException();
-			}
-		}
-
-		[INLINE(256)]
-		public ref TValue GetValue(TKey key)
-		{
-			var allocator = GetAllocator();
-			return ref GetValue(allocator, key);
-		}
-
 		[INLINE(256)]
 		public ref TValue GetValue(World world, TKey key)
 		{
@@ -217,15 +188,6 @@ namespace Sapientia.MemoryAllocator
 
 			value = TDefaultValue<TValue>.value;
 			return false;
-		}
-
-		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
-		/// <param name="key">The key of the element to add to the dictionary.</param>
-		/// <param name="value"></param>
-		[INLINE(256)]
-		public void Add(TKey key, TValue value)
-		{
-			TryInsert(GetAllocator(), key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
@@ -352,7 +314,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			rawEntries[index].hashCode = hashCode;
-			rawEntries[index].next = buckets[targetBucket];
+			rawEntries[index].next = buckets[world, targetBucket];
 			rawEntries[index].key = key;
 			rawEntries[index].value = value;
 			rawBuckets[targetBucket] = index;
@@ -395,15 +357,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
-		/// <param name="allocator"></param>
-		/// <param name="key">The key of the element to be removed from the dictionary.</param>
-		[INLINE(256)]
-		public bool Remove(TKey key)
-		{
-			return Remove(GetAllocator(), key);
-		}
-
-		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
 		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
@@ -442,7 +395,7 @@ namespace Sapientia.MemoryAllocator
 					}
 					else
 					{
-						entries[last].next = rawEntries[i].next;
+						entries[world, last].next = rawEntries[i].next;
 					}
 
 					value = rawEntries[i].value;
@@ -497,21 +450,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public new DictionaryEnumerator<TKey, TValue> GetEnumerator()
-		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(), LastIndex);
-		}
-
-		[INLINE(256)]
 		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(World world)
 		{
 			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
-		}
-
-		[INLINE(256)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator()
-		{
-			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(), LastIndex);
 		}
 
 		[INLINE(256)]
@@ -521,33 +462,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable()
-		{
-			return new(new(GetEntryPtr(), LastIndex));
-		}
-
-		[INLINE(256)]
 		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(World world)
 		{
 			return new(new(GetEntryPtr(world), LastIndex));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable()
-		{
-			return new(new(GetEntryPtr(), LastIndex));
-		}
-
-		[INLINE(256)]
-		IEnumerator<Entry> IEnumerable<Entry>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[INLINE(256)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
 		}
 	}
 }

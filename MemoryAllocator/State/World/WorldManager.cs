@@ -131,7 +131,7 @@ namespace Sapientia.MemoryAllocator
 		public static World GetWorld(WorldId worldId)
 		{
 			if (!worldId.IsValid())
-				throw new ArgumentException($"{nameof(WorldId)} with such Id [id: {worldId.id}] doesn't exist.");
+				return null;
 			return _worlds[worldId.index];
 		}
 
@@ -139,7 +139,7 @@ namespace Sapientia.MemoryAllocator
 		public static World GetWorld(this ref WorldId worldId)
 		{
 			if (!worldId.IsValid())
-				throw new ArgumentException($"{nameof(WorldId)} with such Id [id: {worldId.id}] doesn't exist.");
+				return null;
 			return _worlds[worldId.index];
 		}
 

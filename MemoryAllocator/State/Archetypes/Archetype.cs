@@ -92,11 +92,13 @@ namespace Sapientia.MemoryAllocator.State
 			get => _elements.Count;
 		}
 
+#if UNITY_EDITOR
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public World GetAllocator()
+		internal World GetWorld()
 		{
-			return _elements.GetAllocator();
+			return _elements.GetWorld();
 		}
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype RegisterArchetype<T>(World world, int elementsCount) where T: unmanaged, IIndexedType
@@ -122,7 +124,7 @@ namespace Sapientia.MemoryAllocator.State
 			var archetypePtr = CreateArchetype<T>(world, elementsCount, entitiesCapacity);
 			context.RegisterService(world, archetypePtr);
 
-			return ref archetypePtr.GetValue();
+			return ref archetypePtr.GetValue(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,21 +199,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetDestroyHandler<THandler>() where THandler : unmanaged, IElementDestroyHandler
-		{
-			_destroyHandlerProxy = ProxyPtr<IElementDestroyHandlerProxy>.Create<THandler>(_elements.GetAllocator());
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetDestroyHandler<THandler>(World world) where THandler : unmanaged, IElementDestroyHandler
 		{
 			_destroyHandlerProxy = ProxyPtr<IElementDestroyHandlerProxy>.Create<THandler>(world);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<ArchetypeElement<T>> GetRawElements<T>() where T: unmanaged
-		{
-			return _elements.GetValuePtr<ArchetypeElement<T>>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -262,15 +252,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SimpleList<T> ReadElements<T>(IEnumerable<Entity> entities) where T : unmanaged
+		public SimpleList<T> ReadElements<T>(World world, IEnumerable<Entity> entities) where T : unmanaged
 		{
-			return ReadElements<T, IEnumerable<Entity>>(entities);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SimpleList<T> ReadElements<T, TEnumerable>(TEnumerable entities) where T : unmanaged where TEnumerable: IEnumerable<Entity>
-		{
-			return ReadElements<T, TEnumerable>(GetAllocator(), entities);
+			return ReadElements<T, IEnumerable<Entity>>(world, entities);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -295,12 +279,6 @@ namespace Sapientia.MemoryAllocator.State
 		public bool HasElement(World world, Entity entity)
 		{
 			return _elements.Has(world, entity.id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool SetElement(Entity entity)
-		{
-			return SetElement(_elements.GetAllocator(), entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -366,12 +344,6 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetElement<T>(Entity entity, out bool isCreated) where T : unmanaged
-		{
-			return ref GetElement<T>(_elements.GetAllocator(), entity, out isCreated);
-		}
-
 		/// Тут идёт дублирование кода, т.к:
 		/// 1) Если написать:
 		///		return ref GetElement<T>(_elements.GetAllocator(), entity, out _);
@@ -410,40 +382,25 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetElement<T>(Entity entity) where T : unmanaged
+		public void Clear<T>(World world) where T: unmanaged
 		{
-			return ref GetElement<T>(_elements.GetAllocator(), entity);
+			if (_destroyHandlerProxy.IsCreated)
+			{
+				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(world);
+				_destroyHandlerProxy.EntityArrayDestroyed(world, world, valueArray.ptr, _elements.Count);
+			}
+			_elements.Clear(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear<T>() where T: unmanaged
+		public void ClearFast<T>(World world) where T: unmanaged
 		{
-			var allocator = _elements.GetAllocator();
 			if (_destroyHandlerProxy.IsCreated)
 			{
-				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
-				_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, valueArray.ptr, _elements.Count);
+				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(world);
+				_destroyHandlerProxy.EntityArrayDestroyed(world, world, valueArray.ptr, _elements.Count);
 			}
-			_elements.Clear(allocator);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ClearFast<T>() where T: unmanaged
-		{
-			var allocator = _elements.GetAllocator();
-			if (_destroyHandlerProxy.IsCreated)
-			{
-				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(allocator);
-				_destroyHandlerProxy.EntityArrayDestroyed(allocator, allocator, valueArray.ptr, _elements.Count);
-			}
-
 			_elements.ClearFast();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBackElement(Entity entity)
-		{
-			RemoveSwapBackElement(_elements.GetAllocator(), entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -485,27 +442,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			_elements.Dispose();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(World world)
 		{
 			_elements.Dispose(world);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>() where T: unmanaged
-		{
-			return _elements.GetEnumerable<T>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator<T>() where T: unmanaged
-		{
-			return _elements.GetPtrEnumerator<T>();
 		}
 	}
 }

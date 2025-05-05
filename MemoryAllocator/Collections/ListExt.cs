@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -115,16 +114,16 @@ namespace Sapientia.MemoryAllocator
 			if (index < 0)
 				return;
 
-			if (list[index].Equals(value))
+			if (list[world, index].Equals(value))
 			{
 				list.RemoveAt(world, index);
 				return;
 			}
 
 			var indexToBottom = index - 1;
-			while (indexToBottom >= 0 && comparer.Compare(list[indexToBottom], value) == 0)
+			while (indexToBottom >= 0 && comparer.Compare(list[world, indexToBottom], value) == 0)
 			{
-				if (list[indexToBottom].Equals(value))
+				if (list[world, indexToBottom].Equals(value))
 				{
 					list.RemoveAt(world, indexToBottom);
 					return;
@@ -133,9 +132,9 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			var indexToTop = index + 1;
-			while (indexToTop < list.Count && comparer.Compare(list[indexToTop], value) == 0)
+			while (indexToTop < list.Count && comparer.Compare(list[world, indexToTop], value) == 0)
 			{
-				if (list[indexToTop].Equals(value))
+				if (list[world, indexToTop].Equals(value))
 				{
 					list.RemoveAt(world, indexToTop);
 					return;

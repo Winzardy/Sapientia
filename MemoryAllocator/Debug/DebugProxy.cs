@@ -1,6 +1,8 @@
+#if UNITY_EDITOR
+
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe class MemArrayProxy<T> where T : unmanaged
+	public class MemArrayProxy<T> where T : unmanaged
 	{
 		private MemArray<T> _arr;
 
@@ -13,11 +15,11 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = _arr.GetAllocator();
+				var world = _arr.GetWorld();
 				var arr = new T[_arr.Length];
 				for (var i = 0; i < _arr.Length; ++i)
 				{
-					arr[i] = _arr[allocator, i];
+					arr[i] = _arr[world, i];
 				}
 
 				return arr;
@@ -25,7 +27,7 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe class ListProxy<T> where T : unmanaged
+	public class ListProxy<T> where T : unmanaged
 	{
 		private List<T> _arr;
 
@@ -42,11 +44,11 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = _arr.GetAllocator();
+				var world = _arr.GetWorld();
 				var arr = new T[_arr.Count];
 				for (int i = 0; i < _arr.Count; ++i)
 				{
-					arr[i] = _arr[allocator, i];
+					arr[i] = _arr[world, i];
 				}
 
 				return arr;
@@ -56,22 +58,23 @@ namespace Sapientia.MemoryAllocator
 
 	public class QueueProxy<T> where T : unmanaged
 	{
-		private Queue<T> _arr;
+		private Queue<T> _queue;
 
-		public QueueProxy(Queue<T> arr)
+		public QueueProxy(Queue<T> queue)
 		{
-			_arr = arr;
+			_queue = queue;
 		}
 
-		public int Count => _arr.Count;
+		public int Count => _queue.Count;
 
 		public T[] Items
 		{
 			get
 			{
-				var arr = new T[_arr.Count];
+				var arr = new T[_queue.Count];
 				var i = 0;
-				var e = _arr.GetEnumerator();
+				var world = _queue.GetWorld();
+				var e = _queue.GetEnumerator(world);
 				while (e.MoveNext())
 				{
 					arr[i++] = e.Current;
@@ -99,7 +102,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = _arr.GetAllocator();
+				var allocator = _arr.GetWorld();
 				var arr = new T[_arr.Count];
 				var i = 0;
 				var e = _arr.GetEnumerator(allocator);
@@ -136,7 +139,8 @@ namespace Sapientia.MemoryAllocator
 			{
 				var arr = new System.Collections.Generic.KeyValuePair<TK, TV>[_arr.Count];
 				var i = 0;
-				var e = _arr.GetEnumerator();
+				var world = _arr.GetWorld();
+				var e = _arr.GetEnumerator(world);
 				while (e.MoveNext())
 				{
 					arr[i++] = new System.Collections.Generic.KeyValuePair<TK, TV>(e.Current.key, e.Current.value);
@@ -168,7 +172,8 @@ namespace Sapientia.MemoryAllocator
 			{
 				var arr = new T[_arr.Count];
 				var i = 0;
-				var e = _arr.GetEnumerator();
+				var world = _arr.GetWorld();
+				var e = _arr.GetEnumerator(world);
 				while (e.MoveNext())
 				{
 					arr[i++] = e.Current;
@@ -181,3 +186,5 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 }
+
+#endif

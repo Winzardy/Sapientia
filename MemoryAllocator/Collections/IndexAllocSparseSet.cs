@@ -37,17 +37,13 @@ namespace Sapientia.MemoryAllocator
 			_count = 0;
 		}
 
+#if UNITY_EDITOR
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public World GetAllocator()
+		internal World GetWorld()
 		{
-			return _ids.GetAllocator();
+			return _ids.GetWorld();
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr()
-		{
-			return _sparseSet.GetValuePtr();
-		}
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetValuePtr(World world)
@@ -71,12 +67,6 @@ namespace Sapientia.MemoryAllocator
 		public bool Has(World world, int id)
 		{
 			return _sparseSet.Has(world, id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(int id)
-		{
-			return _sparseSet.Has(id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -106,12 +96,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			Dispose(GetAllocator());
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(World world)
 		{
 			_ids.Dispose(world);
@@ -120,10 +104,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear()
+		public void Clear(World world)
 		{
 			_ids.Clear();
-			_sparseSet.Clear();
+			_sparseSet.Clear(world);
 			_count = 0;
 		}
 

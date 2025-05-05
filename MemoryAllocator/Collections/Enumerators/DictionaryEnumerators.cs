@@ -6,12 +6,11 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface IDictionaryEnumerable<TKey, TValue> : IEnumerable<Dictionary<TKey, TValue>.Entry>
+	public unsafe interface IDictionaryEnumerable<TKey, TValue>
 		where TKey: unmanaged, IEquatable<TKey>
 		where TValue: unmanaged
 	{
 		public int LastIndex { get; }
-		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr();
 		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,21 +20,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new DictionaryEnumerator<TKey, TValue> GetEnumerator()
-		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(), LastIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(World world)
 		{
 			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator()
-		{
-			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,33 +32,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable()
-		{
-			return new (new (GetEntryPtr(), LastIndex));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetEntryPtr(world), LastIndex));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable()
-		{
-			return new (new (GetEntryPtr(), LastIndex));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<Dictionary<TKey, TValue>.Entry> IEnumerable<Dictionary<TKey, TValue>.Entry>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
 		}
 	}
 

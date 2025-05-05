@@ -5,13 +5,12 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface ICircularBufferEnumerable<T> : IEnumerable<T>, IEnumerable<SafePtr<T>>
+	public unsafe interface ICircularBufferEnumerable<T>
 		where T: unmanaged
 	{
 		public int HeadIndex { get; }
 		public int Count { get; }
 		public int Capacity { get; }
-		public SafePtr<T> GetValuePtr();
 		public SafePtr<T> GetValuePtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,21 +20,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new CircularBufferEnumerator<T> GetEnumerator()
-		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
 			return new CircularBufferPtrEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator()
-		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,39 +32,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<SafePtr<T>> IEnumerable<SafePtr<T>>.GetEnumerator()
-		{
-			return GetEnumerator();
 		}
 	}
 

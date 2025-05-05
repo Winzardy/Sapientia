@@ -23,18 +23,18 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		public delegate void UpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self, System.Single deltaTime);
+		public delegate void UpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void Update(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self, System.Single deltaTime)
+		public readonly void Update(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
 			var __method = UnsafeExt.As<Delegate, UpdateDelegate>(__delegate);
 			__method.Invoke(__executorPtr, world, self, deltaTime);
 		}
 
-		public delegate void LateUpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self);
+		public delegate void LateUpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void LateUpdate(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public readonly void LateUpdate(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 1);
 			var __method = UnsafeExt.As<Delegate, LateUpdateDelegate>(__delegate);
@@ -50,36 +50,36 @@ namespace Sapientia.TypeIndexer
 			__method.Invoke(__executorPtr, world);
 		}
 
-		public delegate void InitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self);
+		public delegate void InitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void Initialize(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public readonly void Initialize(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 3);
 			var __method = UnsafeExt.As<Delegate, InitializeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, world, self);
 		}
 
-		public delegate void LateInitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self);
+		public delegate void LateInitializeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void LateInitialize(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public readonly void LateInitialize(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 4);
 			var __method = UnsafeExt.As<Delegate, LateInitializeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, world, self);
 		}
 
-		public delegate void StartDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self);
+		public delegate void StartDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void Start(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public readonly void Start(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 5);
 			var __method = UnsafeExt.As<Delegate, StartDelegate>(__delegate);
 			__method.Invoke(__executorPtr, world, self);
 		}
 
-		public delegate void DisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self);
+		public delegate void DisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 6);
 			var __method = UnsafeExt.As<Delegate, DisposeDelegate>(__delegate);
@@ -91,28 +91,13 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IWorldSystemProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Update(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self, System.Single deltaTime)
-		{
-			__proxyPtr.proxy.Update(__proxyPtr.GetPtr().ptr, world, self, deltaTime);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Update(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self, System.Single deltaTime)
+		public static void Update(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
 			__proxyPtr.proxy.Update(__proxyPtr.GetPtr(__world).ptr, world, self, deltaTime);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Update(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, IndexedPtr self, System.Single deltaTime)
-		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.Update(__proxyPtr->GetPtr().ptr, world, self, deltaTime);
-			}
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Update(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self, System.Single deltaTime)
+		public static void Update(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
 			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
 			{
@@ -121,28 +106,13 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateUpdate(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			__proxyPtr.proxy.LateUpdate(__proxyPtr.GetPtr().ptr, world, self);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateUpdate(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void LateUpdate(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			__proxyPtr.proxy.LateUpdate(__proxyPtr.GetPtr(__world).ptr, world, self);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateUpdate(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.LateUpdate(__proxyPtr->GetPtr().ptr, world, self);
-			}
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateUpdate(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void LateUpdate(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
 			{
@@ -151,24 +121,9 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
-		{
-			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__world).ptr, world);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World world)
-		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr().ptr, world);
-			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -181,28 +136,13 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Initialize(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			__proxyPtr.proxy.Initialize(__proxyPtr.GetPtr().ptr, world, self);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Initialize(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void Initialize(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			__proxyPtr.proxy.Initialize(__proxyPtr.GetPtr(__world).ptr, world, self);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Initialize(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.Initialize(__proxyPtr->GetPtr().ptr, world, self);
-			}
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Initialize(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void Initialize(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
 			{
@@ -211,28 +151,13 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateInitialize(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr().ptr, world, self);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateInitialize(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void LateInitialize(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr(__world).ptr, world, self);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateInitialize(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.LateInitialize(__proxyPtr->GetPtr().ptr, world, self);
-			}
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void LateInitialize(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void LateInitialize(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
 			{
@@ -241,28 +166,13 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Start(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			__proxyPtr.proxy.Start(__proxyPtr.GetPtr().ptr, world, self);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Start(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void Start(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			__proxyPtr.proxy.Start(__proxyPtr.GetPtr(__world).ptr, world, self);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Start(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.Start(__proxyPtr->GetPtr().ptr, world, self);
-			}
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Start(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void Start(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
 			{
@@ -271,28 +181,13 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Dispose(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			__proxyPtr.proxy.Dispose(__proxyPtr.GetPtr().ptr, world, self);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Dispose(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void Dispose(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			__proxyPtr.proxy.Dispose(__proxyPtr.GetPtr(__world).ptr, world, self);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Dispose(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World world, IndexedPtr self)
-		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.Dispose(__proxyPtr->GetPtr().ptr, world, self);
-			}
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void Dispose(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		public static void Dispose(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
 			{
@@ -310,7 +205,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
-		private static void Update(void* executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self, System.Single deltaTime)
+		private static void Update(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
@@ -333,7 +228,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
-		private static void LateUpdate(void* executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		private static void LateUpdate(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
@@ -379,7 +274,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
-		private static void Initialize(void* executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		private static void Initialize(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
@@ -402,7 +297,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
-		private static void LateInitialize(void* executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		private static void LateInitialize(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
@@ -425,7 +320,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
-		private static void Start(void* executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		private static void Start(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
@@ -448,7 +343,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
-		private static void Dispose(void* executorPtr, Sapientia.MemoryAllocator.World world, IndexedPtr self)
+		private static void Dispose(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING

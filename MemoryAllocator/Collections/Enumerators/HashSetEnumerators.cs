@@ -6,11 +6,10 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface IHashSetEnumerable<T> : IEnumerable<T>
+	public unsafe interface IHashSetEnumerable<T>
 		where T: unmanaged, IEquatable<T>
 	{
 		public int LastIndex { get; }
-		public SafePtr<HashSet<T>.Slot> GetSlotPtr();
 		public SafePtr<HashSet<T>.Slot> GetSlotPtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -20,21 +19,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new HashSetEnumerator<T> GetEnumerator()
-		{
-			return new HashSetEnumerator<T>(GetSlotPtr(), LastIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public HashSetPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
 			return new HashSetPtrEnumerator<T>(GetSlotPtr(world), LastIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<T> GetPtrEnumerator()
-		{
-			return new HashSetPtrEnumerator<T>(GetSlotPtr(), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,33 +31,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetSlotPtr(), LastIndex));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetSlotPtr(world), LastIndex));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetSlotPtr(), LastIndex));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
 		}
 	}
 

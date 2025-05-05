@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 
@@ -40,6 +38,13 @@ namespace Sapientia.MemoryAllocator
 			get => _array.Length;
 		}
 
+#if UNITY_EDITOR
+		internal World GetWorld()
+		{
+			return _array.GetWorld();
+		}
+#endif
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Queue(World world, int capacity)
 		{
@@ -52,12 +57,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			_array.Dispose(world);
 			this = default;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr()
-		{
-			return _array.GetValuePtr();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,21 +147,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new CircularBufferEnumerator<T> GetEnumerator()
-		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
 			return new CircularBufferPtrEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator()
-		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -172,33 +159,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
 		}
 	}
 }

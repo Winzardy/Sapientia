@@ -42,11 +42,12 @@ namespace Sapientia.MemoryAllocator
 			[INLINE(256)] get => lastIndex;
 		}
 
-		[INLINE(256)]
-		public World GetAllocator()
+#if UNITY_EDITOR
+		public World GetWorld()
 		{
-			return buckets.GetAllocator();
+			return buckets.GetWorld();
 		}
+#endif
 
 		[INLINE(256)]
 		public HashSet(World world, int capacity = 8)
@@ -99,13 +100,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<Slot> GetSlotPtr()
-		{
-			E.ASSERT(IsCreated);
-			return slots.GetValuePtr();
-		}
-
-		[INLINE(256)]
 		public SafePtr<Slot> GetSlotPtr(World world)
 		{
 			E.ASSERT(IsCreated);
@@ -118,12 +112,6 @@ namespace Sapientia.MemoryAllocator
 			buckets.Dispose(world);
 			slots.Dispose(world);
 			this = default;
-		}
-
-		[INLINE(256)]
-		public void Dispose()
-		{
-			Dispose(GetAllocator());
 		}
 
 		[INLINE(256)]
@@ -255,17 +243,6 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Remove item from this hashset
 		/// </summary>
-		/// <param name="item">item to remove</param>
-		/// <returns>true if removed; false if not (i.e. if the item wasn't in the HashSet)</returns>
-		[INLINE(256)]
-		public bool Remove(in T item)
-		{
-			return Remove(GetAllocator(), item);
-		}
-
-		/// <summary>
-		/// Remove item from this hashset
-		/// </summary>
 		/// <param name="worldator"></param>
 		/// <param name="item">item to remove</param>
 		/// <returns>true if removed; false if not (i.e. if the item wasn't in the HashSet)</returns>
@@ -362,19 +339,6 @@ namespace Sapientia.MemoryAllocator
 			buckets = newBuckets;
 		}
 
-
-		/// <summary>
-		/// Add item to this HashSet. Returns bool indicating whether item was added (won't be
-		/// added if already present)
-		/// </summary>
-		/// <param name="value"></param>
-		/// <returns>true if added, false if already present</returns>
-		[INLINE(256)]
-		public bool Add(in T value)
-		{
-			return Add(GetAllocator(), value);
-		}
-
 		/// <summary>
 		/// Add item to this HashSet. Returns bool indicating whether item was added (won't be
 		/// added if already present)
@@ -462,21 +426,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSetEnumerator<T> GetEnumerator()
-		{
-			return new HashSetEnumerator<T>(GetSlotPtr(), LastIndex);
-		}
-
-		[INLINE(256)]
 		public HashSetPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
 			return new HashSetPtrEnumerator<T>(GetSlotPtr(world), LastIndex);
-		}
-
-		[INLINE(256)]
-		public HashSetPtrEnumerator<T> GetPtrEnumerator()
-		{
-			return new HashSetPtrEnumerator<T>(GetSlotPtr(), LastIndex);
 		}
 
 		[INLINE(256)]
@@ -486,21 +438,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetSlotPtr(), LastIndex));
-		}
-
-		[INLINE(256)]
 		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetSlotPtr(world), LastIndex));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetSlotPtr(), LastIndex));
 		}
 	}
 }

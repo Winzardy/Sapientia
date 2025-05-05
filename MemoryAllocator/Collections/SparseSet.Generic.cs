@@ -46,11 +46,13 @@ namespace Sapientia.MemoryAllocator
 			get => _innerSet.expandStep;
 		}
 
+#if UNITY_EDITOR
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public World GetAllocator()
+		internal World GetWorld()
 		{
-			return _innerSet.GetAllocator();
+			return _innerSet.GetWorld();
 		}
+#endif
 
 		public SparseSet(int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorld, capacity, sparseCapacity, expandStep) {}
 
@@ -68,21 +70,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr()
-		{
-			return _innerSet.GetValuePtr<T>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Get(World world, int id)
 		{
 			return ref _innerSet.Get<T>(world, id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get(int id)
-		{
-			return ref _innerSet.Get<T>(id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,21 +88,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(int id)
-		{
-			return _innerSet.Has(id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T EnsureGet(World world, int id)
 		{
 			return ref _innerSet.EnsureGet<T>(world, id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T EnsureGet(int id)
-		{
-			return ref _innerSet.EnsureGet<T>(id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -122,27 +100,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBack(int id)
-		{
-			_innerSet.RemoveSwapBack(id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			_innerSet.Dispose();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(World world)
 		{
 			_innerSet.Dispose(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear()
+		public void Clear(World world)
 		{
-			_innerSet.Clear();
+			_innerSet.Clear(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,21 +124,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
 			return new (new (GetValuePtr(world), 0, Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), 0, Count));
 		}
 	}
 }

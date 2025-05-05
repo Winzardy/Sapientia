@@ -1,6 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
@@ -9,7 +6,7 @@ using Sapientia.Extensions;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe struct SparseSet
+	public struct SparseSet
 	{
 		public readonly int expandStep;
 
@@ -57,11 +54,13 @@ namespace Sapientia.MemoryAllocator
 			get => _values.ElementSize;
 		}
 
+#if UNITY_EDITOR
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public World GetAllocator()
+		internal World GetWorld()
 		{
-			return _values.GetAllocator();
+			return _values.GetWorld();
 		}
+#endif
 
 		public SparseSet(int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorld, valueSize, capacity, sparseCapacity, expandStep) {}
 
@@ -88,27 +87,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr<T>() where T: unmanaged
-		{
-			return _values.GetValuePtr<T>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetValuePtr()
-		{
-			return _values.GetPtr();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetValuePtr(World world)
 		{
 			return _values.GetValuePtr(world);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetValuePtr(int id)
-		{
-			return GetValuePtr(GetAllocator(), id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,12 +129,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get<T>(int id) where T: unmanaged
-		{
-			return ref Get<T>(GetAllocator(), id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetByDenseId<T>(World world, int denseId) where T: unmanaged
 		{
 			return ref _values.GetValue<T>(world, denseId);
@@ -181,44 +156,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(int id)
-		{
-			return Has(GetAllocator(), id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T EnsureGet<T>(World world, int id) where T: unmanaged
 		{
-			ExpandSparseIfNeeded(id + 1);
+			ExpandSparseIfNeeded(world, id + 1);
 			ref var denseId = ref _sparse[world, id];
 			if (denseId >= _count || _dense[world, denseId] != id)
 			{
-				ExpandIfNeeded(_count + 1);
+				ExpandIfNeeded(world, _count + 1);
 				_dense[world, _count] = id;
 				denseId = _count++;
 			}
 			return ref _values.GetValue<T>(world, denseId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T EnsureGet<T>(int id) where T: unmanaged
-		{
-			ExpandSparseIfNeeded(id + 1);
-			ref var denseId = ref _sparse[id];
-			if (denseId >= _count || _dense[denseId] != id)
-			{
-				ExpandIfNeeded(_count + 1);
-				_dense[_count] = id;
-				denseId = _count++;
-			}
-			return ref _values.GetValue<T>(denseId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveSwapBack(int id)
-		{
-			var allocator = GetAllocator();
-			return RemoveSwapBack(allocator, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -268,14 +216,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ExpandSparseIfNeeded(int newCapacity)
+		private void ExpandSparseIfNeeded(World world, int newCapacity)
 		{
 			if (_sparseCapacity >= newCapacity)
 				return;
 
 			newCapacity = SnapCeilCapacity(newCapacity);
 
-			ExpandSparse(GetAllocator(), newCapacity);
+			ExpandSparse(world, newCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -285,14 +233,14 @@ namespace Sapientia.MemoryAllocator
 			_sparseCapacity = _sparse.Length;
 		}
 
-		private void ExpandIfNeeded(int newCapacity)
+		private void ExpandIfNeeded(World world, int newCapacity)
 		{
 			if (_capacity >= newCapacity)
 				return;
 
 			newCapacity = SnapCeilCapacity(newCapacity);
 
-			Expand(GetAllocator(), newCapacity);
+			Expand(world, newCapacity);
 		}
 
 		private void Expand(World world, int newCapacity)
@@ -307,12 +255,6 @@ namespace Sapientia.MemoryAllocator
 		private int SnapCeilCapacity(int newCapacity)
 		{
 			return ((newCapacity + expandStep - 1) / expandStep) * expandStep;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			Dispose(GetAllocator());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -331,13 +273,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear()
-		{
-			_values.Clear(0, _count);
-			_count = 0;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ClearFast()
 		{
 			_count = 0;
@@ -350,21 +285,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator<T>() where T: unmanaged
-		{
-			return new ListEnumerator<T>(GetValuePtr<T>(), Count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListPtrEnumerator<T> GetPtrEnumerator<T>(World world) where T: unmanaged
 		{
 			return new ListPtrEnumerator<T>(GetValuePtr(world), ElementSize, Count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator<T>() where T: unmanaged
-		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), ElementSize, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -374,21 +297,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>() where T: unmanaged
-		{
-			return new (new (GetValuePtr<T>(), Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>(World world) where T: unmanaged
 		{
 			return new (new (GetValuePtr(world), ElementSize, Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>() where T: unmanaged
-		{
-			return new (new (GetValuePtr(), ElementSize, Count));
 		}
 	}
 }

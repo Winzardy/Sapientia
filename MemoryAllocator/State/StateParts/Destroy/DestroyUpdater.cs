@@ -195,7 +195,7 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				var child = destroyElement.children[_world, i];
 
-				if (!_entitiesStatePart.ptr->IsEntityExist(child))
+				if (!_entitiesStatePart.ptr->IsEntityExist(_world, child))
 					continue;
 
 				_killRequestArchetype.GetElement(child, out var isChildExist);

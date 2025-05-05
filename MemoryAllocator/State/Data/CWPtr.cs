@@ -50,25 +50,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public World GetAllocator()
-		{
-			return wPtr.GetWorld();
-		}
-
-		[INLINE(256)]
-		public SafePtr GetPtr()
-		{
-			var world = wPtr.GetWorld();
-			if (world.version != _version)
-			{
-				_cachedPtr = world.GetSafePtr(wPtr);
-				_version = world.version;
-			}
-
-			return _cachedPtr;
-		}
-
-		[INLINE(256)]
 		public SafePtr GetPtr(World world)
 		{
 			if (world.version != _version)
@@ -93,19 +74,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref T Get<T>() where T : unmanaged
-		{
-			var allocator = wPtr.GetWorld();
-			if (allocator.version != _version)
-			{
-				_cachedPtr = allocator.GetSafePtr(wPtr);
-				_version = allocator.version;
-			}
-
-			return ref _cachedPtr.Value<T>();
-		}
-
-		[INLINE(256)]
 		public ref T Get<T>(World world) where T : unmanaged
 		{
 			if (world.version != _version)
@@ -121,13 +89,6 @@ namespace Sapientia.MemoryAllocator
 		public void Dispose(World world)
 		{
 			wPtr.Dispose(world);
-			this = Invalid;
-		}
-
-		[INLINE(256)]
-		public void Dispose()
-		{
-			wPtr.Dispose();
 			this = Invalid;
 		}
 
@@ -244,25 +205,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public World GetAllocator()
-		{
-			return wPtr.worldId.GetWorld();
-		}
-
-		[INLINE(256)]
-		public SafePtr<T> GetPtr()
-		{
-			var allocator = GetAllocator();
-			if (allocator.version != _version && wPtr.IsCreated())
-			{
-				_cachedPtr = allocator.GetSafePtr(wPtr);
-				_version = allocator.version;
-			}
-
-			return _cachedPtr;
-		}
-
-		[INLINE(256)]
 		public SafePtr<T> GetPtr(World world)
 		{
 			if (world.version != _version && wPtr.IsCreated())
@@ -272,19 +214,6 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			return _cachedPtr;
-		}
-
-		[INLINE(256)]
-		public ref T GetValue()
-		{
-			var allocator = GetAllocator();
-			if (allocator.version != _version)
-			{
-				_cachedPtr = allocator.GetSafePtr(wPtr);
-				_version = allocator.version;
-			}
-
-			return ref _cachedPtr.Value();
 		}
 
 		[INLINE(256)]

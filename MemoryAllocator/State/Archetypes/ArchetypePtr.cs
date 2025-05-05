@@ -1,5 +1,3 @@
-using Sapientia.Data;
-
 namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe struct ArchetypePtr<T> where T: unmanaged, IComponent
@@ -9,11 +7,6 @@ namespace Sapientia.MemoryAllocator.State
 		public ref Archetype GetArchetype(World world)
 		{
 			return ref _archetypePtr.GetValue(world);
-		}
-
-		public ref Archetype GetArchetype()
-		{
-			return ref _archetypePtr.GetValue();
 		}
 
 		public ArchetypeContext<T> GetArchetypeContext(World world)

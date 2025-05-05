@@ -9,37 +9,37 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WPtr MemAlloc(int size)
 		{
-			return new WPtr(_allocator.MemAlloc(size), worldId);
+			return new WPtr(_allocator.MemAlloc(size));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WPtr MemAlloc(int size, out SafePtr ptr)
 		{
-			return new WPtr(_allocator.MemAlloc(size, out ptr), worldId);
+			return new WPtr(_allocator.MemAlloc(size, out ptr));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WPtr MemAlloc<T>() where T: unmanaged
 		{
-			return new WPtr(_allocator.MemAlloc<T>(), worldId);
+			return new WPtr(_allocator.MemAlloc<T>());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WPtr MemAlloc<T>(out SafePtr<T> ptr) where T: unmanaged
 		{
-			return new WPtr(_allocator.MemAlloc<T>(out ptr), worldId);
+			return new WPtr(_allocator.MemAlloc<T>(out ptr));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WPtr MemAlloc<T>(in T value, out SafePtr<T> ptr) where T: unmanaged
 		{
-			return new WPtr(_allocator.MemAlloc<T>(value, out ptr), worldId);
+			return new WPtr(_allocator.MemAlloc<T>(value, out ptr));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WPtr MemReAlloc(WPtr wPtr, int size, out SafePtr ptr)
 		{
-			return new WPtr(_allocator.MemReAlloc(wPtr, size, out ptr), worldId);
+			return new WPtr(_allocator.MemReAlloc(wPtr, size, out ptr));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

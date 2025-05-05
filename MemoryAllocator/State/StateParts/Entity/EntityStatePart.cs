@@ -29,7 +29,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public string GetEntityName(World world, in Entity entity)
 		{
-			if (!IsEntityExist(entity))
+			if (!IsEntityExist(world, entity))
 				return "[Destroyed]";
 			return entityIdToName[world, entity.id].ToString();
 		}
@@ -77,16 +77,6 @@ namespace Sapientia.MemoryAllocator.State
 			_entityDestroySubscribers.Subscribe(world, subscriber);
 		}
 
-		public void AddSubscriber(in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
-		{
-			_entityDestroySubscribers.Subscribe(subscriber);
-		}
-
-		public void RemoveSubscriber(in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
-		{
-			_entityDestroySubscribers.UnSubscribe(subscriber);
-		}
-
 		public void RemoveSubscriber(World world, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
 			_entityDestroySubscribers.UnSubscribe(world, subscriber);
@@ -121,11 +111,6 @@ namespace Sapientia.MemoryAllocator.State
 		public bool IsEntityExist(World world, in Entity entity)
 		{
 			return entity.id < EntitiesCapacity && _entityIdToGeneration[world, entity.id] == entity.generation;
-		}
-
-		public bool IsEntityExist(in Entity entity)
-		{
-			return entity.id < EntitiesCapacity && _entityIdToGeneration[entity.id] == entity.generation;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
