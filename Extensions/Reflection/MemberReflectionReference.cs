@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using JetBrains.Annotations;
 
 namespace Sapientia.Reflection
 {
@@ -19,10 +20,31 @@ namespace Sapientia.Reflection
 		/// <summary>
 		/// Получить значение
 		/// </summary>
-		/// <param name="obj">Сначала передается корень, потом переиспользуется</param>
-		/// <param name="cache">Нужно ли кэшировать, важно отметить что кеширует только если получилось достать значение</param>
-		public T Resolve(object obj, bool cache = false)
+		/// <param name="obj">Начальный объект, от которого последовательно разрешаются все шаги пути</param>
+		/// <param name="cached">Нужно ли кэшировать, важно отметить что кеширует только если получилось достать значение</param>
+		public T Resolve(object obj, bool cached = false)
 		{
+			var value = Resolve(obj, out var exception, cached);
+
+			if (exception != null)
+				throw exception;
+
+			return value;
+		}
+
+		/// <summary>
+		/// Безопасно получить значение
+		/// </summary>
+		/// <param name="obj">Начальный объект, от которого последовательно разрешаются все шаги пути</param>
+		/// <param name="cached">Нужно ли кэшировать, важно отметить что кеширует только если получили значение</param>
+		/// <returns>Может вернуть "default"</returns>
+		[CanBeNull]
+		public T ResolveSafe(object obj, bool cached = false) => Resolve(obj, out _, cached);
+
+		private T Resolve(object obj, out Exception exception, bool cached = false)
+		{
+			exception = null;
+
 			if (_cache != null)
 				return _cache;
 
@@ -31,15 +53,33 @@ namespace Sapientia.Reflection
 				var step = steps[i];
 
 				if (obj == null)
+				{
+					exception = new NullReferenceException($"Object became null at step [ {i+1} ]" +
+						$" with name [ {step.name} ], path: {Path}");
 					return default;
+				}
 
-				if (step.IsArrayElement) //In Array
+				if (step.IsArrayElement)
 				{
 					obj = obj.GetValueByReflectionSafe(step.name);
+
 					if (obj is IList list)
+					{
+						if (step.ArrayElementIndex < 0 || step.ArrayElementIndex >= list.Count)
+						{
+							exception = new IndexOutOfRangeException(
+								$"Array index [ {step.ArrayElementIndex} ] out of bounds in list [ {step.name} ], path: {Path}");
+							return default;
+						}
+
 						obj = list[step.ArrayElementIndex];
+					}
 					else
+					{
+						exception = new ArgumentException(
+							$"Step '{step.name}' is marked as array element, but resolved object is not IList (actual: {obj?.GetType().Name ?? "null"}), path: {Path}");
 						return default;
+					}
 				}
 				else
 				{
@@ -48,9 +88,19 @@ namespace Sapientia.Reflection
 			}
 
 			if (obj is not T value)
-				return default;
+			{
+				if (obj == null)
+				{
+					exception = new NullReferenceException($"Final resolved value is null, path: {Path}");
+					return default;
+				}
 
-			if (cache)
+				exception = new ArgumentException(
+					$"Final resolved type is '{obj.GetType().Name}', expected '{typeof(T).Name}', path: {Path}");
+				return default;
+			}
+
+			if (cached)
 				_cache = value;
 
 			return value;
@@ -62,7 +112,8 @@ namespace Sapientia.Reflection
 
 		public override string ToString() => string.Join(".", steps ?? Array.Empty<MemberReferencePathStep>());
 
-		public string ToString(bool type) => string.Join(".", steps ?? Array.Empty<MemberReferencePathStep>()) + (type ? $" ({typeof(T).Name})" : "");
+		public string ToString(bool type) =>
+			string.Join(".", steps ?? Array.Empty<MemberReferencePathStep>()) + (type ? $" ({typeof(T).Name})" : "");
 	}
 
 	[Serializable]

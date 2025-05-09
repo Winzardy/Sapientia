@@ -228,7 +228,7 @@ namespace Sapientia.Collections
 			return index >= 0 && index < array.Length;
 		}
 
-		public static bool ContainsIndexSafe<T>(this T[] array, in int index)
+		public static bool ContainsIndexSafe<T>(this T[] array, int index)
 		{
 			if (array == null)
 				return false;
