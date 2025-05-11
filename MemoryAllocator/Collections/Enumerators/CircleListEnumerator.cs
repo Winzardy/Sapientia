@@ -5,79 +5,36 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface ICircularBufferEnumerable<T> : IEnumerable<T>, IEnumerable<SafePtr<T>>
+	public unsafe interface ICircularBufferEnumerable<T>
 		where T: unmanaged
 	{
 		public int HeadIndex { get; }
 		public int Count { get; }
 		public int Capacity { get; }
-		public SafePtr<T> GetValuePtr();
-		public SafePtr<T> GetValuePtr(Allocator allocator);
+		public SafePtr<T> GetValuePtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(Allocator allocator)
+		public CircularBufferEnumerator<T> GetEnumerator(World world)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new CircularBufferEnumerator<T> GetEnumerator()
+		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
+			return new CircularBufferPtrEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(World world)
 		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
+			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator()
+		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(Allocator allocator)
-		{
-			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
-		{
-			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<SafePtr<T>> IEnumerable<SafePtr<T>>.GetEnumerator()
-		{
-			return GetEnumerator();
+			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
 		}
 	}
 

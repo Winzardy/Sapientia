@@ -4,12 +4,12 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetRef<T>(in MemPtr ptr) where T : unmanaged
+		public ref T GetRef<T>(in MemPtr memPtr) where T : unmanaged
 		{
-			return ref *(T*)GetSafePtr(ptr).ptr;
+			return ref *(T*)GetSafePtr(memPtr).ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,7 +21,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetSafePtr(in MemPtr memPtr)
 		{
-			var memory = zonesList[memPtr.zoneId].ptr->memory;
+			var memory = _zonesList[memPtr.zoneId].ptr->memory;
 			var safePtr = memory + memPtr.zoneOffset;
 #if DEBUG
 			var size = (safePtr.Cast<MemoryBlock>() - 1).ptr->blockSize - TSize<MemoryBlock>.size;
@@ -37,20 +37,19 @@ namespace Sapientia.MemoryAllocator
 			return GetBlockSize(memPtr) - TSize<MemoryBlock>.size;
 		}
 
-		public MemPtr CopyPtrTo(Allocator dstAllocator, MemPtr memPtr)
+		public MemPtr CopyPtrTo(ref Allocator dstAllocator, MemPtr srsMemPtr)
 		{
-			if (!memPtr.IsCreated())
+			if (!srsMemPtr.IsValid())
 				return MemPtr.Invalid;
-			if (memPtr.IsZeroSized())
+			if (srsMemPtr.IsZeroSized())
 			{
-				memPtr.allocatorId = dstAllocator.allocatorId;
-				return memPtr;
+				return srsMemPtr;
 			}
 
-			var size = GetPtrSize(memPtr);
+			var size = GetPtrSize(srsMemPtr);
 			var dstMemPtr = dstAllocator.MemAlloc(size);
 
-			var srcData = GetSafePtr(memPtr);
+			var srcData = GetSafePtr(srsMemPtr);
 			var dstData = dstAllocator.GetSafePtr(dstMemPtr);
 
 			MemoryExt.MemCopy(srcData, dstData, size);

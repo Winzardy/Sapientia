@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
@@ -9,12 +7,15 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemArrayProxy<>))]
+	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemArray<>.MemArrayProxy))]
 	public unsafe struct MemArray<T> : IListEnumerable<T> where T : unmanaged
 	{
 		public static readonly MemArray<T> Empty = new () { innerArray = MemArray.Empty };
 
 		public MemArray innerArray;
+#if DEBUG
+		private WorldId _worldId;
+#endif
 
 		public readonly int Length
 		{
@@ -32,204 +33,172 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
-		{
-			return innerArray.GetAllocator();
-		}
-
-		[INLINE(256)]
 		public MemArray(int length, ClearOptions clearOptions = ClearOptions.ClearMemory) :
-			this(AllocatorManager.CurrentAllocator, length, clearOptions)
+			this(WorldManager.CurrentWorld, length, clearOptions)
 		{
 
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator allocator, int length, T defaultValue)
+		public MemArray(World world, int length, T defaultValue)
 		{
-			innerArray = new MemArray(allocator, TSize<T>.size, length, ClearOptions.UninitializedMemory);
-			innerArray.Fill(allocator, defaultValue, 0, innerArray.Length);
+			innerArray = new MemArray(world, TSize<T>.size, length, ClearOptions.UninitializedMemory);
+			innerArray.Fill(world, defaultValue, 0, innerArray.Length);
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator allocator, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
+		public MemArray(World world, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
-			innerArray = new MemArray(allocator, TSize<T>.size, length, clearOptions);
+			innerArray = new MemArray(world, TSize<T>.size, length, clearOptions);
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
 		[INLINE(256)]
 		public MemArray(int elementSize, int length, ClearOptions clearOptions) :
-			this(AllocatorManager.CurrentAllocator, elementSize, length, clearOptions)
+			this(WorldManager.CurrentWorld, elementSize, length, clearOptions)
 		{
 
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator allocator, int elementSize, int length, ClearOptions clearOptions)
+		public MemArray(World world, int elementSize, int length, ClearOptions clearOptions)
 		{
-			innerArray = new MemArray(allocator, elementSize, length, clearOptions);
+			innerArray = new MemArray(world, elementSize, length, clearOptions);
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
 		[INLINE(256)]
-		public MemArray(in MemArray<T> arr) : this(AllocatorManager.CurrentAllocator, arr)
+		public MemArray(in MemArray<T> arr) : this(WorldManager.CurrentWorld, arr)
 		{
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator allocator, MemArray<T> arr)
+		public MemArray(World world, MemArray<T> arr)
 		{
-			innerArray = new MemArray(allocator, arr.As<MemArray<T>, MemArray>());
+			innerArray = new MemArray(world, arr.As<MemArray<T>, MemArray>());
+#if DEBUG
+			_worldId = world.worldId;
+#endif
 		}
 
 		[INLINE(256)]
-		public MemArray(Allocator allocator, ReadOnlySpan<T> arr)
+		public MemArray(World world, ReadOnlySpan<T> arr)
 		{
-			innerArray = new MemArray(allocator, TSize<T>.size, arr.Length, ClearOptions.UninitializedMemory);
-			arr.CopyTo(new Span<T>(innerArray.GetValuePtr().ptr, arr.Length));
+			innerArray = new MemArray(world, TSize<T>.size, arr.Length, ClearOptions.UninitializedMemory);
+			arr.CopyTo(new Span<T>(innerArray.GetValuePtr(world).ptr, arr.Length));
+#if DEBUG
+			_worldId = world.worldId;
+#endif
+		}
+
+#if DEBUG
+		internal World GetWorld_DEBUG()
+		{
+			return _worldId.GetWorld();
+		}
+#endif
+
+		[INLINE(256)]
+		public ref TU As<TU>(World world, int index) where TU : unmanaged
+		{
+			return ref innerArray.GetValue<TU>(world, index);
 		}
 
 		[INLINE(256)]
-		public MemArray(MemPtr memPtr, int length)
+		public void ReplaceWith(World world, MemArray<T> other)
 		{
-			innerArray = new MemArray(memPtr, TSize<T>.size, length);
+			innerArray.ReplaceWith(world, other.As<MemArray<T>, MemArray>());
 		}
 
 		[INLINE(256)]
-		public ref TU As<TU>(Allocator allocator, int index) where TU : unmanaged
+		public void CopyFrom(World world, MemArray<T> other)
 		{
-			return ref innerArray.GetValue<TU>(allocator, index);
+			innerArray.CopyFrom(world, other.As<MemArray<T>, MemArray>());;
 		}
 
 		[INLINE(256)]
-		public void ReplaceWith(Allocator allocator, MemArray<T> other)
+		public void Dispose(World world)
 		{
-			innerArray.ReplaceWith(allocator, other.As<MemArray<T>, MemArray>());
+			innerArray.Dispose(world);
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(Allocator allocator, MemArray<T> other)
+		public SafePtr GetPtr(World world)
 		{
-			innerArray.CopyFrom(allocator, other.As<MemArray<T>, MemArray>());;
+			return innerArray.GetPtr(world);
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public MemPtr GetMemPtr(int index)
 		{
-			innerArray.Dispose(allocator);
+			return innerArray.GetWPtr(index);
 		}
 
-		[INLINE(256)]
-		public SafePtr GetPtr(Allocator allocator)
-		{
-			return innerArray.GetPtr(allocator);
-		}
-
-		[INLINE(256)]
-		public SafePtr GetPtr()
-		{
-			return innerArray.GetPtr();
-		}
-
-		public ref T this[int index]
-		{
-			[INLINE(256)]
-			get => ref innerArray.GetValue<T>(index);
-		}
-
-		[INLINE(256)]
-		public MemPtr GetAllocPtr(int index)
-		{
-			return innerArray.GetAllocPtr(index);
-		}
-
-		public ref T this[Allocator allocator, int index]
+		public ref T this[World world, int index]
 		{
 			[INLINE(256)]
 			get
 			{
 				E.ASSERT(IsCreated);
 				E.RANGE(index, 0, this.Length);
-				return ref innerArray.GetValue<T> (allocator, index);
+				return ref innerArray.GetValue<T> (world, index);
 			}
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr()
-		{
-			return innerArray.GetValuePtr<T>();
-		}
-
-		[INLINE(256)]
-		public SafePtr<T> GetValuePtr(Allocator allocator)
+		public SafePtr<T> GetValuePtr(World world)
 		{
 			E.ASSERT(IsCreated);
-			return innerArray.GetValuePtr<T>(allocator);
+			return innerArray.GetValuePtr<T>(world);
 		}
 
 		[INLINE(256)]
-		public Span<T> GetSpan(Allocator allocator)
+		public Span<T> GetSpan(World world)
 		{
-			return innerArray.GetSpan<T>(allocator);
+			return innerArray.GetSpan<T>(world);
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr(int index)
+		public SafePtr<T> GetValuePtr(World world, int index)
 		{
-			return innerArray.GetValuePtr<T>(index);
+			return innerArray.GetValuePtr<T>(world, index);
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr(Allocator allocator, int index)
+		public bool Resize(World world, int newLength, ClearOptions options = ClearOptions.ClearMemory)
 		{
-			return innerArray.GetValuePtr<T>(allocator, index);
+			return innerArray.Resize<T>(world, newLength, options);
 		}
 
 		[INLINE(256)]
-		public bool Resize(int newLength, ClearOptions options = ClearOptions.ClearMemory)
+		public void Fill(World world, in T value, int fromIndex, int count)
 		{
-			return innerArray.Resize<T>(GetAllocator(), newLength, options);
+			innerArray.Fill(world, value, fromIndex, count);
 		}
 
 		[INLINE(256)]
-		public bool Resize(Allocator allocator, int newLength, ClearOptions options = ClearOptions.ClearMemory)
+		public void Clear(World world)
 		{
-			return innerArray.Resize<T>(allocator, newLength, options);
+			innerArray.Clear(world);
 		}
 
 		[INLINE(256)]
-		public void Fill(Allocator allocator, in T value, int fromIndex, int count)
+		public void Clear(World world, int index, int length)
 		{
-			innerArray.Fill(allocator, value, fromIndex, count);
+			innerArray.Clear(world, index, length);
 		}
 
 		[INLINE(256)]
-		public void Clear(Allocator allocator)
+		public bool Contains<TU>(World world, in TU obj) where TU : unmanaged, System.IEquatable<T>
 		{
-			innerArray.Clear(allocator);
-		}
-
-		[INLINE(256)]
-		public void Clear(Allocator allocator, int index, int length)
-		{
-			innerArray.Clear(allocator, index, length);
-		}
-
-		[INLINE(256)]
-		public void Clear()
-		{
-			innerArray.Clear();
-		}
-
-		[INLINE(256)]
-		public void Clear(int index, int length)
-		{
-			innerArray.Clear(index, length);
-		}
-
-		[INLINE(256)]
-		public bool Contains<TU>(Allocator allocator, in TU obj) where TU : unmanaged, System.IEquatable<T>
-		{
-			return innerArray.Contains<T, TU>(allocator, obj);
+			return innerArray.Contains<T, TU>(world, obj);
 		}
 
 		[INLINE(256)]
@@ -239,63 +208,55 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListEnumerator<T> GetEnumerator(Allocator allocator)
+		public ListEnumerator<T> GetEnumerator(World world)
 		{
-			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
+			return new ListEnumerator<T>(GetValuePtr(world), Count);
 		}
 
 		[INLINE(256)]
-		public new ListEnumerator<T> GetEnumerator()
+		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new ListEnumerator<T>(GetValuePtr(), Count);
+			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(World world)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(allocator), 0, Count);
+			return new (new (GetValuePtr(world), Count));
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator()
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), 0, Count);
+			return new (new (GetValuePtr(world), 0, Count));
 		}
 
-		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
+		private class MemArrayProxy
 		{
-			return new (new (GetValuePtr(allocator), Count));
-		}
+			private MemArray<T> _arr;
 
-		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), Count));
-		}
+			public MemArrayProxy(MemArray<T> arr)
+			{
+				_arr = arr;
+			}
 
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
-		{
-			return new (new (GetValuePtr(allocator), 0, Count));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), 0, Count));
-		}
-
-		[INLINE(256)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[INLINE(256)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
+			public T[] Items
+			{
+				get
+				{
+#if DEBUG
+					var world = _arr._worldId.GetWorld();
+					var arr = new T[_arr.Length];
+					for (var i = 0; i < _arr.Length; ++i)
+					{
+						arr[i] = _arr[world, i];
+					}
+					return arr;
+#else
+					return Array.Empty<T>();
+#endif
+				}
+			}
 		}
 	}
 }

@@ -7,24 +7,24 @@ using Debug = UnityEngine.Debug;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public unsafe struct State : IDisposable
+	public struct State : IDisposable
 	{
 		public const int MAX_TICKS_PER_FRAME = 5;
 
-		private AllocatorId _allocatorId;
+		private WorldId _worldId;
 
-		public AllocatorId AllocatorId => _allocatorId;
-		public Allocator Allocator => _allocatorId.GetAllocator();
-		public bool IsValid => _allocatorId.IsValid();
+		public WorldId WorldId => _worldId;
+		public World World => _worldId.GetWorld();
+		public bool IsValid => _worldId.IsValid();
 
-		public State(AllocatorId allocatorId)
+		public State(WorldId worldId)
 		{
-			_allocatorId = allocatorId;
+			_worldId = worldId;
 		}
 
 		private SafePtr<WorldState> GetWorld()
 		{
-			return _allocatorId.GetAllocator().GetServicePtr<WorldState>();
+			return _worldId.GetWorld().GetServicePtr<WorldState>();
 		}
 
 		public void Start()
@@ -37,7 +37,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (!IsValid)
 				return;
 
-			var updateStatePart = _allocatorId.GetLocalService<UpdateLocalStatePart>();
+			var updateStatePart = _worldId.GetLocalService<UpdateLocalStatePart>();
 			if (!updateStatePart.CanUpdate())
 				return;
 
@@ -78,7 +78,7 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			if (!IsValid)
 				return;
-			var updateStatePart = _allocatorId.GetLocalService<UpdateLocalStatePart>();
+			var updateStatePart = _worldId.GetLocalService<UpdateLocalStatePart>();
 			if (!updateStatePart.CanLateUpdate())
 				return;
 
@@ -90,7 +90,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (!IsValid)
 				return;
 
-			LocalStatePartService.Dispose(_allocatorId.GetAllocator());
+			LocalStatePartService.Dispose(_worldId.GetWorld());
 			GetWorld().Value().Dispose();
 		}
 	}

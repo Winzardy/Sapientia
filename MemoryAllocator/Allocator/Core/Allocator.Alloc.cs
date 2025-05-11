@@ -4,7 +4,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int Align(int size)
@@ -52,7 +52,7 @@ namespace Sapientia.MemoryAllocator
 			if (size == 0)
 			{
 				valuePtr = default;
-				return MemPtr.CreateZeroSized(allocatorId);
+				return MemPtr.CreateZeroSized();
 			}
 
 			var blockSize = Align(size + TSize<MemoryBlock>.size);
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(blockPtr.ptr->blockSize >= TSize<MemoryBlock>.size + BLOCK_ALIGN);
 			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
 
-			var memPtr = new MemPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size, allocatorId);
+			var memPtr = new MemPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
 			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
 
 			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size);
@@ -70,20 +70,20 @@ namespace Sapientia.MemoryAllocator
 			return memPtr;
 		}
 
-		public MemPtr MemReAlloc(in MemPtr memPtr, int size, out SafePtr valuePtr)
+		public MemPtr MemReAlloc(in MemPtr worldPtr, int size, out SafePtr valuePtr)
 		{
-			if (!memPtr.IsCreated() || memPtr.IsZeroSized())
+			if (!worldPtr.IsValid() || worldPtr.IsZeroSized())
 				return MemAlloc(size, out valuePtr);
 
 			var blockSize = Align(size + TSize<MemoryBlock>.size);
-			var blockRef = (MemoryBlockRef)memPtr;
+			var blockRef = (MemoryBlockRef)worldPtr;
 
 			var newBlockRef = ReAllocateBlock(blockRef, blockSize, out var blockPtr);
 
 			E.ASSERT(blockPtr.ptr->blockSize >= MIN_BLOCK_SIZE);
 			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
 
-			var newMemPtr = new MemPtr(newBlockRef.memoryZoneId, newBlockRef.memoryZoneOffset + TSize<MemoryBlock>.size, allocatorId);
+			var newMemPtr = new MemPtr(newBlockRef.memoryZoneId, newBlockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
 			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
 
 			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size);
@@ -94,7 +94,7 @@ namespace Sapientia.MemoryAllocator
 
 		public bool MemFree(MemPtr memPtr)
 		{
-			if (!memPtr.IsCreated())
+			if (!memPtr.IsValid())
 				return false;
 			if (memPtr.IsZeroSized())
 				return true;

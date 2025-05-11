@@ -1,12 +1,10 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using Sapientia.Data;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
-	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(StackProxy<>))]
+	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(Stack<>.StackProxy))]
 	public unsafe struct Stack<T> : IListEnumerable<T> where T : unmanaged
 	{
 		private const int _defaultCapacity = 4;
@@ -35,40 +33,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
-		{
-			return _array.GetAllocator();
-		}
-
-		[INLINE(256)]
-		public Stack(Allocator allocator, int capacity)
+		public Stack(World world, int capacity)
 		{
 			this = default;
-			_array = new MemArray<T>(allocator, capacity);
+			_array = new MemArray<T>(world, capacity);
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr()
+		public SafePtr<T> GetValuePtr(World world)
 		{
-			return _array.GetValuePtr();
+			return _array.GetValuePtr(world);
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetValuePtr(Allocator allocator)
+		public void Dispose(World world)
 		{
-			return _array.GetValuePtr(allocator);
-		}
-
-		[INLINE(256)]
-		public void Dispose()
-		{
-			Dispose(GetAllocator());
-		}
-
-		[INLINE(256)]
-		public void Dispose(Allocator allocator)
-		{
-			_array.Dispose(allocator);
+			_array.Dispose(world);
 			this = default;
 		}
 
@@ -79,12 +59,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool Contains<TU>(Allocator allocator, TU item) where TU : IEquatable<T>
+		public bool Contains<TU>(World world, TU item) where TU : IEquatable<T>
 		{
 			var count = _count;
 			while (count-- > 0)
 			{
-				if (item.Equals(_array[allocator, count]))
+				if (item.Equals(_array[world, count]))
 				{
 					return true;
 				}
@@ -94,28 +74,28 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public readonly T Peek(Allocator allocator)
+		public readonly T Peek(World world)
 		{
-			return _array[allocator, _count - 1];
+			return _array[world, _count - 1];
 		}
 
 		[INLINE(256)]
-		public T Pop(Allocator allocator)
+		public T Pop(World world)
 		{
-			var item = _array[allocator, --_count];
-			_array[allocator, _count] = default;
+			var item = _array[world, --_count];
+			_array[world, _count] = default;
 			return item;
 		}
 
 		[INLINE(256)]
-		public void Push(Allocator allocator, T item)
+		public void Push(World world, T item)
 		{
 			if (_count == _array.Length)
 			{
-				_array.Resize(allocator, _array.Length == 0 ? _defaultCapacity : 2 * _array.Length);
+				_array.Resize(world, _array.Length == 0 ? _defaultCapacity : 2 * _array.Length);
 			}
 
-			_array[allocator, _count++] = item;
+			_array[world, _count++] = item;
 		}
 
 		[INLINE(256)]
@@ -132,63 +112,62 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListEnumerator<T> GetEnumerator(Allocator allocator)
+		public ListEnumerator<T> GetEnumerator(World world)
 		{
-			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
+			return new ListEnumerator<T>(GetValuePtr(world), Count);
 		}
 
 		[INLINE(256)]
-		public new ListEnumerator<T> GetEnumerator()
+		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new ListEnumerator<T>(GetValuePtr(), Count);
+			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(World world)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(allocator), 0, Count);
+			return new (new (GetValuePtr(world), Count));
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator()
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), 0, Count);
+			return new (new (GetValuePtr(world), 0, Count));
 		}
 
-		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
+		private class StackProxy
 		{
-			return new (new (GetValuePtr(allocator), Count));
-		}
+			private Stack<T> _stack;
 
-		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), Count));
-		}
+			public StackProxy(Stack<T> stack)
+			{
+				_stack = stack;
+			}
 
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
-		{
-			return new (new (GetValuePtr(allocator), 0, Count));
-		}
+			public int Count => _stack.Count;
 
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), 0, Count));
-		}
+			public T[] Items
+			{
+				get
+				{
+#if DEBUG
+					var allocator = _stack._array.GetWorld_DEBUG();
+					var arr = new T[_stack.Count];
+					var i = 0;
+					var e = _stack.GetEnumerator(allocator);
+					while (e.MoveNext())
+					{
+						arr[i++] = e.Current;
+					}
 
-		[INLINE(256)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+					e.Dispose();
 
-		[INLINE(256)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
+					return arr;
+#else
+					return Array.Empty<T>();
+#endif
+				}
+			}
 		}
 	}
 }

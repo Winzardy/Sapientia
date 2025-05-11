@@ -5,95 +5,73 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator : IDisposable
+	public unsafe partial struct Allocator : IDisposable
 	{
-		public AllocatorId allocatorId;
-
-		public UnsafeList<MemoryZone> zonesList;
-		public UnsafeList<MemoryBlockPtrCollection> freeBlockPools;
-
-		internal DataAccessor dataAccessor;
-
-		public ushort version;
-
-		public bool IsValid => version > 0;
+		private UnsafeList<MemoryZone> _zonesList;
+		private UnsafeList<MemoryBlockPtrCollection> _freeBlockPools;
 
 		public int ZoneSize
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => zonesList[0].ptr->size;
+			get => _zonesList[0].ptr->size;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Initialize(AllocatorId allocatorId, int zoneSize = MIN_ZONE_SIZE)
+		public void Initialize(int zoneSize = MIN_ZONE_SIZE)
 		{
-			E.ASSERT(!IsValid);
-
-			this.allocatorId = allocatorId;
-			this.version = 1;
-
 			zoneSize = zoneSize.Max(MIN_ZONE_SIZE);
 
-			zonesList = new UnsafeList<MemoryZone>();
+			_zonesList = new UnsafeList<MemoryZone>();
 
 			var maxBlockSizeId = GetBlockSizeId(zoneSize) + 1;
-			freeBlockPools = new UnsafeList<MemoryBlockPtrCollection>(maxBlockSizeId);
+			_freeBlockPools = new UnsafeList<MemoryBlockPtrCollection>(maxBlockSizeId);
 
 			var blockSize = MIN_BLOCK_SIZE;
-			for (var i = 0; i < freeBlockPools.capacity; i++)
+			for (var i = 0; i < _freeBlockPools.capacity; i++)
 			{
-				freeBlockPools.Add(new MemoryBlockPtrCollection(blockSize));
+				_freeBlockPools.Add(new MemoryBlockPtrCollection(blockSize));
 				blockSize <<= 1;
 			}
 
 			AllocateMemoryZone(zoneSize);
-
-			dataAccessor = DataAccessor.Create(this);
 		}
 
-		public void Reset(AllocatorId allocatorId)
+		public void Reset()
 		{
-			E.ASSERT(IsValid);
-
-			this.allocatorId = allocatorId;
-			this.version++;
-
-			for (var i = 0; i < freeBlockPools.count; i++)
+			for (var i = 0; i < _freeBlockPools.count; i++)
 			{
-				freeBlockPools[i].Value().Reset();
+				_freeBlockPools[i].Value().Reset();
 			}
 
-			for (var i = 0; i < zonesList.count; i++)
+			for (var i = 0; i < _zonesList.count; i++)
 			{
-				ref var pool = ref freeBlockPools[freeBlockPools.count - 1].Value();
-				ref var zone = ref zonesList[i].Value();
-				var blockId = new BlockId(freeBlockPools.count - 1, pool.Count);
+				ref var pool = ref _freeBlockPools[_freeBlockPools.count - 1].Value();
+				ref var zone = ref _zonesList[i].Value();
+				var blockId = new BlockId(_freeBlockPools.count - 1, pool.Count);
 				var memoryBlock = MemoryBlock.CreateFirstBlock(blockId, zone.size);
 
 				// Reset first block
 				zone.memory.Cast<MemoryBlock>().Value() = memoryBlock;
 				pool.AddBlock(new MemoryBlockRef(i, 0));
 			}
-
-			dataAccessor = DataAccessor.Create(this);
 		}
 
 		public void Dispose()
 		{
-			for (var i = 0; i < freeBlockPools.count; i++)
+			for (var i = 0; i < _freeBlockPools.count; i++)
 			{
-				freeBlockPools[i].ptr->Dispose();
+				_freeBlockPools[i].ptr->Dispose();
 			}
-			freeBlockPools.Dispose();
+			_freeBlockPools.Dispose();
 
-			for (var i = 0; i < zonesList.count; i++)
+			for (var i = 0; i < _zonesList.count; i++)
 			{
-				zonesList[i].ptr->Dispose();
+				_zonesList[i].ptr->Dispose();
 			}
-			zonesList.Dispose();
+			_zonesList.Dispose();
 
-			freeBlockPools = default;
-			zonesList = default;
+			_freeBlockPools = default;
+			_zonesList = default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -102,7 +80,7 @@ namespace Sapientia.MemoryAllocator
 			usedSize = 0;
 			reservedSize = 0;
 			freeSize = 0;
-			for (var i = 0; i < zonesList.count; i++)
+			for (var i = 0; i < _zonesList.count; i++)
 			{
 				reservedSize += GetMemoryZoneSize(i, out var usedZoneSize, out var freeZoneSize);
 				usedSize += usedZoneSize;
@@ -116,9 +94,9 @@ namespace Sapientia.MemoryAllocator
 		public int GetReservedSize()
 		{
 			var size = 0;
-			for (var i = 0; i < zonesList.count; i++)
+			for (var i = 0; i < _zonesList.count; i++)
 			{
-				size += zonesList[i].ptr->size;
+				size += _zonesList[i].ptr->size;
 			}
 
 			return size;

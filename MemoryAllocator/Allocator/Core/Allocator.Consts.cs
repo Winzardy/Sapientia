@@ -1,6 +1,6 @@
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		public const int BLOCK_ALIGN = 8;
 		public const int BLOCK_ALIGN_MINUS_ONE = BLOCK_ALIGN - 1;

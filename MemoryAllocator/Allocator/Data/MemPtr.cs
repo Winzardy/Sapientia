@@ -5,36 +5,34 @@ using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe struct MemPtr : System.IEquatable<MemPtr>
+	public struct MemPtr : System.IEquatable<MemPtr>
 	{
-		public static readonly MemPtr Invalid = new (0, 0, default);
+		public static readonly MemPtr Invalid = new (0, 0);
 
 		public int zoneId;
 		public int zoneOffset;
-		public AllocatorId allocatorId;
 
 		[INLINE(256)]
-		public MemPtr(int zoneId, int zoneOffset, AllocatorId allocatorId)
+		public MemPtr(int zoneId, int zoneOffset)
 		{
 			this.zoneId = zoneId;
 			this.zoneOffset = zoneOffset;
-			this.allocatorId = allocatorId;
 		}
 
-		public static MemPtr CreateZeroSized(AllocatorId allocatorId)
+		[INLINE(256)]
+		public static MemPtr CreateZeroSized()
 		{
-			return new MemPtr(0, -1, allocatorId);
+			return new MemPtr(0, -1);
 		}
 
+		[INLINE(256)]
 		public MemPtr GetArrayElement(int elementSize, int index)
 		{
-			return new MemPtr(zoneId, zoneOffset + index * elementSize, allocatorId);
+			return new MemPtr(zoneId, zoneOffset + index * elementSize);
 		}
 
 		[INLINE(256)]
-		public readonly bool IsCreated() => zoneOffset != 0;
-		[INLINE(256)]
-		public bool IsValid() => IsCreated() && allocatorId.IsValid();
+		public readonly bool IsValid() => zoneOffset != 0;
 		[INLINE(256)]
 		public readonly bool IsZeroSized() => zoneOffset < 0;
 
@@ -69,36 +67,25 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
+		public SafePtr GetPtr(ref Allocator allocator)
 		{
-			return allocatorId.GetAllocator();
+			return allocator.GetSafePtr(this);
 		}
 
 		[INLINE(256)]
-		public SafePtr GetPtr()
-		{
-			return GetAllocator().GetSafePtr(in this);
-		}
-
-		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(ref Allocator allocator)
 		{
 			allocator.MemFree(this);
 			this = Invalid;
 		}
 
 		[INLINE(256)]
-		public void Dispose()
+		public MemPtr CopyTo(ref Allocator srsAllocator, ref Allocator dstAllocator)
 		{
-			GetAllocator().MemFree(this);
-			this = Invalid;
+			return srsAllocator.CopyPtrTo(ref dstAllocator, this);
 		}
 
-		public MemPtr CopyTo(Allocator srsAllocator, Allocator dstAllocator)
-		{
-			return srsAllocator.CopyPtrTo(dstAllocator, this);
-		}
-
-		public override string ToString() => $"zoneId: {zoneId}, offset: {zoneOffset}, allocatorId: [{allocatorId}]";
+		[INLINE(256)]
+		public override string ToString() => $"{nameof(zoneId)}: {zoneId}, {nameof(zoneOffset)}: {zoneOffset}";
 	}
 }

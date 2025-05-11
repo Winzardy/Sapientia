@@ -1,46 +1,38 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {
 	public static unsafe class ArchetypeExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetDestroyHandler<THandler>(this ref Ptr<Archetype> archetypePtr) where THandler : unmanaged, IElementDestroyHandler
+		public static void SetDestroyHandler<THandler>(this ref CachedPtr<Archetype> archetypePtr, World world) where THandler : unmanaged, IElementDestroyHandler
 		{
-			archetypePtr.GetValue().SetDestroyHandler<THandler>();
+			archetypePtr.GetValue(world).SetDestroyHandler<THandler>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetDestroyHandler<THandler>(this ref Ptr<Archetype> archetypePtr, Allocator allocator) where THandler : unmanaged, IElementDestroyHandler
+		public static ref Archetype GetArchetype<TComponent>(this World world) where TComponent : unmanaged, IComponent
 		{
-			archetypePtr.GetValue().SetDestroyHandler<THandler>(allocator);
+			return ref ServiceRegistryContext.Create<TComponent, Archetype>().GetService<Archetype>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype GetArchetype<TComponent>(this Allocator allocator) where TComponent : unmanaged, IComponent
+		public static SafePtr<Archetype> GetArchetypePtr<TComponent>(this World world) where TComponent : unmanaged, IComponent
 		{
-			return ref DataAccessorContext.Create<TComponent, Archetype>().GetService<Archetype>(allocator);
+			return ServiceRegistryContext.Create<TComponent, Archetype>().GetServicePtr<Archetype>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SafePtr<Archetype> GetArchetypePtr<TComponent>(this Allocator allocator) where TComponent : unmanaged, IComponent
+		public static ref Archetype GetArchetype<TComponent>(this ref WorldId worldId) where TComponent : unmanaged, IComponent
 		{
-			return DataAccessorContext.Create<TComponent, Archetype>().GetServicePtr<Archetype>(allocator);
+			return ref GetArchetype<TComponent>(worldId.GetWorld());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype GetArchetype<TComponent>(this ref AllocatorId allocatorId) where TComponent : unmanaged, IComponent
+		public static SafePtr<Archetype> GetArchetypePtr<TComponent>(this ref WorldId worldId) where TComponent : unmanaged, IComponent
 		{
-			return ref GetArchetype<TComponent>(allocatorId.GetAllocator());
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SafePtr<Archetype> GetArchetypePtr<TComponent>(this ref AllocatorId allocatorId) where TComponent : unmanaged, IComponent
-		{
-			return GetArchetypePtr<TComponent>(allocatorId.GetAllocator());
+			return GetArchetypePtr<TComponent>(worldId.GetWorld());
 		}
 	}
 }

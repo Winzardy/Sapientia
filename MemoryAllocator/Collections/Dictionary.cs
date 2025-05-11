@@ -15,8 +15,8 @@ namespace Sapientia.MemoryAllocator
 		ThrowOnExisting,
 	}
 
-	[DebuggerTypeProxy(typeof(EquatableDictionaryProxy<,>))]
-	public unsafe struct Dictionary<TKey, TValue> : IDictionaryEnumerable<TKey, TValue>
+	[DebuggerTypeProxy(typeof(Dictionary<,>.EquatableDictionaryProxy))]
+	public struct Dictionary<TKey, TValue> : IDictionaryEnumerable<TKey, TValue>
 		where TKey : unmanaged, IEquatable<TKey>
 		where TValue : unmanaged
 	{
@@ -57,45 +57,33 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Allocator GetAllocator()
-		{
-			return buckets.GetAllocator();
-		}
-
-		[INLINE(256)]
-		public Dictionary(Allocator allocator, int capacity)
+		public Dictionary(World world, int capacity)
 		{
 			this = default;
-			Initialize(allocator, capacity);
+			Initialize(world, capacity);
 		}
 
 		[INLINE(256)]
-		private void Initialize(Allocator allocator, int capacity)
+		private void Initialize(World world, int capacity)
 		{
 			var prime = capacity.GetPrime();
 			freeList = -1;
-			buckets = new MemArray<int>(allocator, prime, -1);
-			entries = new MemArray<Entry>(allocator, prime);
+			buckets = new MemArray<int>(world, prime, -1);
+			entries = new MemArray<Entry>(world, prime);
 		}
 
 		[INLINE(256)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			buckets.Dispose(allocator);
-			entries.Dispose(allocator);
+			buckets.Dispose(world);
+			entries.Dispose(world);
 			this = default;
 		}
 
 		[INLINE(256)]
-		public SafePtr<Entry> GetEntryPtr()
+		public SafePtr<Entry> GetEntryPtr(World world)
 		{
-			return entries.GetValuePtr();
-		}
-
-		[INLINE(256)]
-		public SafePtr<Entry> GetEntryPtr(Allocator allocator)
-		{
-			return entries.GetValuePtr(allocator);
+			return entries.GetValuePtr(world);
 		}
 
 		[INLINE(256)]
@@ -105,67 +93,49 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void ReplaceWith(Allocator allocator, in Dictionary<TKey, TValue> other)
+		public void ReplaceWith(World world, in Dictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr()) return;
 
-			Dispose(allocator);
+			Dispose(world);
 			this = other;
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(Allocator allocator, in Dictionary<TKey, TValue> other)
+		public void CopyFrom(World world, in Dictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 				return;
-			if (!GetMemPtr().IsCreated() && !other.GetMemPtr().IsCreated())
+			if (!GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
 				return;
-			if (GetMemPtr().IsCreated() && !other.GetMemPtr().IsCreated())
+			if (GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
 			{
-				Dispose(allocator);
+				Dispose(world);
 				return;
 			}
 
-			if (GetMemPtr().IsCreated() == false)
-				this = new Dictionary<TKey, TValue>(allocator, other.Count);
+			if (!GetMemPtr().IsValid())
+				this = new Dictionary<TKey, TValue>(world, other.Count);
 
-			MemArrayExt.CopyExact(allocator, other.buckets, ref buckets);
-			MemArrayExt.CopyExact(allocator, other.entries, ref entries);
+			MemArrayExt.CopyExact(world, other.buckets, ref buckets);
+			MemArrayExt.CopyExact(world, other.entries, ref entries);
 			count = other.count;
 			freeCount = other.freeCount;
 			freeList = other.freeList;
 		}
 
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public ref TValue this[Allocator allocator, in TKey key]
+		public ref TValue this[World world, in TKey key]
 		{
 			[INLINE(256)]
 			get
 			{
-				var entry = FindEntry(allocator, key);
+				var entry = FindEntry(world, key);
 				if (entry >= 0)
 				{
-					return ref entries[allocator, entry].value;
-				}
-
-				throw new KeyNotFoundException();
-			}
-		}
-
-		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
-		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public ref TValue this[in TKey key]
-		{
-			[INLINE(256)]
-			get
-			{
-				var allocator = GetAllocator();
-				var entry = FindEntry(allocator, key);
-				if (entry >= 0)
-				{
-					return ref entries[allocator, entry].value;
+					return ref entries[world, entry].value;
 				}
 
 				throw new KeyNotFoundException();
@@ -173,32 +143,25 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref TValue GetValue(TKey key)
+		public ref TValue GetValue(World world, TKey key)
 		{
-			var allocator = GetAllocator();
-			return ref GetValue(allocator, key);
-		}
-
-		[INLINE(256)]
-		public ref TValue GetValue(Allocator allocator, TKey key)
-		{
-			var entry = FindEntry(allocator, key);
+			var entry = FindEntry(world, key);
 			if (entry >= 0)
 			{
-				return ref entries[allocator, entry].value;
+				return ref entries[world, entry].value;
 			}
 
 			return ref TDefaultValue<TValue>.value;
 		}
 
 		[INLINE(256)]
-		public ref TValue GetValue(Allocator allocator, TKey key, out bool success)
+		public ref TValue GetValue(World world, TKey key, out bool success)
 		{
-			var entry = FindEntry(allocator, key);
+			var entry = FindEntry(world, key);
 			if (entry >= 0)
 			{
 				success = true;
-				return ref entries[allocator, entry].value;
+				return ref entries[world, entry].value;
 			}
 
 			success = false;
@@ -206,12 +169,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool TryGetValue(Allocator allocator, TKey key, out TValue value)
+		public bool TryGetValue(World world, TKey key, out TValue value)
 		{
-			var entry = FindEntry(allocator, key);
+			var entry = FindEntry(world, key);
 			if (entry >= 0)
 			{
-				value = entries[allocator, entry].value;
+				value = entries[world, entry].value;
 				return true;
 			}
 
@@ -220,55 +183,46 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
+		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to add to the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public void Add(TKey key, TValue value)
+		public void Add(World world, TKey key, TValue value)
 		{
-			TryInsert(GetAllocator(), key, value, InsertionBehavior.ThrowOnExisting);
-		}
-
-		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
-		/// <param name="allocator"></param>
-		/// <param name="key">The key of the element to add to the dictionary.</param>
-		/// <param name="value"></param>
-		[INLINE(256)]
-		public void Add(Allocator allocator, TKey key, TValue value)
-		{
-			TryInsert(allocator, key, value, InsertionBehavior.ThrowOnExisting);
+			TryInsert(world, key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
 		[INLINE(256)]
-		public void Clear(Allocator allocator)
+		public void Clear(World world)
 		{
 			var clearCount = count;
 			if (clearCount > 0)
 			{
-				buckets.Clear(allocator);
+				buckets.Clear(world);
 				count = 0;
 				freeList = -1;
 				freeCount = 0;
-				entries.Clear(allocator, 0, clearCount);
+				entries.Clear(world, 0, clearCount);
 			}
 		}
 
 		/// <summary><para>Determines whether the dictionary contains an element with a specific key.</para></summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
 		[INLINE(256)]
-		public bool ContainsKey(Allocator allocator, TKey key)
+		public bool ContainsKey(World world, TKey key)
 		{
-			return FindEntry(allocator, key) >= 0;
+			return FindEntry(world, key) >= 0;
 		}
 
 		/// <summary><para>Determines whether the dictionary contains an element with a specific value.</para></summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="value">The value to locate in the dictionary.</param>
 		[INLINE(256)]
-		public bool ContainsValue(Allocator allocator, TValue value)
+		public bool ContainsValue(World world, TValue value)
 		{
-			var rawEntries = entries.GetValuePtr(allocator);
+			var rawEntries = entries.GetValuePtr(world);
 			for (var i = 0; i < count; i++)
 			{
 				if (rawEntries[i].hashCode >= 0 && value.Equals(rawEntries[i].value))
@@ -279,13 +233,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		private int FindEntry(Allocator allocator, in TKey key)
+		private int FindEntry(World world, in TKey key)
 		{
 			if (buckets.IsCreated)
 			{
 				var hashCode = key.GetHashCode() & _hashCodeMask;
-				var rawBuckets = buckets.GetValuePtr(allocator);
-				var rawEntries = entries.GetValuePtr(allocator);
+				var rawBuckets = buckets.GetValuePtr(world);
+				var rawEntries = entries.GetValuePtr(world);
 
 				for (var i = rawBuckets[hashCode % buckets.Length]; i >= 0; i = rawEntries[i].next)
 				{
@@ -297,18 +251,18 @@ namespace Sapientia.MemoryAllocator
 			return -1;
 		}
 
-		private bool TryInsert(Allocator allocator, TKey key, TValue value, InsertionBehavior behavior)
+		private bool TryInsert(World world, TKey key, TValue value, InsertionBehavior behavior)
 		{
 			if (!buckets.IsCreated)
 			{
-				Initialize(allocator, 0);
+				Initialize(world, 0);
 			}
 
 			var hashCode = key.GetHashCode() & _hashCodeMask;
 			var targetBucket = hashCode % buckets.Length;
 
-			var rawBuckets = buckets.GetValuePtr(allocator);
-			var rawEntries = entries.GetValuePtr(allocator);
+			var rawBuckets = buckets.GetValuePtr(world);
+			var rawEntries = entries.GetValuePtr(world);
 
 			for (var i = rawBuckets[targetBucket]; i >= 0; i = rawEntries[i].next)
 			{
@@ -340,11 +294,11 @@ namespace Sapientia.MemoryAllocator
 			{
 				if (count == entries.Length)
 				{
-					IncreaseCapacity(allocator);
+					IncreaseCapacity(world);
 					targetBucket = hashCode % buckets.Length;
 
-					rawBuckets = buckets.GetValuePtr(allocator);
-					rawEntries = entries.GetValuePtr(allocator);
+					rawBuckets = buckets.GetValuePtr(world);
+					rawEntries = entries.GetValuePtr(world);
 				}
 
 				index = count;
@@ -352,7 +306,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			rawEntries[index].hashCode = hashCode;
-			rawEntries[index].next = buckets[targetBucket];
+			rawEntries[index].next = buckets[world, targetBucket];
 			rawEntries[index].key = key;
 			rawEntries[index].value = value;
 			rawBuckets[targetBucket] = index;
@@ -361,21 +315,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		private void IncreaseCapacity(Allocator allocator)
+		private void IncreaseCapacity(World world)
 		{
-			IncreaseCapacity(allocator, count.ExpandPrime());
+			IncreaseCapacity(world, count.ExpandPrime());
 		}
 
 		[INLINE(256)]
-		private void IncreaseCapacity(Allocator allocator, int newSize)
+		private void IncreaseCapacity(World world, int newSize)
 		{
-			var bucketsArray = new MemArray<int>(allocator, newSize, -1);
-			var entryArray = new MemArray<Entry>(allocator, newSize);
+			var bucketsArray = new MemArray<int>(world, newSize, -1);
+			var entryArray = new MemArray<Entry>(world, newSize);
 
-			MemArrayExt.CopyNoChecks(allocator, entries, 0, ref entryArray, 0, count);
+			MemArrayExt.CopyNoChecks(world, entries, 0, ref entryArray, 0, count);
 
-			var rawBuckets = bucketsArray.GetValuePtr(allocator);
-			var rawEntries = entryArray.GetValuePtr(allocator);
+			var rawBuckets = bucketsArray.GetValuePtr(world);
+			var rawEntries = entryArray.GetValuePtr(world);
 
 			for (var i = 0; i < count; i++)
 			{
@@ -387,38 +341,29 @@ namespace Sapientia.MemoryAllocator
 				}
 			}
 
-			buckets.Dispose(allocator);
-			entries.Dispose(allocator);
+			buckets.Dispose(world);
+			entries.Dispose(world);
 
 			buckets = bucketsArray;
 			entries = entryArray;
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
-		/// <param name="allocator"></param>
-		/// <param name="key">The key of the element to be removed from the dictionary.</param>
-		[INLINE(256)]
-		public bool Remove(TKey key)
-		{
-			return Remove(GetAllocator(), key);
-		}
-
-		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public bool Remove(Allocator allocator, TKey key)
+		public bool Remove(World world, TKey key)
 		{
-			return Remove(allocator, key, out _);
+			return Remove(world, key, out _);
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
-		/// <param name="allocator"></param>
+		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public bool Remove(Allocator allocator, TKey key, out TValue value)
+		public bool Remove(World world, TKey key, out TValue value)
 		{
 			value = default;
 
@@ -429,8 +374,8 @@ namespace Sapientia.MemoryAllocator
 			var bucket = hashCode % buckets.Length;
 			var last = -1;
 
-			var rawBuckets = buckets.GetValuePtr(allocator);
-			var rawEntries = entries.GetValuePtr(allocator);
+			var rawBuckets = buckets.GetValuePtr(world);
+			var rawEntries = entries.GetValuePtr(world);
 
 			for (var i = rawBuckets[bucket]; i >= 0; last = i, i = rawEntries[i].next)
 			{
@@ -442,7 +387,7 @@ namespace Sapientia.MemoryAllocator
 					}
 					else
 					{
-						entries[last].next = rawEntries[i].next;
+						entries[world, last].next = rawEntries[i].next;
 					}
 
 					value = rawEntries[i].value;
@@ -463,13 +408,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool TryAdd(Allocator allocator, TKey key, TValue value)
+		public bool TryAdd(World world, TKey key, TValue value)
 		{
-			return TryInsert(allocator, key, value, InsertionBehavior.None);
+			return TryInsert(world, key, value, InsertionBehavior.None);
 		}
 
 		[INLINE(256)]
-		public int EnsureCapacity(Allocator allocator, int capacity)
+		public int EnsureCapacity(World world, int capacity)
 		{
 			E.ASSERT(IsCreated);
 
@@ -481,73 +426,74 @@ namespace Sapientia.MemoryAllocator
 
 			if (buckets.IsCreated == false)
 			{
-				Initialize(allocator, capacity);
+				Initialize(world, capacity);
 				return Capacity;
 			}
 
 			var prime = capacity.GetPrime();
-			IncreaseCapacity(allocator, prime);
+			IncreaseCapacity(world, prime);
 			return prime;
 		}
 
 		[INLINE(256)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(Allocator allocator)
+		public DictionaryEnumerator<TKey, TValue> GetEnumerator(World world)
 		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
+			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
 		}
 
 		[INLINE(256)]
-		public new DictionaryEnumerator<TKey, TValue> GetEnumerator()
+		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(World world)
 		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(), LastIndex);
+			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
 		}
 
 		[INLINE(256)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(Allocator allocator)
+		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(World world)
 		{
-			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(allocator), LastIndex);
+			return new(new(GetEntryPtr(world), LastIndex));
 		}
 
 		[INLINE(256)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator()
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(World world)
 		{
-			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(), LastIndex);
+			return new(new(GetEntryPtr(world), LastIndex));
 		}
 
-		[INLINE(256)]
-		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(Allocator allocator)
+		private class EquatableDictionaryProxy
 		{
-			return new(new(GetEntryPtr(allocator), LastIndex));
-		}
+			private Dictionary<TKey, TValue> _dictionary;
 
-		[INLINE(256)]
-		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable()
-		{
-			return new(new(GetEntryPtr(), LastIndex));
-		}
+			public EquatableDictionaryProxy(Dictionary<TKey, TValue> dictionary)
+			{
+				_dictionary = dictionary;
+			}
 
-		[INLINE(256)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(Allocator allocator)
-		{
-			return new(new(GetEntryPtr(allocator), LastIndex));
-		}
+			public MemArray<int> Buckets => _dictionary.buckets;
+			public MemArray<Entry> Entries => _dictionary.entries;
+			public int Count => _dictionary.count;
+			public int FreeList => _dictionary.freeList;
+			public int FreeCount => _dictionary.freeCount;
 
-		[INLINE(256)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable()
-		{
-			return new(new(GetEntryPtr(), LastIndex));
-		}
+			public KeyValuePair<TKey, TValue>[] Items
+			{
+				get
+				{
+#if DEBUG
+					var arr = new KeyValuePair<TKey, TValue>[_dictionary.Count];
+					var i = 0;
+					var world = _dictionary.buckets.GetWorld_DEBUG();
+					var e = _dictionary.GetEnumerator(world);
+					while (e.MoveNext())
+					{
+						arr[i++] = new KeyValuePair<TKey, TValue>(e.Current.key, e.Current.value);
+					}
 
-		[INLINE(256)]
-		IEnumerator<Entry> IEnumerable<Entry>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[INLINE(256)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
+					return arr;
+#else
+					return Array.Empty<KeyValuePair<TKey, TValue>>();
+#endif
+				}
+			}
 		}
 	}
 }

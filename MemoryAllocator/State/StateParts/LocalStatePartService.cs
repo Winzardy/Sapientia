@@ -6,44 +6,44 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe interface IWoldLocalStatePart
 	{
-		public void Initialize(Allocator allocator){}
+		public void Initialize(World world){}
 
-		public void Dispose(Allocator allocator){}
+		public void Dispose(World world){}
 	}
 
 	public unsafe class LocalStatePartService
 	{
 		public readonly SimpleList<IWoldLocalStatePart> localStateParts = new();
 
-		public static void AddStatePart(Allocator allocator, IWoldLocalStatePart statePart)
+		public static void AddStatePart(World world, IWoldLocalStatePart statePart)
 		{
-			var service = ServiceContext<AllocatorId>.GetOrCreateService<LocalStatePartService>(allocator.allocatorId);
+			var service = ServiceContext<WorldId>.GetOrCreateService<LocalStatePartService>(world.worldId);
 			if (service == null)
 			{
 				service = new LocalStatePartService();
-				ServiceContext<AllocatorId>.SetService(service);
+				ServiceContext<WorldId>.SetService(service);
 			}
 			service.localStateParts.Add(statePart);
 		}
 
-		public static void Initialize(Allocator allocator)
+		public static void Initialize(World world)
 		{
-			var service = ServiceContext<AllocatorId>.GetOrCreateService<LocalStatePartService>(allocator.allocatorId);
+			var service = ServiceContext<WorldId>.GetOrCreateService<LocalStatePartService>(world.worldId);
 
 			foreach (var statePart in service.localStateParts)
 			{
-				statePart.Initialize(allocator);
+				statePart.Initialize(world);
 			}
 		}
 
-		public static void Dispose(Allocator allocator)
+		public static void Dispose(World world)
 		{
-			if (!ServiceLocator<AllocatorId, LocalStatePartService>.TryRemoveService(allocator.allocatorId, out var service))
+			if (!ServiceLocator<WorldId, LocalStatePartService>.TryRemoveService(world.worldId, out var service))
 				return;
 
 			foreach (var statePart in service.localStateParts)
 			{
-				statePart.Dispose(allocator);
+				statePart.Dispose(world);
 			}
 			service.localStateParts.Dispose();
 		}

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.TypeIndexer;
 
-namespace Sapientia.MemoryAllocator.Data
+namespace Sapientia.MemoryAllocator
 {
 	public unsafe struct ProxyPtr<T> : IEquatable<ProxyPtr<T>> where T: unmanaged, IProxy
 	{
@@ -24,19 +24,19 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProxyPtr<T> Create<TInstance>(Allocator allocator) where TInstance: unmanaged
+		public static ProxyPtr<T> Create<TInstance>(World world) where TInstance: unmanaged
 		{
-			return new ProxyPtr<T>(IndexedPtr.Create<TInstance>(allocator));
+			return new ProxyPtr<T>(IndexedPtr.Create<TInstance>(world));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProxyPtr<T> Create<TInstance>(Allocator allocator, in TInstance value) where TInstance: unmanaged
+		public static ProxyPtr<T> Create<TInstance>(World world, in TInstance value) where TInstance: unmanaged
 		{
-			return new ProxyPtr<T>(IndexedPtr.Create(allocator, value));
+			return new ProxyPtr<T>(IndexedPtr.Create(world, value));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProxyPtr<T> Create<TInstance>(in Ptr<TInstance> value) where TInstance: unmanaged
+		public static ProxyPtr<T> Create<TInstance>(in CachedPtr<TInstance> value) where TInstance: unmanaged
 		{
 			return new ProxyPtr<T>(value);
 		}
@@ -54,54 +54,30 @@ namespace Sapientia.MemoryAllocator.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T1 GetValue<T1>(Allocator allocator) where T1: unmanaged
+		public ref T1 GetValue<T1>(World world) where T1: unmanaged
 		{
-			return ref indexedPtr.GetValue<T1>(allocator);
+			return ref indexedPtr.GetValue<T1>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T1 GetValue<T1>() where T1: unmanaged
+		public CachedPtr<T1> ToPtr<T1>() where T1: unmanaged
 		{
-			return ref indexedPtr.GetValue<T1>();
+			return new CachedPtr<T1>(indexedPtr.GetMemPtr());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Ptr<T1> ToPtr<T1>() where T1: unmanaged
+		public SafePtr GetPtr(World world)
 		{
-			return new Ptr<T1>(indexedPtr.GetMemPtr());
+			return indexedPtr.GetPtr(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetPtr(Allocator allocator)
-		{
-			return indexedPtr.GetPtr(allocator);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetPtr()
-		{
-			return indexedPtr.GetPtr();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Allocator GetAllocator()
-		{
-			return indexedPtr.GetAllocator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			Dispose(GetAllocator());
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
 			if (IsCreated)
 			{
-				proxy.ProxyDispose(GetPtr(allocator).ptr, allocator);
-				indexedPtr.Dispose(allocator);
+				proxy.ProxyDispose(GetPtr(world).ptr, world);
+				indexedPtr.Dispose(world);
 			}
 		}
 
@@ -123,9 +99,9 @@ namespace Sapientia.MemoryAllocator.Data
 			return indexedPtr == other.indexedPtr && proxy.FirstDelegateIndex.index == other.proxy.FirstDelegateIndex.index;
 		}
 
-		public ProxyPtr<T> CopyTo(Allocator srsAllocator, Allocator dstAllocator)
+		public ProxyPtr<T> CopyTo(World srsWorld, World dstWorld)
 		{
-			return new ProxyPtr<T>(indexedPtr.CopyTo(srsAllocator, dstAllocator));
+			return new ProxyPtr<T>(indexedPtr.CopyTo(srsWorld, dstWorld));
 		}
 
 		public override int GetHashCode()

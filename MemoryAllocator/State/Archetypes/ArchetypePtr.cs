@@ -1,28 +1,20 @@
-using Sapientia.Data;
-using Sapientia.MemoryAllocator.Data;
-
 namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe struct ArchetypePtr<T> where T: unmanaged, IComponent
 	{
-		private Ptr<Archetype> _archetypePtr;
+		private CachedPtr<Archetype> _archetypePtr;
 
-		public ref Archetype GetArchetype(Allocator allocator)
+		public ref Archetype GetArchetype(World world)
 		{
-			return ref _archetypePtr.GetValue(allocator);
+			return ref _archetypePtr.GetValue(world);
 		}
 
-		public ref Archetype GetArchetype()
+		public ArchetypeContext<T> GetArchetypeContext(World world)
 		{
-			return ref _archetypePtr.GetValue();
+			return new ArchetypeContext<T>(world, _archetypePtr.GetPtr(world));
 		}
 
-		public ArchetypeContext<T> GetArchetypeContext(Allocator allocator)
-		{
-			return new ArchetypeContext<T>(allocator, _archetypePtr.GetPtr(allocator));
-		}
-
-		public static implicit operator ArchetypePtr<T>(Ptr<Archetype> ptr)
+		public static implicit operator ArchetypePtr<T>(CachedPtr<Archetype> ptr)
 		{
 			return new ArchetypePtr<T>
 			{
@@ -30,7 +22,7 @@ namespace Sapientia.MemoryAllocator.State
 			};
 		}
 
-		public static implicit operator Ptr<Archetype>(ArchetypePtr<T> archetypePtr)
+		public static implicit operator CachedPtr<Archetype>(ArchetypePtr<T> archetypePtr)
 		{
 			return archetypePtr._archetypePtr;
 		}

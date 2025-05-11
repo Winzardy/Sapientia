@@ -87,7 +87,7 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EnsureCapacity(int newCapacity)
+		public void EnsureCapacity(int newCapacity)
 		{
 			MemoryExt.ResizeArray<T>(ref array, ref capacity, newCapacity, true, false);
 		}

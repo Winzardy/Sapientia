@@ -5,77 +5,34 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface IListEnumerable<T> : IEnumerable<T>, IEnumerable<SafePtr<T>>
+	public interface IListEnumerable<T>
 		where T: unmanaged
 	{
 		public int Count { get; }
-		public SafePtr<T> GetValuePtr();
-		public SafePtr<T> GetValuePtr(Allocator allocator);
+		public SafePtr<T> GetValuePtr(World world);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator(Allocator allocator)
+		public ListEnumerator<T> GetEnumerator(World world)
 		{
-			return new ListEnumerator<T>(GetValuePtr(allocator), Count);
+			return new ListEnumerator<T>(GetValuePtr(world), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new ListEnumerator<T> GetEnumerator()
+		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new ListEnumerator<T>(GetValuePtr(), Count);
+			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(World world)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(allocator), 0, Count);
+			return new (new (GetValuePtr(world), Count));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator()
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(), 0, Count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(Allocator allocator)
-		{
-			return new (new (GetValuePtr(allocator), Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
-		{
-			return new (new (GetValuePtr(allocator), 0, Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), 0, Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<SafePtr<T>> IEnumerable<SafePtr<T>>.GetEnumerator()
-		{
-			return GetPtrEnumerator();
+			return new (new (GetValuePtr(world), 0, Count));
 		}
 	}
 

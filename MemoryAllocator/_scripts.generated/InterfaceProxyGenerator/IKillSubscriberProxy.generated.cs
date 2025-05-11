@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Data;
+using Sapientia.MemoryAllocator;
 
 namespace Sapientia.TypeIndexer
 {
@@ -23,22 +23,22 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		public delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator allocator, in Sapientia.MemoryAllocator.State.Entity entity);
+		public delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void EntityKilled(void* __executorPtr, Sapientia.MemoryAllocator.Allocator allocator, in Sapientia.MemoryAllocator.State.Entity entity)
+		public readonly void EntityKilled(void* __executorPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
 			var __method = UnsafeExt.As<Delegate, EntityKilledDelegate>(__delegate);
-			__method.Invoke(__executorPtr, allocator, in entity);
+			__method.Invoke(__executorPtr, world, in entity);
 		}
 
-		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.Allocator allocator);
+		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.Allocator allocator)
+		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.World world)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 1);
 			var __method = UnsafeExt.As<Delegate, ProxyDisposeDelegate>(__delegate);
-			__method.Invoke(__executorPtr, allocator);
+			__method.Invoke(__executorPtr, world);
 		}
 
 	}
@@ -46,62 +46,32 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IKillSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator allocator, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr().ptr, allocator, in entity);
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__world).ptr, world, in entity);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator __allocator, Sapientia.MemoryAllocator.Allocator allocator, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__allocator).ptr, allocator, in entity);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator allocator, in Sapientia.MemoryAllocator.State.Entity entity)
-		{
-			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
+			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
 			{
-				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr().ptr, allocator, in entity);
+				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__world).ptr, world, in entity);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator __allocator, Sapientia.MemoryAllocator.Allocator allocator, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void ProxyDispose(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
-			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__world).ptr, world);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
+		{
+			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
 			{
-				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__allocator).ptr, allocator, in entity);
-			}
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator allocator)
-		{
-			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, allocator);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.Allocator __allocator, Sapientia.MemoryAllocator.Allocator allocator)
-		{
-			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__allocator).ptr, allocator);
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator allocator)
-		{
-			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable())
-			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr().ptr, allocator);
-			}
-		}
-
-		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.Allocator __allocator, Sapientia.MemoryAllocator.Allocator allocator)
-		{
-			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__allocator))
-			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__allocator).ptr, allocator);
+				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__world).ptr, world);
 			}
 		}
 
@@ -114,14 +84,13 @@ namespace Sapientia.TypeIndexer
 #if BURST
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
-		[AOT.MonoPInvokeCallbackAttribute(typeof(IKillSubscriberProxy.EntityKilledDelegate))]
 #endif
-		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.Allocator allocator, in Sapientia.MemoryAllocator.State.Entity entity)
+		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.EntityKilled(allocator, in entity);
+			__source.EntityKilled(world, in entity);
 #endif
 		}
 
@@ -138,14 +107,13 @@ namespace Sapientia.TypeIndexer
 #if BURST
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
-		[AOT.MonoPInvokeCallbackAttribute(typeof(IKillSubscriberProxy.ProxyDisposeDelegate))]
 #endif
-		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.Allocator allocator)
+		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.World world)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.ProxyDispose(allocator);
+			__source.ProxyDispose(world);
 #endif
 		}
 

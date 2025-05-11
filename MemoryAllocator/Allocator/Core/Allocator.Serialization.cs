@@ -1,23 +1,18 @@
 using Sapientia.Collections;
-using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class Allocator
+	public unsafe partial struct Allocator
 	{
 		public void Serialize(ref StreamBufferWriter stream)
 		{
-			stream.Write(allocatorId);
-			stream.Write(dataAccessor);
-			stream.Write(version);
-
 			// Записываем память
-			stream.Write(zonesList.count);
-			for (var i = 0; i < zonesList.count; ++i)
+			stream.Write(_zonesList.count);
+			for (var i = 0; i < _zonesList.count; ++i)
 			{
-				var zone = zonesList[i];
+				var zone = _zonesList[i];
 
 				stream.Write(zone.ptr->size);
 				E.ASSERT(zone.ptr->size > 0);
@@ -26,16 +21,16 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			// Записываем свободные блоки
-			stream.Write(freeBlockPools.count);
-			for (var i = 0; i < freeBlockPools.count; i++)
+			stream.Write(_freeBlockPools.count);
+			for (var i = 0; i < _freeBlockPools.count; i++)
 			{
-				stream.Write(freeBlockPools[i].ptr->blockSize);
-				stream.Write(freeBlockPools[i].ptr->Count);
+				stream.Write(_freeBlockPools[i].ptr->blockSize);
+				stream.Write(_freeBlockPools[i].ptr->Count);
 
-				if (freeBlockPools[i].ptr->Count == 0)
+				if (_freeBlockPools[i].ptr->Count == 0)
 					continue;
 
-				stream.Write(freeBlockPools[i].ptr->GetInnerArray(), freeBlockPools[i].ptr->Count);
+				stream.Write(_freeBlockPools[i].ptr->GetInnerArray(), _freeBlockPools[i].ptr->Count);
 			}
 		}
 
@@ -43,27 +38,21 @@ namespace Sapientia.MemoryAllocator
 		{
 			var allocator = new Allocator();
 
-			stream.Read(ref allocator.allocatorId);
-			stream.Read(ref allocator.dataAccessor);
-			stream.Read(ref allocator.version);
-
-			allocator.version++;
-
 			var zonesCount = stream.Read<int>();
-			allocator.zonesList = new UnsafeList<MemoryZone>(zonesCount.Max(8));
+			allocator._zonesList = new UnsafeList<MemoryZone>(zonesCount.Max(8));
 			for (var i = 0; i < zonesCount; ++i)
 			{
 				var zoneSize = stream.Read<int>();
 				E.ASSERT(zoneSize > 0);
 
-				allocator.zonesList.Add(new MemoryZone(default, zoneSize));
-				var zoneMemoryPtr = allocator.zonesList[i].ptr->memory;
+				allocator._zonesList.Add(new MemoryZone(default, zoneSize));
+				var zoneMemoryPtr = allocator._zonesList[i].ptr->memory;
 
 				stream.Read(ref zoneMemoryPtr, zoneSize);
 			}
 
 			var blockCollectionsCount = stream.Read<int>();
-			ref var freeBlockPools = ref allocator.freeBlockPools;
+			ref var freeBlockPools = ref allocator._freeBlockPools;
 			freeBlockPools = new UnsafeList<MemoryBlockPtrCollection>(blockCollectionsCount);
 
 			for (var i = 0; i < blockCollectionsCount; i++)

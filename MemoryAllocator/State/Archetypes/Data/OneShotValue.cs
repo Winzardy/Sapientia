@@ -1,19 +1,19 @@
 namespace Sapientia.MemoryAllocator.State
 {
-	public readonly unsafe struct OneShotValue<TValue>
+	public readonly struct OneShotValue<TValue>
 	{
 		private readonly uint _version;
 		private readonly TValue _value;
 
 		private OneShotValue(TValue value)
 		{
-			_version = AllocatorManager.CurrentAllocator.dataAccessor.GetService<WorldState>().Tick;
+			_version = WorldManager.CurrentWorld.GetService<WorldState>().Tick;
 			_value = value;
 		}
 
 		public readonly bool IsValid()
 		{
-			return _version == AllocatorManager.CurrentAllocator.dataAccessor.GetService<WorldState>().Tick;
+			return _version == WorldManager.CurrentWorld.GetService<WorldState>().Tick;
 		}
 
 		public readonly bool TryGetValue(out TValue value)

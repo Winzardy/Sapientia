@@ -1,12 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(QueueProxy<>))]
-	public unsafe struct Queue<T> : ICircularBufferEnumerable<T> where T : unmanaged
+	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(Queue<>.QueueProxy))]
+	public struct Queue<T> : ICircularBufferEnumerable<T> where T : unmanaged
 	{
 		private const int _minimumGrow = 4;
 		private const int _growFactor = 200;
@@ -41,29 +40,23 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Queue(Allocator allocator, int capacity)
+		public Queue(World world, int capacity)
 		{
 			this = default;
-			_array = new MemArray<T>(allocator, capacity);
+			_array = new MemArray<T>(world, capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(Allocator allocator)
+		public void Dispose(World world)
 		{
-			_array.Dispose(allocator);
+			_array.Dispose(world);
 			this = default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr()
+		public SafePtr<T> GetValuePtr(World world)
 		{
-			return _array.GetValuePtr();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr(Allocator allocator)
-		{
-			return _array.GetValuePtr(allocator);
+			return _array.GetValuePtr(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -75,7 +68,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Enqueue(Allocator allocator, T item)
+		public void Enqueue(World world, T item)
 		{
 			if (_count == _array.Length)
 			{
@@ -85,38 +78,38 @@ namespace Sapientia.MemoryAllocator
 					newCapacity = _array.Length + _minimumGrow;
 				}
 
-				SetCapacity(allocator, newCapacity);
+				SetCapacity(world, newCapacity);
 			}
 
-			_array[allocator, _tailIndex] = item;
+			_array[world, _tailIndex] = item;
 			_tailIndex = (_tailIndex + 1) % _array.Length;
 			_count++;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Dequeue(Allocator allocator)
+		public T Dequeue(World world)
 		{
-			var removed = _array[allocator, _headIndex];
-			_array[allocator, _headIndex] = default;
+			var removed = _array[world, _headIndex];
+			_array[world, _headIndex] = default;
 			_headIndex = (_headIndex + 1) % _array.Length;
 			_count--;
 			return removed;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Peek(Allocator allocator)
+		public T Peek(World world)
 		{
-			return _array[allocator, _headIndex];
+			return _array[world, _headIndex];
 		}
 
-		public bool Contains<TU>(Allocator allocator, TU item) where TU : System.IEquatable<T>
+		public bool Contains<TU>(World world, TU item) where TU : System.IEquatable<T>
 		{
 			var index = _headIndex;
 			var count = _count;
 
 			while (count-- > 0)
 			{
-				if (item.Equals(_array[allocator, index]))
+				if (item.Equals(_array[world, index]))
 				{
 					return true;
 				}
@@ -128,77 +121,76 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private T GetElement(Allocator allocator, int i)
+		private T GetElement(World world, int i)
 		{
-			return _array[allocator, (_headIndex + i) % _array.Length];
+			return _array[world, (_headIndex + i) % _array.Length];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void SetCapacity(Allocator allocator, int capacity)
+		private void SetCapacity(World world, int capacity)
 		{
-			_array.Resize(allocator, capacity);
+			_array.Resize(world, capacity);
 			_headIndex = 0;
 			_tailIndex = _count == capacity ? 0 : _count;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(Allocator allocator)
+		public CircularBufferEnumerator<T> GetEnumerator(World world)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public new CircularBufferEnumerator<T> GetEnumerator()
+		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(World world)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
+			return new CircularBufferPtrEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(Allocator allocator)
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(World world)
 		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(allocator), HeadIndex, Count, Capacity);
+			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator()
+		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(World world)
 		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(), HeadIndex, Count, Capacity);
+			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(Allocator allocator)
+		private class QueueProxy
 		{
-			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
-		}
+			private Queue<T> _queue;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable()
-		{
-			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
-		}
+			public QueueProxy(Queue<T> queue)
+			{
+				_queue = queue;
+			}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(Allocator allocator)
-		{
-			return new (new (GetValuePtr(allocator), HeadIndex, Count, Capacity));
-		}
+			public int Count => _queue.Count;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable()
-		{
-			return new (new (GetValuePtr(), HeadIndex, Count, Capacity));
-		}
+			public T[] Items
+			{
+				get
+				{
+#if DEBUG
+					var arr = new T[_queue.Count];
+					var i = 0;
+					var world = _queue._array.GetWorld_DEBUG();
+					var e = _queue.GetEnumerator(world);
+					while (e.MoveNext())
+					{
+						arr[i++] = e.Current;
+					}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+					e.Dispose();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
+					return arr;
+#else
+					return Array.Empty<T>();
+#endif
+				}
+			}
 		}
 	}
 }
