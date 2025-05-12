@@ -12,7 +12,8 @@ namespace Sapientia.Extensions.Reflection
 	/// </summary>
 	public static partial class ReflectionExt
 	{
-		public const BindingFlags FIELD_BINDING_FLAGS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
+		public const BindingFlags FIELD_BINDING_FLAGS =
+			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
 
 		public const BindingFlags INTERNAL_FIELD_BINDING_FLAGS = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField;
 
@@ -25,8 +26,10 @@ namespace Sapientia.Extensions.Reflection
 		public const char ARRAY_DATA_TERMINATOR = ']';
 		public const string ARRAY_DATA_BEGINNER = "data[";
 
-		private static readonly Dictionary<(Type baseType, bool insertNull, bool includeInterfaces, bool interfacesOnly), Type[]> TYPES = new ();
-		private static readonly Dictionary<Type[], Dictionary<string, Type>> NAMES_TO_TYPES = new ();
+		private static readonly Dictionary<(Type baseType, bool insertNull, bool includeInterfaces, bool interfacesOnly), Type[]>
+			TYPES = new();
+
+		private static readonly Dictionary<Type[], Dictionary<string, Type>> NAMES_TO_TYPES = new();
 
 		public static bool HasDefaultConstructor(this Type type)
 		{
@@ -47,7 +50,7 @@ namespace Sapientia.Extensions.Reflection
 			return type.FullName!.Replace('+', '.');
 		}
 
-		public static bool HasAttribute<T>(this Type type) where T: Attribute
+		public static bool HasAttribute<T>(this Type type) where T : Attribute
 		{
 			return type.GetCustomAttribute<T>(true) != null;
 		}
@@ -88,12 +91,41 @@ namespace Sapientia.Extensions.Reflection
 			return genericTypeDefinition == typeof(List<>);
 		}
 
+		/// <returns>Возвращает тип элемента коллекции, если данный тип не коллекция вернет себя</returns>
+		public static Type GetCollectionElementType(this Type type)
+		{
+			if (type.IsArray)
+				return type.GetElementType();
+
+			if (type.IsGenericType)
+			{
+				var genericDef = type.GetGenericTypeDefinition();
+
+				if (genericDef == typeof(List<>) ||
+				    genericDef == typeof(IEnumerable<>) ||
+				    genericDef == typeof(IList<>) ||
+				    genericDef == typeof(ICollection<>))
+				{
+					return type.GetGenericArguments()[0];
+				}
+
+				foreach (var interfaceType in type.GetInterfaces())
+				{
+					if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+						return interfaceType.GetGenericArguments()[0];
+				}
+			}
+
+			return type;
+		}
+
 		public static bool InheritsFrom(this Type type, Type baseType)
 		{
 			return baseType.IsAssignableFrom(type);
 		}
 
-		public static Type[] GetInheritorTypes(this Type[] baseTypes, bool insertNull = false, bool includeInterfaces = false, bool interfacesOnly = false)
+		public static Type[] GetInheritorTypes(this Type[] baseTypes, bool insertNull = false, bool includeInterfaces = false,
+			bool interfacesOnly = false)
 		{
 			var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 			var typeList = new List<Type>();
@@ -113,7 +145,7 @@ namespace Sapientia.Extensions.Reflection
 
 					if ((interfacesOnly && types[t].IsInterface) ||
 					    (!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
-					     !types[t].IsGenericType))
+						    !types[t].IsGenericType))
 					{
 						typeList.Add(types[t]);
 					}
@@ -138,7 +170,8 @@ namespace Sapientia.Extensions.Reflection
 			return inheritorTypes;
 		}
 
-		public static Dictionary<string, Type> GetNameToInheritorTypes(this Type baseType, bool includeInterfaces = false, bool interfacesOnly = false)
+		public static Dictionary<string, Type> GetNameToInheritorTypes(this Type baseType, bool includeInterfaces = false,
+			bool interfacesOnly = false)
 		{
 			var types = baseType.GetInheritorTypes(false, includeInterfaces, interfacesOnly);
 
@@ -154,7 +187,8 @@ namespace Sapientia.Extensions.Reflection
 			return nameToType;
 		}
 
-		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false, bool includeInterfaces = false, bool interfacesOnly = false)
+		public static Type[] GetInheritorTypes(this Type baseType, bool insertNull = false, bool includeInterfaces = false,
+			bool interfacesOnly = false)
 		{
 			var key = (baseType, insertNull, includeInterfaces, interfacesOnly);
 
@@ -176,7 +210,7 @@ namespace Sapientia.Extensions.Reflection
 
 					if ((interfacesOnly && types[t].IsInterface) ||
 					    (!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
-					     !types[t].IsGenericType))
+						    !types[t].IsGenericType))
 					{
 						typeList.Add(types[t]);
 					}
@@ -325,7 +359,7 @@ namespace Sapientia.Extensions.Reflection
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "")
-							.Replace($"{ARRAY_DATA_TERMINATOR}", ""));
+						   .Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 
 						if (p + 1 == pathComponents.Length)
 						{
@@ -367,7 +401,7 @@ namespace Sapientia.Extensions.Reflection
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "")
-							.Replace($"{ARRAY_DATA_TERMINATOR}", ""));
+						   .Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 						target = array.GetValue(index);
 					}
 				}
@@ -475,7 +509,8 @@ namespace Sapientia.Extensions.Reflection
 
 		public static HashSet<MethodInfo> GetAllInstanceMethods(this Type type)
 		{
-			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
+				BindingFlags.FlattenHierarchy);
 			var allMethods = new HashSet<MethodInfo>();
 
 			foreach (var methodInfo in methods)
