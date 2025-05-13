@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using JetBrains.Annotations;
 
 namespace Sapientia.Reflection
 {
@@ -38,7 +37,6 @@ namespace Sapientia.Reflection
 		/// <param name="obj">Начальный объект, от которого последовательно разрешаются все шаги пути</param>
 		/// <param name="cached">Нужно ли кэшировать, важно отметить что кеширует только если получили значение</param>
 		/// <returns>Может вернуть "default"</returns>
-		[CanBeNull]
 		public T ResolveSafe(object obj, bool cached = false) => Resolve(obj, out _, cached);
 
 		private T Resolve(object obj, out Exception exception, bool cached = false)
