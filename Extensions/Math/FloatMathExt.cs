@@ -60,6 +60,12 @@ namespace Sapientia.Extensions
 			return (int)(value + POSITIVE_CEIL_OFFSET);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int CeilToInt(this float value)
+		{
+			return value < 0 ? (int)value : (int)(value + POSITIVE_CEIL_OFFSET);
+		}
+
 		// ~70% faster: Mathf.FloorToInt
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int FloorToInt_Negative(this float value)
@@ -67,16 +73,23 @@ namespace Sapientia.Extensions
 			return (int)(value + NEGATIVE_FLOOR_OFFSET);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static float Floor_Negative(this float value, float round)
-		{
-			return (value / round).FloorToInt_Negative() * round;
-		}
-
+		// ~70% faster: Mathf.FloorToInt
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int FloorToInt_Positive(this float value)
 		{
 			return (int)value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int FloorToInt(this float value)
+		{
+			return value >= 0 ? (int)value : (int)(value + NEGATIVE_FLOOR_OFFSET);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float Floor_Negative(this float value, float round)
+		{
+			return (value / round).FloorToInt_Negative() * round;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -36,7 +36,7 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe struct ListPtrEnumerator<T> : IEnumerator<SafePtr>, IEnumerator<SafePtr<T>>
+	public struct ListPtrEnumerator<T> : IEnumerator<SafePtr>, IEnumerator<SafePtr<T>>
 		where T: unmanaged
 	{
 		private readonly SafePtr<T> _valuePtr;
@@ -89,7 +89,7 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	public unsafe struct ListEnumerator<T> : IEnumerator<T> where T: unmanaged
+	public struct ListEnumerator<T> : IEnumerator<T> where T: unmanaged
 	{
 		private readonly SafePtr<T> _valuePtr;
 		private readonly int _count;

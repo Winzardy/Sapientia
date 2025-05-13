@@ -4,14 +4,14 @@ using Sapientia.ServiceManagement;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public unsafe interface IWoldLocalStatePart
+	public interface IWoldLocalStatePart
 	{
 		public void Initialize(World world){}
 
 		public void Dispose(World world){}
 	}
 
-	public unsafe class LocalStatePartService
+	public class LocalStatePartService
 	{
 		public readonly SimpleList<IWoldLocalStatePart> localStateParts = new();
 

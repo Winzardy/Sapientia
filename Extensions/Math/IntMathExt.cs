@@ -11,6 +11,12 @@ namespace Sapientia.Extensions
 	{
 		public const int FIRST_TO_LAST_SHIFT = 32 - 1;
 
+		public static int DivRem(this int value, int divider, out int remainder)
+		{
+			remainder = value % divider;
+			return value / divider;
+		}
+
 		public static int Log2(this int value)
 		{
 			var result = 0;
@@ -29,6 +35,12 @@ namespace Sapientia.Extensions
 			n |= n >> 16;
 			++n;
 			return n;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Clamp(this int value, int min, int max)
+		{
+			return value < min ? min : (value > max ? max : value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

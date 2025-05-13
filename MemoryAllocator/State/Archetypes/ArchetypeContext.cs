@@ -6,7 +6,7 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public readonly unsafe struct ArchetypeContext<T> : IEnumerable<T> where T: unmanaged, IComponent
+	public readonly unsafe struct ArchetypeContext<T> : IEnumerable<ArchetypeElement<T>> where T: unmanaged, IComponent
 	{
 		public readonly World world;
 		public readonly SafePtr<Archetype> innerArchetype;
@@ -112,13 +112,16 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator()
+		public ListEnumerator<ArchetypeElement<T>> GetEnumerator()
 		{
-			return new ListEnumerator<T>(innerArchetype.ptr->_elements.GetValuePtr<T>(world), innerArchetype.ptr->Count);
+			ref var elements = ref innerArchetype.Value()._elements;
+			var ptr = elements.GetValuePtr<ArchetypeElement<T>>(world);
+
+			return new ListEnumerator<ArchetypeElement<T>>(ptr, innerArchetype.ptr->Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		IEnumerator<ArchetypeElement<T>> IEnumerable<ArchetypeElement<T>>.GetEnumerator()
 		{
 			return GetEnumerator();
 		}

@@ -134,7 +134,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public SafePtr<T> GetValuePtr<T>(World world) where T: unmanaged
 		{
-			return GetPtr(world);
+			return GetPtr(world).Cast<T>();
 		}
 
 		public Span<T> GetSpan<T>(World world) where T: unmanaged
