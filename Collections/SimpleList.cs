@@ -71,7 +71,9 @@ namespace Sapientia.Collections
 			_isRented = false;
 		}
 
-		public SimpleList(bool isRented) : this(DEFAULT_CAPACITY, isRented) {}
+		public SimpleList(bool isRented) : this(DEFAULT_CAPACITY, isRented)
+		{
+		}
 
 		public SimpleList(int capacity = DEFAULT_CAPACITY, bool isRented = true)
 		{
@@ -91,9 +93,20 @@ namespace Sapientia.Collections
 			array.CopyTo(_array, 0);
 		}
 
-		public SimpleList(IEnumerable<T> collection, int capacity = DEFAULT_CAPACITY, bool isRented = true) : this(capacity, isRented)
+		public SimpleList(IEnumerable<T> enumerable, int capacity = DEFAULT_CAPACITY, bool isRented = true) : this(capacity, isRented)
 		{
-			AddRange(collection);
+			AddRange(enumerable);
+		}
+
+		public SimpleList(ICollection<T> collection, int capacity = DEFAULT_CAPACITY, bool isRented = true) : this(capacity, isRented)
+		{
+			_count = collection.Count;
+			if (capacity < _count)
+				capacity = _count;
+			_array = isRented ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
+			_isRented = isRented;
+
+			collection.CopyTo(_array, 0);
 		}
 
 		public SimpleList(int capacity, T defaultValue, bool isRented = true) : this(capacity, isRented)
@@ -112,7 +125,7 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddWithoutExpand<T1>(T1 value) where T1: T
+		public void AddWithoutExpand<T1>(T1 value) where T1 : T
 		{
 			_array[_count++] = value;
 		}
@@ -125,21 +138,21 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add<T1>(T1 value) where T1: T
+		public void Add<T1>(T1 value) where T1 : T
 		{
 			Expand(_count + 1);
 			_array[_count++] = value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddRange<T1>(IEnumerable<T1> values) where T1: T
+		public void AddRange<T1>(IEnumerable<T1> values) where T1 : T
 		{
 			foreach (var value in values)
 				Add(value);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddRange<T1>(SimpleList<T1> values) where T1: T
+		public void AddRange<T1>(SimpleList<T1> values) where T1 : T
 		{
 			Expand(_count + values._count);
 			Array.Copy(values._array, 0, _array, _count, values._count);
@@ -147,19 +160,19 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddRange<T1>(T1[] values) where T1: T
+		public void AddRange<T1>(T1[] values) where T1 : T
 		{
 			AddRange(values, 0, values.Length);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddRange<T1>(T1[] values, int count) where T1: T
+		public void AddRange<T1>(T1[] values, int count) where T1 : T
 		{
 			AddRange(values, 0, count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddRange<T1>(T1[] values, int sourceIndex, int count) where T1: T
+		public void AddRange<T1>(T1[] values, int sourceIndex, int count) where T1 : T
 		{
 			Expand(_count + count);
 			Array.Copy(values, sourceIndex, _array, _count, count);
@@ -277,6 +290,7 @@ namespace Sapientia.Collections
 					return true;
 				}
 			}
+
 			return false;
 		}
 
@@ -291,6 +305,7 @@ namespace Sapientia.Collections
 					return true;
 				}
 			}
+
 			return false;
 		}
 
@@ -305,6 +320,7 @@ namespace Sapientia.Collections
 					return true;
 				}
 			}
+
 			return false;
 		}
 
@@ -319,6 +335,7 @@ namespace Sapientia.Collections
 					return true;
 				}
 			}
+
 			GC.SuppressFinalize(value);
 			return false;
 		}
@@ -331,6 +348,7 @@ namespace Sapientia.Collections
 				if (value.Equals(_array[i]))
 					return true;
 			}
+
 			return false;
 		}
 
@@ -341,6 +359,7 @@ namespace Sapientia.Collections
 				if (value.Equals(_array[i]))
 					return i;
 			}
+
 			return -1;
 		}
 
@@ -383,6 +402,7 @@ namespace Sapientia.Collections
 				ArrayExt.Expand_WithPool_DontReturn(ref _array, newCapacity);
 				_isRented = true;
 			}
+
 			Array.Fill(_array, defaultValue, previousLength, _array.Length - previousLength);
 		}
 
@@ -497,7 +517,9 @@ namespace Sapientia.Collections
 				_index = -1;
 			}
 
-			public void Dispose() {}
+			public void Dispose()
+			{
+			}
 		}
 	}
 }

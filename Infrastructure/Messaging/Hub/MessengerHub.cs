@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Sapientia.Collections;
 using Sapientia.Data;
 
 namespace Sapientia.Messaging
@@ -9,217 +6,104 @@ namespace Sapientia.Messaging
 	public delegate bool Filter<T>(in T msg);
 
 	/// <summary>
-	/// Messenger hub responsible for taking subscriptions/publications and delivering of messages.
+	/// Централизованный мессенджер-хаб, отвечающий за подписку, публикацию и доставку сообщений.
 	/// </summary>
-	internal sealed partial class MessengerHub : AsyncClass
+	public sealed partial class MessengerHub : AsyncClass
 	{
-		private readonly Dictionary<Type, SubscriptionGroup> _typeToSubscriptionGroup = new();
-
 		/// <summary>
-		/// Subscribe to a message type with the given destination and receiver action.
-		/// All references are held with strong references
+		/// Подписка на тип сообщения с заданным обработчиком.
+		/// Все ссылки хранятся как сильные (strong references).
 		///
-		/// All messages of this type will be delivered.
+		/// Все сообщения этого типа будут доставляться.
 		/// </summary>
-		/// <typeparam name="TMessage">Type of message</typeparam>
-		/// <param name="receiver">Action to invoke when message is delivered</param>
-		/// <returns>MessageSubscription used to unsubscribing</returns>
+		/// <typeparam name="TMessage">Тип сообщения</typeparam>
+		/// <param name="receiver">Метод, вызываемый при доставке сообщения</param>
+		/// <returns>Токен подписки, необходимый для отписки</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver) where TMessage : struct
-		{
-			return AddSubscriptionInternal(receiver, null, true);
-		}
+			=> AddSubscriptionInternal(receiver, null, true);
 
 		/// <summary>
-		/// Subscribe to a message type with the given destination and receiver action.
-		/// Messages will be delivered via the specified proxy.
-		///
-		/// All messages of this type will be delivered.
+		/// Подписка на тип сообщения с заданным обработчиком.
+		/// Все сообщения этого типа будут доставляться
 		/// </summary>
-		/// <typeparam name="TMessage">Type of message</typeparam>
-		/// <param name="receiver">Action to invoke when message is delivered</param>
-		/// <param name="useStrongReferences">Use strong references to destination and receiver </param>
-		/// <param name="proxy">Proxy to use when delivering the messages</param>
-		/// <returns>MessageSubscription used to unsubscribing</returns>
+		/// <typeparam name="TMessage">Тип сообщения</typeparam>
+		/// <param name="receiver">Метод, вызываемый при доставке сообщения</param>
+		/// <param name="useStrongReferences">Использовать ли сильные ссылки на обработчик</param>
+		/// <returns>Токен подписки, необходимый для отписки</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, bool useStrongReferences)
 			where TMessage : struct
-		{
-			return AddSubscriptionInternal<TMessage>(receiver, null, useStrongReferences);
-		}
+			=> AddSubscriptionInternal(receiver, null, useStrongReferences);
 
 		/// <summary>
-		/// Subscribe to a message type with the given destination and receiver action with the given filter.
-		/// Messages will be delivered via the specified proxy.
-		/// All references (apart from the proxy) are held with WeakReferences
+		/// Подписка на тип сообщения с обработчиком и фильтром.
+		/// Все ссылки (кроме прокси) хранятся как слабые (WeakReference).
 		///
-		/// Only messages that "pass" the filter will be delivered.
+		/// Будут доставлены только те сообщения, которые проходят фильтр
 		/// </summary>
-		/// <typeparam name="TMessage">Type of message</typeparam>
-		/// <param name="receiver">Action to invoke when message is delivered</param>
-		/// <returns>MessageSubscription used to unsubscribing</returns>
+		/// <typeparam name="TMessage">Тип сообщения</typeparam>
+		/// <param name="receiver">Метод, вызываемый при доставке сообщения</param>
+		/// <param name="filter">Фильтр, определяющий, следует ли доставлять сообщение</param>
+		/// <returns>Токен подписки, необходимый для отписки</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, Filter<TMessage>? filter)
+		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, Filter<TMessage> filter)
 			where TMessage : struct
-		{
-			return AddSubscriptionInternal<TMessage>(receiver, filter, true);
-		}
+			=> AddSubscriptionInternal(receiver, filter, true);
 
 		/// <summary>
-		/// Subscribe to a message type with the given destination and receiver action with the given filter.
-		/// All references are held with WeakReferences
+		/// Подписка на тип сообщения с обработчиком и фильтром.
+		/// Все ссылки хранятся как слабые (WeakReference)
 		///
-		/// Only messages that "pass" the filter will be delivered.
+		/// Будут доставлены только те сообщения, которые проходят фильтр
 		/// </summary>
-		/// <typeparam name="TMessage">Type of message</typeparam>
-		/// <param name="receiver">Action to invoke when message is delivered</param>
-		/// <param name="useStrongReferences">Use strong references to destination and receiver </param>
-		/// <returns>MessageSubscription used to unsubscribing</returns>
+		/// <typeparam name="TMessage">Тип сообщения</typeparam>
+		/// <param name="receiver">Метод, вызываемый при доставке сообщения</param>
+		/// <param name="filter">Фильтр, определяющий, следует ли доставлять сообщение</param>
+		/// <param name="useStrongReferences">Использовать ли сильные ссылки</param>
+		/// <returns>Токен подписки, необходимый для отписки</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(Receiver<TMessage> receiver, Filter<TMessage>? filter,
+		public MessageSubscriptionToken<TMessage> Subscribe<TMessage>(
+			Receiver<TMessage> receiver,
+			Filter<TMessage> filter,
 			bool useStrongReferences)
 			where TMessage : struct
-		{
-			return AddSubscriptionInternal<TMessage>(receiver, filter, useStrongReferences);
-		}
+			=> AddSubscriptionInternal(receiver, filter, useStrongReferences);
 
 		/// <summary>
-		/// Unsubscribe from a particular message type.
+		/// Отписка от конкретного типа сообщения.
 		///
-		/// Does not throw an exception if the subscription is not found.
+		/// Не выбрасывает исключение, если подписка не найдена.
 		/// </summary>
-		/// <param name="subscriptionToken">Subscription token received from Subscribe</param>
+		/// <param name="subscriptionToken">Токен подписки, полученный при подписке</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Unsubscribe<TMessage>(MessageSubscriptionToken<TMessage> subscriptionToken) where TMessage : struct
-		{
-			RemoveSubscriptionInternal(subscriptionToken);
-		}
+			=> RemoveSubscriptionInternal(subscriptionToken);
 
 		/// <summary>
-		/// Unsubscribe all subscribers from a particular message type.
+		/// Удаляет всех подписчиков на конкретный тип сообщения.
 		/// </summary>
-		/// <param name="subscriptionToken">Subscription token received from Subscribe</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void UnsubscribeAll<TMessage>() where TMessage : struct
-		{
-			RemoveAllSubscriptionInternal<TMessage>();
-		}
+			=> RemoveAllSubscriptionInternal<TMessage>();
 
 		/// <summary>
-		/// Publish a message to any subscribers
+		/// Публикует сообщение всем подписчикам.
 		/// </summary>
-		/// <typeparam name="TMessage">Type of message</typeparam>
-		/// <param name="msg">Message to deliver</param>
+		/// <typeparam name="TMessage">Тип сообщения</typeparam>
+		/// <param name="msg">Сообщение для доставки</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Send<TMessage>(ref TMessage msg)
-			where TMessage : struct
-		{
-			SendInternal(ref msg);
-		}
+		public void Send<TMessage>(ref TMessage msg) where TMessage : struct => SendInternal(ref msg);
 
 		/// <summary>
-		/// Publish a message to any subscribers
+		/// Публикует сообщение всем подписчикам и затем удаляет всех подписчиков этого типа.
 		/// </summary>
-		/// <typeparam name="TMessage">Type of message</typeparam>
-		/// <param name="msg">Message to deliver</param>
+		/// <typeparam name="TMessage">Тип сообщения</typeparam>
+		/// <param name="msg">Сообщение для доставки</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SendAndUnsubscribeAll<TMessage>(ref TMessage msg)
-			where TMessage : struct
-		{
-			SendAndUnsubscribeAllInternal(ref msg);
-		}
+		public void SendAndUnsubscribeAll<TMessage>(ref TMessage msg) where TMessage : struct
+			=> SendAndUnsubscribeAllInternal(ref msg);
 
-		private MessageSubscriptionToken<TMessage> AddSubscriptionInternal<TMessage>(Receiver<TMessage> receiver,
-			Filter<TMessage>? filter,
-			bool strongReference)
-			where TMessage : struct
-		{
-			if (receiver == null)
-				throw new ArgumentNullException(nameof(receiver));
 
-			using var scope = GetBusyScope();
-
-			var messageType = typeof(TMessage);
-			var subscriptionToken = new MessageSubscriptionToken<TMessage>(this);
-
-			IMessageSubscription subscription;
-			if (strongReference)
-				subscription = new StrongMessageSubscription<TMessage>(receiver, filter);
-			else
-				subscription = new WeakMessageSubscription<TMessage>(receiver, filter);
-
-			if (!_typeToSubscriptionGroup.TryGetValue(messageType, out var subscriptionGroup))
-			{
-				subscriptionGroup.tokenToSubscription = new();
-				_typeToSubscriptionGroup[messageType] = subscriptionGroup;
-			}
-
-			subscriptionGroup.tokenToSubscription.Add(subscriptionToken, subscription);
-
-			return subscriptionToken;
-		}
-
-		private void RemoveSubscriptionInternal<TMessage>(MessageSubscriptionToken<TMessage> subscriptionToken) where TMessage : struct
-		{
-			if (subscriptionToken == null)
-				throw new ArgumentNullException(nameof(subscriptionToken));
-
-			using var scope = GetBusyScope();
-
-			if (!_typeToSubscriptionGroup.TryGetValue(typeof(TMessage), out var subscriptionGroup))
-				return;
-
-			subscriptionGroup.tokenToSubscription.Remove(subscriptionToken);
-		}
-
-		private void RemoveAllSubscriptionInternal<TMessage>() where TMessage : struct
-		{
-			using var scope = GetBusyScope();
-
-			if (!_typeToSubscriptionGroup.TryGetValue(typeof(TMessage), out var subscriptionGroup))
-				return;
-
-			subscriptionGroup.tokenToSubscription.Clear();
-		}
-
-		private void SendInternal<TMessage>(ref TMessage msg)
-			where TMessage : struct
-		{
-			using var scope = GetBusyScope();
-
-			if (!_typeToSubscriptionGroup.TryGetValue(typeof(TMessage), out var subscriptionGroup))
-				return;
-
-			// Создаётся буфер, т.к. при вызове Deliver получатель может изменить список подписок.
-			// Сейчас GetBusyScope не блокирует поток если вызов происходит в текущем потоке.
-			// Если жёстко запретить изменять список во время Deliver, то можно поймать deadlock.
-			// SimpleList внутри использует пуллинг, так что лишняя память утекать не будет.
-			var subscriptions = new SimpleList<IMessageSubscription>(subscriptionGroup.tokenToSubscription.Values);
-			foreach (var subscription in subscriptions)
-			{
-				subscription.Deliver(ref msg);
-			}
-		}
-
-		private void SendAndUnsubscribeAllInternal<TMessage>(ref TMessage msg)
-			where TMessage : struct
-		{
-			using var scope = GetBusyScope();
-
-			if (!_typeToSubscriptionGroup.TryGetValue(typeof(TMessage), out var subscriptionGroup))
-				return;
-
-			// Создаётся буфер, т.к. при вызове Deliver получатель может изменить список подписок.
-			// Сейчас GetBusyScope не блокирует поток если вызов происходит в текущем потоке.
-			// Если жёстко запретить изменять список во время Deliver, то можно поймать deadlock.
-			// SimpleList внутри использует пуллинг, так что лишняя память утекать не будет.
-			var subscriptions = new SimpleList<IMessageSubscription>(subscriptionGroup.tokenToSubscription.Values);
-			subscriptionGroup.tokenToSubscription.Clear();
-
-			foreach (var subscription in subscriptions)
-			{
-				subscription.Deliver(ref msg);
-			}
-		}
 	}
 }
