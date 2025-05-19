@@ -29,7 +29,7 @@ namespace Sapientia.Messaging
 
 		public void Dispose()
 		{
-			MessengerHub.SubscriptionMap<T>.Remove(this);
+			MessageBus.SubscriptionMap<T>.Remove(this);
 			GC.SuppressFinalize(this);
 		}
 	}

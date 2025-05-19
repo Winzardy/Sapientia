@@ -2,6 +2,10 @@ using System;
 
 namespace Sapientia
 {
+	/// <summary>
+	/// Легковесное реактивное поле, уведомляющее подписчиков при изменении значения.
+	/// Поддерживает опциональный вызов подписчика при подписке.
+	/// </summary>
 	[Serializable]
 	public struct ReactiveField<T> : IReactiveProperty<T>
 	{

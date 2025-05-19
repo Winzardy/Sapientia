@@ -5,7 +5,7 @@ using Sapientia.Pooling;
 
 namespace Sapientia.Messaging
 {
-	public sealed partial class MessengerHub
+	public sealed partial class MessageBus
 	{
 		internal static class SubscriptionMap<TMessage> where TMessage : struct
 		{
@@ -51,7 +51,7 @@ namespace Sapientia.Messaging
 			}
 
 			/// <summary>
-			/// Доставить сообщение по группе
+			/// Доставить сообщение по хабу
 			/// </summary>
 			/// <remarks>
 			/// Создаём временный буфер подписок, потому что во время Deliver

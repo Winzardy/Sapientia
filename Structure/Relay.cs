@@ -2,6 +2,10 @@ using System;
 
 namespace Sapientia
 {
+	/// <summary>
+	/// Реле-посредник для переключения реализации <typeparamref name="T"/> с контролем
+	/// инициализации и очистки. Обеспечивает безопасную смену источника.
+	/// </summary>
 	public abstract class Relay<T> : IDisposable
 	{
 		private T _source;

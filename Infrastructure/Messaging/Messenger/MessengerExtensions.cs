@@ -2,7 +2,7 @@
 
 namespace Sapientia.Messaging
 {
-	public static class MessengerExtenstions
+	public static class MessengerExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Send<TMessage>(this TMessage msg) where TMessage : struct

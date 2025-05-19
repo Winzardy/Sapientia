@@ -97,4 +97,14 @@ namespace Sapientia.Pooling
 
 		private void Push(T obj) => _queue.Enqueue(obj);
 	}
+
+	public static class ObjectPoolExtension
+	{
+		public static PooledObject<T> Get<T>(this IObjectPool<T> pool, out T obj)
+		{
+			obj = pool.Get();
+
+			return new PooledObject<T>(pool, obj);
+		}
+	}
 }

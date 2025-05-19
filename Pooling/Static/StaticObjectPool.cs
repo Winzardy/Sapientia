@@ -1,9 +1,8 @@
 using System.Runtime.CompilerServices;
-using Sapientia.Extensions;
 
 namespace Sapientia.Pooling
 {
-	public sealed class StaticObjectPool<T> : StaticWrapper<ObjectPool<T>>
+	public sealed class StaticObjectPool<T> : StaticProvider<ObjectPool<T>>
 	{
 		private static ObjectPool<T> pool
 		{
@@ -35,5 +34,10 @@ namespace Sapientia.Pooling
 		internal static PooledObject<T> Get<T>(out T result) => StaticObjectPool<T>.Get(out result);
 		internal static T Get<T>() => StaticObjectPool<T>.Get();
 		internal static void Release<T>(T obj) => StaticObjectPool<T>.Release(obj);
+	}
+
+	public static class StaticObjectPoolExtension
+	{
+		public static void ReleaseToStaticPool<T>(this T obj) => StaticObjectPool<T>.Release(obj);
 	}
 }

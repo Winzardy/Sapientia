@@ -6,9 +6,9 @@ namespace Sapientia.Messaging
 	public delegate bool Filter<T>(in T msg);
 
 	/// <summary>
-	/// Централизованный мессенджер-хаб, отвечающий за подписку, публикацию и доставку сообщений.
+	/// Централизованный мессендж-хаб, отвечающий за подписку, публикацию и доставку сообщений.
 	/// </summary>
-	public sealed partial class MessengerHub : AsyncClass
+	public sealed partial class MessageBus : AsyncClass
 	{
 		/// <summary>
 		/// Подписка на тип сообщения с заданным обработчиком.

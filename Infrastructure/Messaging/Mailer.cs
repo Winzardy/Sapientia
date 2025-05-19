@@ -1,5 +1,7 @@
 namespace Sapientia.Messaging
 {
+	// TODO: реализация из R&D, пока оставлю. Думаю в будущем удалю чтобы не усложнять восприятие
+
 	/// <summary>
 	/// Объединяет событие и передачу сообщение (<see cref="Messenger"/>) в один объект.
 	/// Так же как и у события есть подписка и отписка, а так же Invoke
@@ -7,16 +9,16 @@ namespace Sapientia.Messaging
 	public struct Mailer<TMessage> : IReactiveProperty<TMessage>
 		where TMessage : struct
 	{
-		private MessengerHub _hub;
+		private MessageBus _bus;
 
 		private event Receiver<TMessage> _receiver;
 
 		private TMessage _last;
 		public TMessage Value => _last;
 
-		internal Mailer(MessengerHub hub = null) : this() => Setup(hub);
+		internal Mailer(MessageBus bus = null) : this() => Setup(bus);
 
-		internal void Setup(MessengerHub hub) => _hub = hub;
+		internal void Setup(MessageBus bus) => _bus = bus;
 
 		public void Subscribe(Receiver<TMessage> receiver, bool invokeOnSubscribe = true)
 		{
@@ -45,9 +47,9 @@ namespace Sapientia.Messaging
 		{
 			_receiver?.Invoke(in msg);
 
-			if (_hub != null)
+			if (_bus != null)
 			{
-				_hub.Send(ref msg);
+				_bus.Send(ref msg);
 				return;
 			}
 
@@ -98,7 +100,7 @@ namespace Sapientia.Messaging
 
 		public delegate TMessage ToMessageDelegate(in T1 input);
 
-		private MessengerHub _hub;
+		private MessageBus _bus;
 
 		private event CustomAction _action;
 		private event Receiver<TMessage> _receiver;
@@ -110,18 +112,18 @@ namespace Sapientia.Messaging
 
 		internal Mailer(ToMessageDelegate toMsg,
 			ToValueDelegate toValue,
-			MessengerHub hub = null)
+			MessageBus bus = null)
 		{
 			_toMsg = toMsg;
 			_toValue = toValue;
 
-			_hub = hub;
+			_bus = bus;
 			_last = default;
 			_action = null;
 			_receiver = null;
 		}
 
-		internal void Setup(MessengerHub hub) => _hub = hub;
+		internal void Setup(MessageBus bus) => _bus = bus;
 
 		public void Subscribe(Receiver<TMessage> receiver) => _receiver += receiver;
 		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;
@@ -153,9 +155,9 @@ namespace Sapientia.Messaging
 			_action?.Invoke(in value);
 			_receiver?.Invoke(in msg);
 
-			if (_hub != null)
+			if (_bus != null)
 			{
-				_hub.Send(ref msg);
+				_bus.Send(ref msg);
 				return;
 			}
 
@@ -211,7 +213,7 @@ namespace Sapientia.Messaging
 
 		public delegate TMessage ToMessageDelegate(in T1 first, in T2 second);
 
-		private MessengerHub _hub;
+		private MessageBus _bus;
 
 		private event CustomAction _action;
 		private event Receiver<TMessage> _receiver;
@@ -223,18 +225,18 @@ namespace Sapientia.Messaging
 
 		internal Mailer(ToMessageDelegate toMsg,
 			ToValueDelegate toValue,
-			MessengerHub hub = null)
+			MessageBus bus = null)
 		{
 			_toMsg = toMsg;
 			_toValue = toValue;
 
-			_hub = hub;
+			_bus = bus;
 			_last = default;
 			_action = null;
 			_receiver = null;
 		}
 
-		internal void Setup(MessengerHub hub) => _hub = hub;
+		internal void Setup(MessageBus bus) => _bus = bus;
 
 		public void Subscribe(Receiver<TMessage> receiver) => _receiver += receiver;
 		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;
@@ -268,9 +270,9 @@ namespace Sapientia.Messaging
 			_action?.Invoke(in first, in second);
 			_receiver?.Invoke(in msg);
 
-			if (_hub != null)
+			if (_bus != null)
 			{
-				_hub.Send(ref msg);
+				_bus.Send(ref msg);
 				return;
 			}
 
@@ -326,7 +328,7 @@ namespace Sapientia.Messaging
 
 		public delegate TMessage ToMessageDelegate(in T1 first, in T2 second, in T3 third);
 
-		private MessengerHub _hub;
+		private MessageBus _bus;
 
 		private event CustomAction _action;
 		private event Receiver<TMessage> _receiver;
@@ -338,18 +340,18 @@ namespace Sapientia.Messaging
 
 		internal Mailer(ToMessageDelegate toMsg,
 			ToValueDelegate toValue,
-			MessengerHub hub = null)
+			MessageBus bus = null)
 		{
 			_toMsg = toMsg;
 			_toValue = toValue;
 
-			_hub = hub;
+			_bus = bus;
 			_last = default;
 			_action = null;
 			_receiver = null;
 		}
 
-		internal void Setup(MessengerHub hub) => _hub = hub;
+		internal void Setup(MessageBus bus) => _bus = bus;
 
 		public void Subscribe(Receiver<TMessage> receiver) => _receiver += receiver;
 		public void Unsubscribe(Receiver<TMessage> receiver) => _receiver -= receiver;
@@ -383,9 +385,9 @@ namespace Sapientia.Messaging
 			_action?.Invoke(in first, in second, third);
 			_receiver?.Invoke(in msg);
 
-			if (_hub != null)
+			if (_bus != null)
 			{
-				_hub.Send(ref msg);
+				_bus.Send(ref msg);
 				return;
 			}
 

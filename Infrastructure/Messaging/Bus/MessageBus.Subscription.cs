@@ -3,7 +3,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Messaging
 {
-	public sealed partial class MessengerHub
+	public sealed partial class MessageBus
 	{
 		/// <summary>
 		/// Представляет подписку на сообщение

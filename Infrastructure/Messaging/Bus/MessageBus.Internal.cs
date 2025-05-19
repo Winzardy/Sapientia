@@ -1,10 +1,8 @@
 using System;
-using System.Runtime.CompilerServices;
-using Sapientia.Data;
 
 namespace Sapientia.Messaging
 {
-	public sealed partial class MessengerHub
+	public sealed partial class MessageBus
 	{
 		private static int _hubCounter;
 		/// <summary>
@@ -12,7 +10,7 @@ namespace Sapientia.Messaging
 		/// </summary>
 		private readonly int _index;
 
-		public MessengerHub() =>
+		public MessageBus() =>
 			_index = _hubCounter++;
 
 		private MessageSubscriptionToken<TMessage> AddSubscriptionInternal<TMessage>(
