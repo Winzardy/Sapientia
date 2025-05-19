@@ -8,7 +8,7 @@ namespace Sapientia.TypeIndexer
 {
 	public static class UnityTypeIndexerAutoGenerator
 	{
-		[MenuItem("Code Gen/Generate Type Indexes")]
+		[MenuItem("Tools/Type Indexes/Generate", priority = 100_000_001)]
 		private static void GenerateTypeIndex()
 		{
 			var baseGenerationFolder = Path.Combine("Assets", "_scripts.generated");

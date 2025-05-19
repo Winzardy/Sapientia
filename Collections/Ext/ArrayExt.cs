@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Sapientia.Collections
@@ -172,6 +173,12 @@ namespace Sapientia.Collections
 		public static SimpleList<T> WrapToSimpleList<T>(this T[] array)
 		{
 			return SimpleList<T>.WrapArray(array);
+		}
+
+		public static List<T> ToList<T>(this T[] array)
+		{
+			var list = new List<T>(array);
+			return list;
 		}
 
 		public static void RemoveAt<T>(ref T[] array, int index)
