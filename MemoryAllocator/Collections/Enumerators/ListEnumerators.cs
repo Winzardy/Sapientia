@@ -127,8 +127,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool MoveNext()
 		{
-			_index++;
-			return _index < _count;
+			return ++_index < _count;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -96,18 +96,38 @@ namespace Sapientia.Extensions
 		}
 #endif
 
+#if UNITY_5_4_OR_NEWER
 		[INLINE(256)]
-		public static SafePtr MemAlloc(int size)
+		public static SafePtr MemAlloc(int size, int align, Unity.Collections.Allocator allocator)
 		{
-#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
-			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<byte>.align, Unity.Collections.Allocator.Persistent);
-#else
-			var ptr = (void*)Marshal.AllocHGlobal(size);
-#endif
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, allocator);
 			DebugMemAlloc(ptr, size);
 
 			return new SafePtr(ptr, size);
 		}
+
+		[INLINE(256)]
+		public static SafePtr MemAlloc(int size, Unity.Collections.Allocator allocator)
+		{
+			return MemAlloc(size, TAlign<byte>.align, allocator);
+		}
+
+		[INLINE(256)]
+		public static SafePtr<T> MemAlloc<T>(Unity.Collections.Allocator allocator) where T : unmanaged
+		{
+			return MemAlloc(TSize<T>.size, TAlign<T>.align, allocator);
+		}
+
+		[INLINE(256)]
+		public static SafePtr<T> MemAllocAndClear<T>(Unity.Collections.Allocator allocator) where T : unmanaged
+		{
+			var size = TSize<T>.size;
+			var safePtr = MemAlloc(size, TAlign<T>.align, allocator);
+			MemClear(safePtr, size);
+
+			return safePtr;
+		}
+#endif
 
 		[INLINE(256)]
 		public static SafePtr MemAlloc(int size, int align)
@@ -123,35 +143,35 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
+		public static SafePtr MemAlloc(int size)
+		{
+			return MemAlloc(size, TAlign<byte>.align);
+		}
+
+		[INLINE(256)]
 		public static SafePtr<T> MemAlloc<T>() where T : unmanaged
 		{
-			var size = TSize<T>.size;
-#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
-			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
-#else
-			var ptr = (T*)Marshal.AllocHGlobal(size);
-#endif
-			DebugMemAlloc(ptr, size);
-
-			return new SafePtr<T>(ptr, 1);
+			return MemAlloc(TSize<T>.size, TAlign<T>.align);
 		}
 
 		[INLINE(256)]
 		public static SafePtr<T> MemAllocAndClear<T>() where T : unmanaged
 		{
 			var size = TSize<T>.size;
-#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
-			var ptr = (T*)Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, TAlign<T>.align, Unity.Collections.Allocator.Persistent);
-#else
-			var ptr = (T*)Marshal.AllocHGlobal(size);
-#endif
-			DebugMemAlloc(ptr, size);
-
-			var safePtr = new SafePtr<T>(ptr, 1);
+			var safePtr = MemAlloc(size, TAlign<T>.align);
 			MemClear(safePtr, size);
 
 			return safePtr;
 		}
+
+#if UNITY_5_3_OR_NEWER
+		[INLINE(256)]
+		public static void MemFree(SafePtr memory, Unity.Collections.Allocator allocator)
+		{
+			DebugMemFree(memory.ptr);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, allocator);
+		}
+#endif
 
 		[INLINE(256)]
 		public static void MemFree(SafePtr memory)
@@ -210,6 +230,12 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
+		public static void MemClear<T>(SafePtr<T> destination, int count) where T: unmanaged
+		{
+			MemClear((SafePtr)destination, TSize<T>.size * count);
+		}
+
+		[INLINE(256)]
 		public static void MemClear(SafePtr destination, int size)
 		{
 #if DEBUG
@@ -231,11 +257,17 @@ namespace Sapientia.Extensions
 			E.ASSERT(source.IsLengthInRange(length));
 			E.ASSERT(destination.IsLengthInRange(length));
 #endif
+			MemCopy<T>(destination.ptr, source.ptr, length);
+		}
+
+		[INLINE(256)]
+		public static void MemCopy<T>(T* source, T* destination, int length) where T: unmanaged
+		{
 			var size = length * TSize<T>.size;
 #if UNITY_5_3_OR_NEWER
-			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination.ptr, source.ptr, size);
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpy(destination, source, size);
 #else
-			Buffer.MemoryCopy(source.ptr, source.ptr, size, size);
+			Buffer.MemoryCopy(source, source, size, size);
 #endif
 		}
 
@@ -251,6 +283,12 @@ namespace Sapientia.Extensions
 #else
 			Buffer.MemoryCopy(source.ptr, destination.ptr, size, size);
 #endif
+		}
+
+		[INLINE(256)]
+		public static void MemSwap<T>(SafePtr<T> a, SafePtr<T> b) where T: unmanaged
+		{
+			MemSwap((SafePtr)a, (SafePtr)b, TSize<T>.size);
 		}
 
 		[INLINE(256)]
@@ -299,17 +337,18 @@ namespace Sapientia.Extensions
 #endif
 		}
 
+#if UNITY_5_4_OR_NEWER
 		[INLINE(256)]
-		public static SafePtr<T> MakeArray<T>(in T firstElement, int length, bool clearMemory = false) where T : unmanaged
+		public static SafePtr<T> MakeArray<T>(int length, Unity.Collections.Allocator allocator, bool clearMemory = true) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
-			var ptr = (SafePtr<T>)MemAlloc(size, TAlign<T>.align);
+			var ptr = (SafePtr<T>)MemAlloc(size, TAlign<T>.align, allocator);
 			if (clearMemory)
 				MemClear(ptr, size);
 
-			ptr[0] = firstElement;
 			return ptr;
 		}
+#endif
 
 		[INLINE(256)]
 		public static SafePtr<T> MakeArray<T>(int length, bool clearMemory = true) where T : unmanaged
