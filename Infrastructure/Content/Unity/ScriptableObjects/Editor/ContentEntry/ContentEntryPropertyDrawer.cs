@@ -1,14 +1,14 @@
 #if UNITY_EDITOR
 using System;
 using Content.ScriptableObjects;
-using Sapientia.Reflection;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Content.Editor
 {
+	using UnityObject = UnityEngine.Object;
+
 	public class ContentEntryPropertyDrawer : OdinValueDrawer<IUniqueContentEntry>
 	{
 		private bool _supported;
@@ -110,16 +110,9 @@ namespace Content.Editor
 				if (entry.Guid != guid)
 					property.RestoreGuid(entry, in guid);
 			}
-
-			void Regenerate(in (ContentScriptableObject asset, MemberReflectionReference<IUniqueContentEntry> reference) key)
-			{
-				ContentEntryEditorUtility.Untrack(in key);
-				property.RegenerateGuid(entry, asset);
-				ContentEntryEditorUtility.Track(in key, in entry.Guid);
-			}
 		}
 
-		private bool CanRegister(InspectorProperty property, out IUniqueContentEntry entry, out Object targetObject)
+		private bool CanRegister(InspectorProperty property, out IUniqueContentEntry entry, out UnityObject targetObject)
 		{
 			entry = null;
 			targetObject = null;
@@ -146,6 +139,11 @@ namespace Content.Editor
 
 			if (entry.Guid == Guid.Empty)
 			{
+				ContentEntryEditorUtility.RegenerateGuid(entry, property.UnityPropertyPath, targetObject);
+
+				if(entry.Guid != SerializableGuid.Empty)
+					return true;
+
 				ContentDebug.LogError($"Guid is empty by property path [ {property.UnityPropertyPath} ]!", targetObject);
 				return false;
 			}

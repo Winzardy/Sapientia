@@ -1,3 +1,4 @@
+#if CLIENT
 using System;
 using System.Diagnostics;
 using Sirenix.OdinInspector;
@@ -92,3 +93,4 @@ namespace Sapientia
 			};
 	}
 }
+#endif

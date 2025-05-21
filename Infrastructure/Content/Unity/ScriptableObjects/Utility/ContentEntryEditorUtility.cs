@@ -235,10 +235,29 @@ namespace Content.Editor
 			entry.ClearNestedCollection();
 		}
 
-		public static void RegenerateGuid(this SerializedProperty property, IUniqueContentEntry entry, ContentScriptableObject asset)
+		public static void RegenerateGuid(this SerializedProperty property,
+			IUniqueContentEntry entry,
+			ContentScriptableObject asset)
 		{
 			RegenerateGuid(entry, property.propertyPath, asset);
 			RecursiveRegenerateGuidForChildren(property, asset);
+		}
+
+		public static void RegenerateGuid(IUniqueContentEntry entry, string path, UnityObject asset)
+		{
+			var prevEntryGuid = entry.Guid;
+			entry.RegenerateGuid();
+			EditorUtility.SetDirty(asset);
+			ScheduleRefreshAndSave();
+
+			if (ContentDebug.Logging.Nested.regenerate)
+			{
+				var msg = $"<b>Regenerated</b> guid [ {entry.Guid}]";
+				if (prevEntryGuid != SerializableGuid.Empty)
+					msg += $" from [ {prevEntryGuid} ]";
+				msg += " for content entry by path: " + path;
+				ContentDebug.LogWarning(msg, asset);
+			}
 		}
 
 		private static void RecursiveRegenerateGuidForChildren(this SerializedProperty property, ContentScriptableObject asset)
@@ -261,23 +280,6 @@ namespace Content.Editor
 				RegenerateGuid(entry, iterator.propertyPath, asset);
 				SetDirty(iterator.serializedObject);
 			} while (iterator.NextVisible(true));
-		}
-
-		private static void RegenerateGuid(IUniqueContentEntry entry, string path, ContentScriptableObject asset)
-		{
-			var prevEntryGuid = entry.Guid;
-			entry.RegenerateGuid();
-			EditorUtility.SetDirty(asset);
-			ScheduleRefreshAndSave();
-
-			if (ContentDebug.Logging.Nested.regenerate)
-			{
-				var msg = $"<b>Regenerated</b> guid [ {entry.Guid}]";
-				if (prevEntryGuid != SerializableGuid.Empty)
-					msg += $" from [ {prevEntryGuid} ]";
-				msg += " for content entry by path: " + path;
-				ContentDebug.LogWarning(msg, asset);
-			}
 		}
 
 		private static void RestoreGuid(IUniqueContentEntry entry, in SerializableGuid guid, string path, UnityObject source)
