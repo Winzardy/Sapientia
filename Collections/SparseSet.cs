@@ -148,6 +148,11 @@ namespace Sapientia.Collections
 			ExpandSparse(newCapacity);
 		}
 
+		public int GetIdByDenseId(int denseId)
+		{
+			return _sparse[denseId];
+		}
+
 		private void ExpandSparse(int newCapacity)
 		{
 			if (_useIndexPool)
@@ -229,6 +234,12 @@ namespace Sapientia.Collections
 			_sparse = null;
 			_dense = null;
 			_values = null;
+		}
+
+		public void Clear()
+		{
+			_values.Clear();
+			_count = 0;
 		}
 
 		public void ClearFast()

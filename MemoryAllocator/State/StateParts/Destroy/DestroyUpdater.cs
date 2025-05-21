@@ -67,24 +67,27 @@ namespace Sapientia.MemoryAllocator.State
 			}
 
 			var killRequestsCount = _killRequestArchetype.Count;
-			var killRequestsTemp = stackalloc ArchetypeElement<KillRequest>[killRequestsCount];
-			var killRequestsTempPtr = new SafePtr<ArchetypeElement<KillRequest>>(killRequestsTemp, killRequestsCount);
-
-			var killRequests = _killRequestArchetype.GetRawElements();
-			MemoryExt.MemCopy(killRequests, killRequestsTempPtr, killRequestsCount);
-
-			_killRequestArchetype.Clear();
-
-			for (var i = 0; i < killRequestsCount; i++)
+			if (killRequestsCount > 0)
 			{
-				var entity = killRequestsTempPtr[i].entity;
+				var killRequestsTempRaw = stackalloc ArchetypeElement<KillRequest>[killRequestsCount];
+				var killRequestsTemp = new SafePtr<ArchetypeElement<KillRequest>>(killRequestsTempRaw, killRequestsCount);
 
-				ExecuteKillCallback(entity);
-				KillChild(entity);
-				KillParent(entity);
+				var killRequests = _killRequestArchetype.GetRawElements();
+				MemoryExt.MemCopy<ArchetypeElement<KillRequest>>(killRequests, killRequestsTemp, killRequestsCount);
 
-				_delayKillRequestArchetype.RemoveSwapBackElement(entity);
-				_destroyRequestArchetype.GetElement(entity);
+				_killRequestArchetype.Clear();
+
+				for (var i = 0; i < killRequestsCount; i++)
+				{
+					var entity = killRequestsTemp[i].entity;
+
+					ExecuteKillCallback(entity);
+					KillChild(entity);
+					KillParent(entity);
+
+					_delayKillRequestArchetype.RemoveSwapBackElement(entity);
+					_destroyRequestArchetype.GetElement(entity);
+				}
 			}
 		}
 

@@ -119,9 +119,8 @@ namespace Sapientia.MemoryAllocator.State
 #if DEBUG
 			for (var i = 0; i < count; i++)
 			{
-				E.ASSERT(IsEntityExist(world, entities[i]));
+				E.ASSERT(IsEntityExist(world, entities[i]), "Попытка уничтожить уже мёртвую entity!");
 			}
-
 #endif
 			_entityDestroySubscribers.EntityArrayDestroyed(world, world, entities, count);
 

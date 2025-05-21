@@ -1,35 +1,16 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Sapientia.Collections;
-using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {
 	public class IndexAllocSparseSet<T> : IDisposable, IEnumerable<T>
 	{
-		public struct IndexData
-		{
-			public int indexToId;
-			public int idToIndex;
-			public int id;
-		}
-
-		public delegate void ResetAction(ref T item);
-
-		public readonly int expandStep;
-
-		private T[] _values;
-		private IndexData[] _indexData;
-
-		private readonly bool _useIndexPool;
-		private readonly bool _useValuePool;
-		private readonly ResetAction _resetValue;
+		private Stack<int> _ids;
+		private SparseSet<T> _sparseSet;
 
 		private int _count;
-		private int _capacity;
 
 		public int Count
 		{
@@ -40,223 +21,94 @@ namespace Sapientia.Collections
 		public int Capacity
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _capacity;
+			get => _sparseSet.Capacity;
 		}
 
 		public bool IsFull
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _count >= _capacity;
+			get => _sparseSet.IsFull;
 		}
 
-		public IndexAllocSparseSet(int capacity = 8) : this(capacity, null){}
-
-		public IndexAllocSparseSet(int capacity, ResetAction resetValue) : this(capacity, capacity, true, true, resetValue) {}
-
-		public IndexAllocSparseSet(int capacity, int expandStep, bool useIndexPool = true, bool useValuePool = true, ResetAction resetValue = null)
+		public IndexAllocSparseSet(int capacity, int sparseCapacity, int expandStep = 0)
 		{
-			this.expandStep = expandStep;
-
+			_ids = new Stack<int>(capacity);
+			_sparseSet = new SparseSet<T>(capacity, sparseCapacity, expandStep);
 			_count = 0;
-			_capacity = capacity;
-
-			_useIndexPool = useIndexPool;
-			_useValuePool = useValuePool;
-			_resetValue = resetValue;
-
-			_indexData = _useIndexPool ? ArrayPool<IndexData>.Shared.Rent(capacity) : new IndexData[capacity];
-			_values = _useValuePool ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
-
-			FillIndexes(0, capacity);
 		}
 
-		public ref readonly T[] GetValueArray()
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T Get(int id)
 		{
-			return ref _values;
+			return ref _sparseSet.Get(id);
 		}
 
-		public ref T GetValue(int id)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Has(int id)
 		{
-			var valueIndex = _indexData[id].idToIndex;
-			return ref _values[valueIndex];
+			return _sparseSet.Has(id);
 		}
 
-		public int IndexToIndexId(int index)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int AllocateId()
 		{
-			return _indexData[index].indexToId;
-		}
+			if (_ids.Count <= 0)
+				_ids.Push(_count + 1);
 
-		public int IndexIdToIndex(int id)
-		{
-			return _indexData[id].idToIndex;
-		}
+			var id = _ids.Pop();
+			_count++;
 
-		public bool HasIndexId(int id)
-		{
-			return _indexData[id].idToIndex < _count;
-		}
-
-		public int AllocateIndexId()
-		{
-			ExpandIfNeeded(_count + 1);
-
-			return AllocateIndexId_NoExpand();
-		}
-
-		public int AllocateIndexId_NoExpand()
-		{
-			var index = _count++;
-			var id = _indexData[index].id;
-
-			_indexData[id].idToIndex = index;
-			_indexData[index].indexToId = id;
+			_sparseSet.EnsureGet(id);
 			return id;
 		}
 
-		public void ReleaseIndexId(int id, bool clear)
-		{
-			if (clear)
-				GetValue(id) = default;
-			ReleaseIndexId(id);
-		}
-
-		public void ReleaseIndexId(int id)
-		{
-			var index = _indexData[id].idToIndex;
-
-			var lastIndex = --_count;
-			var lastId = _indexData[lastIndex].indexToId;
-
-			_indexData[index].indexToId = lastId;
-			_indexData[index].id = lastId;
-
-			_indexData[lastIndex].id = id;
-			_indexData[lastId].idToIndex = index;
-
-			_values[index] = _values[lastIndex];
-			_values[lastIndex] = default;
-		}
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReleaseIndex(int index)
 		{
-			ReleaseIndexId(_indexData[index].indexToId);
+			var id = _sparseSet.GetIdByDenseId(index);
+			ReleaseId(id);
 		}
 
-		private void ExpandIfNeeded(int newCapacity)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ReleaseId(int id)
 		{
-			if (_capacity >= newCapacity)
-				return;
-
-			newCapacity = SnapCeilCapacity(newCapacity);
-
-			Expand(newCapacity);
+			_sparseSet.RemoveSwapBack(id);
+			_ids.Push(id);
+			_count--;
 		}
 
-		private void Expand(int newCapacity)
-		{
-			if (_useIndexPool)
-				ArrayExt.Expand_WithPool(ref _indexData, newCapacity);
-			else
-				ArrayExt.Expand(ref _indexData, newCapacity);
-			if (_useValuePool)
-				ArrayExt.Expand_WithPool(ref _values, newCapacity);
-			else
-				ArrayExt.Expand(ref _values, newCapacity);
-
-			FillIndexes(_capacity, newCapacity);
-
-			_capacity = newCapacity;
-		}
-
-		private int SnapCeilCapacity(int newCapacity)
-		{
-			return ((newCapacity + expandStep - 1) / expandStep) * expandStep;
-		}
-
-		private void FillIndexes(int from, int to)
-		{
-			for (var i = from; i < to; i++)
-			{
-				_indexData[i].id = i;
-			}
-			if (_resetValue == null)
-				return;
-			for (var i = from; i < to; i++)
-			{
-				_resetValue.Invoke(ref _values[i]);
-			}
-		}
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			Dispose(true);
-		}
-
-		public void Dispose(bool clearArray)
-		{
-			if (_useIndexPool)
-				ArrayPool<IndexData>.Shared.Return(_indexData, clearArray);
-			if (_useValuePool)
-				ArrayPool<T>.Shared.Return(_values, clearArray);
-
-			_indexData = null;
-			_values = null;
-		}
-
-		public void ClearFast()
-		{
+			_ids.Clear();
+			_sparseSet.Dispose();
 			_count = 0;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
-			Array.Clear(_indexData, 0, _indexData.Length);
-			Array.Clear(_values, 0, _values.Length);
+			_ids.Clear();
+			_sparseSet.Clear();
 			_count = 0;
 		}
 
-		public Enumerator GetEnumerator()
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ClearFast()
 		{
-			return new Enumerator(this);
+			_ids.Clear();
+			_sparseSet.ClearFast();
+			_count = 0;
 		}
 
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		public IEnumerator<T> GetEnumerator()
 		{
-			return GetEnumerator();
+			return _sparseSet.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
-		}
-
-		public struct Enumerator : IEnumerator<T>
-		{
-			private readonly IndexAllocSparseSet<T> _sparseSet;
-			private int _index;
-
-			public T Current => _sparseSet._values[_index];
-
-			object IEnumerator.Current => Current;
-
-			internal Enumerator(IndexAllocSparseSet<T> sparseSet)
-			{
-				_sparseSet = sparseSet;
-				_index = -1;
-			}
-
-			public bool MoveNext()
-			{
-				_index++;
-				return _index < _sparseSet._count;
-			}
-
-			public void Reset()
-			{
-				_index = -1;
-			}
-
-			public void Dispose() {}
 		}
 	}
 }

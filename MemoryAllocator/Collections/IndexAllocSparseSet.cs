@@ -5,7 +5,7 @@ using Sapientia.Data;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe struct IndexAllocSparseSet<T> where T: unmanaged
+	public struct IndexAllocSparseSet<T> where T: unmanaged
 	{
 		private Stack<int> _ids;
 		private SparseSet<T> _sparseSet;
@@ -50,12 +50,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T EnsureGet(World world, int id)
-		{
-			return ref _sparseSet.EnsureGet(world, id);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(World world, int id)
 		{
 			return _sparseSet.Has(world, id);
@@ -69,13 +63,15 @@ namespace Sapientia.MemoryAllocator
 
 			var id = _ids.Pop(world);
 			_count++;
+
+			_sparseSet.EnsureGet(world, id);
 			return id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReleaseIndex(World world, int index)
 		{
-			var id = _sparseSet.GetIdByIndex(world, index);
+			var id = _sparseSet.GetIdByDenseId(world, index);
 			ReleaseId(world, id);
 		}
 
