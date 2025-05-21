@@ -257,7 +257,7 @@ namespace Sapientia.Extensions
 			E.ASSERT(source.IsLengthInRange(length));
 			E.ASSERT(destination.IsLengthInRange(length));
 #endif
-			MemCopy<T>(destination.ptr, source.ptr, length);
+			MemCopy<T>(source.ptr, destination.ptr, length);
 		}
 
 		[INLINE(256)]
