@@ -1,4 +1,6 @@
-namespace Sapientia.Messaging
+using Sapientia;
+
+namespace Messaging
 {
 	// TODO: реализация из R&D, пока оставлю. Думаю в будущем удалю чтобы не усложнять восприятие
 

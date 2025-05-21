@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
+using Sapientia;
 
-namespace Sapientia.Messaging
+namespace Messaging
 {
 	// TODO: этим можно пользоваться только на клиенте, на сервере многопоток...
 	// Нужно вынести это в reference assembly для клиента, на сервере нужно напрямую с Bus

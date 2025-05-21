@@ -1,7 +1,8 @@
 using System.Runtime.CompilerServices;
+using Sapientia;
 using Sapientia.Data;
 
-namespace Sapientia.Messaging
+namespace Messaging
 {
 	public delegate bool Filter<T>(in T msg);
 

@@ -1,7 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
+using Sapientia;
 using Sapientia.ServiceManagement;
 
-namespace Sapientia.Messaging
+namespace Messaging
 {
 	public static class Messenger<TContext>
 	{

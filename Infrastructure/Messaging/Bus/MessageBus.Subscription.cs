@@ -1,7 +1,8 @@
 using System;
+using Sapientia;
 using Sapientia.Extensions;
 
-namespace Sapientia.Messaging
+namespace Messaging
 {
 	public sealed partial class MessageBus
 	{

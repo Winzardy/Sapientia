@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Sapientia.Messaging
+namespace Messaging
 {
 	public static class MessengerExtensions
 	{

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 
-namespace Sapientia.Messaging
+namespace Messaging
 {
 	public sealed partial class MessageBus
 	{
