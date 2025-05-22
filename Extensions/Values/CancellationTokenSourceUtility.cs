@@ -5,11 +5,16 @@ namespace Sapientia.Extensions
 	public static class CancellationTokenSourceUtility
 	{
 		public static void Trigger(ref CancellationTokenSource cts)
+			=> Release(ref cts, true);
+
+		public static void Release(ref CancellationTokenSource cts, bool cancel = false)
 		{
-			if (cts == null || cts.IsCancellationRequested)
+			if (cts == null)
 				return;
 
-			cts.Cancel();
+			if (cancel && !cts.IsCancellationRequested)
+				cts.Cancel();
+
 			cts.Dispose();
 
 			cts = null;
@@ -51,12 +56,12 @@ namespace Sapientia.Extensions
 			=> CancellationTokenSource.CreateLinkedTokenSource(cts.Token, token1, token2);
 
 		public static CancellationTokenSource Link(this ref
-			CancellationToken a,
+				CancellationToken a,
 			CancellationToken b)
 			=> CancellationTokenSource.CreateLinkedTokenSource(a, b);
 
 		public static CancellationTokenSource Link(this ref
-			CancellationToken a,
+				CancellationToken a,
 			CancellationToken b,
 			CancellationToken c)
 			=> CancellationTokenSource.CreateLinkedTokenSource(a, b, c);
