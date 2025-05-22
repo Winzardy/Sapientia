@@ -6,9 +6,9 @@ namespace Sapientia
 	{
 	}
 
-	[DisableConvertParent]
+
 	[Serializable]
-	public struct Range<T> : IMinMax
+	public partial struct Range<T> : IMinMax, IHolder<T>
 	{
 		public T min;
 		public T max;
@@ -23,7 +23,7 @@ namespace Sapientia
 		public static implicit operator Range<T>(T max) => new Range<T>(default, max);
 	}
 
-	public static class RangeExtensions
+	public static class RangeUtility
 	{
 		public static bool Contains(this in Range<float> range, float value, bool maxInclusive = false)
 			=> value >= range.min &&

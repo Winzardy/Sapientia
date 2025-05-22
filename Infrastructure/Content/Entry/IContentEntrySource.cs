@@ -5,7 +5,6 @@ namespace Content
 	public interface IUniqueContentEntrySource<T> : IUniqueContentEntrySource, IContentEntrySource<T>
 	{
 		public new IUniqueContentEntry<T> UniqueContentEntry { get; }
-		string Id { get; set; }
 	}
 
 	public interface IUniqueContentEntrySource : IContentEntrySource, IIdentifiable

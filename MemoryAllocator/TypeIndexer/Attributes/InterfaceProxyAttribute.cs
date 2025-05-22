@@ -1,5 +1,3 @@
-using System;
-
 namespace Sapientia.TypeIndexer
 {
 	/*[AttributeUsage(AttributeTargets.Interface)]

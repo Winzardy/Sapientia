@@ -1,6 +1,4 @@
-using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Sapientia.Data;
 #if UNITY_5_3_OR_NEWER
 using Unity.Collections.LowLevel.Unsafe;

@@ -1,6 +1,5 @@
 using System;
 using UnityEngine.Serialization;
-using UnityEngine.UIElements;
 
 namespace Sapientia
 {
@@ -14,10 +13,9 @@ namespace Sapientia
 		public T Value { get; }
 	}
 
-	//TODO: Конкурс на лучшее название
-	[DisableConvertParent]
+
 	[Serializable]
-	public struct Toggle<T> : IToggle<T>
+	public partial struct Toggle<T> : IToggle<T>
 	{
 		[FormerlySerializedAs("use")]
 		public bool enable;

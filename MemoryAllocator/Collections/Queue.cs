@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 
@@ -187,7 +186,7 @@ namespace Sapientia.MemoryAllocator
 
 					return arr;
 #else
-					return Array.Empty<T>();
+					return System.Array.Empty<T>();
 #endif
 				}
 			}

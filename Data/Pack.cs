@@ -4,15 +4,6 @@ namespace Sapientia
 {
 	public interface IPack
 	{
-		/// <summary>
-		/// <see cref="Pack{T}.target"/>
-		/// </summary>
-		public const string TARGET_FIELD_NAME = "target";
-
-		/// <summary>
-		/// <see cref="Pack{T}.amount"/>
-		/// </summary>
-		public const string AMOUNT_FIELD_NAME = "amount";
 	}
 
 	/// <summary>
@@ -20,7 +11,7 @@ namespace Sapientia
 	/// </summary>
 	/// <typeparam name="T">Что в пачке</typeparam>
 	[Serializable]
-	public struct Pack<T> : IPack
+	public struct Pack<T> : IPack, IHolder<T>
 	{
 		public T target;
 		public int amount;
