@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace InAppPurchasing
 {
@@ -46,7 +45,9 @@ namespace InAppPurchasing
 		/// <summary>
 		/// Сырые данные из интеграции
 		/// </summary>
-		[CanBeNull]
+#if CLIENT
+		[JetBrains.Annotations.CanBeNull]
+#endif
 		public readonly object rawData;
 
 		public IAPPurchaseError(IAPPurchaseErrorCode code, object rawData = null)
