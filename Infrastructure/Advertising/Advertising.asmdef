@@ -1,8 +1,11 @@
 {
-    "name": "Content",
+    "name": "Advertising",
     "rootNamespace": "",
     "references": [
-        "Sapientia"
+        "Sapientia",
+        "Content",
+        "Fusumity",
+        "Distribution"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

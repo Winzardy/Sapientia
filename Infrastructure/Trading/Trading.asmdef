@@ -1,7 +1,8 @@
 {
-    "name": "Content",
-    "rootNamespace": "",
+    "name": "Trading",
+    "rootNamespace": "Trading",
     "references": [
+        "Content",
         "Sapientia"
     ],
     "includePlatforms": [],

@@ -1,7 +1,8 @@
 {
-    "name": "Content",
+    "name": "InAppPurchasing",
     "rootNamespace": "",
     "references": [
+        "Content",
         "Sapientia"
     ],
     "includePlatforms": [],

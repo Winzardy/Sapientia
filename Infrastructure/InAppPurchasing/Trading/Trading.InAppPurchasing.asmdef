@@ -1,8 +1,11 @@
 {
-    "name": "Content",
+    "name": "Trading.InAppPurchasing",
     "rootNamespace": "",
     "references": [
-        "Sapientia"
+        "Trading",
+        "InAppPurchasing",
+        "Sapientia",
+        "Content"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

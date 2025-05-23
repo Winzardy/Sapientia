@@ -1,5 +1,5 @@
 {
-    "name": "Content",
+    "name": "Distribution",
     "rootNamespace": "",
     "references": [
         "Sapientia"
@@ -12,5 +12,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": false
+    "noEngineReferences": true
 }

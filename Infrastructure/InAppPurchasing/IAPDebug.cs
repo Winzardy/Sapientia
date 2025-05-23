@@ -1,9 +1,9 @@
 using System;
 using Sapientia;
 
-namespace Content
+namespace InAppPurchasing
 {
-	public static class ContentDebug
+	public class IAPDebug
 	{
 		public static ILogger logger;
 
@@ -30,29 +30,7 @@ namespace Content
 		public static Exception Exception(object msg) => logger?.Exception(msg) ?? new Exception(msg.ToString());
 
 #if CLIENT
-		public static UnityEngine.Color COLOR = new(1f, 0.5f, 0.5f);
+		public static UnityEngine.Color COLOR = UnityEngine.Color.yellow;
 #endif
-
-		public static class Logging
-		{
-#if UNITY_EDITOR
-			public static bool database = true;
-#endif
-			public static class Nested
-			{
-#if UNITY_EDITOR
-				public static bool refresh = true;
-				public static bool regenerate = true;
-				public static bool restore = true;
-#endif
-
-				public static bool resolve =
-#if DebugLog
-					true;
-#else
-					false;
-#endif
-			}
-		}
 	}
 }

@@ -1,8 +1,12 @@
 {
-    "name": "Content",
+    "name": "Trading.Advertising",
     "rootNamespace": "",
     "references": [
-        "Sapientia"
+        "Advertising",
+        "GUID:dc8e8e524b04497ab575e558b7649abb",
+        "Sapientia",
+        "Trading",
+        "Content"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

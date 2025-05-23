@@ -1,8 +1,8 @@
 {
-    "name": "Content",
+    "name": "InAppPurchasing.Fake",
     "rootNamespace": "",
     "references": [
-        "Sapientia"
+        "InAppPurchasing"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
