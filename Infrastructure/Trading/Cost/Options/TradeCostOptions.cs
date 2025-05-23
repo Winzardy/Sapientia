@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Sapientia;
 using Sapientia.Collections;
-using UnityEngine;
 
 namespace Trading
 {
@@ -13,7 +12,7 @@ namespace Trading
 		internal int selectedIndex;
 
 #if CLIENT
-		[SerializeReference]
+		[UnityEngine.SerializeReference]
 #endif
 		// ReSharper disable once UseArrayEmptyMethod
 		public TradeCost[] options = new TradeCost[0];
