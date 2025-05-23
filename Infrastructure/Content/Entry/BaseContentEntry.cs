@@ -18,7 +18,7 @@ namespace Content
 
 		public virtual bool IsUnique() => false;
 
-		public BaseContentEntry(in T value)
+		protected BaseContentEntry(in T value)
 		{
 			this.value = value;
 		}

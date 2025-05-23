@@ -1,12 +1,14 @@
 using System;
-using UnityEngine;
 
 namespace Content
 {
 	public abstract partial class UniqueContentEntry<T> : BaseContentEntry<T>, IUniqueContentEntry<T>
 	{
+		// ReSharper disable once MemberInitializerValueIgnored
 		// ReSharper disable once InconsistentNaming
-		[SerializeField]
+#if CLIENT
+		[UnityEngine.SerializeField]
+#endif
 		protected SerializableGuid guid = SerializableGuid.New();
 
 		/// <summary>
@@ -23,7 +25,7 @@ namespace Content
 		public sealed override bool IsUnique() => true;
 		public virtual string Id => Guid.ToString();
 
-		public UniqueContentEntry(in T value, in SerializableGuid guid) : base(in value)
+		protected UniqueContentEntry(in T value, in SerializableGuid guid) : base(in value)
 		{
 			this.guid = guid;
 		}

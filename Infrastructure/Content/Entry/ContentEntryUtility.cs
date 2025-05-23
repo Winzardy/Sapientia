@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using Sapientia;
 
 namespace Content
@@ -7,7 +6,12 @@ namespace Content
 	public static class ContentEntryUtility
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Deconstruct<T>(this IContentEntry<T> entry, [CanBeNull] out string id, out T value)
+		public static void Deconstruct<T>(this IContentEntry<T> entry,
+#if CLIENT
+			[JetBrains.Annotations.CanBeNull]
+ #endif
+			out string id,
+			out T value)
 		{
 			id = entry is IIdentifiable identifiable ? identifiable.Id : null;
 			value = entry.Value;

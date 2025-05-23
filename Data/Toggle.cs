@@ -1,5 +1,4 @@
 using System;
-using UnityEngine.Serialization;
 
 namespace Sapientia
 {
@@ -17,10 +16,14 @@ namespace Sapientia
 	[Serializable]
 	public partial struct Toggle<T> : IToggle<T>
 	{
-		[FormerlySerializedAs("use")]
+#if CLIENT
+		[UnityEngine.Serialization.FormerlySerializedAs("use")]
+#endif
 		public bool enable;
 
-		[FormerlySerializedAs("duration")]
+#if CLIENT
+		[UnityEngine.Serialization.FormerlySerializedAs("duration")]
+#endif
 		public T value;
 
 		public Toggle(T value, bool enable = true)
