@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Distribution;
 using Sapientia;
 
-namespace Distribution
+namespace Targeting
 {
 	[Serializable]
-	public struct AppOptions
+	public struct TargetingOptions
 	{
 		public int buildNumber;
 		public string identifier;
@@ -23,11 +22,11 @@ namespace Distribution
 		public Dictionary<StorePlatformEntry, string> storeToReviewLinks;
 	}
 
-	public class DefaultDistributionProvider : IDistributionProvider
+	public class DefaultDeskAttendant : IDeskAttendant
 	{
 		private ReactiveField<string> _userId;
 
-		private AppOptions _options;
+		private TargetingOptions _options;
 
 		private PlatformEntry _platform;
 		private StorePlatformEntry _store;
@@ -35,7 +34,7 @@ namespace Distribution
 		public IReactiveProperty<string> UserId => _userId;
 		public string Identifier => _options.identifier;
 
-		public DefaultDistributionProvider(AppOptions options, in PlatformEntry platform)
+		public DefaultDeskAttendant(TargetingOptions options, in PlatformEntry platform)
 		{
 			_options = options;
 			_platform = platform;
@@ -51,6 +50,6 @@ namespace Distribution
 		public ref readonly PlatformEntry GetPlatform() => ref _platform;
 		public ref readonly StorePlatformEntry GetStorePlatform() => ref _store;
 
-		void IDistributionProvider.SetUserId(string userId) => _userId.Set(userId, true);
+		void IDeskAttendant.SetUserId(string userId) => _userId.Set(userId, true);
 	}
 }

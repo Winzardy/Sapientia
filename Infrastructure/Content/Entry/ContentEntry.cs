@@ -20,5 +20,9 @@ namespace Content
 		public ContentEntry(in T value) : base(in value, SerializableGuid.New())
 		{
 		}
+
+#if CLIENT
+		public void Edit(in T newValue) => ContentEditValue = newValue;
+#endif
 	}
 }

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Sapientia.Extensions;
 
-namespace Distribution
+namespace Targeting
 {
 	public class StorePlatformType
 	{

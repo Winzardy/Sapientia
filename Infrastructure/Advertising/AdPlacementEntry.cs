@@ -3,7 +3,7 @@
 #endif
 using System;
 using System.Collections.Generic;
-using Distribution;
+using Targeting;
 using Content;
 using Sapientia;
 #if ENABLE_AD_EMPTY_CHECK

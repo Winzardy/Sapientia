@@ -9,7 +9,6 @@ namespace Content
 		// ReSharper disable once InconsistentNaming
 		protected T value;
 		public ref readonly T Value => ref value;
-		public void SetValue(in T newValue) => value = newValue;
 #endif
 
 		public Type ValueType => typeof(T);

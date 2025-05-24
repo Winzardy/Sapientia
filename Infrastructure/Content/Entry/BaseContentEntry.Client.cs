@@ -13,7 +13,10 @@ namespace Content
 		[SerializeField, FormerlySerializedAs("_value")]
 		protected T value;
 
-		public ref readonly T Value
+		public ref readonly T Value => ref ContentEditValue;
+		ref T IContentEntry<T>.EditValue => ref ContentEditValue;
+
+		protected ref T ContentEditValue
 		{
 			get
 			{
@@ -45,22 +48,6 @@ namespace Content
 		private ISerializeReference<T> _serializeReference = null;
 
 		public object RawValue => Value;
-
-		public void SetValue(T newValue)
-		{
-			if (ValueType.IsSerializeReference())
-			{
-				_serializeReference ??= new SerializeReference<T>();
-				_serializeReference.Value = newValue;
-			}
-			else
-				value = newValue;
-		}
-	}
-
-	public partial interface IContentEntry<T>
-	{
-		public void SetValue(T newValue);
 	}
 
 	public static class BaseContentEntryExtensions
@@ -88,6 +75,14 @@ namespace Content
 		public const string CUSTOM_VALUE_FIELD_NAME = "_value";
 
 		object RawValue { get; }
+	}
+
+	public partial interface IContentEntry<T>
+	{
+		/// <summary>
+		/// Изменение контента доступно только вне runtime!
+		/// </summary>
+		internal ref T EditValue { get; }
 	}
 
 	internal interface ISerializeReference<T>

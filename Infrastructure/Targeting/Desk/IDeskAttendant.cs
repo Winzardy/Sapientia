@@ -1,9 +1,9 @@
-using Distribution;
+using Targeting;
 using Sapientia;
 
-namespace Distribution
+namespace Targeting
 {
-	public interface IDistributionProvider
+	public interface IDeskAttendant
 	{
 		public string Identifier { get; }
 

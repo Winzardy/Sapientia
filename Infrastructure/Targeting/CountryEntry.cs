@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Sapientia.Extensions;
 
-namespace Distribution
+namespace Targeting
 {
 	[Serializable]
 	public struct CountryEntry
