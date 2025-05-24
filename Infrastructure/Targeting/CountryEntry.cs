@@ -20,7 +20,7 @@ namespace Targeting
 		}
 
 		public static implicit operator string(CountryEntry platform) => platform.code;
-		public static implicit operator CountryEntry(string code) => CountryEntryExt.Get(code);
+		public static implicit operator CountryEntry(string code) => CountryEntryUtility.Get(code);
 
 		public static implicit operator bool(CountryEntry platform) =>
 			!platform.code.IsNullOrEmpty();
@@ -30,11 +30,11 @@ namespace Targeting
 		public override string ToString() => code ?? UNKNOWN;
 	}
 
-	public static class CountryEntryExt
+	public static class CountryEntryUtility
 	{
-		private static Dictionary<string, CountryEntryRef> _codeToEntry;
+		private static Dictionary<string, CountryEntryReference> _codeToEntry;
 
-		public static IEnumerable<CountryEntryRef> GetAll()
+		public static IEnumerable<CountryEntryReference> GetAll()
 		{
 			if (_codeToEntry != null)
 				return _codeToEntry.Values;
@@ -85,10 +85,10 @@ namespace Targeting
 			return $"[{code}] {name}";
 		}
 
-		public class CountryEntryRef
+		public class CountryEntryReference
 		{
 			public CountryEntry entry;
-			public static implicit operator CountryEntryRef(CountryEntry entry) => new CountryEntryRef {entry = entry};
+			public static implicit operator CountryEntryReference(CountryEntry entry) => new CountryEntryReference {entry = entry};
 		}
 	}
 }

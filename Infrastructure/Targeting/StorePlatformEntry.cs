@@ -34,7 +34,7 @@ namespace Targeting
 		public override string ToString() => store ?? StorePlatformType.UNDEFINED;
 	}
 
-	public static class StorePlatformExt
+	public static class StorePlatformUtility
 	{
 		public static IEnumerable<StorePlatformEntry> GetAllPlatforms()
 		{

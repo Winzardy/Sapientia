@@ -36,7 +36,7 @@ namespace Targeting
 		public override string ToString() => platform ?? PlatformType.UNDEFINED;
 	}
 
-	public static class PlatformExt
+	public static class PlatformUtility
 	{
 		public static IEnumerable<PlatformEntry> GetAllPlatforms()
 		{
