@@ -1,2 +1,2 @@
 # Sapientia
-Utility and extension layer for infrastructure systems
+Utility layer for .NET and infrastructure systems core

@@ -3,7 +3,7 @@ using Sapientia;
 
 namespace Targeting
 {
-	public interface IDeskAttendant
+	public interface IProjectDeskAttendant
 	{
 		public string Identifier { get; }
 

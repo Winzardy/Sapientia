@@ -22,7 +22,7 @@ namespace Targeting
 		public Dictionary<StorePlatformEntry, string> storeToReviewLinks;
 	}
 
-	public class DefaultDeskAttendant : IDeskAttendant
+	public class DefaultProjectDeskAttendant : IProjectDeskAttendant
 	{
 		private ReactiveField<string> _userId;
 
@@ -34,7 +34,7 @@ namespace Targeting
 		public IReactiveProperty<string> UserId => _userId;
 		public string Identifier => _options.identifier;
 
-		public DefaultDeskAttendant(TargetingOptions options, in PlatformEntry platform)
+		public DefaultProjectDeskAttendant(TargetingOptions options, in PlatformEntry platform)
 		{
 			_options = options;
 			_platform = platform;
@@ -50,6 +50,6 @@ namespace Targeting
 		public ref readonly PlatformEntry GetPlatform() => ref _platform;
 		public ref readonly StorePlatformEntry GetStorePlatform() => ref _store;
 
-		void IDeskAttendant.SetUserId(string userId) => _userId.Set(userId, true);
+		void IProjectDeskAttendant.SetUserId(string userId) => _userId.Set(userId, true);
 	}
 }

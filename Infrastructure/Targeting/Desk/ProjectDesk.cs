@@ -4,11 +4,11 @@ using Sapientia;
 namespace Targeting
 {
 	/// <summary>
-	/// Стойка с информацией
+	/// Стойка с информацией о проекте и его дистрибуции (платформа, страна)
 	/// </summary>
-	public class Desk : StaticProvider<IDeskAttendant>
+	public class ProjectDesk : StaticProvider<IProjectDeskAttendant>
 	{
-		private static IDeskAttendant attendant
+		private static IProjectDeskAttendant attendant
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _instance;
