@@ -1,32 +1,12 @@
-using System;
-using System.Collections.Generic;
 using Sapientia;
 
 namespace Targeting
 {
-	[Serializable]
-	public struct TargetingOptions
-	{
-		public int buildNumber;
-		public string identifier;
-		public string version;
-
-		/// <summary>
-		/// Заполняется из вне через Database!
-		/// </summary>
-		public Dictionary<PlatformEntry, StorePlatformEntry> platformToStore;
-
-		/// <summary>
-		/// Заполняется из вне через Database!
-		/// </summary>
-		public Dictionary<StorePlatformEntry, string> storeToReviewLinks;
-	}
-
 	public class DefaultProjectDeskAttendant : IProjectDeskAttendant
 	{
 		private ReactiveField<string> _userId;
 
-		private TargetingOptions _options;
+		private ProjectInfo _options;
 
 		private PlatformEntry _platform;
 		private StorePlatformEntry _store;
@@ -34,7 +14,7 @@ namespace Targeting
 		public IReactiveProperty<string> UserId => _userId;
 		public string Identifier => _options.identifier;
 
-		public DefaultProjectDeskAttendant(TargetingOptions options, in PlatformEntry platform)
+		public DefaultProjectDeskAttendant(ProjectInfo options, in PlatformEntry platform)
 		{
 			_options = options;
 			_platform = platform;
