@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using Sapientia;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace InAppPurchasing
@@ -43,11 +44,7 @@ namespace InAppPurchasing
 
 		public string customId;
 
-		/// <summary>
-		/// Заполняется при OnConfigure из контента
-		/// </summary>
 		public Dictionary<IAPPlatformEntry, string> platformToId;
-
 
 		public static implicit operator IAPProductType(IAPProductEntry entry) => entry.Type;
 		public static implicit operator bool(IAPProductEntry entry) => entry != null;

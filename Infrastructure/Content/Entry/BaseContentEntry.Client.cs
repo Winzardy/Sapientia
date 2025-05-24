@@ -74,6 +74,16 @@ namespace Content
 		/// </summary>
 		public const string CUSTOM_VALUE_FIELD_NAME = "_value";
 
+		/// <summary>
+		/// <see cref="ContentEntry{T}.guid"/>
+		/// </summary>
+		public const string GUID_FIELD_NAME = "guid";
+
+		/// <summary>
+		/// <see cref="BaseContentEntry{T}.value"/>
+		/// </summary>
+		public const string VALUE_FIELD_NAME = "value";
+
 		object RawValue { get; }
 	}
 
