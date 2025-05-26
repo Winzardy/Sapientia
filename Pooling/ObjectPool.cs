@@ -1,100 +1,105 @@
+#nullable enable
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Sapientia.Pooling
 {
+	/// <summary>
+	/// Default implementation of <see cref="ObjectPool{T}"/>.
+	/// </summary>
+	/// <typeparam name="T">The type to pool objects for.</typeparam>
+	/// <remarks>This implementation keeps a cache of retained objects. This means that if objects are returned when the pool has already reached "maximumRetained" objects they will be available to be Garbage Collected.</remarks>
+	/// <seealso href="https://github.com/dotnet/aspnetcore/blob/ed74665e773dd1ebea3289c5662d71c590305932/src/ObjectPool/src/DefaultObjectPool.cs">DefaultObjectPool.cs</seealso>
 	public class ObjectPool<T> : IObjectPool<T>, IDisposable
+		where T : class
 	{
-		private readonly HashSet<T> _used;
-
-		private readonly Queue<T> _queue;
+		private readonly ConcurrentQueue<T> _queue;
 		private readonly IObjectPoolPolicy<T> _policy;
 
-		private readonly bool _collectionCheck;
-		private readonly int _maxSize;
+		private readonly int _maxCapacity;
 
-		public ObjectPool(
-			IObjectPoolPolicy<T> policy,
-			bool collectionCheck = false,
-			int capacity = 0,
-			int maxSize = 0)
+		private T? _single;
+		private int _count;
+
+		/// <summary>
+		/// Creates an instance of <see cref="ObjectPool{T}"/>.
+		/// </summary>
+		/// <param name="policy">The pooling policy to use.</param>
+		public ObjectPool(IObjectPoolPolicy<T> policy) : this(policy, Environment.ProcessorCount * 2)
 		{
-			_used = capacity > 0 ? new HashSet<T>(capacity) : new HashSet<T>();
-			_queue = capacity > 0 ? new Queue<T>(capacity) : new Queue<T>();
-			_policy = policy;
-			_collectionCheck = collectionCheck;
-			_maxSize = maxSize;
-
-			for (int i = 0; i < capacity; i++)
-			{
-				var obj = _policy.Create();
-				_policy.OnRelease(obj);
-				Push(obj);
-			}
 		}
 
-		public void Dispose()
+		/// <summary>
+		/// Creates an instance of <see cref="ObjectPool{T}"/>.
+		/// </summary>
+		/// <param name="policy">The pooling policy to use.</param>
+		/// <param name="maximumRetained">The maximum number of objects to retain in the pool.</param>
+		public ObjectPool(IObjectPoolPolicy<T> policy, int maximumRetained)
 		{
-			Clear(false);
-
-			while (_queue.Count > 0)
-				_policy.OnDispose(_queue.Dequeue());
+			_policy = policy ?? throw new ArgumentNullException(nameof(policy));
+			_queue = new ConcurrentQueue<T>();
+			_maxCapacity = maximumRetained - 1; // -1 to account for _fastItem
 		}
+
+		public void Dispose() => Clear(release: true);
 
 		public T Get()
 		{
-			T item;
-
-			if (_queue.Count > 0)
+			var item = _single;
+			if (item == null || Interlocked.CompareExchange(ref _single, null, item) != item)
 			{
-				item = _queue.Dequeue();
-			}
-			else
-			{
-				item = _policy.Create();
+				if (_queue.TryDequeue(out item))
+					Interlocked.Decrement(ref _count);
+				else
+					item = _policy.Create();
 			}
 
 			_policy.OnGet(item);
-			_used.Add(item);
-
 			return item;
 		}
 
-		public void Release(T obj) => Push(obj, true);
-
-		public void Push(T obj, bool removeFromUsed, bool release = true)
+		public void Release(T obj)
 		{
-#if DEBUG
-			if (_collectionCheck)
+			if (_single != null || Interlocked.CompareExchange(ref _single, obj, null) != null)
 			{
-				if (_queue.Contains(obj))
-					throw new ArgumentException("The specified instance is already held by the pool.", nameof(obj));
+				if (Interlocked.Increment(ref _count) <= _maxCapacity)
+				{
+					_queue.Enqueue(obj);
+				}
+				else
+				{
+					Interlocked.Decrement(ref _count);
+				}
 			}
-#endif
-			if (release)
-				_policy.OnRelease(obj);
 
-			if (removeFromUsed)
-				_used.Remove(obj);
-
-			if (_maxSize > 0 && _queue.Count >= _maxSize)
-			{
-				_policy.OnDispose(obj);
-			}
-			else
-			{
-				Push(obj);
-			}
+			_policy.OnRelease(obj);
 		}
 
 		public void Clear(bool release = true)
 		{
-			foreach (var obj in _used)
-				Push(obj, false, release);
+			if (release)
+			{
+				var fast = Interlocked.Exchange(ref _single, null);
+				if (fast != null)
+					_policy.OnDispose(fast);
+			}
 
-			_used.Clear();
+			while (_queue.TryDequeue(out var obj))
+			{
+				Interlocked.Decrement(ref _count);
+				if (release)
+					_policy.OnDispose(obj);
+			}
 		}
+	}
 
-		private void Push(T obj) => _queue.Enqueue(obj);
+	public static class ObjectPoolExtensions
+	{
+		public static PooledObject<T> Get<T>(this IObjectPool<T> pool, out T obj)
+		{
+			obj = pool.Get();
+			return new PooledObject<T>(pool, obj);
+		}
 	}
 }
