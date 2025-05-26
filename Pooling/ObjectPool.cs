@@ -102,14 +102,4 @@ namespace Sapientia.Pooling
 			return new PooledObject<T>(pool, obj);
 		}
 	}
-
-	public static class ObjectPoolExtension
-	{
-		public static PooledObject<T> Get<T>(this IObjectPool<T> pool, out T obj)
-		{
-			obj = pool.Get();
-
-			return new PooledObject<T>(pool, obj);
-		}
-	}
 }
