@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
+using Sapientia.Extensions;
 
 namespace Sapientia.Pooling
 {
 	public sealed class StaticObjectPool<T> : StaticProvider<ObjectPool<T>>
+		where T : class
 	{
 		private static ObjectPool<T> pool
 		{
@@ -25,19 +27,25 @@ namespace Sapientia.Pooling
 
 	public static class StaticObjectPool
 	{
-		internal static void Initialize<T>(IObjectPoolPolicy<T> policy, bool collectionCheck = true)
+		internal static void Initialize<T>(IObjectPoolPolicy<T> policy) where T : class
 		{
 			if (!StaticObjectPool<T>.IsInitialized)
-				StaticObjectPool<T>.Initialize(new(policy, collectionCheck));
+				StaticObjectPool<T>.Initialize(new(policy));
 		}
 
-		internal static PooledObject<T> Get<T>(out T result) => StaticObjectPool<T>.Get(out result);
-		internal static T Get<T>() => StaticObjectPool<T>.Get();
-		internal static void Release<T>(T obj) => StaticObjectPool<T>.Release(obj);
+		internal static PooledObject<T> Get<T>(out T result) where T : class
+			=> StaticObjectPool<T>.Get(out result);
+
+		internal static T Get<T>() where T : class
+			=> StaticObjectPool<T>.Get();
+
+		internal static void Release<T>(T obj) where T : class
+			=> StaticObjectPool<T>.Release(obj);
 	}
 
-	public static class StaticObjectPoolExtension
+	public static class StaticObjectPoolExtensions
 	{
-		public static void ReleaseToStaticPool<T>(this T obj) => StaticObjectPool<T>.Release(obj);
+		public static void ReleaseToStaticPool<T>(this T obj) where T : class
+			=> StaticObjectPool<T>.Release(obj);
 	}
 }
