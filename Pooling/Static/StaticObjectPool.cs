@@ -17,11 +17,29 @@ namespace Sapientia.Pooling
 			get => _instance != null;
 		}
 
-		internal static T Get() => pool.Get();
+		internal static T Get()
+		{
+#if !CLIENT
+			lock (pool)
+#endif
+				return pool.Get();
+		}
 
-		internal static PooledObject<T> Get(out T result) => pool.Get(out result);
+		internal static PooledObject<T> Get(out T result)
+		{
+#if !CLIENT
+			lock (pool)
+#endif
+				return pool.Get(out result);
+		}
 
-		internal static void Release(T obj) => pool.Release(obj);
+		internal static void Release(T obj)
+		{
+#if !CLIENT
+			lock (pool)
+#endif
+				pool.Release(obj);
+		}
 	}
 
 	public static class StaticObjectPool
