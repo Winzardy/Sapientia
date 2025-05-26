@@ -2,7 +2,7 @@ using System;
 
 namespace Content
 {
-	public abstract partial class UniqueContentEntry<T> : BaseContentEntry<T>, IUniqueContentEntry<T>
+	public partial class UniqueContentEntry<T> : BaseContentEntry<T>, IUniqueContentEntry<T>
 	{
 		// ReSharper disable once MemberInitializerValueIgnored
 		// ReSharper disable once InconsistentNaming
@@ -41,6 +41,8 @@ namespace Content
 		public static implicit operator ContentReference<T>(UniqueContentEntry<T> entry) => new(in entry.Guid, entry.Index);
 
 		public override string ToString() => $"Entry Type: [ {typeof(T).Name} ] Guid: [ {guid} ]";
+
+		public UniqueContentEntry<T> Clone() => new(in Value, in Guid);
 	}
 
 	public interface IUniqueContentEntry<T> : IContentEntry<T>, IUniqueContentEntry

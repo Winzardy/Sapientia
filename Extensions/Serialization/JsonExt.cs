@@ -58,15 +58,23 @@ namespace Sapientia.Extensions
 				SerializationType.FullIndented => JSON_SETTINGS_FULL_TYPED_INDENTED,
 				_ => JSON_SETTINGS_NONE_TYPED
 			};
+
+			return ToJson(from, settings);
+		}
+
+		public static string ToJson<T>(this T from, JsonSerializerSettings settings)
+		{
 			return JsonConvert.SerializeObject(from, typeof(T), settings);
 		}
 
-		public static void WriteToJsonFile<T>(this T from, string filePath, SerializationType serializationType = SerializationType.Cut, bool isCut = true)
+		public static void WriteToJsonFile<T>(this T from, string filePath, SerializationType serializationType = SerializationType.Cut,
+			bool isCut = true)
 		{
 			File.WriteAllText(filePath, from.ToJson(serializationType));
 		}
 
-		public static void AppendToJsonFile<T>(this T from, string filePath, SerializationType serializationType = SerializationType.Cut, bool isCut = true)
+		public static void AppendToJsonFile<T>(this T from, string filePath, SerializationType serializationType = SerializationType.Cut,
+			bool isCut = true)
 		{
 			using var streamWriter = File.AppendText(filePath);
 
@@ -74,13 +82,15 @@ namespace Sapientia.Extensions
 			streamWriter.WriteLine(json);
 		}
 
-		public static void AppendToJsonFile<T>(this T from, StreamWriter streamWriter, SerializationType serializationType = SerializationType.Cut)
+		public static void AppendToJsonFile<T>(this T from, StreamWriter streamWriter,
+			SerializationType serializationType = SerializationType.Cut)
 		{
 			var json = from.ToJson(serializationType);
 			streamWriter.WriteLine(json);
 		}
 
-		public static async Task AppendToJsonFileAsync<T>(this T from, StreamWriter streamWriter, SerializationType serializationType = SerializationType.Cut)
+		public static async Task AppendToJsonFileAsync<T>(this T from, StreamWriter streamWriter,
+			SerializationType serializationType = SerializationType.Cut)
 		{
 			var json = from.ToJson(serializationType);
 			await streamWriter.WriteLineAsync(json);
@@ -107,6 +117,7 @@ namespace Sapientia.Extensions
 				value = default!;
 				return false;
 			}
+
 			var json = File.ReadAllText(path);
 			value = json.FromJson<T>();
 			return true;

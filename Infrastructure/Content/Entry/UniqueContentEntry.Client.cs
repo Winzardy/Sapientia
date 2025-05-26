@@ -2,7 +2,7 @@
 
 namespace Content
 {
-	public abstract partial class UniqueContentEntry<T>
+	public partial class UniqueContentEntry<T>
 	{
 		public virtual void RegenerateGuid() => SetGuid(SerializableGuid.New());
 
