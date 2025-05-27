@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -7,24 +6,8 @@ namespace Sapientia.Data
 {
 	public class AsyncClass
 	{
-		private int _millisecondsTimeout;
-
-		private volatile int _threadId;
-		private volatile int _count;
-
-		public AsyncClass(int millisecondsTimeout = 1)
-		{
-			_millisecondsTimeout = millisecondsTimeout;
-			_threadId = -1;
-			_count = 0;
-		}
-
-		public void SetMillisecondsTimeout(int millisecondsTimeout)
-		{
-			SetBusy();
-			_millisecondsTimeout = millisecondsTimeout;
-			SetBusy();
-		}
+		private volatile int _threadId = -1;
+		private volatile int _count = 0;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TrySetBusy(bool ignoreThreadId = false)
@@ -81,12 +64,14 @@ namespace Sapientia.Data
 		public void SetBusy(bool ignoreThreadId = false)
 		{
 			var currentThreadId = Environment.CurrentManagedThreadId;
+			var spin = new SpinWait();
+
 			if (ignoreThreadId)
 			{
 				var threadId = _threadId;
 				while (_count > 0 || Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) != threadId)
 				{
-					Thread.Sleep(_millisecondsTimeout);
+					spin.SpinOnce();
 					threadId = _threadId;
 				}
 			}
@@ -103,7 +88,7 @@ namespace Sapientia.Data
 					else if (_threadId == currentThreadId)
 						break;
 
-					Thread.Sleep(_millisecondsTimeout);
+					spin.SpinOnce();
 				}
 			}
 

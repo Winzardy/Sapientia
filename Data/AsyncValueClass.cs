@@ -7,7 +7,7 @@ namespace Sapientia.Data
 	{
 		public T value;
 
-		public AsyncValueClass(T value, int millisecondsTimeout = 1) : base(millisecondsTimeout)
+		public AsyncValueClass(T value)
 		{
 			this.value = value;
 		}

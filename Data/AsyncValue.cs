@@ -7,23 +7,16 @@ namespace Sapientia.Data
 {
 	public struct AsyncValue
 	{
-		private int _millisecondsTimeout;
-
 		private volatile int _threadId;
 		private volatile int _count;
 
-		public AsyncValue(int millisecondsTimeout = 1)
+		public static AsyncValue Create()
 		{
-			_millisecondsTimeout = millisecondsTimeout;
-			_threadId = -1;
-			_count = 0;
-		}
-
-		public void SetMillisecondsTimeout(int millisecondsTimeout)
-		{
-			SetBusy();
-			_millisecondsTimeout = millisecondsTimeout;
-			SetFree();
+			return new AsyncValue()
+			{
+				_threadId = -1,
+				_count = 0,
+			};
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,13 +46,14 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBusy(bool ignoreThreadId = false)
 		{
+			var spin = new SpinWait();
 			var currentThreadId = Environment.CurrentManagedThreadId;
 			if (ignoreThreadId)
 			{
 				var threadId = _threadId;
 				while (_count > 0 || Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) != threadId)
 				{
-					Thread.Sleep(_millisecondsTimeout);
+					spin.SpinOnce();
 					threadId = _threadId;
 				}
 			}
@@ -76,7 +70,7 @@ namespace Sapientia.Data
 					else if (_threadId == currentThreadId)
 						break;
 
-					Thread.Sleep(_millisecondsTimeout);
+					spin.SpinOnce();
 				}
 			}
 
