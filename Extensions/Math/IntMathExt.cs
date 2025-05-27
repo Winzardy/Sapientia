@@ -61,7 +61,9 @@ namespace Sapientia.Extensions
 		public static bool IsEven(this int value)
 		{
 			return (value & 1) == 0;
-		}		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsOdd(this int value)
 		{
 			return (value & 1) == 1;

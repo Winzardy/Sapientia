@@ -115,7 +115,7 @@ namespace Sapientia.Extensions
 		[INLINE(256)]
 		public static SafePtr<T> MemAlloc<T>(Unity.Collections.Allocator allocator) where T : unmanaged
 		{
-			return MemAlloc(TSize<T>.size, TAlign<T>.align, allocator);
+			return (SafePtr<T>)MemAlloc(TSize<T>.size, TAlign<T>.align, allocator);
 		}
 
 		[INLINE(256)]
@@ -125,7 +125,7 @@ namespace Sapientia.Extensions
 			var safePtr = MemAlloc(size, TAlign<T>.align, allocator);
 			MemClear(safePtr, size);
 
-			return safePtr;
+			return (SafePtr<T>)safePtr;
 		}
 #endif
 
@@ -161,7 +161,7 @@ namespace Sapientia.Extensions
 			var safePtr = MemAlloc(size, TAlign<T>.align);
 			MemClear(safePtr, size);
 
-			return safePtr;
+			return (SafePtr<T>)safePtr;
 		}
 
 #if UNITY_5_3_OR_NEWER
@@ -342,11 +342,11 @@ namespace Sapientia.Extensions
 		public static SafePtr<T> MakeArray<T>(int length, Unity.Collections.Allocator allocator, bool clearMemory = true) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
-			var ptr = (SafePtr<T>)MemAlloc(size, TAlign<T>.align, allocator);
+			var ptr = MemAlloc(size, TAlign<T>.align, allocator);
 			if (clearMemory)
 				MemClear(ptr, size);
 
-			return ptr;
+			return (SafePtr<T>)ptr;
 		}
 #endif
 
@@ -354,11 +354,11 @@ namespace Sapientia.Extensions
 		public static SafePtr<T> MakeArray<T>(int length, bool clearMemory = true) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
-			var ptr = (SafePtr<T>)MemAlloc(size, TAlign<T>.align);
+			var ptr = MemAlloc(size, TAlign<T>.align);
 			if (clearMemory)
 				MemClear(ptr, size);
 
-			return ptr;
+			return (SafePtr<T>)ptr;
 		}
 
 		[INLINE(256)]
@@ -394,17 +394,17 @@ namespace Sapientia.Extensions
 				newLength = newLength.NextPowerOfTwo().Max(8);
 
 			var size = newLength * TSize<T>.size;
-			var ptr = (SafePtr<T>)MemAlloc(size, TAlign<T>.align);
+			var ptr = MemAlloc(size, TAlign<T>.align);
 			if (clearMemory)
 				MemClear(ptr, size);
 
 			if (arr != default)
 			{
-				MemCopy<T>(arr, ptr, length);
+				MemCopy<T>(arr, (SafePtr<T>)ptr, length);
 				MemFree(arr);
 			}
 
-			arr = ptr;
+			arr = (SafePtr<T>)ptr;
 			length = newLength;
 		}
 
