@@ -150,7 +150,7 @@ namespace Sapientia.Collections
 
 		public int GetIdByDenseId(int denseId)
 		{
-			return _sparse[denseId];
+			return _dense[denseId];
 		}
 
 		private void ExpandSparse(int newCapacity)
