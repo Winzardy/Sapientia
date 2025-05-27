@@ -67,9 +67,21 @@ namespace Sapientia.Reflection
 		public static void SetValueByReflectionSafe(this Type type, string name, object obj, object value)
 			=> GetFieldInfo(type, name)?.SetValue(obj, value);
 
-		private static FieldInfo GetFieldInfo(this Type type, string name)
-			=> _fieldToInfo.GetOrAdd(new(type, name),
-				type.GetField(name, _bindingFlags));
+		public static FieldInfo GetFieldInfo(this Type type, string name)
+			=> _fieldToInfo.GetOrAdd(new(type, name), GetField(type, name));
+
+		private static FieldInfo GetField(Type type, string name)
+		{
+			while (type != null)
+			{
+				var field = type.GetField(name, _bindingFlags);
+				if (field != null)
+					return field;
+				type = type.BaseType;
+			}
+
+			return null;
+		}
 
 		private readonly struct RawFieldInfoKey : IEquatable<RawFieldInfoKey>
 		{
