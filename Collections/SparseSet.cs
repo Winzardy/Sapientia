@@ -105,7 +105,7 @@ namespace Sapientia.Collections
 
 		public bool TryRemoveSwapBack(int id, out T value)
 		{
-			value = default;
+			value = default!;
 			if (id >= _sparseCapacity)
 				return false;
 			var denseId = _sparse[id];
@@ -136,6 +136,8 @@ namespace Sapientia.Collections
 
 			_values[denseId] = _values[_count];
 			_values[_count] = default;
+
+			E.ASSERT(_count >= 0);
 		}
 
 		private void ExpandSparseIfNeeded(int newCapacity)
