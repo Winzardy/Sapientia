@@ -7,7 +7,7 @@ namespace Sapientia
 	/// </summary>
 	public abstract class StaticWrapper<T> where T : class
 	{
-		protected static T _instance;
+		protected static T? _instance;
 
 		//TODO:Удалить!
 		[Obsolete("Удалить когда волью в мейн!")]
