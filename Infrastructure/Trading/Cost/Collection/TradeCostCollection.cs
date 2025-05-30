@@ -9,6 +9,7 @@ namespace Trading
 	[Serializable]
 	public sealed partial class TradeCostCollection : TradeCost
 	{
+		public string test;
 #if CLIENT
 		[UnityEngine.SerializeReference]
 #endif

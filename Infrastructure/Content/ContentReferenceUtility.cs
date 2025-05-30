@@ -18,12 +18,12 @@ namespace Content
 #if UNITY_EDITOR
 			if (UnityEngine.Application.isPlaying)
 #endif
-			if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
-			{
-				var entryByIndex = ContentManager.GetEntry<T>(reference.index);
-				if (entryByIndex.Guid == reference.guid)
-					return ref entryByIndex.Value;
-			}
+				if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
+				{
+					var entryByIndex = ContentManager.GetEntry<T>(reference.index);
+					if (entryByIndex.Guid == reference.guid)
+						return ref entryByIndex.Value;
+				}
 
 			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
 			reference.index = entryByGuid.Index;
@@ -33,7 +33,6 @@ namespace Content
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetId<T>(this in ContentReference<T> reference) =>
 			ContentManager.ToId<T>(in reference.guid);
-
 
 		/// <summary>
 		/// Возвращает ссылку на содержимое по ссылке <paramref name="reference"/>.
@@ -61,12 +60,12 @@ namespace Content
 #if UNITY_EDITOR
 			if (UnityEngine.Application.isPlaying)
 #endif
-			if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
-			{
-				var entryByIndex = ContentManager.GetEntry<T>(reference.index);
-				if (entryByIndex.Guid == reference.guid)
-					return ref entryByIndex.Value;
-			}
+				if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
+				{
+					var entryByIndex = ContentManager.GetEntry<T>(reference.index);
+					if (entryByIndex.Guid == reference.guid)
+						return ref entryByIndex.Value;
+				}
 
 			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
 			return ref entryByGuid.Value;
@@ -137,7 +136,7 @@ namespace Content
 		public static ContentReference<T> ToReference<T>(this IContentEntry<T> entry)
 		{
 			if (entry is IUniqueContentEntry<T> unique)
-				return new (in unique.Guid, unique.Index);
+				return new(in unique.Guid, unique.Index);
 
 			return IContentReference.SINGLE_GUID;
 		}

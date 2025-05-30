@@ -2,7 +2,8 @@
     "name": "Content",
     "rootNamespace": "",
     "references": [
-        "Sapientia"
+        "Sapientia",
+        "Fusumity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

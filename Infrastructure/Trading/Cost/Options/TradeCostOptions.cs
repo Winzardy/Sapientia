@@ -11,10 +11,10 @@ namespace Trading
 	{
 		internal int selectedIndex;
 
+		// ReSharper disable once UseArrayEmptyMethod
 #if CLIENT
 		[UnityEngine.SerializeReference]
 #endif
-		// ReSharper disable once UseArrayEmptyMethod
 		public TradeCost[] options = new TradeCost[0];
 
 		public TradeCost[] Items => options;

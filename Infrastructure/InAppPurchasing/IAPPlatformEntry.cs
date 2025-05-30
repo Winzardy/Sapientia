@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Content;
 using Sapientia.Extensions;
 
 namespace InAppPurchasing
@@ -15,6 +16,10 @@ namespace InAppPurchasing
 	}
 
 	[Serializable]
+	[Constants(customConstants: new[]
+	{
+		"Undefined"
+	})]
 	public struct IAPPlatformEntry
 	{
 		public string platform;
@@ -34,7 +39,7 @@ namespace InAppPurchasing
 
 	//TODO: Важно что выбранный магазин выбирается не от платформы приложения,
 	//Важно учитывать что мы можем билдить на андроид для разных магазинов!
-	public static class IAPPlatformExt
+	public static class IAPPlatformExtensions
 	{
 		public static IEnumerable<IAPPlatformEntry> GetAll()
 		{

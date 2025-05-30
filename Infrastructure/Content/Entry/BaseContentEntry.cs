@@ -8,7 +8,7 @@ namespace Content
 #if !CLIENT
 		// ReSharper disable once InconsistentNaming
 		protected T value;
-		public ref readonly T Value => ref value;
+		public virtual ref readonly T Value => ref value;
 #endif
 
 		public Type ValueType => typeof(T);
@@ -61,6 +61,16 @@ namespace Content
 	public partial interface IContentEntry
 	{
 		public const string DEFAULT_SINGLE_ID = "Single";
+
+		/// <summary>
+		/// <see cref="ContentEntry{T}.guid"/>
+		/// </summary>
+		public const string GUID_FIELD_NAME = "guid";
+
+		/// <summary>
+		/// <see cref="BaseContentEntry{T}.value"/>
+		/// </summary>
+		public const string VALUE_FIELD_NAME = "value";
 
 		public Type ValueType { get; }
 		public object Context { get; }

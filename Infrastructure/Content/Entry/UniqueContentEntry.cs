@@ -40,9 +40,8 @@ namespace Content
 		public static implicit operator ContentReference(UniqueContentEntry<T> entry) => new(in entry.Guid, entry.Index);
 		public static implicit operator ContentReference<T>(UniqueContentEntry<T> entry) => new(in entry.Guid, entry.Index);
 
-		public override string ToString() => $"Entry Type: [ {typeof(T).Name} ] Guid: [ {guid} ]";
-
 		public UniqueContentEntry<T> Clone() => new(in Value, in Guid);
+		public override string ToString() => $"Entry Type: [ {typeof(T).Name} ] Guid: [ {guid} ]";
 	}
 
 	public interface IUniqueContentEntry<T> : IContentEntry<T>, IUniqueContentEntry

@@ -1,4 +1,5 @@
 using System;
+using Content;
 using Sapientia;
 
 //Возможно стоило назвать TradeSystem, но хотелось отсебятины
@@ -12,7 +13,6 @@ namespace Trading
 	public class TradeEntry : IExternallyIdentifiable
 	{
 		private string _id;
-
 #if CLIENT
 		[UnityEngine.SerializeReference]
 #endif

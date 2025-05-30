@@ -2,28 +2,24 @@
 {
 	public partial struct ContentReference<T>
 	{
-		public bool Contains() => !IsEmpty();
-
-		public readonly bool IsEmpty() =>
+		public readonly bool Contains() => !IsEmpty() &&
 			guid == IContentReference.SINGLE_GUID
-				? !ContentManager.Contains<T>()
-				: guid == SerializableGuid.Empty || !ContentManager.Contains<T>(in guid);
+				? ContentManager.Contains<T>()
+				: ContentManager.Contains<T>(in guid);
+
+		public readonly bool IsEmpty() => guid == SerializableGuid.Empty;
 	}
 
 	public partial struct ContentReference
 	{
-		public bool Contains() => !IsEmpty();
-
-		public bool IsEmpty() => throw ContentDebug.Exception(
+		public readonly bool Contains() => throw ContentDebug.Exception(
 			"IsEmpty can only be accessed on ContentReference<T>, use IsEmpty<T>");
 
-		public readonly bool Contains<T>() =>
+		public readonly bool IsEmpty() => guid == SerializableGuid.Empty;
+
+		public readonly bool Contains<T>() => !IsEmpty() &&
 			guid == IContentReference.SINGLE_GUID
-				? !ContentManager.Contains<T>()
-				: guid == SerializableGuid.Empty || !ContentManager.Contains<T>(in guid);
-		public readonly bool IsEmpty<T>() =>
-			guid == IContentReference.SINGLE_GUID
-				? !ContentManager.Contains<T>()
-				: guid == SerializableGuid.Empty || !ContentManager.Contains<T>(in guid);
+				? ContentManager.Contains<T>()
+				: ContentManager.Contains<T>(in guid);
 	}
 }

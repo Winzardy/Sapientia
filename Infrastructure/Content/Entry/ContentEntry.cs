@@ -17,6 +17,12 @@ namespace Content
 	[Serializable]
 	public sealed class ContentEntry<T> : UniqueContentEntry<T>
 	{
+#if !CLIENT
+		[NonSerialized]
+		private int _index = -1;
+		public override ref readonly T Value => ref guid.Get<T>(ref _index);
+#endif
+
 		public ContentEntry(in T value) : base(in value, SerializableGuid.New())
 		{
 		}

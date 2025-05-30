@@ -9,7 +9,7 @@ namespace Content
 		public static void Deconstruct<T>(this IContentEntry<T> entry,
 #if CLIENT
 			[JetBrains.Annotations.CanBeNull]
- #endif
+#endif
 			out string id,
 			out T value)
 		{
@@ -26,5 +26,23 @@ namespace Content
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsEmpty<T>(this BaseContentEntry<T> entry) => !entry.IsValid() || entry.Value == null;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static ref readonly T Get<T>(this in SerializableGuid guid, ref int index)
+		{
+#if UNITY_EDITOR
+			if (UnityEngine.Application.isPlaying)
+#endif
+				if (index >= 0 && ContentManager.Contains<T>(index))
+				{
+					var entryByIndex = ContentManager.GetEntry<T>(index);
+					if (entryByIndex.Guid == guid)
+						return ref entryByIndex.Value;
+				}
+
+			var entryByGuid = ContentManager.GetEntry<T>(in guid);
+			index = entryByGuid.Index;
+			return ref entryByGuid.Value;
+		}
 	}
 }

@@ -16,7 +16,7 @@ namespace Content
 		#endregion
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator bool(in ContentReference<T> reference) => !reference.IsEmpty();
+		public static implicit operator bool(in ContentReference<T> reference) => reference.Contains();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator T(in ContentReference<T> reference) => reference.Read();

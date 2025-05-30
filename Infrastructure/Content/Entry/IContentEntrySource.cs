@@ -17,7 +17,7 @@ namespace Content
 		public new IContentEntry<T> ContentEntry { get; }
 	}
 
-	public interface IContentEntrySource
+	public interface IContentEntrySource : IValidatable
 	{
 		/// <summary>
 		/// <see cref="ContentEntryScriptableObject{T}._entry"/>

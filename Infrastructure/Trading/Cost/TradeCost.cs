@@ -1,8 +1,10 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Trading
 {
+	[Serializable]
 	public abstract partial class TradeCost
 	{
 		/// <summary>

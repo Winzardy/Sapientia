@@ -13,7 +13,7 @@ namespace Content
 		[SerializeField, FormerlySerializedAs("_value")]
 		protected T value;
 
-		public ref readonly T Value => ref ContentEditValue;
+		public virtual ref readonly T Value => ref ContentEditValue;
 		ref T IContentEntry<T>.EditValue => ref ContentEditValue;
 
 		protected ref T ContentEditValue
@@ -44,7 +44,7 @@ namespace Content
 
 		// TODO: надо очищать YAML от Null значений, потому что тупо место занимает rid: -2...
 		// ReSharper disable once InconsistentNaming
-		[SerializeField, SerializeReference]
+		[SerializeField, SerializeReference, ClientOnly]
 		private ISerializeReference<T> _serializeReference = null;
 
 		public object RawValue => Value;
@@ -74,16 +74,6 @@ namespace Content
 		/// </summary>
 		public const string CUSTOM_VALUE_FIELD_NAME = "_value";
 
-		/// <summary>
-		/// <see cref="ContentEntry{T}.guid"/>
-		/// </summary>
-		public const string GUID_FIELD_NAME = "guid";
-
-		/// <summary>
-		/// <see cref="BaseContentEntry{T}.value"/>
-		/// </summary>
-		public const string VALUE_FIELD_NAME = "value";
-
 		object RawValue { get; }
 	}
 
@@ -103,7 +93,7 @@ namespace Content
 	// Использую такой контейнер, в обход сериализации object. У object проблемы с массивами...
 	internal class SerializeReference<T> : ISerializeReference<T>
 	{
-		[SerializeField, SerializeReference]
+		[SerializeField, SerializeReference, ClientOnly]
 		private T _value;
 
 		ref T ISerializeReference<T>.Value => ref _value;

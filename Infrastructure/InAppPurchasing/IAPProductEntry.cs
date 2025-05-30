@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using Sapientia;
-using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace InAppPurchasing
@@ -60,7 +59,7 @@ namespace InAppPurchasing
 				$"	Type: {Type}";
 	}
 
-	public static class IAPProductEntryExt
+	public static class IAPProductEntryExtensions
 	{
 		public static string GetId(this IAPProductEntry product, in IAPPlatformEntry platform)
 		{

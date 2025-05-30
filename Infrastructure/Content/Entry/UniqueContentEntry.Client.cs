@@ -1,5 +1,4 @@
 #if CLIENT
-
 namespace Content
 {
 	public partial class UniqueContentEntry<T>

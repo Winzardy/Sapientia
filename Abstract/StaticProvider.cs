@@ -25,7 +25,7 @@ namespace Sapientia
 	/// </remarks>
 	public abstract class StaticProvider<T> where T : class
 	{
-		protected static T _instance;
+		protected static T? _instance;
 
 		public static void Initialize(T instance)
 		{

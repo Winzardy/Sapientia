@@ -13,6 +13,10 @@ namespace Content
 		public ConstantsAttribute()
 		{
 		}
+		public ConstantsAttribute(string[] customConstants)
+		{
+			CustomConstants = customConstants;
+		}
 
 		public ConstantsAttribute(string remove, params string[] customConstants)
 		{
