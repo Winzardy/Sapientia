@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Sapientia.Pooling
@@ -42,7 +43,7 @@ namespace Sapientia.Pooling
 			_maxCapacity = maximumRetained - 1; // -1 to account for _fastItem
 		}
 
-		public void Dispose() => Clear(release: true);
+		public void Dispose() => Clear();
 
 		public T Get()
 		{
@@ -76,20 +77,16 @@ namespace Sapientia.Pooling
 			_policy.OnRelease(obj);
 		}
 
-		public void Clear(bool release = true)
+		public void Clear()
 		{
-			if (release)
-			{
-				var fast = Interlocked.Exchange(ref _single, null);
-				if (fast != null)
-					_policy.OnDispose(fast);
-			}
+			var fast = Interlocked.Exchange(ref _single, null);
+			if (fast != null)
+				_policy.OnDispose(fast);
 
 			while (_queue.TryDequeue(out var obj))
 			{
 				Interlocked.Decrement(ref _count);
-				if (release)
-					_policy.OnDispose(obj);
+				_policy.OnDispose(obj);
 			}
 		}
 	}
@@ -100,6 +97,21 @@ namespace Sapientia.Pooling
 		{
 			obj = pool.Get();
 			return new PooledObject<T>(pool, obj);
+		}
+
+		public static void Release<T>(this ObjectPool<T> pool, ICollection<T> collection)
+			where T : class =>
+			collection.Release(pool);
+
+		public static void Release<T>(this ICollection<T> collection, ObjectPool<T> pool)
+			where T : class
+		{
+			foreach (var obj in collection)
+			{
+				pool.Release(obj);
+			}
+
+			collection.Clear();
 		}
 	}
 }
