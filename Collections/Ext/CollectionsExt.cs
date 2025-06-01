@@ -127,6 +127,33 @@ namespace Sapientia.Collections
 			return enumerable == null || IsEmpty(enumerable);
 		}
 
+		public static bool ReferenceContains<T>(this IList<T> collection, T item)
+		{
+			if (!Any(collection))
+				return false;
+
+			// ReSharper disable once ForCanBeConvertedToForeach
+			// ReSharper disable once LoopCanBeConvertedToQuery
+			for (var i = 0; i < collection.Count; i++)
+			{
+				if (ReferenceEquals(collection[i], item))
+					return true;
+			}
+
+			return false;
+		}
+
+		public static bool ReferenceContains<T>(this IEnumerable<T> collection, T target)
+		{
+			foreach (var item in collection)
+			{
+				if (ReferenceEquals(item, target))
+					return true;
+			}
+
+			return false;
+		}
+
 		public static bool Any<T>(this IList<T> collection, Func<T, bool> predicate)
 		{
 			if (!Any(collection))
