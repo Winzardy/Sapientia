@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Sapientia.Collections;
 
 namespace Sapientia.Reflection
@@ -69,7 +70,7 @@ namespace Sapientia.Reflection
 		{
 			var paramAmountToFactory = new ConcurrentDictionary<int, Func<object[], object>>();
 
-			foreach (var ctor in type.GetConstructors())
+			foreach (var ctor in GetAllowedCtors(type))
 			{
 				var argsParam = Expression.Parameter(typeof(object[]), "args");
 				var ctorParams = ctor.GetParameters();
@@ -81,7 +82,10 @@ namespace Sapientia.Reflection
 					)).ToArray();
 
 				var newExp = Expression.New(ctor, args);
-				var lambda = Expression.Lambda<Func<object[], object>>(newExp, argsParam);
+				Expression body = type.IsValueType
+					? Expression.Convert(newExp, typeof(object)) // box
+					: newExp;
+				var lambda = Expression.Lambda<Func<object[], object>>(body, argsParam);
 				paramAmountToFactory[ctorParams.Length] = lambda.Compile();
 			}
 
@@ -94,6 +98,17 @@ namespace Sapientia.Reflection
 
 				throw new InvalidOperationException($"No matching constructor found for {type} with {args.Length} arguments");
 			};
+		}
+
+		/// <remarks>
+		/// Не поддерживаем конструкторы с <c>ref</c>, <c>in</c>
+		/// </remarks>
+		internal static ConstructorInfo[] GetAllowedCtors(Type type)
+		{
+			return type.GetConstructors()
+			   .Where(c => c.GetParameters().All(p =>
+					p.ParameterType is {IsByRef: false}))//, IsValueType: false}))
+			   .ToArray();
 		}
 	}
 
@@ -127,7 +142,8 @@ namespace Sapientia.Reflection
 		{
 			var paramAmountToFactory = new ConcurrentDictionary<int, Func<object[], T>>();
 
-			foreach (var ctor in typeof(T).GetConstructors())
+			var type = typeof(T);
+			foreach (var ctor in FastActivator.GetAllowedCtors(type))
 			{
 				var argsParam = Expression.Parameter(typeof(object[]), "args");
 				var ctorParams = ctor.GetParameters();
@@ -139,11 +155,14 @@ namespace Sapientia.Reflection
 					)).ToArray();
 
 				var newExp = Expression.New(ctor, args);
+				Expression body = type.IsValueType
+					? Expression.Convert(newExp, typeof(object))
+					: newExp;
 				var lambda = Expression.Lambda<Func<object[], T>>(newExp, argsParam);
 				paramAmountToFactory[ctorParams.Length] = lambda.Compile();
 			}
 
-			FastActivator.typeToFactoryWithArgs[typeof(T)] = ToObjectWithArgs;
+			FastActivator.typeToFactoryWithArgs[type] = ToObjectWithArgs;
 
 			return args =>
 			{
@@ -152,7 +171,7 @@ namespace Sapientia.Reflection
 				if (paramAmountToFactory.TryGetValue(args.Length, out var factoryWithArgs))
 					return factoryWithArgs(args);
 
-				throw new InvalidOperationException($"No matching constructor found for {typeof(T)} with {args.Length} arguments");
+				throw new InvalidOperationException($"No matching constructor found for {type} with {args.Length} arguments");
 			};
 		}
 

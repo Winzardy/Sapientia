@@ -1,6 +1,7 @@
 ﻿#if NEWTONSOFT
 using System;
 using Newtonsoft.Json;
+using Sapientia.Reflection;
 
 namespace Content
 {
@@ -24,13 +25,8 @@ namespace Content
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
 		{
 			var str = reader.Value?.ToString();
-			var guidCtor = objectType.GetConstructor(new[] {typeof(SerializableGuid), typeof(int)});
-
-			var guid = string.IsNullOrEmpty(str)
-				? SerializableGuid.Empty
-				: new SerializableGuid(str);
-
-			return guidCtor?.Invoke(new object[] {guid, -1});
+			SerializableGuid.TryParse(str, out var guid);
+			return objectType.CreateInstance<IContentReference>(guid);
 		}
 	}
 }

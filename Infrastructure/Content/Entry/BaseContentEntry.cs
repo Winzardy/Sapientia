@@ -60,22 +60,12 @@ namespace Content
 
 	public partial interface IContentEntry
 	{
-		public const string DEFAULT_SINGLE_ID = "Single";
-
-		/// <summary>
-		/// <see cref="ContentEntry{T}.guid"/>
-		/// </summary>
-		public const string GUID_FIELD_NAME = "guid";
-
-		/// <summary>
-		/// <see cref="BaseContentEntry{T}.value"/>
-		/// </summary>
-		public const string VALUE_FIELD_NAME = "value";
-
 		public Type ValueType { get; }
-		public object Context { get; }
+
 		public void Register();
 		public void Unregister();
 		public bool IsUnique();
+
+		public object Context { get; }
 	}
 }

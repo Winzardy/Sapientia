@@ -14,7 +14,7 @@ namespace Content
 
 		SerializableGuid IContentReference.Guid => guid;
 
-		public ContentReference(in SerializableGuid guid, int index = IContentReference.NO_INDEX)
+		public ContentReference(in SerializableGuid guid, int index = ContentConstants.INVALID_INDEX)
 		{
 			this.guid = guid;
 			this.index = index;
@@ -41,7 +41,7 @@ namespace Content
 			"When using ContentReference without a type parameter, you must rely on implicit (“hidden”)" +
 			" knowledge of the contained type");
 
-		public ContentReference(in SerializableGuid guid, int index = IContentReference.NO_INDEX)
+		public ContentReference(in SerializableGuid guid, int index = ContentConstants.INVALID_INDEX)
 		{
 			this.guid = guid;
 			this.index = index;
@@ -53,11 +53,6 @@ namespace Content
 	/// </summary>
 	public interface IContentReference
 	{
-		/// <summary>
-		/// Не определенный индекс
-		/// </summary>
-		public const int NO_INDEX = -1;
-
 		/// <summary>
 		/// <see cref="ContentReference{T}.guid"/>
 		/// </summary>

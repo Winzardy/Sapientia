@@ -14,7 +14,7 @@ namespace Content.Management
 			_entry = entry;
 
 			if (entry.Value is IExternallyIdentifiable identifiable)
-				identifiable.SetId(IContentEntry.DEFAULT_SINGLE_ID);
+				identifiable.SetId(ContentConstants.DEFAULT_SINGLE_ID);
 		}
 
 		internal static void Unregister() => _entry = null;

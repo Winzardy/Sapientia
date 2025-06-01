@@ -124,9 +124,11 @@ namespace Sapientia.Extensions
 		}
 
 		// If you see error in Newtonsoft.Json.Serialization.JsonArrayContract.CreateWrapper check this - https://github.com/jilleJr/Newtonsoft.Json-for-Unity/issues/77
-		public static T FromJson<T>(this string json)
+		public static T FromJson<T>(this string json) => FromJson<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
+
+		public static T FromJson<T>(this string json, JsonSerializerSettings settings)
 		{
-			return JsonConvert.DeserializeObject<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
+			return JsonConvert.DeserializeObject<T>(json, settings)!;
 		}
 
 		public static T? FromJsonOrDefault<T>(this string json)

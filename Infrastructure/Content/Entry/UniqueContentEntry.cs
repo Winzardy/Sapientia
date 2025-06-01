@@ -30,8 +30,6 @@ namespace Content
 			this.guid = guid;
 		}
 
-		public void SetIndex(int index) => _index = index;
-
 		protected override void OnRegister() => ContentManager.Register(this);
 
 		protected override void OnUnregister() => ContentManager.Unregister(this);
@@ -41,7 +39,10 @@ namespace Content
 		public static implicit operator ContentReference<T>(UniqueContentEntry<T> entry) => new(in entry.Guid, entry.Index);
 
 		public UniqueContentEntry<T> Clone() => new(in Value, in Guid);
+
 		public override string ToString() => $"Entry Type: [ {typeof(T).Name} ] Guid: [ {guid} ]";
+
+		void IUniqueContentEntry.SetIndex(int index) => _index = index;
 	}
 
 	public interface IUniqueContentEntry<T> : IContentEntry<T>, IUniqueContentEntry
@@ -54,6 +55,6 @@ namespace Content
 
 		public int Index { get; }
 
-		public void SetIndex(int index);
+		internal void SetIndex(int index);
 	}
 }

@@ -9,7 +9,6 @@ namespace Trading
 	[Serializable]
 	public partial class TradeRewardCollection : TradeReward
 	{
-		public string test;
 #if CLIENT
 		[UnityEngine.SerializeReference]
 #endif

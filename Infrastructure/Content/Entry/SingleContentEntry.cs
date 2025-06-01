@@ -1,6 +1,6 @@
 namespace Content
 {
-	public class SingleContentEntry<T> : BaseContentEntry<T>
+	public partial class SingleContentEntry<T> : BaseContentEntry<T>, ISingleContentEntry<T>
 	{
 		protected SingleContentEntry(in T value) : base(in value)
 		{
@@ -14,5 +14,13 @@ namespace Content
 		public static implicit operator T(SingleContentEntry<T> entry) => entry.Value;
 
 		public SingleContentEntry<T> Clone() => new(in Value);
+	}
+
+	public interface ISingleContentEntry<T> : IContentEntry<T>, ISingleContentEntry
+	{
+	}
+
+	public partial interface ISingleContentEntry : IContentEntry
+	{
 	}
 }

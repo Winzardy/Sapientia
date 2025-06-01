@@ -24,8 +24,6 @@ namespace Content.Management
 	/// </remarks>
 	public sealed partial class ContentResolver : IDisposable
 	{
-		public const int INVALID_INDEX = -1;
-
 		private readonly IContentImporter _importer;
 
 		private IList<IContentEntry> _entries;
@@ -178,7 +176,7 @@ namespace Content.Management
 		{
 #if ENABLE_CONTENT_CONTAINS_CHECK
 
-			if (index == INVALID_INDEX)
+			if (index == ContentConstants.INVALID_INDEX)
 				throw new Exception($"Invalid index for get entry of type: [ {typeof(T).Name} ]");
 			if (!Contains<T>(index))
 				throw new Exception($"Could not find entry of type: [ {typeof(T).Name} ] with index: [ {index} ]");
@@ -260,7 +258,7 @@ namespace Content.Management
 		{
 #if ENABLE_CONTENT_CONTAINS_CHECK
 
-			if (index == INVALID_INDEX)
+			if (index == ContentConstants.INVALID_INDEX)
 				throw new Exception($"Invalid index for get entry of type: [ {typeof(T).Name} ]");
 			if (!Contains<T>(index))
 				throw new Exception($"Could not find entry of type: [ {typeof(T).Name} ] with index: [ {index} ]");
@@ -341,8 +339,7 @@ namespace Content.Management
 		internal string ToId<T>(int index)
 		{
 #if ENABLE_CONTENT_CONTAINS_CHECK
-
-			if (index == INVALID_INDEX)
+			if (index == ContentConstants.INVALID_INDEX)
 				throw new Exception($"Invalid index for get entry of type: [ {typeof(T).Name} ]");
 			if (!Contains<T>(index))
 				throw new Exception($"Could not find entry of type: [ {typeof(T).Name} ] with index: [ {index} ]");
@@ -426,8 +423,7 @@ namespace Content.Management
 		internal ref readonly SerializableGuid ToGuid<T>(int index)
 		{
 #if ENABLE_CONTENT_CONTAINS_CHECK
-
-			if (index == INVALID_INDEX)
+			if (index == ContentConstants.INVALID_INDEX)
 				throw new Exception($"Invalid index for get entry of type: [ {typeof(T).Name} ]");
 			if (!Contains<T>(index))
 				throw new Exception($"Could not find entry of type: [ {typeof(T).Name} ] with index: [ {index} ]");
@@ -454,8 +450,8 @@ namespace Content.Management
 				{
 					var entry = GetEntry<T>();
 					return detailed
-						? $"{IContentEntry.DEFAULT_SINGLE_ID} (type: {entry.ValueType.Name})"
-						: $"{IContentEntry.DEFAULT_SINGLE_ID}";
+						? $"{ContentConstants.DEFAULT_SINGLE_ID} (type: {entry.ValueType.Name})"
+						: $"{ContentConstants.DEFAULT_SINGLE_ID}";
 				}
 			}
 			else if (Contains<T>(in guid))

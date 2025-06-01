@@ -15,20 +15,16 @@ namespace Content
 	/// требовать значительных ресурсов, хотя решение этого вопроса возможно
 	/// </remarks>
 	[Serializable]
-	public sealed class ContentEntry<T> : UniqueContentEntry<T>
+	public sealed partial class ContentEntry<T> : UniqueContentEntry<T>
 	{
 #if !CLIENT
 		[NonSerialized]
-		private int _index = -1;
+		private int _index = ContentConstants.INVALID_INDEX;
 		public override ref readonly T Value => ref guid.Get<T>(ref _index);
 #endif
 
 		public ContentEntry(in T value) : base(in value, SerializableGuid.New())
 		{
 		}
-
-#if CLIENT
-		public void Edit(in T newValue) => ContentEditValue = newValue;
-#endif
 	}
 }

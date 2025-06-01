@@ -57,6 +57,7 @@ namespace Content
 			guid = g;
 			return true;
 		}
+		public static SerializableGuid Parse(string str) => Guid.Parse(str);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString() => guid.ToString("N");
