@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Fusumity.Collections;
 using Newtonsoft.Json;
 using Sapientia.Extensions;
 
@@ -16,7 +15,9 @@ namespace Content.Management
 			{
 				new ContentReferenceJsonConverter(),
 				new SerializableGuidJsonConverter(),
-				new SerializableDictionaryJsonConverter(),
+#if CLIENT
+				new Fusumity.Collections.SerializableDictionaryJsonConverter(),
+#endif
 				new ContentEntryJsonConverter()
 			},
 			DefaultValueHandling = DefaultValueHandling.Ignore,

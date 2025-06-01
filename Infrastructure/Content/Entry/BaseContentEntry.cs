@@ -12,10 +12,12 @@ namespace Content
 #endif
 
 		public Type ValueType => typeof(T);
-		public virtual object Context => null;
-		public virtual bool IsValid() => true;
 
+		public virtual bool IsValid() => true;
 		public virtual bool IsUnique() => false;
+		object IContentEntry.RawValue => Value;
+
+		public virtual object Context => null;
 
 		protected BaseContentEntry(in T value)
 		{
@@ -65,6 +67,8 @@ namespace Content
 		public void Register();
 		public void Unregister();
 		public bool IsUnique();
+
+		object RawValue { get; }
 
 		public object Context { get; }
 	}

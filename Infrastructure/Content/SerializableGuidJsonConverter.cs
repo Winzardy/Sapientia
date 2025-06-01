@@ -1,4 +1,3 @@
-#if NEWTONSOFT
 using System;
 using Newtonsoft.Json;
 
@@ -20,4 +19,3 @@ namespace Content
 		}
 	}
 }
-#endif

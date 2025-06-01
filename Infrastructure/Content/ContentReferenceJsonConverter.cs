@@ -1,5 +1,4 @@
-﻿#if NEWTONSOFT
-using System;
+﻿using System;
 using Newtonsoft.Json;
 using Sapientia.Reflection;
 
@@ -30,4 +29,3 @@ namespace Content
 		}
 	}
 }
-#endif
