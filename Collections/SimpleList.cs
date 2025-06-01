@@ -91,9 +91,15 @@ namespace Sapientia.Collections
 			array.CopyTo(_array, 0);
 		}
 
-		public SimpleList(IEnumerable<T> enumerable, int capacity = DEFAULT_CAPACITY, bool isRented = true) : this(capacity, isRented)
+		public SimpleList(Span<T> array, int capacity = DEFAULT_CAPACITY, bool isRented = true)
 		{
-			AddRange(enumerable);
+			_count = array.Length;
+			if (capacity < _count)
+				capacity = _count;
+			_array = isRented ? ArrayPool<T>.Shared.Rent(capacity) : new T[capacity];
+			_isRented = isRented;
+
+			array.CopyTo(_array);
 		}
 
 		public SimpleList(ICollection<T> collection, int capacity = DEFAULT_CAPACITY, bool isRented = true) : this(capacity, isRented)

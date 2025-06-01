@@ -10,12 +10,10 @@ namespace Sapientia.Collections
 		private Stack<int> _ids;
 		private SparseSet<T> _sparseSet;
 
-		private int _count;
-
 		public int Count
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _count;
+			get => _sparseSet.Count;
 		}
 
 		public int Capacity
@@ -34,7 +32,6 @@ namespace Sapientia.Collections
 		{
 			_ids = new Stack<int>(capacity);
 			_sparseSet = new SparseSet<T>(capacity, sparseCapacity, expandStep);
-			_count = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,11 +50,9 @@ namespace Sapientia.Collections
 		public int AllocateId()
 		{
 			if (_ids.Count <= 0)
-				_ids.Push(_count + 1);
+				_ids.Push(_sparseSet.Count);
 
 			var id = _ids.Pop();
-			_count++;
-
 			_sparseSet.EnsureGet(id);
 			return id;
 		}
@@ -74,7 +69,6 @@ namespace Sapientia.Collections
 		{
 			_sparseSet.RemoveSwapBack(id);
 			_ids.Push(id);
-			_count--;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,7 +76,6 @@ namespace Sapientia.Collections
 		{
 			_ids.Clear();
 			_sparseSet.Dispose();
-			_count = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,7 +83,6 @@ namespace Sapientia.Collections
 		{
 			_ids.Clear();
 			_sparseSet.Clear();
-			_count = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,7 +90,6 @@ namespace Sapientia.Collections
 		{
 			_ids.Clear();
 			_sparseSet.ClearFast();
-			_count = 0;
 		}
 
 		public IEnumerator<T> GetEnumerator()

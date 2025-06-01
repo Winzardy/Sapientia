@@ -135,7 +135,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(this.As<Entity, int>(), worldId.id);
+			return id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

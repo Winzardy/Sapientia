@@ -111,7 +111,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int GetIdByDenseId(World world, int denseId)
 		{
-			return _sparse[world, denseId];
+			return _dense[world, denseId];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

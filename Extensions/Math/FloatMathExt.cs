@@ -259,6 +259,13 @@ namespace Sapientia.Extensions
 			return current + (target - current) * coefficient;
 		}
 
+		/// <returns> Returns Lerp's coefficient</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float UnLerp(this float current, float target, float value)
+		{
+			return (value - current) / (target - current);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float SmoothStep(this float current, float target, float step)
 		{
