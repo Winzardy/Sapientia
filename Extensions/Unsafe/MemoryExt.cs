@@ -189,7 +189,6 @@ namespace Sapientia.Extensions
 		{
 #if DEBUG
 			E.ASSERT(destination.IsValidLength(size));
-			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSet(destination.ptr, value, size);
@@ -240,7 +239,6 @@ namespace Sapientia.Extensions
 		{
 #if DEBUG
 			E.ASSERT(destination.IsValidLength(size));
-			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemClear(destination.ptr, size);
