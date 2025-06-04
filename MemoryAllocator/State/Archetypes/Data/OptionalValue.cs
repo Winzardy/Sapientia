@@ -2,8 +2,8 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public struct OptionalValue<TValue>
 	{
-		private byte _isEnabled;
 		public TValue value;
+		private byte _isEnabled;
 
 		private OptionalValue(TValue value)
 		{
