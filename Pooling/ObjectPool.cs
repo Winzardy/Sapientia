@@ -101,15 +101,13 @@ namespace Sapientia.Pooling
 
 		public static void Release<T>(this ObjectPool<T> pool, ICollection<T> collection)
 			where T : class =>
-			collection.Release(pool);
+			collection.ReleaseAndClear(pool);
 
-		public static void Release<T>(this ICollection<T> collection, ObjectPool<T> pool)
+		public static void ReleaseAndClear<T>(this ICollection<T> collection, ObjectPool<T> pool)
 			where T : class
 		{
 			foreach (var obj in collection)
-			{
 				pool.Release(obj);
-			}
 
 			collection.Clear();
 		}
