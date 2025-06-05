@@ -8,7 +8,7 @@ namespace Trading
 {
 	public sealed partial class TradeCostCollection
 	{
-		public override bool CanReturn(out TradeCostReturnError? error)
+		public override bool CanReturn(Tradeboard board, out TradeCostReturnError? error)
 		{
 			using (ListPool<TradeCostReturnError?>.Get(out var errors))
 			{
@@ -16,26 +16,26 @@ namespace Trading
 
 				foreach (var item in items)
 				{
-					if (item.CanReturn(out error))
+					if (item.CanReturn(board, out error))
 						continue;
 
 					errors.Add(error);
 				}
 
 				if (!errors.IsEmpty())
-					error = new TradeCostReturnError(TradeCostReturnCategory.COLLECTION, errors.ToArray());
+					error = new TradeCostReturnError(ERROR_CATEGORY, errors.ToArray());
 
 				return errors.IsEmpty();
 			}
 		}
 
-		internal override async Task<bool> ReturnAsync(CancellationToken cancellationToken = default)
+		internal override async Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default)
 		{
 			var success = true;
 			foreach (var cost in items)
 			{
 				// ReSharper disable once MethodSupportsCancellation
-				var itemSuccess = await cost.ReturnAsync();
+				var itemSuccess = await cost.ReturnAsync(board);
 				if (!itemSuccess)
 					success = false;
 			}
@@ -43,13 +43,13 @@ namespace Trading
 			return success;
 		}
 
-		private async Task<bool> ReturnAsync(List<TradeCost> paid)
+		private async Task<bool> ReturnAsync(Tradeboard board, List<TradeCost> paid)
 		{
 			var success = true;
 			foreach (var cost in paid)
 			{
 				// ReSharper disable once MethodSupportsCancellation
-				var itemSuccess = await cost.ReturnAsync();
+				var itemSuccess = await cost.ReturnAsync(board);
 				if (!itemSuccess)
 					success = false;
 			}

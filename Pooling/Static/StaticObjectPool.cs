@@ -43,9 +43,28 @@ namespace Sapientia.Pooling
 			=> StaticObjectPool<T>.Release(obj);
 	}
 
-	public static class StaticObjectPoolExtensions
+	public static class StaticObjectPoolUtility
 	{
-		public static void ReleaseToStaticPool<T>(this T obj) where T : class
-			=> StaticObjectPool<T>.Release(obj);
+		public static void ReleaseToStaticPool<T>(this T obj)
+			where T : class
+		{
+			StaticObjectPool<T>.Release(obj);
+		}
+
+		public static void Release<T>(ref T? obj)
+			where T : class
+		{
+			StaticObjectPool<T>.Release(obj!);
+			obj = null;
+		}
+
+		public static void ReleaseSafe<T>(ref T? obj)
+			where T : class
+		{
+			if (obj == null)
+				return;
+
+			Release(ref obj);
+		}
 	}
 }

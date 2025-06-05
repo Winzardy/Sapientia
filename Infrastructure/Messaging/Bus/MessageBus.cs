@@ -4,7 +4,7 @@ using Sapientia.Data;
 
 namespace Messaging
 {
-	public delegate bool Filter<T>(in T msg);
+	public delegate bool Filter<T>(in T value);
 
 	/// <summary>
 	/// Централизованный мессендж-хаб, отвечающий за подписку, публикацию и доставку сообщений.

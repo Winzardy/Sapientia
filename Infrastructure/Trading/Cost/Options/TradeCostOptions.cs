@@ -24,9 +24,10 @@ namespace Trading
 
 		public ref readonly TradeCost this[int index] => ref options[index];
 
-		public override bool CanPay(out TradePayError? error) => options[selectedIndex].CanPay(out error);
+		protected override bool CanPay(Tradeboard board, out TradePayError? error) => options[selectedIndex].CanPay(board, out error);
 
-		protected override Task<bool> PayAsync(CancellationToken cancellationToken) => options[selectedIndex].ExecuteAsync(cancellationToken);
+		protected override Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken) =>
+			options[selectedIndex].ExecuteAsync(board, cancellationToken);
 
 		public bool TrySelect(int index)
 		{

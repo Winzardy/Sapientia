@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Sapientia.Extensions;
+using Sapientia.JsonConverters;
 
 namespace Content.Management
 {
@@ -16,9 +17,10 @@ namespace Content.Management
 				new ContentReferenceJsonConverter(),
 				new SerializableGuidJsonConverter(),
 #if CLIENT
-				new Fusumity.Collections.SerializableDictionaryJsonConverter(),
+				new Fusumity.JsonConverters.SerializableDictionaryJsonConverter(),
 #endif
-				new ContentEntryJsonConverter()
+				new ContentEntryJsonConverter(),
+				new DictionaryConverter()
 			},
 			DefaultValueHandling = DefaultValueHandling.Ignore,
 			TypeNameHandling = TypeNameHandling.Auto,

@@ -8,7 +8,7 @@ namespace Trading
 {
 	public partial class TradeRewardCollection
 	{
-		public override bool CanReturn(out TradeRewardReturnError? error)
+		public override bool CanReturn(Tradeboard board, out TradeRewardReturnError? error)
 		{
 			using (ListPool<TradeRewardReturnError?>.Get(out var errors))
 			{
@@ -16,26 +16,26 @@ namespace Trading
 
 				foreach (var item in items)
 				{
-					if (item.CanReturn(out error))
+					if (item.CanReturn(board, out error))
 						continue;
 
 					errors.Add(error);
 				}
 
 				if (!errors.IsEmpty())
-					error = new TradeRewardReturnError(TradeRewardReturnCategory.COLLECTION, errors.ToArray());
+					error = new TradeRewardReturnError(ERROR_CATEGORY, errors.ToArray());
 
 				return errors.IsEmpty();
 			}
 		}
 
-		internal override async Task<bool> ReturnAsync(CancellationToken cancellationToken = default)
+		internal override async Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default)
 		{
 			var success = true;
 			foreach (var reward in items)
 			{
 				// ReSharper disable once MethodSupportsCancellation
-				var itemSuccess = await reward.ReturnAsync();
+				var itemSuccess = await reward.ReturnAsync(board);
 				if (!itemSuccess)
 					success = false;
 			}
@@ -43,13 +43,13 @@ namespace Trading
 			return success;
 		}
 
-		private async Task<bool> ReturnAsync(List<TradeReward> received)
+		private async Task<bool> ReturnAsync(Tradeboard board, List<TradeReward> received)
 		{
 			var success = true;
 			foreach (var reward in received)
 			{
 				// ReSharper disable once MethodSupportsCancellation
-				var itemSuccess = await reward.ReturnAsync();
+				var itemSuccess = await reward.ReturnAsync(board);
 				if (!itemSuccess)
 					success = false;
 			}

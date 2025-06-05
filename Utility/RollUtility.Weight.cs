@@ -9,7 +9,7 @@ namespace Sapientia
 		/// Возвращает index чтобы не было боксинга
 		/// </summary>
 		/// <returns>Успешность ролла</returns>
-		public static bool Roll<T>(this IList<T> elements, IRandomizer<int> random,  out int index)
+		public static bool Roll<T>(this IList<T> elements, IRandomizer<int> random, out int index)
 			where T : IWeightable
 		{
 			index = 0;

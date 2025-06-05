@@ -2,6 +2,8 @@ using System;
 
 namespace Sapientia
 {
+	public delegate void Receiver<T>(in T value);
+
 	/// <summary>
 	/// Легковесное реактивное поле, уведомляющее подписчиков при изменении значения.
 	/// Поддерживает опциональный вызов подписчика при подписке.
@@ -12,7 +14,7 @@ namespace Sapientia
 		private T _value;
 		public T Value => _value;
 
-		private event Receiver<T> _receiver;
+		private event Receiver<T> _valueChanged;
 
 		public static implicit operator T(ReactiveField<T> property) => property.Value;
 
@@ -27,7 +29,7 @@ namespace Sapientia
 		public void Set(in T value)
 		{
 			_value = value;
-			_receiver?.Invoke(in _value);
+			_valueChanged?.Invoke(in _value);
 		}
 
 		public void Subscribe(Receiver<T> receiver, bool invokeOnSubscribe = true)
@@ -35,10 +37,10 @@ namespace Sapientia
 			if (invokeOnSubscribe)
 				receiver?.Invoke(in _value);
 
-			_receiver += receiver;
+			_valueChanged += receiver;
 		}
 
-		public void Unsubscribe(Receiver<T> receiver) => _receiver -= receiver;
+		public void Unsubscribe(Receiver<T> receiver) => _valueChanged -= receiver;
 	}
 
 	public interface IReactiveProperty<T>
@@ -78,6 +80,4 @@ namespace Sapientia
 			return receiver;
 		}
 	}
-
-	public delegate void Receiver<T>(in T value);
 }

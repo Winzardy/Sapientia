@@ -9,6 +9,8 @@ namespace Trading
 	[Serializable]
 	public partial class TradeRewardCollection : TradeReward
 	{
+		public const string ERROR_CATEGORY = "Collection";
+
 #if CLIENT
 		[UnityEngine.SerializeReference]
 #endif
@@ -17,7 +19,7 @@ namespace Trading
 
 		public TradeReward[] Items => items;
 
-		public override bool CanReceive(out TradeReceiveError? error)
+		protected internal override bool CanReceive(Tradeboard board, out TradeReceiveError? error)
 		{
 			using (ListPool<TradeReceiveError?>.Get(out var errors))
 			using (ListPool<TradeReward>.Get(out var sorted))
@@ -29,20 +31,20 @@ namespace Trading
 
 				foreach (var cost in sorted)
 				{
-					if (cost.CanReceive(out error))
+					if (cost.CanReceive(board, out error))
 						continue;
 
 					errors.Add(error);
 				}
 
 				if (!errors.IsEmpty())
-					error = new TradeReceiveError(TradeRewardCategory.COLLECTION, errors.ToArray());
+					error = new TradeReceiveError(ERROR_CATEGORY, errors.ToArray());
 
 				return errors.IsEmpty();
 			}
 		}
 
-		internal override async Task<bool> ReceiveAsync(CancellationToken cancellationToken)
+		protected override async Task<bool> ReceiveAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
 			using (ListPool<TradeReward>.Get(out var received))
 			using (ListPool<TradeReward>.Get(out var sorted))
@@ -55,11 +57,11 @@ namespace Trading
 					foreach (var reward in sorted)
 					{
 						cancellationToken.ThrowIfCancellationRequested();
-						var success = await reward.ReceiveAsync(cancellationToken);
+						var success = await reward.ExecuteAsync(board, cancellationToken);
 
 						if (!success)
 						{
-							await ReturnAsync(received);
+							await ReturnAsync(board, received);
 							return false;
 						}
 
@@ -70,7 +72,7 @@ namespace Trading
 				}
 				catch (OperationCanceledException)
 				{
-					await ReturnAsync(received);
+					await ReturnAsync(board, received);
 					throw;
 				}
 			}

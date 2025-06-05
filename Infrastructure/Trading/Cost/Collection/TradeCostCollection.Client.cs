@@ -19,7 +19,8 @@ namespace Trading
 		/// <summary>
 		/// Фильтрует типы только в инспекторе!
 		/// </summary>
-		public bool Filter(Type type) => !typeof(IEnumerable<TradeCost>).IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
+		public bool Filter(Type type) => !typeof(IEnumerable<TradeCost>)
+		   .IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
 	}
 }
 #endif

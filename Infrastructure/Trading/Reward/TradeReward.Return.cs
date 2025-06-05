@@ -8,7 +8,7 @@ namespace Trading
 		/// <summary>
 		/// Можно ли забрать обратно что выдали?
 		/// </summary>
-		public virtual bool CanReturn(out TradeRewardReturnError? error)
+		public virtual bool CanReturn(Tradeboard board, out TradeRewardReturnError? error)
 		{
 			error = null;
 			return false;
@@ -18,7 +18,7 @@ namespace Trading
 		/// Забираем, то что выдали
 		/// </summary>
 		/// <returns>Успешность</returns>
-		internal virtual Task<bool> ReturnAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
+		internal virtual Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default) => Task.FromResult(true);
 	}
 
 	public readonly struct TradeRewardReturnError

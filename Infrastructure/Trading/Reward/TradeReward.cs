@@ -10,17 +10,21 @@ namespace Trading
 		/// <summary>
 		/// Участвует в сортировке в <see cref="TradeRewardCollection"/>
 		/// </summary>
-		public virtual int Priority => TradeCostPriority.NORMAL;
+		protected internal virtual int Priority => TradeCostPriority.NORMAL;
+
+		internal bool CanExecute(Tradeboard board, out TradeReceiveError? error) => CanReceive(board, out error);
+		internal Task<bool> ExecuteAsync(Tradeboard board, CancellationToken cancellationToken) => ReceiveAsync(board, cancellationToken);
+
 
 		/// <summary>
 		/// Доступно ли для получения? пример: нет места в инвентаре
 		/// </summary>
-		public abstract bool CanReceive(out TradeReceiveError? error);
+		protected internal abstract bool CanReceive(Tradeboard board, out TradeReceiveError? error);
 
 		/// <summary>
 		/// Выдать
 		/// </summary>
-		internal abstract Task<bool> ReceiveAsync(CancellationToken cancellationToken);
+		protected abstract Task<bool> ReceiveAsync(Tradeboard board, CancellationToken cancellationToken);
 	}
 
 	public readonly struct TradeReceiveError

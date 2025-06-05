@@ -15,7 +15,7 @@ namespace Messaging
 		}
 
 		/// <summary>
-		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(Receiver{TMessage})"/>
+		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(Receiver{T})"/>
 		/// </summary>
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -23,7 +23,7 @@ namespace Messaging
 			=> bus.SendAndUnsubscribeAll(ref msg);
 
 		/// <summary>
-		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(Receiver{TMessage})"/>
+		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(Receiver{T})"/>
 		/// </summary>
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

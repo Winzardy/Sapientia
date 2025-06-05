@@ -6,7 +6,7 @@ namespace Trading
 	public abstract partial class TradeCost
 	{
 		/// <returns>Можно ли вернуть, что заплатили?</returns>
-		public virtual bool CanReturn(out TradeCostReturnError? error)
+		public virtual bool CanReturn(Tradeboard board, out TradeCostReturnError? error)
 		{
 			error = null;
 			return false;
@@ -16,7 +16,7 @@ namespace Trading
 		/// Возвращаем, что заплатили
 		/// </summary>
 		/// <returns>Получилось ли?</returns>
-		internal virtual Task<bool> ReturnAsync(CancellationToken cancellationToken = default) => Task.FromResult(true);
+		internal virtual Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default) => Task.FromResult(true);
 	}
 
 	public readonly struct TradeCostReturnError

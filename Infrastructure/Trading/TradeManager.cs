@@ -24,9 +24,25 @@ namespace Trading
 
 		public static void Register(TradeEntry entry) => management.Register(entry);
 		public static void Unregister(TradeEntry entry) => management.Unregister(entry);
-		public static bool CanExecute(TradeEntry entry, out TradeExecuteError? error) => management.CanExecute(entry, out error);
 
-		public static Task<bool> ExecuteAsync(TradeEntry entry, CancellationToken cancellationToken = default) =>
-			management.ExecuteAsync(entry, cancellationToken);
+		public static bool CanExecute(TradeEntry entry, Tradeboard board, out TradeExecuteError? error)
+			=> management.CanExecute(entry, board, out error);
+
+		public static Task<bool> ExecuteAsync(TradeEntry entry, Tradeboard board, CancellationToken cancellationToken = default) =>
+			management.ExecuteAsync(entry, board, cancellationToken);
+	}
+
+	public static class TradeManagerUtility
+	{
+		public static bool CanPay(this TradeCost cost, Tradeboard board, out TradePayError? error)
+		{
+			return cost.CanExecute(board, out error);
+		}
+
+		//TODO: трабла что ExecuteAsync ндао подумать
+		public static bool Pay(this TradeCost cost, Tradeboard board)
+		{
+			return cost.ExecuteAsync(board, CancellationToken.None).Result;
+		}
 	}
 }

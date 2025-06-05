@@ -6,15 +6,15 @@ namespace Trading.Management
 {
 	public sealed class TradeManagement
 	{
-		internal bool CanExecute(TradeEntry trade, out TradeExecuteError? error)
+		internal bool CanExecute(TradeEntry trade, Tradeboard board, out TradeExecuteError? error)
 		{
 			var result = true;
 			error = null;
 
-			if (!trade.cost.CanPay(out var payError))
+			if (!trade.cost.CanPay(board, out var payError))
 				result = false;
 
-			if (!trade.reward.CanReceive(out var receiveError))
+			if (!trade.reward.CanReceive(board, out var receiveError))
 				result = false;
 
 			if (!result)
@@ -23,13 +23,20 @@ namespace Trading.Management
 			return result;
 		}
 
-		internal async Task<bool> ExecuteAsync(TradeEntry trade, CancellationToken cancellationToken)
+		internal async Task<bool> ExecuteAsync(TradeEntry trade, Tradeboard board, CancellationToken cancellationToken)
 		{
-			var success = await trade.cost.ExecuteAsync(cancellationToken);
+			// Сначала платим
+			var success = await trade.cost.ExecuteAsync(board, cancellationToken);
 			if (!success)
 				return false;
 
-			success = await trade.reward.ReceiveAsync(cancellationToken);
+			// Потом получаем
+			success = await trade.reward.ExecuteAsync(board, cancellationToken);
+
+			// Если что-то пошло не по плану возвращаем
+			if (!success)
+				await trade.cost.ReturnAsync(board, cancellationToken);
+
 			return success;
 		}
 
