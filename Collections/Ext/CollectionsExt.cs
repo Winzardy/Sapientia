@@ -265,40 +265,33 @@ namespace Sapientia.Collections
 
 		public static T First<T>(this IList<T> list) => list[0];
 
-		public static T FirstOrDefault<T>(this IList<T> list)
-		{
-			if (list == null || list.Count < 1)
-				return default;
-
-			return First(list);
-		}
+		public static T FirstOrDefault<T>(this IList<T>? list, T defaultValue = default)
+			=> ElementAtOrDefault(list, 0, defaultValue);
 
 		public static T Second<T>(this IList<T> list) => list[1];
 
-		public static T SecondOrDefault<T>(this IList<T> list)
-		{
-			if (list == null || list.Count < 2)
-				return default;
-
-			return Second(list);
-		}
+		public static T SecondOrDefault<T>(this IList<T>? list, T defaultValue = default)
+			=> ElementAtOrDefault(list, 1, defaultValue);
 
 		public static T Third<T>(this IList<T> list) => list[2];
 
-		public static T ThirdOrDefault<T>(this IList<T> list)
+		public static T ElementAtOrDefault<T>(this IList<T>? list, int index, T defaultValue = default)
 		{
-			if (list == null || list.Count < 3)
-				return default;
+			if (list == null || list.Count - 1 < index)
+				return defaultValue;
 
-			return Third(list);
+			return list[index];
 		}
+
+		public static T ThirdOrDefault<T>(this IList<T>? list, T defaultValue = default)
+			=> ElementAtOrDefault(list, 2, defaultValue);
 
 		public static T Last<T>(this IList<T> list) => list[^1];
 
-		public static T LastOrDefault<T>(this IList<T> list)
+		public static T LastOrDefault<T>(this IList<T> list, T defaultValue = default)
 		{
 			if (IsNullOrEmpty(list))
-				return default;
+				return defaultValue;
 
 			return Last(list);
 		}

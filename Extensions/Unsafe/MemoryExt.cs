@@ -101,7 +101,9 @@ namespace Sapientia.Extensions
 		public static SafePtr MemAlloc(int size, int align, Unity.Collections.Allocator allocator)
 		{
 			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, allocator);
-			DebugMemAlloc(ptr, size);
+#if DEBUG
+			DebugInsertMemorySpace((IntPtr)ptr, size);
+#endif
 
 			return new SafePtr(ptr, size);
 		}
@@ -168,7 +170,9 @@ namespace Sapientia.Extensions
 		[INLINE(256)]
 		public static void MemFree(SafePtr memory, Unity.Collections.Allocator allocator)
 		{
-			DebugMemFree(memory.ptr);
+#if DEBUG
+			DebugRemoveMemorySpace((IntPtr)memory.ptr, out var size);
+#endif
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, allocator);
 		}
 #endif
@@ -189,7 +193,6 @@ namespace Sapientia.Extensions
 		{
 #if DEBUG
 			E.ASSERT(destination.IsValidLength(size));
-			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemSet(destination.ptr, value, size);
@@ -240,7 +243,6 @@ namespace Sapientia.Extensions
 		{
 #if DEBUG
 			E.ASSERT(destination.IsValidLength(size));
-			E.ASSERT(DebugIsInBound(destination.LowBound, destination.HiBound));
 #endif
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemClear(destination.ptr, size);

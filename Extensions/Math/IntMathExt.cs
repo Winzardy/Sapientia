@@ -94,9 +94,23 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Max(this int a, int b, out bool aMoreEqual)
+		{
+			aMoreEqual = a >= b;
+			return aMoreEqual ? a : b;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Max(this int a, int b)
 		{
 			return a > b ? a : b;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Min(this int a, int b, out bool aLessEqual)
+		{
+			aLessEqual = a <= b;
+			return aLessEqual ? a : b;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
