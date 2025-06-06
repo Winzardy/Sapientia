@@ -7,24 +7,21 @@ using Sapientia.Pooling.Concurrent;
 
 namespace Sapientia
 {
-	public abstract class Blackboard : IDisposable
+	/// <remarks>
+	/// ⚠️ Важно: only-runtime сущность
+	/// </remarks>
+	public abstract class Blackboard : IPoolable, IDisposable
 	{
 		private ConcurrentHashSet<IBlackboardToken>? _tokens;
 
 		public void Dispose()
 		{
-			if (_tokens == null)
-				return;
-
-			foreach (var token in _tokens)
-				token.Release(false);
-
-			StaticObjectPoolUtility.ReleaseSafe(ref _tokens);
+			ReleaseInternal();
+			OnDispose();
 		}
 
-		internal virtual string GetName() => GetType().Name;
-
 		public bool Contains<T>(string? key = null) => Blackboard<T>.Contains(this, key);
+
 		public ref readonly T Get<T>(string? key = null) => ref Blackboard<T>.Get(this, key);
 
 		public IBlackboardToken Register<T>(in T value, string? key = null)
@@ -38,7 +35,10 @@ namespace Sapientia
 		internal void Unregister(IBlackboardToken token)
 		{
 			if (_tokens == null || !_tokens.Remove(token))
-				throw new ArgumentException($"[{GetName()}] {token.ValueType} not registered");
+			{
+				var msg = $"{Name}: ${token.ValueType} not registered";
+				throw GetArgumentException(msg);
+			}
 		}
 
 		internal void Clone(Blackboard target)
@@ -54,6 +54,32 @@ namespace Sapientia
 				target._tokens.Add(newToken);
 			}
 		}
+
+		protected virtual void OnRelease()
+		{
+		}
+
+		protected virtual void OnDispose()
+		{
+		}
+
+		void IPoolable.Release() => ReleaseInternal();
+
+		private void ReleaseInternal()
+		{
+			if (_tokens != null)
+			{
+				foreach (var token in _tokens)
+					token.Release(false);
+
+				StaticObjectPoolUtility.ReleaseSafe(ref _tokens);
+			}
+
+			OnRelease();
+		}
+
+		protected internal virtual string Name => GetType().Name;
+		protected internal virtual Exception GetArgumentException(object msg) => new ArgumentException(msg.ToString());
 	}
 
 	internal static class Blackboard<T>
@@ -74,8 +100,11 @@ namespace Sapientia
 
 			var hash = ToHash(blackboard, key);
 			if (_boardToValue == null || !_boardToValue.TryGetValue(hash, out var entry))
-				throw new ArgumentException($"[{blackboard.GetName()}] {typeof(T)} not found" +
-					(!key.IsNullOrEmpty() ? $" by key '{key}'" : ""));
+			{
+				var msg = $"{blackboard.Name}: ${typeof(T)} not found" +
+					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
+				throw blackboard.GetArgumentException(msg);
+			}
 
 			return ref entry.value;
 		}
@@ -85,8 +114,11 @@ namespace Sapientia
 			_boardToValue ??= ConcurrentDictionaryPool<int, Entry>.Get();
 			var hash = ToHash(blackboard, key);
 			if (!_boardToValue.TryAdd(hash, value))
-				throw new ArgumentException($"[{blackboard.GetName()}] {typeof(T)} already registered" +
-					(!key.IsNullOrEmpty() ? $" with key '{key}'" : ""));
+			{
+				var msg = $"{blackboard.Name}: ${typeof(T)} already registered" +
+					(!key.IsNullOrEmpty() ? $" with key [ {key} ]" : "");
+				throw blackboard.GetArgumentException(msg);
+			}
 
 			return new BlackboardToken<T>(blackboard, key);
 		}
@@ -95,8 +127,11 @@ namespace Sapientia
 		{
 			var hash = ToHash(blackboard, key);
 			if (_boardToValue == null || !_boardToValue.TryRemove(hash, out _))
-				throw new ArgumentException($"[{blackboard.GetName()}] {typeof(T)} not registered" +
-					(!key.IsNullOrEmpty() ? $" by key '{key}'" : ""));
+			{
+				var msg = $"{blackboard.Name}: ${typeof(T)} not registered" +
+					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
+				throw blackboard.GetArgumentException(msg);
+			}
 
 			if (_boardToValue.Count <= 0)
 				StaticObjectPoolUtility.Release(ref _boardToValue);

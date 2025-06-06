@@ -6,12 +6,12 @@ namespace Trading
 #if NEWTONSOFT
 	[Newtonsoft.Json.JsonObject] // иначе пытается сериализовать как список
 #endif
-	public sealed partial class TradeCostCollection : IEnumerable<TradeCost>
+	public sealed partial class TradeCostOptions : IEnumerable<TradeCost>
 	{
-		public override IEnumerator<TradeCost> GetEnumerator()
+		public new IEnumerator<TradeCost> GetEnumerator()
 		{
-			foreach (var item in items)
-				yield return item;
+			foreach (var option in options)
+				yield return option;
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

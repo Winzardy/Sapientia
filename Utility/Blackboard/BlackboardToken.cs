@@ -38,7 +38,7 @@ namespace Sapientia
 			if (unregister)
 				_blackboard.Unregister(this);
 
-			Blackboard<T>.Unregister(_blackboard);
+			Blackboard<T>.Unregister(_blackboard, _key);
 		}
 
 		IBlackboardToken IBlackboardToken.Clone(Blackboard blackboard)

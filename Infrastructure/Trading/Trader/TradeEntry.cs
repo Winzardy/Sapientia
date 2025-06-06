@@ -1,16 +1,15 @@
 using System;
-using Content;
 using Sapientia;
 
-//Возможно стоило назвать TradeSystem, но хотелось отсебятины
 namespace Trading
 {
-	//TODO: Нужно будет регистрировать сделки в общей системе если сами сделки динамические
+	// TODO: Нужно будет регистрировать сделки в общей системе если сами сделки динамические
+
 	/// <summary>
-	/// Сделка, рецепт, обмен <b>чего-то</b> на <b>что-то</b>
+	/// Сделка, рецепт, обмен <b>чего-то</b> (<see cref="TradeCost"/>) на <b>что-то</b> (<see cref="TradeReward"/>)
 	/// </summary>
 	[Serializable]
-	public class TradeEntry : IExternallyIdentifiable
+	public struct TradeEntry : IExternallyIdentifiable
 	{
 		private string _id;
 #if CLIENT
