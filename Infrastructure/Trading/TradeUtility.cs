@@ -1,11 +1,11 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Trading.Management
+namespace Trading
 {
-	public sealed class TradeManagement
+	public static class TradeUtility
 	{
-		internal bool CanExecute(TradeEntry trade, Tradeboard board, out TradeExecuteError? error)
+		public static bool CanExecute(this TradeEntry trade, Tradeboard board, out TradeExecuteError? error)
 		{
 			var result = true;
 			error = null;
@@ -22,7 +22,7 @@ namespace Trading.Management
 			return result;
 		}
 
-		internal async Task<bool> ExecuteAsync(TradeEntry trade, Tradeboard board, CancellationToken cancellationToken)
+		internal static async Task<bool> ExecuteAsync(TradeEntry trade, Tradeboard board, CancellationToken cancellationToken)
 		{
 			// Сначала платим
 			var success = await trade.cost.ExecuteAsync(board, cancellationToken);
