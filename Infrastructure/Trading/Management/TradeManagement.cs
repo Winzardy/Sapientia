@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +10,7 @@ namespace Trading.Management
 			var result = true;
 			error = null;
 
-			if (!trade.cost.CanPay(board, out var payError))
+			if (!trade.cost.CanExecute(board, out var payError))
 				result = false;
 
 			if (!trade.reward.CanReceive(board, out var receiveError))
@@ -38,16 +37,6 @@ namespace Trading.Management
 				await trade.cost.ReturnAsync(board, cancellationToken);
 
 			return success;
-		}
-
-		internal void Register(TradeEntry trade)
-		{
-			throw new NotImplementedException();
-		}
-
-		internal void Unregister(TradeEntry trade)
-		{
-			throw new NotImplementedException();
 		}
 	}
 

@@ -31,7 +31,7 @@ namespace Trading
 
 				foreach (var cost in sorted)
 				{
-					if (cost.CanPay(board, out error))
+					if (cost.CanExecute(board, out error))
 						continue;
 
 					errors.Add(error);

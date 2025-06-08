@@ -2,11 +2,10 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Sapientia;
+using Trading.Management;
 
 namespace Trading
 {
-	using Management;
-
 	//Подумать насчет контрактов, кейсы когда у нас подписка
 	public sealed class TradeManager : StaticProvider<TradeManagement>
 	{
@@ -22,9 +21,6 @@ namespace Trading
 			get => _instance != null;
 		}
 
-		public static void Register(TradeEntry entry) => management.Register(entry);
-		public static void Unregister(TradeEntry entry) => management.Unregister(entry);
-
 		public static bool CanExecute(TradeEntry entry, Tradeboard board, out TradeExecuteError? error)
 			=> management.CanExecute(entry, board, out error);
 
@@ -32,17 +28,15 @@ namespace Trading
 			management.ExecuteAsync(entry, board, cancellationToken);
 	}
 
-	public static class TradeManagerUtility
+	/// <summary>
+	/// Защита от дурака: только через этот класс можно вызывать ExecuteAsync
+	/// </summary>
+	public static class TradeAccess
 	{
-		public static bool CanPay(this TradeCost cost, Tradeboard board, out TradePayError? error)
-		{
-			return cost.CanExecute(board, out error);
-		}
+		public static Task<bool> ExecuteAsync(TradeCost cost, Tradeboard board, CancellationToken cancellationToken)
+			=> cost.ExecuteAsync(board, cancellationToken);
 
-		//TODO: трабла что ExecuteAsync ндао подумать
-		public static bool Pay(this TradeCost cost, Tradeboard board)
-		{
-			return cost.ExecuteAsync(board, CancellationToken.None).Result;
-		}
+		public static Task<bool> ExecuteAsync(TradeReward reward, Tradeboard board, CancellationToken cancellationToken)
+			=> reward.ExecuteAsync(board, cancellationToken);
 	}
 }

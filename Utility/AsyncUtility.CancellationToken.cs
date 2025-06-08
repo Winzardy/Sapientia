@@ -1,13 +1,13 @@
 using System.Threading;
 
-namespace Sapientia.Extensions
+namespace Sapientia.Utility
 {
-	public static class CancellationTokenSourceUtility
+	public static partial class AsyncUtility
 	{
-		public static void Trigger(ref CancellationTokenSource cts)
+		public static void Trigger(ref CancellationTokenSource? cts)
 			=> Release(ref cts, true);
 
-		public static void Release(ref CancellationTokenSource cts, bool cancel = false)
+		public static void Release(ref CancellationTokenSource? cts, bool cancel = false)
 		{
 			if (cts == null)
 				return;
