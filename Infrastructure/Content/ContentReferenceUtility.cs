@@ -1,5 +1,5 @@
-using System;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace Content
 {
@@ -16,7 +16,7 @@ namespace Content
 				return ref ContentManager.Get<T>();
 
 #if UNITY_EDITOR
-			if (UnityEngine.Application.isPlaying)
+			if (Application.isPlaying)
 #endif
 				if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
 				{
@@ -58,7 +58,7 @@ namespace Content
 				return ref ContentManager.Get<T>();
 
 #if UNITY_EDITOR
-			if (UnityEngine.Application.isPlaying)
+			if (Application.isPlaying)
 #endif
 				if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
 				{
@@ -127,9 +127,9 @@ namespace Content
 
 		/// <param name="str">Либо Id, либо Guid</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ContentReference<T> ToReference<T>(this string str) => new()
+		public static ContentReference<T> ToReference<T>(string str) => new()
 		{
-			guid = Guid.TryParse(str, out var guid) ? guid : ContentManager.ToGuid<T>(str)
+			guid = SerializableGuid.TryParse(str, out var guid) ? guid : ContentManager.ToGuid<T>(str)
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -140,5 +140,9 @@ namespace Content
 
 			return IContentReference.SINGLE_GUID;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToLabel<T>(this in ContentReference<T> reference, bool verbose) =>
+			ContentManager.ToLabel<T>(in reference.guid, verbose);
 	}
 }

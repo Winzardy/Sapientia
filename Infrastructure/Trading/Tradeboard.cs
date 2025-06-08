@@ -13,6 +13,14 @@ namespace Trading
 	/// <seealso cref="Blackboard"/>
 	public sealed class Tradeboard : Blackboard
 	{
+		public Tradeboard()
+		{
+		}
+
+		public Tradeboard(Blackboard source) : base(source)
+		{
+		}
+
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
 	}

@@ -21,7 +21,8 @@ namespace Advertising
 
 		public static IAdEvents Events => management.Events;
 
-		public static bool CanShow<T>(string placement, out AdShowError? error) where T : AdPlacementEntry
+		public static bool CanShow<T>(string placement, out AdShowError? error)
+			where T : AdPlacementEntry
 			=> management.CanShow<T>(placement, out error);
 
 		public static bool CanShow(AdPlacementEntry entry, out AdShowError? error)

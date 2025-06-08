@@ -20,9 +20,7 @@ namespace Content
 			this.index = index;
 		}
 
-		public override string ToString() => ContentManager.ToLabel<T>(in guid);
-		public string ToString(bool detailed) => ContentManager.ToLabel<T>(in guid, detailed);
-
+		public override string ToString() => guid.ToString();
 		public override int GetHashCode() => guid.GetHashCode();
 	}
 
@@ -46,6 +44,9 @@ namespace Content
 			this.guid = guid;
 			this.index = index;
 		}
+
+		public override string ToString() => guid.ToString();
+		public override int GetHashCode() => guid.GetHashCode();
 	}
 
 	/// <summary>

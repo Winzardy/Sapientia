@@ -142,6 +142,15 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int Add(in T value)
+		{
+			Expand(_count + 1);
+			var index = _count++;
+			_array[index] = value;
+			return index;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add<T1>(T1 value) where T1 : T
 		{
 			Expand(_count + 1);

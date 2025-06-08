@@ -7,7 +7,7 @@ namespace InAppPurchasing.Fake
 	{
 		public const bool DEFAULT_USE_FAKE_RESTORE_TRANSACTIONS = false;
 
-		private SubscriptionInfo _empty;
+		private SubscriptionInfo _emptySubscriptionInfo;
 
 		public string Name => "Fake";
 
@@ -17,7 +17,7 @@ namespace InAppPurchasing.Fake
 		public event PurchaseCanceled PurchaseCanceled;
 		public event PromotionalPurchaseIntercepted PromotionalPurchaseIntercepted;
 
-		private Dictionary<IAPProductEntry, FakeProductData> _dictionary = new(2);
+		private Dictionary<IAPProductEntry, FakeProduct> _dictionary = new(2);
 
 		public bool TryGetStatus(IAPProductEntry product, out ProductStatus status)
 		{
@@ -32,19 +32,27 @@ namespace InAppPurchasing.Fake
 			IAPDebug.Log("Restored transactions");
 		}
 
+		public ref readonly ProductInfo GetProductInfo(IAPProductEntry entry, bool forceUpdateCache = false)
+		{
+			if (!_dictionary.TryGetValue(entry, out var product))
+				product = new FakeProduct(entry);
+
+			return ref product.info;
+		}
+
 		public bool CanPurchaseConsumable(IAPProductEntry product, out IAPPurchaseError? error)
 		{
 			error = null;
 			return true;
 		}
 
-		public bool RequestPurchaseConsumable(IAPProductEntry product) => Purchase(product);
+		public bool RequestPurchaseConsumable(IAPProductEntry entry) => Purchase(entry);
 
-		public bool CanPurchaseNonConsumable(IAPProductEntry product, out IAPPurchaseError? error)
+		public bool CanPurchaseNonConsumable(IAPProductEntry entry, out IAPPurchaseError? error)
 		{
-			if (_dictionary.TryGetValue(product, out var info))
+			if (_dictionary.TryGetValue(entry, out var product))
 			{
-				if (info.purchaseCount > 0)
+				if (product.purchaseCount > 0)
 				{
 					error = IAPPurchaseErrorCode.Purchased;
 					return false;
@@ -55,20 +63,20 @@ namespace InAppPurchasing.Fake
 			return true;
 		}
 
-		public bool RequestPurchaseNonConsumable(IAPProductEntry product)
+		public bool RequestPurchaseNonConsumable(IAPProductEntry entry)
 		{
-			if (!_dictionary.TryGetValue(product, out var data))
-				data = new FakeProductData(product.Id);
+			if (!_dictionary.TryGetValue(entry, out var product))
+				product = new FakeProduct(entry);
 
-			data.subscriptionExpirationTime = TimeSpan.FromSeconds(600);
-			return Purchase(product);
+			product.subscriptionExpirationTime = TimeSpan.FromSeconds(600);
+			return Purchase(entry);
 		}
 
-		public bool CanPurchaseSubscription(IAPProductEntry product, out IAPPurchaseError? error)
+		public bool CanPurchaseSubscription(IAPProductEntry entry, out IAPPurchaseError? error)
 		{
-			if (_dictionary.TryGetValue(product, out var info))
+			if (_dictionary.TryGetValue(entry, out var product))
 			{
-				if (info.lastPurchaseTime + info.subscriptionExpirationTime > DateTime.Now)
+				if (product.lastPurchaseTime + product.subscriptionExpirationTime > DateTime.Now)
 				{
 					error = IAPPurchaseErrorCode.Purchased;
 					return false;
@@ -79,44 +87,47 @@ namespace InAppPurchasing.Fake
 			return true;
 		}
 
-		public bool RequestPurchaseSubscription(IAPProductEntry product) => Purchase(product);
+		public bool RequestPurchaseSubscription(IAPProductEntry entry) => Purchase(entry);
 
-		public ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool force = false)
+		public ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool forceUpdateCache = false)
 		{
-			return ref _empty;
+			return ref _emptySubscriptionInfo;
 		}
 
-		private bool Purchase(IAPProductEntry product)
+		private bool Purchase(IAPProductEntry entry)
 		{
-			PurchaseRequested?.Invoke(product);
+			PurchaseRequested?.Invoke(entry);
 
-			if (!_dictionary.TryGetValue(product, out var data))
-				data = new FakeProductData(product.Id);
+			if (!_dictionary.TryGetValue(entry, out var product))
+				product = new FakeProduct(entry);
 
-			data.purchaseCount++;
-			data.lastPurchaseTime = DateTime.Now;
+			product.purchaseCount++;
+			product.lastPurchaseTime = DateTime.Now;
 
 			PurchaseCompleted?.Invoke(new PurchaseReceipt
 			{
-				product = product,
-				receipt = data.receipt,
-				transactionId = data.transactionId
+				product = entry,
+				receipt = product.receipt,
+				transactionId = product.transactionId
 			});
 			return true;
 		}
 
-		private class FakeProductData
+		private class FakeProduct
 		{
-			private readonly string _id;
+			public ProductInfo info;
 
 			public int purchaseCount;
 			public DateTime lastPurchaseTime;
 
 			public TimeSpan subscriptionExpirationTime;
-			public string receipt => $"Product: {_id}, time: {lastPurchaseTime}";
+			public string receipt => $"Product: {info.id}, time: {lastPurchaseTime}";
 			public string transactionId => lastPurchaseTime.Ticks.ToString();
 
-			public FakeProductData(string id) => this._id = id;
+			public FakeProduct(IAPProductEntry entry)
+			{
+				info = new ProductInfo(entry.Id, entry.Type, entry.price);
+			}
 		}
 	}
 }

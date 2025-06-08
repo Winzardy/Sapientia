@@ -29,6 +29,9 @@ namespace InAppPurchasing
 	{
 		private IInAppPurchasingService _service;
 
+		private readonly ProductInfo _emptyProductInfo = default;
+		private readonly SubscriptionInfo _emptySubscriptionInfo = default;
+
 		private readonly InAppPurchasingRelay _relay;
 
 		internal IInAppPurchasingEvents Events => _relay;
@@ -42,6 +45,20 @@ namespace InAppPurchasing
 		}
 
 		public void Dispose() => _relay.Dispose();
+
+		internal ref readonly ProductInfo GetProductInfo<T>(string product, bool forceUpdateCache = false)
+			where T : IAPProductEntry
+		{
+			if (!ContentManager.Contains<T>(product))
+				return ref _emptyProductInfo;
+
+			var entry = ContentManager.Get<IAPSubscriptionProductEntry>(product);
+			return ref GetProductInfo(entry, forceUpdateCache);
+		}
+
+		internal ref readonly ProductInfo GetProductInfo<T>(T entry, bool forceUpdateCache = false)
+			where T : IAPProductEntry =>
+			ref _service.GetProductInfo(entry, forceUpdateCache);
 
 		#region Can Purchase
 
@@ -246,15 +263,18 @@ namespace InAppPurchasing
 
 		#region Subscription
 
-		private readonly SubscriptionInfo _empty = default;
-
-		internal ref readonly SubscriptionInfo GetSubscriptionInfo(string product, bool force = false)
+		internal ref readonly SubscriptionInfo GetSubscriptionInfo(string product, bool forceUpdateCache = false)
 		{
 			if (!ContentManager.Contains<IAPSubscriptionProductEntry>(product))
-				return ref _empty;
+				return ref _emptySubscriptionInfo;
 
 			var entry = ContentManager.Get<IAPSubscriptionProductEntry>(product);
-			return ref _service.GetSubscriptionInfo(entry, force);
+			return ref GetSubscriptionInfo(entry, forceUpdateCache);
+		}
+
+		internal ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry entry, bool forceUpdateCache = false)
+		{
+			return ref _service.GetSubscriptionInfo(entry, forceUpdateCache);
 		}
 
 		#endregion

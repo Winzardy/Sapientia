@@ -263,6 +263,14 @@ namespace Sapientia.Collections
 			return index >= 0 && index < array.Length;
 		}
 
+		public static bool ContainsIndexSafe<T>(this IList<T> list, int index)
+		{
+			if (list == null)
+				return false;
+
+			return index >= 0 && index < list.Count;
+		}
+
 		public static T First<T>(this IList<T> list) => list[0];
 
 		public static T FirstOrDefault<T>(this IList<T>? list, T defaultValue = default)

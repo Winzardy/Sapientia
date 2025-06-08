@@ -13,25 +13,27 @@ namespace InAppPurchasing
 		/// </summary>
 		public void RestoreTransactions();
 
+		public ref readonly ProductInfo GetProductInfo(IAPProductEntry entry, bool forceUpdateCache = false);
+
 		#region Consumable
 
 		public bool CanPurchaseConsumable(IAPProductEntry product, out IAPPurchaseError? error);
-		public bool RequestPurchaseConsumable(IAPProductEntry product);
+		public bool RequestPurchaseConsumable(IAPProductEntry entry);
 
 		#endregion
 
 		#region NonConsumable
 
-		public bool CanPurchaseNonConsumable(IAPProductEntry product, out IAPPurchaseError? error);
-		public bool RequestPurchaseNonConsumable(IAPProductEntry product);
+		public bool CanPurchaseNonConsumable(IAPProductEntry entry, out IAPPurchaseError? error);
+		public bool RequestPurchaseNonConsumable(IAPProductEntry entry);
 
 		#endregion
 
 		#region Subscription
 
-		public bool CanPurchaseSubscription(IAPProductEntry product, out IAPPurchaseError? error);
-		public bool RequestPurchaseSubscription(IAPProductEntry product);
-		public ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool force = false);
+		public bool CanPurchaseSubscription(IAPProductEntry entry, out IAPPurchaseError? error);
+		public bool RequestPurchaseSubscription(IAPProductEntry entry);
+		public ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry subscription, bool forceUpdateCache = false);
 
 		#endregion
 

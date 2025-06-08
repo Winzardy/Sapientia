@@ -120,8 +120,8 @@ namespace Content
 
 		/// <inheritdoc cref="ContentResolver.ToLabel{T}(in SerializableGuid, bool)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToLabel<T>(in SerializableGuid guid, bool detailed = false)
-			=> _resolver.ToLabel<T>(in guid, detailed);
+		public static string ToLabel<T>(in SerializableGuid guid, bool verbose = false)
+			=> _resolver.ToLabel<T>(in guid, verbose);
 
 		#region Registation
 

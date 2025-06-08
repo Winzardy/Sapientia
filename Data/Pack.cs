@@ -14,21 +14,24 @@ namespace Sapientia
 	public struct Pack<T> : IPack, IHolder<T>
 	{
 		public T target;
-		public int amount;
+#if CLIENT
+		[UnityEngine.Serialization.FormerlySerializedAs("amount")]
+#endif
+		public int count;
 
-		public Pack(T target, int amount)
+		public Pack(T target, int count)
 		{
 			this.target = target;
-			this.amount = amount;
+			this.count = count;
 		}
 
-		public void Deconstruct(out T target, out int amount)
+		public void Deconstruct(out T target, out int count)
 		{
 			target = this.target;
-			amount = this.amount;
+			count = this.count;
 		}
 
 		public static implicit operator Pack<T>((T, int amount) tuple) => new(tuple.Item1, tuple.amount);
-		public static implicit operator bool(Pack<T> pack) => pack.amount > 0 && pack.target != null;
+		public static implicit operator bool(Pack<T> pack) => pack.count > 0 && pack.target != null;
 	}
 }

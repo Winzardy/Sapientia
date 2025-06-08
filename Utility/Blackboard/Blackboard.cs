@@ -14,6 +14,20 @@ namespace Sapientia
 	{
 		private ConcurrentHashSet<IBlackboardToken>? _tokens;
 
+		protected Blackboard(Blackboard? source = null)
+		{
+			if (source?._tokens == null)
+				return;
+
+			_tokens ??= ConcurrentHashSetPool<IBlackboardToken>.Get();
+
+			foreach (var token in source._tokens)
+			{
+				var newToken = token.Clone(this);
+				_tokens.Add(newToken);
+			}
+		}
+
 		public void Dispose()
 		{
 			ReleaseInternal();
@@ -41,20 +55,6 @@ namespace Sapientia
 			}
 		}
 
-		internal void Clone(Blackboard target)
-		{
-			if (_tokens == null)
-				return;
-
-			target._tokens ??= ConcurrentHashSetPool<IBlackboardToken>.Get();
-
-			foreach (var token in _tokens)
-			{
-				var newToken = token.Clone(target);
-				target._tokens.Add(newToken);
-			}
-		}
-
 		protected virtual void OnRelease()
 		{
 		}
@@ -78,8 +78,11 @@ namespace Sapientia
 			OnRelease();
 		}
 
-		protected internal virtual string Name => GetType().Name;
-		protected internal virtual Exception GetArgumentException(object msg) => new ArgumentException(msg.ToString());
+		protected virtual string Name => GetType().Name;
+		protected virtual Exception GetArgumentException(object msg) => new ArgumentException(msg.ToString());
+
+		internal string GetName() => Name;
+		internal Exception GetException(object msg) => GetArgumentException(msg);
 	}
 
 	internal static class Blackboard<T>
@@ -101,9 +104,9 @@ namespace Sapientia
 			var hash = ToHash(blackboard, key);
 			if (_boardToValue == null || !_boardToValue.TryGetValue(hash, out var entry))
 			{
-				var msg = $"{blackboard.Name}: ${typeof(T)} not found" +
+				var msg = $"{blackboard.GetName()}: ${typeof(T)} not found" +
 					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
-				throw blackboard.GetArgumentException(msg);
+				throw blackboard.GetException(msg);
 			}
 
 			return ref entry.value;
@@ -115,9 +118,9 @@ namespace Sapientia
 			var hash = ToHash(blackboard, key);
 			if (!_boardToValue.TryAdd(hash, value))
 			{
-				var msg = $"{blackboard.Name}: ${typeof(T)} already registered" +
+				var msg = $"{blackboard.GetName()}: ${typeof(T)} already registered" +
 					(!key.IsNullOrEmpty() ? $" with key [ {key} ]" : "");
-				throw blackboard.GetArgumentException(msg);
+				throw blackboard.GetException(msg);
 			}
 
 			return new BlackboardToken<T>(blackboard, key);
@@ -128,9 +131,9 @@ namespace Sapientia
 			var hash = ToHash(blackboard, key);
 			if (_boardToValue == null || !_boardToValue.TryRemove(hash, out _))
 			{
-				var msg = $"{blackboard.Name}: ${typeof(T)} not registered" +
+				var msg = $"{blackboard.GetName()}: ${typeof(T)} not registered" +
 					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
-				throw blackboard.GetArgumentException(msg);
+				throw blackboard.GetException(msg);
 			}
 
 			if (_boardToValue.Count <= 0)

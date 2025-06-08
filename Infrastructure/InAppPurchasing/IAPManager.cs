@@ -22,7 +22,8 @@ namespace InAppPurchasing
 		public static IInAppPurchasingEvents Events => management.Events;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool CanPurchase<T>(string product, out IAPPurchaseError? error) where T : IAPProductEntry
+		public static bool CanPurchase<T>(string product, out IAPPurchaseError? error)
+			where T : IAPProductEntry
 			=> management.CanPurchase<T>(product, out error);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,7 +37,8 @@ namespace InAppPurchasing
 		#region Purchase
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool RequestPurchase<T>(string product) where T : IAPProductEntry
+		public static bool RequestPurchase<T>(string product)
+			where T : IAPProductEntry
 			=> management.RequestPurchase<T>(product);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,7 +58,8 @@ namespace InAppPurchasing
 			=> management.PurchaseAsync(type, product, cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<bool> PurchaseAsync<T>(string product, CancellationToken cancellationToken) where T : IAPProductEntry
+		public static Task<bool> PurchaseAsync<T>(string product, CancellationToken cancellationToken)
+			where T : IAPProductEntry
 			=> management.PurchaseAsync<T>(product, cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,12 +80,27 @@ namespace InAppPurchasing
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsRestoreSupported() => management.IsRestoreTransactionsSupported();
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void RestoreTransactions() => management.RestoreTransactions();
 
-		public static ref readonly SubscriptionInfo GetSubscriptionInfo(string product, bool force = false)
-			=> ref management.GetSubscriptionInfo(product, force);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref readonly SubscriptionInfo GetSubscriptionInfo(string product, bool forceUpdateCache = false)
+			=> ref management.GetSubscriptionInfo(product, forceUpdateCache);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry entry, bool forceUpdateCache = false)
+			=> ref management.GetSubscriptionInfo(entry, forceUpdateCache);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref readonly ProductInfo GetProductInfo<T>(string product, bool forceUpdateCache = false)
+			where T : IAPProductEntry
+			=> ref management.GetProductInfo<T>(product, forceUpdateCache);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref readonly ProductInfo GetProductInfo<T>(T entry, bool forceUpdateCache = false)
+			where T : IAPProductEntry
+			=> ref management.GetProductInfo(entry, forceUpdateCache);
 #if DebugLog
 		public static IInAppPurchasingService Service => management.Service;
 

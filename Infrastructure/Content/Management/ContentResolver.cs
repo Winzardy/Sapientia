@@ -436,20 +436,20 @@ namespace Content.Management
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="guid">Уникальный идентификатор записи</param>
-		/// <param name="detailed">Добавляет дополнительную информацию (id, type, guid)</param>
+		/// <param name="verbose">Добавляет дополнительную информацию (id, type, guid)</param>
 		/// <returns>Имя по записи, если она найдена; иначе — <c>guid</c> или пустая строка (если <b>guid</b> пустой)</returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal string ToLabel<T>(in SerializableGuid guid, bool detailed = false)
+		internal string ToLabel<T>(in SerializableGuid guid, bool verbose = false)
 		{
 			if (guid == IContentReference.SINGLE_GUID)
 			{
 				if (Contains<T>())
 				{
 					var entry = GetEntry<T>();
-					return detailed
+					return verbose
 						? $"{ContentConstants.DEFAULT_SINGLE_ID} (type: {entry.ValueType.Name})"
 						: $"{ContentConstants.DEFAULT_SINGLE_ID}";
 				}
@@ -457,12 +457,14 @@ namespace Content.Management
 			else if (Contains<T>(in guid))
 			{
 				var entry = GetEntry<T>(in guid);
-				return detailed
+				return verbose
 					? $"{entry.Id} (type:{entry.ValueType.Name}, guid: {guid})"
 					: $"{entry.Id}";
 			}
 
-			return $"[{typeof(T).Name}] {guid}";
+			return verbose
+				? $"[{typeof(T).Name}] {guid}"
+				: guid.ToString();
 		}
 	}
 }
