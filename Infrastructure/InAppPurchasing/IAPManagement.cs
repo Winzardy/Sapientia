@@ -151,16 +151,16 @@ namespace InAppPurchasing
 
 		#region Purchase Async
 
-		internal Task<bool> PurchaseAsync<T>(string product, CancellationToken cancellationToken) where T : IAPProductEntry
+		internal Task<PurchaseResult> PurchaseAsync<T>(string product, CancellationToken cancellationToken) where T : IAPProductEntry
 		{
 			if (!ContentManager.Contains<T>(product))
-				return Task.FromResult(false);
+				return Task.FromResult(PurchaseResult.Failed);
 
 			var entry = ContentManager.Get<T>(product);
 			return PurchaseAsync(entry, cancellationToken);
 		}
 
-		internal Task<bool> PurchaseAsync(IAPProductType type, string product, CancellationToken cancellationToken)
+		internal Task<PurchaseResult> PurchaseAsync(IAPProductType type, string product, CancellationToken cancellationToken)
 		{
 			IAPProductEntry entry = type switch
 			{
@@ -170,12 +170,12 @@ namespace InAppPurchasing
 				_ => null
 			};
 
-			return entry ? PurchaseAsync(entry, cancellationToken) : Task.FromResult(false);
+			return entry ? PurchaseAsync(entry, cancellationToken) : Task.FromResult(PurchaseResult.Failed);
 		}
 
-		internal async Task<bool> PurchaseAsync(IAPProductEntry entry, CancellationToken cancellationToken)
+		internal async Task<PurchaseResult> PurchaseAsync(IAPProductEntry entry, CancellationToken cancellationToken)
 		{
-			var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+			var tcs = new TaskCompletionSource<PurchaseResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
 			// ReSharper disable once UseAwaitUsing
 			using (cancellationToken.Register(Cancel))
@@ -183,12 +183,12 @@ namespace InAppPurchasing
 				// Это на случай если сервис поменяют, так как такой функционал есть
 				var service = _service;
 
-				service.PurchaseCompleted += OnCompleted;
-				service.PurchaseFailed += OnFailed;
-				service.PurchaseCanceled += OnCanceled;
-
 				try
 				{
+					service.PurchaseCompleted += OnCompleted;
+					service.PurchaseFailed += OnFailed;
+					service.PurchaseCanceled += OnCanceled;
+
 					var success = entry.Type switch
 					{
 						IAPProductType.Consumable => service.RequestPurchaseConsumable(entry),
@@ -198,9 +198,14 @@ namespace InAppPurchasing
 					};
 
 					if (!success)
-						return false;
+						return PurchaseResult.Failed;
 
 					return await tcs.Task; //.ConfigureAwait(false); можно вне Unity)
+				}
+				catch (Exception e)
+				{
+					IAPDebug.LogException(e);
+					return PurchaseResult.Failed;
 				}
 				finally
 				{
@@ -209,9 +214,20 @@ namespace InAppPurchasing
 					service.PurchaseCanceled -= OnCanceled;
 				}
 
-				void OnCompleted(in PurchaseReceipt receipt, object rawData) => tcs.TrySetResult(true);
-				void OnFailed(IAPProductEntry product, string error, object rawData) => tcs.TrySetResult(false);
-				void OnCanceled(IAPProductEntry product, object rawData) => tcs.TrySetResult(false);
+				void OnCompleted(in PurchaseReceipt receipt, object rawData)
+				{
+					tcs.TrySetResult(new PurchaseResult(true)
+					{
+						receipt = receipt,
+						rawData = rawData
+					});
+				}
+
+				void OnFailed(IAPProductEntry product, string error, object rawData) =>
+					tcs.TrySetResult(PurchaseResult.Failed);
+
+				void OnCanceled(IAPProductEntry product, object rawData)
+					=> tcs.TrySetResult(PurchaseResult.Failed);
 			}
 
 			void Cancel() => tcs.TrySetCanceled(cancellationToken);
@@ -297,6 +313,24 @@ namespace InAppPurchasing
 
 			return prev;
 		}
+	}
+
+	public struct PurchaseResult
+	{
+		public bool success;
+
+		public string error;
+
+		public PurchaseReceipt receipt;
+
+		public object rawData;
+
+		public PurchaseResult(bool success) : this()
+		{
+			this.success = success;
+		}
+
+		public static PurchaseResult Failed = new(false);
 	}
 
 	internal class InAppPurchasingRelay : Relay<IInAppPurchasingService>, IInAppPurchasingEvents

@@ -8,7 +8,7 @@ namespace Trading
 {
 	public partial class TradeRewardCollection
 	{
-		public override bool CanReturn(Tradeboard board, out TradeRewardReturnError? error)
+		protected override bool CanReturn(Tradeboard board, out TradeRewardReturnError? error)
 		{
 			using (ListPool<TradeRewardReturnError?>.Get(out var errors))
 			{
@@ -16,7 +16,7 @@ namespace Trading
 
 				foreach (var item in items)
 				{
-					if (item.CanReturn(board, out error))
+					if (item.CanExecuteReturn(board, out error))
 						continue;
 
 					errors.Add(error);
@@ -29,13 +29,13 @@ namespace Trading
 			}
 		}
 
-		internal override async Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default)
+		protected override async Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default)
 		{
 			var success = true;
 			foreach (var reward in items)
 			{
 				// ReSharper disable once MethodSupportsCancellation
-				var itemSuccess = await reward.ReturnAsync(board);
+				var itemSuccess = await reward.ExecuteReturnAsync(board);
 				if (!itemSuccess)
 					success = false;
 			}
@@ -49,7 +49,7 @@ namespace Trading
 			foreach (var reward in received)
 			{
 				// ReSharper disable once MethodSupportsCancellation
-				var itemSuccess = await reward.ReturnAsync(board);
+				var itemSuccess = await reward.ExecuteReturnAsync(board);
 				if (!itemSuccess)
 					success = false;
 			}

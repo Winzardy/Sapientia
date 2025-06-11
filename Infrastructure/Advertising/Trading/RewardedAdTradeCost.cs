@@ -13,6 +13,8 @@ namespace Trading.Advertising
 
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
+		public override bool Prepayment => true;
+
 		public ContentReference<RewardedAdPlacementEntry> placement;
 
 		protected override bool CanPay(Tradeboard board, out TradePayError? error)
@@ -27,15 +29,22 @@ namespace Trading.Advertising
 			return success;
 		}
 
-		protected override Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken) =>
-			AdManager.ShowAsync(placement, cancellationToken);
+		protected override async Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken)
+		{
+			var success = await AdManager.ShowAsync(placement, cancellationToken);
+			//Нужно выдать чек...
+			return success;
+		}
 
 		/// <summary>
 		/// <para>Никто не в силах вернуть потраченное время от рекламы T_T...</para>
 		/// Если только не запомнить что игрок полностью просмотрел рекламу и при следующем воспроизведении пропустить...
 		/// Но есть вопросики конечно
 		/// </summary>
-		public override bool CanReturn(Tradeboard board, out TradeCostReturnError? error)
-			=> base.CanReturn(board, out error);
+		protected override bool CanRefund(Tradeboard board, out TradeCostRefundError? error)
+		{
+			error = null;
+			return false;
+		}
 	}
 }

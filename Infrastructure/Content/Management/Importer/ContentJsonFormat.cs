@@ -101,7 +101,11 @@ namespace Content.Management
 			return _keyToType.GetValueOrDefault(fullTypeKey);
 		}
 
-		public static void Clear() => _keyToType?.Clear();
+		public static void Clear()
+		{
+			_keyToType?.Clear();
+			_keyToType = null;
+		}
 
 		private static void TryFillMap(IEnumerable<string> assemblyNameFilter = null)
 		{

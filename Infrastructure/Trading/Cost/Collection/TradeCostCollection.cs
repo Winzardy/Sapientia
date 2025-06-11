@@ -61,7 +61,7 @@ namespace Trading
 
 						if (!success)
 						{
-							await ReturnAsync(board, paid);
+							await RefundAsync(board, paid);
 							return false;
 						}
 
@@ -72,7 +72,7 @@ namespace Trading
 				}
 				catch (OperationCanceledException)
 				{
-					await ReturnAsync(board, paid);
+					await RefundAsync(board, paid);
 					throw;
 				}
 			}

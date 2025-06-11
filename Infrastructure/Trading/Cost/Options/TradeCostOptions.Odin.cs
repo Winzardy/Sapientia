@@ -1,7 +1,5 @@
 #if CLIENT
 using System;
-using Sapientia;
-using Sapientia.Extensions.Reflection;
 using Sirenix.OdinInspector;
 
 namespace Trading
@@ -17,11 +15,6 @@ namespace Trading
 	public sealed partial class TradeCostOptions
 	{
 		internal const string WARNING_MESSAGE = "не поддерживается (пока)";
-
-		/// <summary>
-		/// Фильтрует типы только в инспекторе!
-		/// </summary>
-		public bool Filter(Type type) => !typeof(IOptions<TradeCost>).IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
 	}
 }
 #endif

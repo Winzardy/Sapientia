@@ -54,16 +54,16 @@ namespace InAppPurchasing
 		#region Purchase Async
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<bool> PurchaseAsync(IAPProductType type, string product, CancellationToken cancellationToken)
+		public static Task<PurchaseResult> PurchaseAsync(IAPProductType type, string product, CancellationToken cancellationToken)
 			=> management.PurchaseAsync(type, product, cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<bool> PurchaseAsync<T>(string product, CancellationToken cancellationToken)
+		public static Task<PurchaseResult> PurchaseAsync<T>(string product, CancellationToken cancellationToken)
 			where T : IAPProductEntry
 			=> management.PurchaseAsync<T>(product, cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task<bool> PurchaseAsync(IAPProductEntry entry, CancellationToken cancellationToken)
+		public static Task<PurchaseResult> PurchaseAsync(IAPProductEntry entry, CancellationToken cancellationToken)
 			=> management.PurchaseAsync(entry, cancellationToken);
 
 		#endregion

@@ -1,5 +1,6 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using Sapientia.Pooling;
 
 namespace Content
 {
@@ -16,7 +17,7 @@ namespace Content
 				return ref ContentManager.Get<T>();
 
 #if UNITY_EDITOR
-			if (Application.isPlaying)
+			if (UnityEngine.Application.isPlaying)
 #endif
 				if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
 				{
@@ -58,7 +59,7 @@ namespace Content
 				return ref ContentManager.Get<T>();
 
 #if UNITY_EDITOR
-			if (Application.isPlaying)
+			if (UnityEngine.Application.isPlaying)
 #endif
 				if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
 				{
@@ -139,6 +140,18 @@ namespace Content
 				return new(in unique.Guid, unique.Index);
 
 			return IContentReference.SINGLE_GUID;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ContentReference<T>[] ToReferences<T>(this IList<IContentEntry<T>> list)
+		{
+			using (ListPool<ContentReference<T>>.Get(out var result))
+			{
+				for (int i = 0; i < list.Count; i++)
+					result.Add(list[i].ToReference());
+
+				return result.ToArray();
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

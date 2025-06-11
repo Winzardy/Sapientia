@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Sapientia
 {
@@ -12,7 +13,7 @@ namespace Sapientia
 	public struct ReactiveField<T> : IReactiveProperty<T>
 	{
 		private T _value;
-		public T Value => _value;
+		public T Value { get => _value; internal set => Set(in value); }
 
 		private event Receiver<T> _valueChanged;
 
@@ -79,5 +80,12 @@ namespace Sapientia
 			property.Unsubscribe(receiver);
 			return receiver;
 		}
+	}
+
+	public static class ReactivePropertyExtensions
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Increment(this ref ReactiveField<int> field) =>
+			field.Value++;
 	}
 }

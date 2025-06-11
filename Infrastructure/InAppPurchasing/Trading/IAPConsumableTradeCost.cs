@@ -7,9 +7,12 @@ using InAppPurchasing;
 namespace Trading.InAppPurchasing
 {
 	[Serializable]
+	[TradeAccess(TradeAccessType.High)]
 	public partial class IAPConsumableTradeCost : TradeCost
 	{
 		private const string ERROR_CATEGORY = "InAppPurchasing";
+
+		public override bool Prepayment => true;
 
 		public ContentReference<IAPConsumableProductEntry> product;
 
@@ -27,7 +30,12 @@ namespace Trading.InAppPurchasing
 			return success;
 		}
 
-		protected override Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken)
-			=> IAPManager.PurchaseAsync(product, cancellationToken);
+		protected override async Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken)
+		{
+			var result = await IAPManager.PurchaseAsync(product, cancellationToken);
+			if (result.success)
+				board.Register(result.receipt);
+			return result.success;
+		}
 	}
 }

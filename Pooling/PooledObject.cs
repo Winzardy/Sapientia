@@ -9,6 +9,8 @@ namespace Sapientia.Pooling
 
 		private bool _disposed;
 
+		public T Obj => _obj;
+
 		public PooledObject(IObjectPool<T> pool, T obj)
 		{
 			_pool = pool;
@@ -25,5 +27,7 @@ namespace Sapientia.Pooling
 
 			_pool.Release(_obj);
 		}
+
+		public static implicit operator T(PooledObject<T> pooledObject) => pooledObject.Obj;
 	}
 }

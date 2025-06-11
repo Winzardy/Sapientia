@@ -5,10 +5,18 @@ namespace Trading
 {
 	public abstract partial class TradeReward
 	{
+		/// <inheritdoc cref="CanReturn"/>
+		internal virtual bool CanExecuteReturn(Tradeboard board, out TradeRewardReturnError? error)
+			=> CanReturn(board, out error);
+
+		/// <inheritdoc cref="ReceiveAsync"/>
+		internal virtual Task<bool> ExecuteReturnAsync(Tradeboard board, CancellationToken cancellationToken = default)
+			=> ReturnAsync(board, cancellationToken);
+
 		/// <summary>
 		/// Можно ли забрать обратно что выдали?
 		/// </summary>
-		public virtual bool CanReturn(Tradeboard board, out TradeRewardReturnError? error)
+		protected virtual bool CanReturn(Tradeboard board, out TradeRewardReturnError? error)
 		{
 			error = null;
 			return false;
@@ -18,7 +26,7 @@ namespace Trading
 		/// Забираем, то что выдали
 		/// </summary>
 		/// <returns>Успешность</returns>
-		internal virtual Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default) => Task.FromResult(true);
+		protected virtual Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default) => Task.FromResult(true);
 	}
 
 	public readonly struct TradeRewardReturnError

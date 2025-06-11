@@ -62,7 +62,15 @@ namespace Sapientia.Collections
 			_values.RemoveAt(index);
 		}
 
-		public ref TValue GetValueOrDefault(in TKey key)
+		public ref TValue GetOrAdd(in TKey key)
+		{
+			if (!Contains(in key))
+				Add(in key, new());
+
+			return ref this[key];
+		}
+
+		public ref TValue GetOrDefault(in TKey key)
 		{
 			if (Contains(in key))
 				return ref this[key];
@@ -70,7 +78,7 @@ namespace Sapientia.Collections
 			return ref _defaultValue;
 		}
 
-		public ref TValue GetValueOrDefault(in TKey key, ref TValue defaultValue)
+		public ref TValue GetOrDefault(in TKey key, ref TValue defaultValue)
 		{
 			if (Contains(in key))
 				return ref this[key];

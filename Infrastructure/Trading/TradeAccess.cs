@@ -14,7 +14,7 @@ namespace Trading
 		public static Task<bool> ExecuteAsync(TradeReward reward, Tradeboard board, CancellationToken cancellationToken)
 			=> reward.ExecuteAsync(board, cancellationToken);
 
-		public static Task<bool> ExecuteAsync(TradeEntry trade, Tradeboard board, CancellationToken cancellationToken)
-			=> TradeUtility.ExecuteAsync(trade, board, cancellationToken);
+		public static Task<bool> ExecuteAsync(in TradeEntry trade, Tradeboard board, CancellationToken cancellationToken)
+			=> trade.ExecuteAsync(board, cancellationToken);
 	}
 }
