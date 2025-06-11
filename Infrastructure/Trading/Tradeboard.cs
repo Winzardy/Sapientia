@@ -1,4 +1,5 @@
 using System;
+using Content;
 using Sapientia;
 
 namespace Trading
@@ -13,6 +14,13 @@ namespace Trading
 	/// <seealso cref="Blackboard"/>
 	public sealed class Tradeboard : Blackboard
 	{
+		/// <summary>
+		/// Trade Id
+		/// </summary>
+		public string Id { get; private set; }
+
+		internal void SetId(string id) => Id = id;
+
 		public Tradeboard()
 		{
 		}
@@ -23,5 +31,18 @@ namespace Trading
 
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
+	}
+
+	public static class TradeboardUtility
+	{
+		public static void Bind(this Tradeboard board, in ContentReference<TradeCost> reference)
+		{
+			board.SetId(reference.guid);
+		}
+
+		public static void Bind(this Tradeboard board, in TradeEntry entry)
+		{
+			board.SetId(entry.Id);
+		}
 	}
 }

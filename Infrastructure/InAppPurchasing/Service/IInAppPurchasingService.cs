@@ -125,7 +125,8 @@ namespace InAppPurchasing
 
 	public struct PurchaseReceipt
 	{
-		public IAPProductEntry product;
+		public IAPProductType productType;
+		public string productId;
 
 		public string transactionId;
 		public string receipt;

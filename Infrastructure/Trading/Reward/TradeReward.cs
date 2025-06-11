@@ -13,7 +13,7 @@ namespace Trading
 		protected internal virtual int Priority => TradeCostPriority.NORMAL;
 
 		internal bool CanExecute(Tradeboard board, out TradeReceiveError? error) => CanReceive(board, out error);
-		internal Task<bool> ExecuteAsync(Tradeboard board, CancellationToken cancellationToken) => ReceiveAsync(board, cancellationToken);
+		internal bool Execute(Tradeboard board) => Receive(board);
 
 
 		/// <summary>
@@ -24,7 +24,7 @@ namespace Trading
 		/// <summary>
 		/// Выдать
 		/// </summary>
-		protected abstract Task<bool> ReceiveAsync(Tradeboard board, CancellationToken cancellationToken);
+		protected abstract bool Receive(Tradeboard board);
 	}
 
 	public readonly struct TradeReceiveError

@@ -26,8 +26,7 @@ namespace Trading
 
 		protected override bool CanPay(Tradeboard board, out TradePayError? error) => options[selectedIndex].CanExecute(board, out error);
 
-		protected override Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken) =>
-			options[selectedIndex].ExecuteAsync(board, cancellationToken);
+		protected override bool Pay(Tradeboard board) => options[selectedIndex].Execute(board);
 
 		public bool TrySelect(int index)
 		{

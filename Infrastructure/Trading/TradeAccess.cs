@@ -8,13 +8,10 @@ namespace Trading
 	/// </summary>
 	public static class TradeAccess
 	{
-		public static Task<bool> ExecuteAsync(TradeCost cost, Tradeboard board, CancellationToken cancellationToken)
-			=> cost.ExecuteAsync(board, cancellationToken);
+		public static bool Pay(TradeCost cost, Tradeboard board)
+			=> cost.Execute(board);
 
-		public static Task<bool> ExecuteAsync(TradeReward reward, Tradeboard board, CancellationToken cancellationToken)
-			=> reward.ExecuteAsync(board, cancellationToken);
-
-		public static Task<bool> ExecuteAsync(in TradeEntry trade, Tradeboard board, CancellationToken cancellationToken)
-			=> trade.ExecuteAsync(board, cancellationToken);
+		public static bool Pay(TradeReward reward, Tradeboard board)
+			=> reward.Execute(board);
 	}
 }

@@ -1,6 +1,4 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Trading
 {
@@ -12,9 +10,8 @@ namespace Trading
 		/// </summary>
 		public virtual int Priority => TradeCostPriority.NORMAL;
 
-		public virtual bool Prepayment => false;
 		public bool CanExecute(Tradeboard board, out TradePayError? error) => CanPay(board, out error);
-		internal Task<bool> ExecuteAsync(Tradeboard board, CancellationToken cancellationToken) => PayAsync(board, cancellationToken);
+		internal bool Execute(Tradeboard board) => Pay(board);
 
 		/// <summary>
 		/// Доступно ли для продажи? пример: есть ли у игрока 100 монет?
@@ -25,7 +22,7 @@ namespace Trading
 		/// Плати!
 		/// </summary>
 		/// <returns>Успешность</returns>
-		protected abstract Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken);
+		protected abstract bool Pay(Tradeboard board);
 	}
 
 	public readonly struct TradePayError

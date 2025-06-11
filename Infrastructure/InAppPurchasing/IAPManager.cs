@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Content;
 using Sapientia;
 
 namespace InAppPurchasing
@@ -108,5 +109,10 @@ namespace InAppPurchasing
 		public static IInAppPurchasingService SetService(IInAppPurchasingService service) =>
 			management.SetService(service);
 #endif
+
+		public static bool Validate(PurchaseReceipt receipt)
+		{
+			return true; // TODO: надо сделать!
+		}
 	}
 }

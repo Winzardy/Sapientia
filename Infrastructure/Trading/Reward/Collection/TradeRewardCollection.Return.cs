@@ -29,28 +29,26 @@ namespace Trading
 			}
 		}
 
-		protected override async Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default)
+		protected override bool Return(Tradeboard board)
 		{
 			var success = true;
 			foreach (var reward in items)
 			{
 				// ReSharper disable once MethodSupportsCancellation
-				var itemSuccess = await reward.ExecuteReturnAsync(board);
-				if (!itemSuccess)
+				if (!reward.ExecuteReturn(board))
 					success = false;
 			}
 
 			return success;
 		}
 
-		private async Task<bool> ReturnAsync(Tradeboard board, List<TradeReward> received)
+		private bool Return(Tradeboard board, List<TradeReward> received)
 		{
 			var success = true;
 			foreach (var reward in received)
 			{
 				// ReSharper disable once MethodSupportsCancellation
-				var itemSuccess = await reward.ExecuteReturnAsync(board);
-				if (!itemSuccess)
+				if (!reward.ExecuteReturn(board))
 					success = false;
 			}
 

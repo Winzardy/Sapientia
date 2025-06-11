@@ -1,6 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Trading
 {
 	public abstract partial class TradeCost
@@ -9,8 +6,8 @@ namespace Trading
 			=> CanRefund(board, out error);
 
 		/// <inheritdoc cref="RefundAsync"/>
-		internal Task<bool> ExecuteRefundAsync(Tradeboard board, CancellationToken cancellationToken = default)
-			=> RefundAsync(board, cancellationToken);
+		internal bool ExecuteRefund(Tradeboard board)
+			=> Refund(board);
 
 		protected virtual bool CanRefund(Tradeboard board, out TradeCostRefundError? error)
 		{
@@ -22,8 +19,7 @@ namespace Trading
 		/// Возвращаем, что заплатили
 		/// </summary>
 		/// <returns>Получилось ли?</returns>
-		protected virtual Task<bool> RefundAsync(Tradeboard board, CancellationToken cancellationToken = default)
-			=> Task.FromResult(true);
+		protected virtual bool Refund(Tradeboard board) => true;
 	}
 
 	public readonly struct TradeCostRefundError

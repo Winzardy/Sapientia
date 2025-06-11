@@ -12,6 +12,9 @@ namespace Content
 		public static implicit operator SerializableGuid(Guid guid) => new(guid);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator string(in SerializableGuid guid) => guid.ToString();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(SerializableGuid a, string b) => a.guid.ToString() == b;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

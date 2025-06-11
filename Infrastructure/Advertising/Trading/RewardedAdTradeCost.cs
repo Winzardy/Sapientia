@@ -13,27 +13,19 @@ namespace Trading.Advertising
 
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
-		public override bool Prepayment => true;
-
 		public ContentReference<RewardedAdPlacementEntry> placement;
 
 		protected override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
-
-			var success = AdManager.CanShow(placement, out var localError);
-
-			if (localError.HasValue)
-				error = new TradePayError(ERROR_CATEGORY, (int) localError.Value.code, localError);
-
-			return success;
+			//TODO: тут надо проверять смотрели ли рекламу)
+			return true;
 		}
 
-		protected override async Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken)
+		protected override bool Pay(Tradeboard board)
 		{
-			var success = await AdManager.ShowAsync(placement, cancellationToken);
-			//Нужно выдать чек...
-			return success;
+			//TODO израсходовать квитанцию за просмотр рекламы
+			return true;
 		}
 
 		/// <summary>

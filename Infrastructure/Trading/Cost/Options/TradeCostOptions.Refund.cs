@@ -8,7 +8,7 @@ namespace Trading
 		protected override bool CanRefund(Tradeboard board, out TradeCostRefundError? error) =>
 			options[selectedIndex].CanExecuteRefund(board, out error);
 
-		protected override Task<bool> RefundAsync(Tradeboard board, CancellationToken cancellationToken = default) =>
-			options[selectedIndex].ExecuteRefundAsync(board, cancellationToken);
+		protected override bool Refund(Tradeboard board) =>
+			options[selectedIndex].ExecuteRefund(board);
 	}
 }

@@ -44,7 +44,7 @@ namespace Trading
 			}
 		}
 
-		protected override async Task<bool> PayAsync(Tradeboard board, CancellationToken cancellationToken)
+		protected override bool Pay(Tradeboard board)
 		{
 			using (ListPool<TradeCost>.Get(out var paid))
 			using (ListPool<TradeCost>.Get(out var sorted))
@@ -56,12 +56,9 @@ namespace Trading
 
 					foreach (var item in sorted)
 					{
-						cancellationToken.ThrowIfCancellationRequested();
-						var success = await item.ExecuteAsync(board, cancellationToken);
-
-						if (!success)
+						if (!item.Execute(board))
 						{
-							await RefundAsync(board, paid);
+							Refund(board, paid);
 							return false;
 						}
 
@@ -72,7 +69,7 @@ namespace Trading
 				}
 				catch (OperationCanceledException)
 				{
-					await RefundAsync(board, paid);
+					Refund(board, paid);
 					throw;
 				}
 			}

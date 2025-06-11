@@ -20,7 +20,6 @@ namespace Content
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator T(in ContentReference<T> reference) => reference.Read();
-
 		#region Guid
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -99,5 +98,8 @@ namespace Content
 		public static implicit operator SerializableGuid(in ContentReference reference) => reference.guid;
 
 		#endregion
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator string(in ContentReference reference) => reference.ToString();
 	}
 }

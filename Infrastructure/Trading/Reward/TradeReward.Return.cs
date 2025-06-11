@@ -10,8 +10,8 @@ namespace Trading
 			=> CanReturn(board, out error);
 
 		/// <inheritdoc cref="ReceiveAsync"/>
-		internal virtual Task<bool> ExecuteReturnAsync(Tradeboard board, CancellationToken cancellationToken = default)
-			=> ReturnAsync(board, cancellationToken);
+		internal virtual bool ExecuteReturn(Tradeboard board)
+			=> Return(board);
 
 		/// <summary>
 		/// Можно ли забрать обратно что выдали?
@@ -26,7 +26,7 @@ namespace Trading
 		/// Забираем, то что выдали
 		/// </summary>
 		/// <returns>Успешность</returns>
-		protected virtual Task<bool> ReturnAsync(Tradeboard board, CancellationToken cancellationToken = default) => Task.FromResult(true);
+		protected virtual bool Return(Tradeboard board) => true;
 	}
 
 	public readonly struct TradeRewardReturnError

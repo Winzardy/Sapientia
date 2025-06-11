@@ -1,6 +1,4 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 
@@ -44,7 +42,7 @@ namespace Trading
 			}
 		}
 
-		protected override async Task<bool> ReceiveAsync(Tradeboard board, CancellationToken cancellationToken)
+		protected override bool Receive(Tradeboard board)
 		{
 			using (ListPool<TradeReward>.Get(out var received))
 			using (ListPool<TradeReward>.Get(out var sorted))
@@ -56,12 +54,9 @@ namespace Trading
 
 					foreach (var reward in sorted)
 					{
-						cancellationToken.ThrowIfCancellationRequested();
-						var success = await reward.ExecuteAsync(board, cancellationToken);
-
-						if (!success)
+						if (!reward.ExecuteReturn(board))
 						{
-							await ReturnAsync(board, received);
+							Return(board, received);
 							return false;
 						}
 
@@ -72,7 +67,7 @@ namespace Trading
 				}
 				catch (OperationCanceledException)
 				{
-					await ReturnAsync(board, received);
+					Return(board, received);
 					throw;
 				}
 			}
