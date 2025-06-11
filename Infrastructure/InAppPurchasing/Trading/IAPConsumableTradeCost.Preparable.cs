@@ -4,9 +4,9 @@ using InAppPurchasing;
 
 namespace Trading.InAppPurchasing
 {
-	public partial class IAPConsumableTradeCost : IPrepayment
+	public partial class IAPConsumableTradeCost : ITradePreparable
 	{
-		bool IPrepayment.CanPrepay(Tradeboard board, out TradePayError? error)
+		bool ITradePreparable.CanPrepare(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
 			var success = IAPManager.CanPurchase(product, out var localError);
@@ -17,7 +17,7 @@ namespace Trading.InAppPurchasing
 			return success;
 		}
 
-		async Task<ITradeReceipt> IPrepayment.PrepayAsync(Tradeboard board, CancellationToken cancellationToken)
+		async Task<ITradeReceipt> ITradePreparable.PrepareAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
 			var result = await IAPManager.PurchaseAsync(product, cancellationToken);
 			if (result.success)

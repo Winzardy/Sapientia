@@ -5,9 +5,9 @@ using Content;
 
 namespace Trading.Advertising
 {
-	public partial class RewardedAdTradeCost : IPrepayment
+	public partial class RewardedAdTradeCost : ITradePreparable
 	{
-		bool IPrepayment.CanPrepay(Tradeboard board, out TradePayError? error)
+		bool ITradePreparable.CanPrepare(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
 
@@ -19,7 +19,7 @@ namespace Trading.Advertising
 			return success;
 		}
 
-		async Task<ITradeReceipt> IPrepayment.PrepayAsync(Tradeboard board, CancellationToken cancellationToken)
+		async Task<ITradeReceipt> ITradePreparable.PrepareAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
 			//TODO: может быть какую-то защиту от дурака, что нельзя посмотреть рекламу за секунду)
 			var success = await AdManager.ShowAsync(placement, cancellationToken);

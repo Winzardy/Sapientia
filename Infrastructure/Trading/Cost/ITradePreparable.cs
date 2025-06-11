@@ -4,11 +4,11 @@ using Sapientia;
 
 namespace Trading
 {
-	public interface IPrepayment
+	public interface ITradePreparable
 	{
-		public bool CanPrepay(Tradeboard board, out TradePayError? error);
+		public bool CanPrepare(Tradeboard board, out TradePayError? error);
 
-		public Task<ITradeReceipt> PrepayAsync(Tradeboard board, CancellationToken cancellationToken);
+		public Task<ITradeReceipt> PrepareAsync(Tradeboard board, CancellationToken cancellationToken);
 	}
 
 	public interface ITradeReceipt : IIdentifiable
