@@ -26,6 +26,8 @@ namespace Sapientia.Collections
 
 		public int Count => _values.Count;
 
+		public IEnumerable<TKey> Keys => _keyToIndex.Keys;
+
 		public HashMap()
 		{
 			_values = new();

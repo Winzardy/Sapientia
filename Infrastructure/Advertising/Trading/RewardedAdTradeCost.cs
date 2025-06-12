@@ -7,7 +7,7 @@ using Content;
 namespace Trading.Advertising
 {
 	[Serializable]
-	public partial class RewardedAdTradeCost : TradeCost
+	public partial class RewardedAdTradeCost : TradeCostWithReceipt<AdTradeReceipt>
 	{
 		private const string ERROR_CATEGORY = "Advertising";
 
@@ -15,17 +15,29 @@ namespace Trading.Advertising
 
 		public ContentReference<RewardedAdPlacementEntry> placement;
 
-		protected override bool CanPay(Tradeboard board, out TradePayError? error)
+		protected override string ReceiptId => placement.ToReceiptId();
+
+		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
-			//TODO: тут надо проверять смотрели ли рекламу)
-			return true;
+
+			var success = AdManager.CanShow(placement, out var localError);
+
+			if (localError.HasValue)
+				error = new TradePayError(ERROR_CATEGORY, (int) localError.Value.code, localError);
+
+			return success;
 		}
 
-		protected override bool Pay(Tradeboard board)
+		protected override async Task<AdTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
-			//TODO израсходовать квитанцию за просмотр рекламы
-			return true;
+			//TODO: может быть какую-то защиту от дурака, что нельзя посмотреть рекламу за секунду)
+			var success = await AdManager.ShowAsync(placement, cancellationToken);
+
+			if (!success)
+				return null;
+
+			return new AdTradeReceipt(placement);
 		}
 
 		/// <summary>

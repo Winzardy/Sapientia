@@ -128,6 +128,8 @@ namespace InAppPurchasing
 		public IAPProductType productType;
 		public string productId;
 
+		public IAPPlatformEntry platform;
+
 		public string transactionId;
 		public string receipt;
 

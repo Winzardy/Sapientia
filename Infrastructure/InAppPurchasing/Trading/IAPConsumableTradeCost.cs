@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Content;
 using InAppPurchasing;
 
@@ -6,7 +8,7 @@ namespace Trading.InAppPurchasing
 {
 	[Serializable]
 	[TradeAccess(TradeAccessType.High)]
-	public partial class IAPConsumableTradeCost : TradeCost
+	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>
 	{
 		private const string ERROR_CATEGORY = "InAppPurchasing";
 
@@ -14,33 +16,29 @@ namespace Trading.InAppPurchasing
 
 		public override int Priority => TradeCostPriority.HIGH;
 
-		protected override bool CanPay(Tradeboard board, out TradePayError? error)
+		protected override string ReceiptId => product.ToReceiptId();
+
+		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
-			var id = product.Read().Id;
-			var registry = board.Get<ITradeRegistry>();
-			return registry.CanIssue<IAPTradeReceipt>(board, id);
+			var success = IAPManager.CanPurchase(product, out var localError);
+
+			if (localError != null)
+				error = new TradePayError(ERROR_CATEGORY, (int) localError.Value.code, localError);
+
+			return success;
 		}
 
-		protected override bool Pay(Tradeboard board)
+		protected override async Task<IAPTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
-			var id = product.Read().Id;
-			var registry = board.Get<ITradeRegistry>();
-			return registry.Issue<IAPTradeReceipt>(board, id);
+			var result = await IAPManager.PurchaseAsync(product, cancellationToken);
+
+			if (!result.success)
+				return null;
+
+			return new IAPTradeReceipt(in result.receipt);
 		}
 	}
 
-	public class IAPTradeReceipt : ITradeReceipt
-	{
-		public readonly PurchaseReceipt receipt;
 
-		public string Id => receipt.productId;
-
-		public IAPTradeReceipt(in PurchaseReceipt receipt)
-		{
-			this.receipt = receipt;
-		}
-
-		public override string ToString() => $"IAP Receipt: transactionId: {receipt.transactionId}";
-	}
 }
