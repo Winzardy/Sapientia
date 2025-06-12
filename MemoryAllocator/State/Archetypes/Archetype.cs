@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -199,6 +200,12 @@ namespace Sapientia.MemoryAllocator.State
 		public SafePtr<ArchetypeElement<T>> GetRawElements<T>(World world) where T: unmanaged
 		{
 			return _elements.GetValuePtr<ArchetypeElement<T>>(world);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<ArchetypeElement<T>> GetSpan<T>(World world) where T: unmanaged
+		{
+			return new Span<ArchetypeElement<T>>(_elements.GetValuePtr<ArchetypeElement<T>>(world).ptr, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
