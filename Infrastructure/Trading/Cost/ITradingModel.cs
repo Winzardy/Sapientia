@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Sapientia.Extensions;
 
 namespace Trading
 {
@@ -46,6 +47,9 @@ namespace Trading
 	{
 		public static void Registry(this ITradeReceipt[] receipts, ITradingModel model, string tradeId)
 		{
+			if (tradeId.IsNullOrEmpty())
+				throw TradingDebug.NullException("Trade ID cannot be null or empty");
+
 			for (int i = 0; i < receipts.Length; i++)
 				receipts[i].Registry(model, tradeId);
 		}
@@ -53,6 +57,9 @@ namespace Trading
 		public static void Registry<T>(this T receipt, ITradingModel model, string tradeId)
 			where T : struct, ITradeReceipt
 		{
+			if (tradeId.IsNullOrEmpty())
+				throw TradingDebug.NullException("Trade ID cannot be null or empty");
+
 			TradeReceiptRegistry<T>.Registry(model, tradeId, in receipt);
 		}
 	}
