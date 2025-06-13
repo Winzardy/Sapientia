@@ -30,10 +30,11 @@ namespace Content
 
 	public partial class UniqueContentEntry<T>
 	{
+		// ReSharper disable once PossibleInvalidCastException
 		void IUniqueContentEntry.Setup(in UniqueContentEntryJsonObject dto)
 		{
 			guid = dto.guid;
-			value = (T) dto.rawValue;
+			ContentEditValue = dto.rawValue is T t ? t : (T) dto.rawValue;
 		}
 
 		public UniqueContentEntry()
@@ -43,9 +44,10 @@ namespace Content
 
 	public partial class SingleContentEntry<T>
 	{
+		// ReSharper disable once PossibleInvalidCastException
 		void ISingleContentEntry.Setup(in ContentEntryJsonObject dto)
 		{
-			value = (T) dto.rawValue;
+			ContentEditValue = dto.rawValue is T t ? t : (T) dto.rawValue;
 		}
 
 		public SingleContentEntry()

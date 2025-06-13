@@ -12,8 +12,6 @@ namespace Content
 		protected override void OnUnregister() => ContentManager.Unregister<T>();
 
 		public static implicit operator T(SingleContentEntry<T> entry) => entry.Value;
-
-		public SingleContentEntry<T> Clone() => new(in Value);
 	}
 
 	public interface ISingleContentEntry<T> : IContentEntry<T>, ISingleContentEntry

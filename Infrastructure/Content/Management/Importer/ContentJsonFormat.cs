@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
@@ -10,6 +11,7 @@ namespace Content.Management
 {
 	public class ContentJsonFormat : Dictionary<string, Dictionary<string, Dictionary<string, object>>>
 	{
+		private const string TYPE_KEY = "$type";
 		private static readonly string SINGLE_KEY = "$" + ContentConstants.DEFAULT_SINGLE_ID.ToLower();
 
 		public void Add(string moduleName, IEnumerable<IContentEntry> list)
@@ -43,21 +45,40 @@ namespace Content.Management
 
 			foreach (var typeToGuidToValue in Values)
 			{
-				foreach (var (typeKey, guidToValue) in typeToGuidToValue)
+				foreach (var (typeKey, keyToValue) in typeToGuidToValue)
 				{
 					var type = ContentJsonTypeResolver.Resolve(typeKey, assmeblyFilter);
 
 					if (type == null)
 						throw ContentDebug.NullException("Type not found: " + typeKey);
 
-					foreach (var (key, rawObj) in guidToValue)
+					foreach (var (key, rawObject) in keyToValue)
 					{
-						var value = (rawObj as JObject)?
-						   .ToObject(type, ContentJsonImporter.defaultSerializer);
+						var value = rawObject;
+
 						if (value == null)
+						{
+							ContentDebug.LogError($"Can't to parse value by type [ {type} ]");
 							continue;
+						}
+
+						if (value is JObject jObject)
+						{
+							value = jObject.ToObject(type, ContentJsonImporter.defaultSerializer);
+							if (value == null)
+							{
+								ContentDebug.LogError($"Failed to deserialize JObject into [ {type.FullName} ]:\n{jObject}");
+								continue;
+							}
+						}
+						else if (!type.IsAssignableFrom(value.GetType()))
+						{
+							ContentDebug.LogError($"Invalid value type: expected [ {type.FullName} ], got [ {value.GetType().FullName} ]");
+							continue;
+						}
 
 						IContentEntry entry;
+
 						if (key == SINGLE_KEY)
 						{
 							var wrapperType = typeof(SingleContentEntry<>).MakeGenericType(type);
@@ -80,6 +101,56 @@ namespace Content.Management
 			}
 
 			ContentJsonTypeResolver.Clear();
+		}
+
+		public JObject ToJObject(JsonSerializer serializer)
+		{
+			var root = new JObject();
+			foreach (var (moduleName, typeMap) in this)
+			{
+				var moduleObject = new JObject();
+
+				foreach (var (typeName, entries) in typeMap)
+				{
+					var typeObject = new JObject();
+
+					foreach (var (key, rawValue) in entries)
+					{
+						if (rawValue != null)
+						{
+							var jToken = JToken.FromObject(rawValue, serializer);
+
+							if (jToken is JObject originalObject)
+							{
+								var type = ContentJsonTypeResolver.Resolve(typeName);
+								if (type.IsAbstract)
+								{
+									var valueType = rawValue.GetType();
+									var reorderedJObject = new JObject
+									{
+										[TYPE_KEY] = ContentJsonTypeResolver.ToKey(valueType)
+									};
+
+									foreach (var property in originalObject.Properties())
+										reorderedJObject[property.Name] = property.Value;
+
+									jToken = reorderedJObject;
+								}
+							}
+
+							typeObject[key] = jToken;
+						}
+						else
+							typeObject[key] = null;
+					}
+
+					moduleObject[typeName] = typeObject;
+				}
+
+				root[moduleName] = moduleObject;
+			}
+
+			return root;
 		}
 	}
 
