@@ -34,7 +34,12 @@ namespace Content
 		void IUniqueContentEntry.Setup(in UniqueContentEntryJsonObject dto)
 		{
 			guid = dto.guid;
-			ContentEditValue = dto.rawValue is T t ? t : (T) dto.rawValue;
+			var newValue = dto.rawValue is T t ? t : (T) dto.rawValue;
+#if CLIENT
+			ContentEditValue = newValue;
+#else
+			value = newValue;
+#endif
 		}
 
 		public UniqueContentEntry()
@@ -47,7 +52,12 @@ namespace Content
 		// ReSharper disable once PossibleInvalidCastException
 		void ISingleContentEntry.Setup(in ContentEntryJsonObject dto)
 		{
-			ContentEditValue = dto.rawValue is T t ? t : (T) dto.rawValue;
+			var newValue = dto.rawValue is T t ? t : (T) dto.rawValue;
+#if CLIENT
+			ContentEditValue = newValue;
+#else
+			value = newValue;
+#endif
 		}
 
 		public SingleContentEntry()
