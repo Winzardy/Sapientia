@@ -17,7 +17,7 @@ namespace Targeting
 	/// Это платформа магазина на которой расспротраняется приложение (Distribution)!
 	/// </summary>
 	[Serializable]
-	public struct StorePlatformEntry
+	public partial struct StorePlatformEntry
 	{
 		public string store;
 

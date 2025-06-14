@@ -3,12 +3,16 @@ using Newtonsoft.Json;
 using Sapientia.Extensions;
 using Sapientia.Reflection;
 
-namespace Content.Management
+namespace Content
 {
-	public class ContentEntryJsonConverter : JsonConverter
+	[JsonConverter(typeof(ContentEntryJsonConverter))]
+	public sealed partial class ContentEntry<T>
 	{
-		public override bool CanConvert(Type type) => type.IsGenericType &&
-			type.GetGenericTypeDefinition() == typeof(ContentEntry<>);
+	}
+
+	internal class ContentEntryJsonConverter : JsonConverter
+	{
+		public override bool CanConvert(Type type) => true;
 
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{

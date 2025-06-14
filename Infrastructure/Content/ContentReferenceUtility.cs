@@ -155,7 +155,7 @@ namespace Content
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToLabel<T>(this in ContentReference<T> reference, bool verbose) =>
+		public static string ToLabel<T>(this in ContentReference<T> reference, bool verbose = false) =>
 			ContentManager.ToLabel<T>(in reference.guid, verbose);
 	}
 }

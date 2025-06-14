@@ -1,4 +1,5 @@
 using System;
+using Sapientia.Extensions;
 
 namespace Content
 {
@@ -22,12 +23,16 @@ namespace Content
 
 		public ref readonly SerializableGuid Guid => ref guid;
 
-		public sealed override bool IsUnique() => true;
-		public virtual string Id => Guid.ToString();
+		public string id;
 
-		protected UniqueContentEntry(in T value, in SerializableGuid guid) : base(in value)
+		public string Id => id.IsNullOrEmpty() ? Guid.ToString() : id;
+
+		public sealed override bool IsUnique() => true;
+
+		protected UniqueContentEntry(in T value, in SerializableGuid guid, string id = null) : base(in value)
 		{
 			this.guid = guid;
+			this.id = id;
 		}
 
 		protected override void OnRegister() => ContentManager.Register(this);
@@ -49,6 +54,7 @@ namespace Content
 
 	public partial interface IUniqueContentEntry : IContentEntry
 	{
+		public string Id { get; }
 		public ref readonly SerializableGuid Guid { get; }
 
 		public int Index { get; }

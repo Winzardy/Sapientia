@@ -3,7 +3,12 @@ using Newtonsoft.Json;
 
 namespace Content
 {
-	public class SerializableGuidJsonConverter : JsonConverter<SerializableGuid>
+	[JsonConverter(typeof(SerializableGuidJsonConverter))]
+	public partial struct SerializableGuid
+	{
+	}
+
+	internal class SerializableGuidJsonConverter : JsonConverter<SerializableGuid>
 	{
 		public override void WriteJson(JsonWriter writer, SerializableGuid value, JsonSerializer serializer)
 		{

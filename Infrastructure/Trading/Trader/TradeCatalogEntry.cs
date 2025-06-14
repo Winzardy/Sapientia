@@ -8,7 +8,7 @@ namespace Trading
 	/// Каталог лотов, позиций
 	/// </summary>
 	[Serializable]
-	public struct TradeCatalogEntry : IExternallyIdentifiable
+	public class TradeCatalogEntry : IExternallyIdentifiable
 	{
 		private string _id;
 

@@ -20,7 +20,7 @@ namespace InAppPurchasing
 	{
 		"Undefined"
 	})]
-	public struct IAPPlatformEntry
+	public partial struct IAPPlatformEntry
 	{
 		public string platform;
 
@@ -39,7 +39,7 @@ namespace InAppPurchasing
 
 	//TODO: Важно что выбранный магазин выбирается не от платформы приложения,
 	//Важно учитывать что мы можем билдить на андроид для разных магазинов!
-	public static class IAPPlatformExtensions
+	public static class IAPPlatformUtility
 	{
 		public static IEnumerable<IAPPlatformEntry> GetAll()
 		{

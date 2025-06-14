@@ -43,7 +43,16 @@ namespace Content.Management
 				throw ContentDebug.Exception($"Already registered entry of type: [ {typeof(T).Name} ] with guid: [ {entry.Guid} ]  ");
 
 			if (entry.Value is IExternallyIdentifiable identifiable)
-				identifiable.SetId(entry.Id);
+			{
+				if (entry.ValueType.IsValueType)
+				{
+					ContentDebug.LogError($"Type [{entry.ValueType.FullName}] is a struct. Cannot assign Id via interface. Use class instead.");
+				}
+				else
+				{
+					identifiable.SetId(entry.Id);
+				}
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

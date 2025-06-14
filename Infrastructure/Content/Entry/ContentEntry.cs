@@ -20,7 +20,7 @@ namespace Content
 #if !CLIENT
 		[NonSerialized]
 		private int _index = ContentConstants.INVALID_INDEX;
-		public override ref readonly T Value => ref guid.Get<T>(ref _index);
+		public ref readonly T Value => ref guid.Get<T>(ref _index);
 #endif
 
 		public ContentEntry(in T value) : base(in value, SerializableGuid.New())

@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Sapientia.Collections
 {
+	public delegate ref TValue HashMapFactory<TValue>();
+
+	[Serializable]
 	public sealed partial class HashMap<TKey, TValue>
 		where TKey : notnull
 		where TValue : struct
@@ -39,11 +43,8 @@ namespace Sapientia.Collections
 			_values = new SimpleList<TValue>(source._values);
 			_keyToIndex = new Dictionary<TKey, int>(source.Count);
 
-			foreach (var key in source._keyToIndex.Keys)
-			{
-				var index = source._keyToIndex[key];
+			foreach (var (key, index) in source._keyToIndex)
 				_keyToIndex[key] = index;
-			}
 		}
 
 		public void Clear()
@@ -62,12 +63,13 @@ namespace Sapientia.Collections
 		{
 			var index = _keyToIndex[key];
 			_values.RemoveAt(index);
+			_keyToIndex.Remove(key);
 		}
 
-		public ref TValue GetOrAdd(in TKey key)
+		public ref TValue GetOrAdd(in TKey key, HashMapFactory<TValue>? factory = null)
 		{
 			if (!Contains(in key))
-				Add(in key, new());
+				Add(in key, factory?.Invoke() ?? new TValue());
 
 			return ref this[key];
 		}
@@ -75,7 +77,7 @@ namespace Sapientia.Collections
 		public ref TValue GetOrDefault(in TKey key)
 		{
 			if (Contains(in key))
-				return ref this[key];
+				return ref this[in key];
 
 			return ref _defaultValue;
 		}
@@ -90,5 +92,7 @@ namespace Sapientia.Collections
 
 		public bool Contains(in TKey key) => _keyToIndex.ContainsKey(key);
 		public bool Contains(int index) => _values.ContainsIndexSafe(index);
+
+		public bool IsEmpty() => _values.Count == 0;
 	}
 }

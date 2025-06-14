@@ -3,10 +3,10 @@ using Content;
 
 namespace Trading.Advertising
 {
-	public readonly struct AdTradeReceipt : ITradeReceipt
+	public struct AdTradeReceipt : ITradeReceipt
 	{
-		public readonly AdPlacementType type;
-		public readonly string placement;
+		public AdPlacementType type;
+		public string placement;
 
 		public string Key => AdTradeReceiptUtility.Combine(type, placement);
 

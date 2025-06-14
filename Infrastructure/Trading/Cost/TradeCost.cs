@@ -41,5 +41,7 @@ namespace Trading
 		public TradePayError(string category, object rawData = null) : this(category, 0, rawData)
 		{
 		}
+
+		public static TradePayError NotImplemented = new ("NotImplemented");
 	}
 }

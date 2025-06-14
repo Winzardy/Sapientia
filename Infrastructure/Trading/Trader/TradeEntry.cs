@@ -25,6 +25,8 @@ namespace Trading
 		}
 	}
 
+
+
 	public enum TradeAccessType
 	{
 		Low,
@@ -36,7 +38,7 @@ namespace Trading
 	/// Сделка, рецепт, обмен <b>чего-то</b> (<see cref="TradeCost"/>) на <b>что-то</b> (<see cref="TradeReward"/>)
 	/// </summary>
 	[Serializable]
-	public struct TradeEntry : IExternallyIdentifiable
+	public class TradeEntry : IExternallyIdentifiable
 	{
 		private string _id;
 #if CLIENT

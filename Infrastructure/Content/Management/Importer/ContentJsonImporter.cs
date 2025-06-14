@@ -12,14 +12,8 @@ namespace Content.Management
 	{
 		public static readonly JsonSerializerSettings serializerSettings = new()
 		{
-			Converters = new List<JsonConverter>
+			Converters = new JsonConverter[]
 			{
-				new ContentReferenceJsonConverter(),
-				new SerializableGuidJsonConverter(),
-#if CLIENT
-				new Fusumity.JsonConverters.SerializableDictionaryJsonConverter(),
-#endif
-				new ContentEntryJsonConverter(),
 				new DictionaryConverter()
 			},
 			DefaultValueHandling = DefaultValueHandling.Ignore,

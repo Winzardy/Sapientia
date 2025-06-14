@@ -16,6 +16,14 @@ namespace Trading.InAppPurchasing
 		public IAPTradingModel(IAPTradingModel source)
 		{
 			tradeToModel = new(source.tradeToModel);
+
+			foreach (var key in tradeToModel.Keys)
+			{
+				var active = source.tradeToModel[key].active;
+				tradeToModel[key].active = new HashMap<string, IAPTradeReceipt>(active);
+				var issued = source.tradeToModel[key].issued;
+				tradeToModel[key].issued = new HashMap<string, IAPTradeReceipt>(issued);
+			}
 		}
 
 		public void Register(string tradeId, in IAPTradeReceipt receipt)

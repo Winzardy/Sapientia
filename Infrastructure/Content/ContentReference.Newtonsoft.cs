@@ -1,15 +1,23 @@
-﻿using System;
+﻿#if NEWTONSOFT
+using System;
 using Newtonsoft.Json;
 using Sapientia.Reflection;
 
 namespace Content
 {
-	public class ContentReferenceJsonConverter : JsonConverter
+	[JsonConverter(typeof(ContentReferenceJsonConverter))]
+	public partial struct ContentReference<T>
 	{
-		public override bool CanConvert(Type objectType)
-		{
-			return objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(ContentReference<>);
-		}
+	}
+
+	[JsonConverter(typeof(ContentReferenceJsonConverter))]
+	public partial struct ContentReference
+	{
+	}
+
+	internal class ContentReferenceJsonConverter : JsonConverter
+	{
+		public override bool CanConvert(Type objectType) => true;
 
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
@@ -29,3 +37,4 @@ namespace Content
 		}
 	}
 }
+#endif

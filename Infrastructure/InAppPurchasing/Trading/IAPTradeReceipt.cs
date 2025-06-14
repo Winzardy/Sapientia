@@ -3,9 +3,9 @@ using InAppPurchasing;
 
 namespace Trading.InAppPurchasing
 {
-	public readonly struct IAPTradeReceipt : ITradeReceipt
+	public struct IAPTradeReceipt : ITradeReceipt
 	{
-		public readonly PurchaseReceipt receipt;
+		public PurchaseReceipt receipt;
 
 		public string Key => IAPTradeReceiptUtility.Combine(receipt.productType, receipt.productId);
 		public string Id => receipt.transactionId;

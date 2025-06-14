@@ -1,6 +1,5 @@
 #if NEWTONSOFT
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Sapientia.Reflection;
@@ -12,15 +11,9 @@ namespace Sapientia.Collections
 	{
 	}
 
-	public class HashMapFactoryConverter : JsonConverter
+	internal class HashMapFactoryConverter : JsonConverter
 	{
-		public override bool CanConvert(Type objectType)
-		{
-			if (!objectType.IsGenericType) return false;
-
-			var def = objectType.GetGenericTypeDefinition();
-			return def == typeof(HashMap<,>);
-		}
+		public override bool CanConvert(Type _) => true;
 
 		public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
 		{
@@ -29,13 +22,13 @@ namespace Sapientia.Collections
 
 			var converterType = typeof(HashMapConverter<,>).MakeGenericType(keyType, valueType);
 			var converter = converterType.CreateInstance<JsonConverter>();
-
 			return converter.ReadJson(reader, objectType, existingValue, serializer);
 		}
 
 		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
 		{
 			var objectType = value!.GetType();
+
 			var keyType = objectType.GetGenericArguments()[0];
 			var valueType = objectType.GetGenericArguments()[1];
 
@@ -45,7 +38,7 @@ namespace Sapientia.Collections
 		}
 	}
 
-	public class HashMapConverter<TKey, TValue> : JsonConverter<HashMap<TKey, TValue>>
+	internal class HashMapConverter<TKey, TValue> : JsonConverter<HashMap<TKey, TValue>>
 		where TKey : notnull
 		where TValue : struct
 	{
@@ -65,16 +58,15 @@ namespace Sapientia.Collections
 			writer.WriteEndObject();
 		}
 
-		public override HashMap<TKey, TValue>? ReadJson(JsonReader reader, Type objectType, HashMap<TKey, TValue>? existingValue,
+		public override HashMap<TKey, TValue> ReadJson(JsonReader reader, Type objectType, HashMap<TKey, TValue>? existingValue,
 			bool hasExistingValue, JsonSerializer serializer)
 		{
 			var map = new HashMap<TKey, TValue>();
 			var dict = serializer.Deserialize<Dictionary<TKey, TValue>>(reader);
-			foreach (var kvp in dict)
+			foreach (var kvp in dict!)
 				map.Add(kvp.Key, kvp.Value);
 			return map;
 		}
 	}
 }
-
 #endif

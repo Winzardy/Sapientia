@@ -19,7 +19,7 @@ namespace Targeting
 	/// Платформа приложения (iOS, Android, Windows...)
 	/// </summary>
 	[Serializable]
-	public struct PlatformEntry
+	public partial struct PlatformEntry
 	{
 		public string platform;
 

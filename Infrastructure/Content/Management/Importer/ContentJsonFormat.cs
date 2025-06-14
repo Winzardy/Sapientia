@@ -9,10 +9,14 @@ using Sapientia.Reflection;
 
 namespace Content.Management
 {
-	public class ContentJsonFormat : Dictionary<string, Dictionary<string, Dictionary<string, object>>>
+	public partial class ContentJsonFormat : Dictionary<string, Dictionary<string, Dictionary<string, object>>>
 	{
+		internal const string IDS_KEY = "$identifiers";
 		private const string TYPE_KEY = "$type";
 		private static readonly string SINGLE_KEY = "$" + ContentConstants.DEFAULT_SINGLE_ID.ToLower();
+
+		[JsonProperty(IDS_KEY)]
+		public Dictionary<string, string> guidToId = new();
 
 		public void Add(string moduleName, IEnumerable<IContentEntry> list)
 		{
@@ -21,9 +25,18 @@ namespace Content.Management
 			   .ToDictionary(
 					g => g.Key, // key: тип
 					g => g.ToDictionary(
-						e => e is IUniqueContentEntry unique
-							? unique.Guid.ToString()
-							: SINGLE_KEY,
+						e =>
+						{
+							if (e is IUniqueContentEntry unique)
+							{
+								if (unique.Id != unique.Guid.ToString())
+									guidToId[unique.Guid.ToString()] = unique.Id;
+
+								return unique.Guid.ToString();
+							}
+
+							return SINGLE_KEY;
+						},
 						e => e.RawValue
 					)
 				);
@@ -91,7 +104,8 @@ namespace Content.Management
 							var wrapperType = typeof(UniqueContentEntry<>).MakeGenericType(type);
 							var guid = SerializableGuid.Parse(key);
 							var unique = wrapperType.CreateInstance<IUniqueContentEntry>();
-							unique.Setup(new UniqueContentEntryJsonObject(value, guid));
+							guidToId.TryGetValue(guid, out var id);
+							unique.Setup(new UniqueContentEntryJsonObject(value, guid, id));
 							entry = unique;
 						}
 
@@ -101,56 +115,6 @@ namespace Content.Management
 			}
 
 			ContentJsonTypeResolver.Clear();
-		}
-
-		public JObject ToJObject(JsonSerializer serializer)
-		{
-			var root = new JObject();
-			foreach (var (moduleName, typeMap) in this)
-			{
-				var moduleObject = new JObject();
-
-				foreach (var (typeName, entries) in typeMap)
-				{
-					var typeObject = new JObject();
-
-					foreach (var (key, rawValue) in entries)
-					{
-						if (rawValue != null)
-						{
-							var jToken = JToken.FromObject(rawValue, serializer);
-
-							if (jToken is JObject originalObject)
-							{
-								var type = ContentJsonTypeResolver.Resolve(typeName);
-								if (type.IsAbstract)
-								{
-									var valueType = rawValue.GetType();
-									var reorderedJObject = new JObject
-									{
-										[TYPE_KEY] = ContentJsonTypeResolver.ToKey(valueType)
-									};
-
-									foreach (var property in originalObject.Properties())
-										reorderedJObject[property.Name] = property.Value;
-
-									jToken = reorderedJObject;
-								}
-							}
-
-							typeObject[key] = jToken;
-						}
-						else
-							typeObject[key] = null;
-					}
-
-					moduleObject[typeName] = typeObject;
-				}
-
-				root[moduleName] = moduleObject;
-			}
-
-			return root;
 		}
 	}
 

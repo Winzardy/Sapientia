@@ -4,17 +4,20 @@ namespace Content
 	{
 		public SerializableGuid guid;
 		public readonly object rawValue;
+		public string id;
 
-		public UniqueContentEntryJsonObject(object rawValue, in SerializableGuid guid)
+		public UniqueContentEntryJsonObject(object rawValue, in SerializableGuid guid, string id = null)
 		{
 			this.guid = guid;
 			this.rawValue = rawValue;
+			this.id = id;
 		}
 
 		public UniqueContentEntryJsonObject(in SerializableGuid guid)
 		{
 			this.guid = guid;
 			rawValue = null;
+			id = null;
 		}
 	}
 
@@ -33,6 +36,7 @@ namespace Content
 		// ReSharper disable once PossibleInvalidCastException
 		void IUniqueContentEntry.Setup(in UniqueContentEntryJsonObject dto)
 		{
+			id = dto.id;
 			guid = dto.guid;
 #if CLIENT
 			ContentEditValue

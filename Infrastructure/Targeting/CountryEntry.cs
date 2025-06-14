@@ -6,7 +6,7 @@ using Sapientia.Extensions;
 namespace Targeting
 {
 	[Serializable]
-	public struct CountryEntry
+	public partial struct CountryEntry
 	{
 		public const string UNKNOWN = "Unknown";
 
@@ -32,6 +32,9 @@ namespace Targeting
 
 	public static class CountryEntryUtility
 	{
+		private const char CODE_PREFIX_CHAR = '[';
+		private const char CODE_SUFFIX_CHAR = ']';
+
 		private static Dictionary<string, CountryEntryReference> _codeToEntry;
 
 		public static IEnumerable<CountryEntryReference> GetAll()
@@ -82,7 +85,15 @@ namespace Targeting
 		public static string GetLabel(string code)
 		{
 			var name = _codeToEntry[code].entry.name;
-			return $"[{code}] {name}";
+			return $"{CODE_PREFIX_CHAR}{code}{CODE_SUFFIX_CHAR} {name}";
+		}
+
+		public static (string code, string name) FromLabel(string str)
+		{
+			if (str.IsNullOrEmpty() || str == CountryEntry.UNKNOWN)
+				return (null, null);
+			var split = str.Split(CODE_PREFIX_CHAR, CODE_SUFFIX_CHAR);
+			return (split[1], split[^1]);
 		}
 
 		public class CountryEntryReference

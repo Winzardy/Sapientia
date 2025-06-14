@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Sapientia.Collections;
+using Sapientia.JsonConverters;
 
 namespace Sapientia.Extensions
 {
@@ -20,28 +21,35 @@ namespace Sapientia.Extensions
 	/// </summary>
 	public static class JsonExt
 	{
-		private static readonly JsonSerializerSettings JSON_SETTINGS_NONE_TYPED = new()
+		private static readonly JsonSerializerSettings JSON_SETTINGS_DEFAULT = new()
+		{
+			Converters = new JsonConverter[]
+			{
+				new DictionaryConverter()
+			}
+		};
+		private static readonly JsonSerializerSettings JSON_SETTINGS_NONE_TYPED = new(JSON_SETTINGS_DEFAULT)
 		{
 			TypeNameHandling = TypeNameHandling.None,
 		};
 
-		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED = new()
+		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED = new(JSON_SETTINGS_DEFAULT)
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
 		};
 
-		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED_INDENTED = new()
+		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED_INDENTED = new(JSON_SETTINGS_DEFAULT)
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
 			Formatting = Formatting.Indented,
 		};
 
-		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED = new()
+		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED = new(JSON_SETTINGS_DEFAULT)
 		{
 			TypeNameHandling = TypeNameHandling.All,
 		};
 
-		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED_INDENTED = new()
+		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED_INDENTED = new(JSON_SETTINGS_DEFAULT)
 		{
 			TypeNameHandling = TypeNameHandling.All,
 			Formatting = Formatting.Indented,

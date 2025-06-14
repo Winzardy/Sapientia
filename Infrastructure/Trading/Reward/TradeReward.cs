@@ -43,5 +43,7 @@ namespace Trading
 		public TradeReceiveError(string category, object rawData = null) : this(category, 0, rawData)
 		{
 		}
+
+		public static TradeReceiveError NotImplemented = new TradeReceiveError("NotImplemented");
 	}
 }

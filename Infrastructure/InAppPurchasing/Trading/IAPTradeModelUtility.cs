@@ -6,17 +6,18 @@ namespace Trading.InAppPurchasing
 	{
 		public static void Registry(this ref IAPTradeModel model, in IAPTradeReceipt receipt)
 		{
-			if (model.issued.Contains(receipt.Id))
+			if (model.issued != null && model.issued.Contains(receipt.Id))
 			{
 				TradingDebug.LogError($"Attempted to register a receipt that has already been issued by id [ {receipt.Id} ]");
 				return;
 			}
 
-			if (model.active.Contains(receipt.Id))
+			if (model.issued != null && model.active.Contains(receipt.Id))
 			{
 				TradingDebug.LogError($"Receipt is already registered in active receipts by id [ {receipt.Id} ]");
 			}
 
+			model.active ??= new HashMap<string, IAPTradeReceipt>();
 			model.active.Add(receipt.Id, in receipt);
 
 			// IAPManager.Validate()
@@ -55,6 +56,7 @@ namespace Trading.InAppPurchasing
 			if (targetId == null)
 				return false;
 
+			model.issued ??= new HashMap<string, IAPTradeReceipt>();
 			model.issued.Add(targetId, in model.active[targetId]);
 			model.active.Remove(targetId);
 			return true;
