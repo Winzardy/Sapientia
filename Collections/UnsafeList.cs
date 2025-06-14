@@ -7,7 +7,7 @@ using Sapientia.Extensions;
 namespace Sapientia.Collections
 {
 	[DebuggerTypeProxy(typeof(UnsafeList<>.UnsafeListProxy))]
-	public unsafe struct UnsafeList<T> : IDisposable
+	public struct UnsafeList<T> : IDisposable
 		where T : unmanaged
 	{
 		public SafePtr<T> array;

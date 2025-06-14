@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
-using UnityEngine;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -32,7 +31,6 @@ namespace Sapientia.MemoryAllocator
 		public void Initialize(WorldId worldId, int initialSize)
 		{
 			E.ASSERT(!IsValid);
-			Debug.LogWarning("WORLD CREATED");
 
 			_unsafeWorld = MemoryExt.MemAlloc<UnsafeWorld>();
 			_unsafeWorld.Value().worldId = worldId;

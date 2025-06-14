@@ -27,6 +27,10 @@ namespace Sapientia.Extensions
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#cdd8c9f157a24ed3951f9de198b67b59
 	/// </summary>
+
+#if UNITY_5_3_OR_NEWER
+	[Unity.Burst.BurstCompile]
+#endif
 	public static unsafe class UnsafeExt
 	{
 		// Copy of UnsafeUtility.AlignOfHelper<T> for AlignOf<T>()

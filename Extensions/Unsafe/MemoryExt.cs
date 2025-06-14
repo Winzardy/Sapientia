@@ -105,6 +105,12 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
+		public static SafePtr<T> NoCheckMemAlloc<T>(Unity.Collections.Allocator allocator) where T : unmanaged
+		{
+			return (SafePtr<T>)NoCheckMemAlloc(TSize<T>.size, TAlign<T>.align, allocator);
+		}
+
+		[INLINE(256)]
 		public static SafePtr MemAlloc(int size, int align, Unity.Collections.Allocator allocator)
 		{
 			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, allocator);
@@ -137,6 +143,40 @@ namespace Sapientia.Extensions
 			return (SafePtr<T>)safePtr;
 		}
 #endif
+
+		[INLINE(256)]
+		public static SafePtr NoCheckMemAlloc(int size, int align)
+		{
+#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, Unity.Collections.Allocator.Persistent);
+#else
+			var ptr = (void*)Marshal.AllocHGlobal(size);
+#endif
+
+			return new SafePtr(ptr, size);
+		}
+
+		[INLINE(256)]
+		public static SafePtr NoCheckMemAlloc(int size)
+		{
+			return NoCheckMemAlloc(size, TAlign<byte>.align);
+		}
+
+		[INLINE(256)]
+		public static SafePtr<T> NoCheckMemAlloc<T>() where T : unmanaged
+		{
+			return NoCheckMemAlloc(TSize<T>.size, TAlign<T>.align);
+		}
+
+		[INLINE(256)]
+		public static SafePtr<T> NoCheckMemAllocAndClear<T>() where T : unmanaged
+		{
+			var size = TSize<T>.size;
+			var safePtr = NoCheckMemAlloc(size, TAlign<T>.align);
+			MemClear(safePtr, size);
+
+			return (SafePtr<T>)safePtr;
+		}
 
 		[INLINE(256)]
 		public static SafePtr MemAlloc(int size, int align)
@@ -191,6 +231,16 @@ namespace Sapientia.Extensions
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, allocator);
 		}
 #endif
+
+		[INLINE(256)]
+		public static void NoCheckMemFree(SafePtr memory)
+		{
+#if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, Unity.Collections.Allocator.Persistent);
+#else
+			Marshal.FreeHGlobal((IntPtr)memory.ptr);
+#endif
+		}
 
 		[INLINE(256)]
 		public static void MemFree(SafePtr memory)
@@ -366,6 +416,17 @@ namespace Sapientia.Extensions
 			return (SafePtr<T>)ptr;
 		}
 #endif
+
+		[INLINE(256)]
+		public static SafePtr<T> NoCheckMakeArray<T>(int length, bool clearMemory = true) where T : unmanaged
+		{
+			var size = TSize<T>.size * length;
+			var ptr = NoCheckMemAlloc(size, TAlign<T>.align);
+			if (clearMemory)
+				MemClear(ptr, size);
+
+			return (SafePtr<T>)ptr;
+		}
 
 #if UNITY_5_4_OR_NEWER
 		[INLINE(256)]
