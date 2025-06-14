@@ -34,7 +34,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Pow(this float value, float power)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.pow(value, power);
+#else
 			return MathF.Pow(value, power);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -109,7 +113,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Floor(this float value)
 		{
-			return (float)Math.Floor(value);
+#if UNITY_5_3_OR_NEWER
+			return (int)math.floor(value);
+#else
+			return (int)MathF.Floor(value);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,7 +129,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int RoundToInt(this float value)
 		{
+#if UNITY_5_3_OR_NEWER
+			return (int)math.round(value);
+#else
 			return (int)MathF.Round(value);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -216,7 +228,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Sqrt(this float value)
 		{
-			return (float)Math.Sqrt(value);
+#if UNITY_5_3_OR_NEWER
+			return math.sqrt(value);
+#else
+			return MathF.Sqrt(value);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -262,7 +278,7 @@ namespace Sapientia.Extensions
 			math.sincos(rad, out sin, out cos);
 #else
 			sin = rad.Sin();
-			sin = rad.Cos();
+			cos = rad.Cos();
 #endif
 		}
 
