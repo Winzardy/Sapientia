@@ -4,132 +4,132 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial class World
+	public partial struct World
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService<T>(MemPtr ptr) where T: unmanaged, IIndexedType
 		{
-			_serviceRegistry.RegisterService<T>(this, ptr);
+			GetServiceRegistry().RegisterService<T>(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService<T>(CachedPtr<T> ptr) where T: unmanaged, IIndexedType
 		{
-			_serviceRegistry.RegisterService(this, ptr);
+			GetServiceRegistry().RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService<T>(CachedPtr ptr) where T: unmanaged, IIndexedType
 		{
-			_serviceRegistry.RegisterService<T>(this, ptr);
+			GetServiceRegistry().RegisterService<T>(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService(IndexedPtr indexedPtr)
 		{
-			_serviceRegistry.RegisterService(this, indexedPtr);
+			GetServiceRegistry().RegisterService(this, indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveService<T>() where T: unmanaged, IIndexedType
 		{
-			_serviceRegistry.RemoveService<T>(this);
+			GetServiceRegistry().RemoveService<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterServiceAs<T, TBase>(CachedPtr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
-			_serviceRegistry.RegisterServiceAs<T, TBase>(this, ptr);
+			GetServiceRegistry().RegisterServiceAs<T, TBase>(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveService(IndexedPtr indexedPtr)
 		{
-			_serviceRegistry.RemoveService(this, indexedPtr);
+			GetServiceRegistry().RemoveService(this, indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrRegisterService<T>() where T: unmanaged, IIndexedType
 		{
-			return ref _serviceRegistry.GetOrRegisterService<T>(this);
+			return ref GetServiceRegistry().GetOrRegisterService<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetOrRegisterServicePtr<T>() where T: unmanaged, IIndexedType
 		{
-			return _serviceRegistry.GetOrRegisterServicePtr<T>(this);
+			return GetServiceRegistry().GetOrRegisterServicePtr<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>() where T: unmanaged, IIndexedType
 		{
-			return ref _serviceRegistry.GetService<T>(this);
+			return ref GetServiceRegistry().GetService<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T TryGetService<T>(out bool exist) where T: unmanaged, IIndexedType
 		{
-			return ref _serviceRegistry.GetService<T>(this, out exist);
+			return ref GetServiceRegistry().GetService<T>(this, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
 		{
-			return ref _serviceRegistry.GetService(this, proxyPtr);
+			return ref GetServiceRegistry().GetService(this, proxyPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
 		{
-			return ref _serviceRegistry.GetService(this, proxyPtr, out exist);
+			return ref GetServiceRegistry().GetService(this, proxyPtr, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void GetService<T>(out CachedPtr<T> ptr) where T: unmanaged, IIndexedType
 		{
-			ptr = _serviceRegistry.GetServiceCachedPtr<T>(this);
+			ptr = GetServiceRegistry().GetServiceCachedPtr<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetServiceAs<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
-			return ref _serviceRegistry.GetServiceAs<TBase, T>(this);
+			return ref GetServiceRegistry().GetServiceAs<TBase, T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr GetServiceIndexedPtr<T>() where T: unmanaged, IIndexedType
 		{
-			return _serviceRegistry.GetServiceIndexedPtr<T>(this);
+			return GetServiceRegistry().GetServiceIndexedPtr<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CachedPtr<T> GetServiceCachedPtr<T>() where T: unmanaged, IIndexedType
 		{
-			return _serviceRegistry.GetServiceCachedPtr<T>(this);
+			return GetServiceRegistry().GetServiceCachedPtr<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetServicePtr<T>() where T: unmanaged, IIndexedType
 		{
-			return _serviceRegistry.GetServicePtr<T>(this);
+			return GetServiceRegistry().GetServicePtr<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetServiceAsPtr<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
-			return _serviceRegistry.GetServiceAsPtr<TBase, T>(this);
+			return GetServiceRegistry().GetServiceAsPtr<TBase, T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasService<T>() where T: unmanaged, IIndexedType
 		{
-			return _serviceRegistry.HasService<T>(this);
+			return GetServiceRegistry().HasService<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGetServicePtr<T>(out SafePtr<T> ptr) where T: unmanaged, IIndexedType
 		{
-			return _serviceRegistry.TryGetServicePtr<T>(this, out ptr);
+			return GetServiceRegistry().TryGetServicePtr<T>(this, out ptr);
 		}
 	}
 }

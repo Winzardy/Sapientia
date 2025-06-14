@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator.State
 			worldState.ScheduleLateUpdate = false;
 			worldState.IsStarted = false;
 
-			worldState.worldId = world.worldId;
+			worldState.worldId = world.WorldId;
 			worldState.worldElements = new (world, elementsCapacity);
 			worldState.worldSystems = new (world, elementsCapacity);
 

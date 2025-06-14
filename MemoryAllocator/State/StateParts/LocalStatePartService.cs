@@ -17,7 +17,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public static void AddStatePart(World world, IWoldLocalStatePart statePart)
 		{
-			var service = ServiceContext<WorldId>.GetOrCreateService<LocalStatePartService>(world.worldId);
+			var service = ServiceContext<WorldId>.GetOrCreateService<LocalStatePartService>(world.WorldId);
 			if (service == null)
 			{
 				service = new LocalStatePartService();
@@ -28,7 +28,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public static void Initialize(World world)
 		{
-			var service = ServiceContext<WorldId>.GetOrCreateService<LocalStatePartService>(world.worldId);
+			var service = ServiceContext<WorldId>.GetOrCreateService<LocalStatePartService>(world.WorldId);
 
 			foreach (var statePart in service.localStateParts)
 			{
@@ -38,7 +38,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public static void Dispose(World world)
 		{
-			if (!ServiceLocator<WorldId, LocalStatePartService>.TryRemoveService(world.worldId, out var service))
+			if (!ServiceLocator<WorldId, LocalStatePartService>.TryRemoveService(world.WorldId, out var service))
 				return;
 
 			foreach (var statePart in service.localStateParts)

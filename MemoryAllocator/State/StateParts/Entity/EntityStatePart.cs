@@ -99,7 +99,7 @@ namespace Sapientia.MemoryAllocator.State
 			var id = _freeEntitiesIds[world, EntitiesCount++];
 			var generation = ++_entityIdToGeneration[world, id];
 
-			var entity = new Entity(id, generation, world.worldId);
+			var entity = new Entity(id, generation, world.WorldId);
 #if ENABLE_ENTITY_NAMES
 			entityIdToName[world, id] = name;
 			if (MaxEntitiesCount < EntitiesCount)

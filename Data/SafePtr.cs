@@ -170,6 +170,12 @@ namespace Sapientia.Data
 #endif
 			return left.ptr != right.ptr;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			return (int)ptr;
+		}
 	}
 
 	public readonly unsafe struct SafePtr<T> where T : unmanaged
@@ -370,6 +376,12 @@ namespace Sapientia.Data
 				return true;
 #endif
 			return left.ptr != right.ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			return (int)ptr;
 		}
 	}
 }

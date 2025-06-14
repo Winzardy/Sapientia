@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public World GetAllocator()
+		public World GetWorld()
 		{
 			return worldId.GetWorld();
 		}
@@ -53,8 +53,8 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create()
 		{
-			var allocator = WorldManager.CurrentWorld;
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			var world = WorldManager.CurrentWorld;
+			return world.GetService<EntityStatePart>().CreateEntity(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

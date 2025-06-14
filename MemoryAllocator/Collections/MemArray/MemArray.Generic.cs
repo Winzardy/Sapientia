@@ -45,7 +45,7 @@ namespace Sapientia.MemoryAllocator
 			innerArray = new MemArray(world, TSize<T>.size, length, ClearOptions.UninitializedMemory);
 			innerArray.Fill(world, defaultValue, 0, innerArray.Length);
 #if DEBUG
-			_worldId = world.worldId;
+			_worldId = world.WorldId;
 #endif
 		}
 
@@ -54,7 +54,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			innerArray = new MemArray(world, TSize<T>.size, length, clearOptions);
 #if DEBUG
-			_worldId = world.worldId;
+			_worldId = world.WorldId;
 #endif
 		}
 
@@ -70,7 +70,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			innerArray = new MemArray(world, elementSize, length, clearOptions);
 #if DEBUG
-			_worldId = world.worldId;
+			_worldId = world.WorldId;
 #endif
 		}
 
@@ -84,7 +84,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			innerArray = new MemArray(world, arr.As<MemArray<T>, MemArray>());
 #if DEBUG
-			_worldId = world.worldId;
+			_worldId = world.WorldId;
 #endif
 		}
 
@@ -94,7 +94,7 @@ namespace Sapientia.MemoryAllocator
 			innerArray = new MemArray(world, TSize<T>.size, arr.Length, ClearOptions.UninitializedMemory);
 			arr.CopyTo(new Span<T>(innerArray.GetValuePtr(world).ptr, arr.Length));
 #if DEBUG
-			_worldId = world.worldId;
+			_worldId = world.WorldId;
 #endif
 		}
 

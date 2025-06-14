@@ -47,7 +47,7 @@ namespace Sapientia.MemoryAllocator.State
 
 			InitializeWorld(world);
 
-			return new State(_world.worldId);
+			return new State(_world.WorldId);
 		}
 
 		protected virtual void InitializeWorld(SafePtr<WorldState> worldState)
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
 		{
 			LocalStatePartService.AddStatePart(_world, value);
-			ServiceContext<WorldId>.SetService(_world.worldId, value);
+			ServiceContext<WorldId>.SetService(_world.WorldId, value);
 		}
 
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart
