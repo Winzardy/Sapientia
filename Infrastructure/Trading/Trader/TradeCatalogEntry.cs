@@ -8,7 +8,7 @@ namespace Trading
 	/// Каталог лотов, позиций
 	/// </summary>
 	[Serializable]
-	public class TradeCatalogEntry : IExternallyIdentifiable
+	public partial class TradeCatalogEntry : IExternallyIdentifiable
 	{
 		private string _id;
 
@@ -26,7 +26,7 @@ namespace Trading
 	/// Лот, позиция в магазине, не воспринимать как оффер (попап с предложением покупки), возможно название неудачное...
 	/// </remarks>
 	[Serializable]
-	public struct TradeOfferEntry
+	public partial struct TradeOfferEntry
 	{
 		//TODO: добавить прогрессивную сделку, проблема что еще эту прогрессию где-то надо фиксировать
 		public ContentReference<TradeEntry> trade;

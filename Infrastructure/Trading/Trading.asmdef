@@ -3,7 +3,9 @@
     "rootNamespace": "Trading",
     "references": [
         "Content",
-        "Sapientia"
+        "Sapientia",
+        "Localization",
+        "AssetManagement"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
