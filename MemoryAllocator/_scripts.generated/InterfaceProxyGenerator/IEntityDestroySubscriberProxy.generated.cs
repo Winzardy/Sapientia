@@ -46,6 +46,12 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IEntityDestroySubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void EntityArrayDestroyed(this in UnsafeProxyPtr<IEntityDestroySubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.State.Entity* entities, System.Int32 count)
+		{
+			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr().ptr, world, entities, count);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityArrayDestroyed(this ref ProxyPtr<IEntityDestroySubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.State.Entity* entities, System.Int32 count)
 		{
 			__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(__world).ptr, world, entities, count);
@@ -58,6 +64,12 @@ namespace Sapientia.TypeIndexer
 			{
 				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(__world).ptr, world, entities, count);
 			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this in UnsafeProxyPtr<IEntityDestroySubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]

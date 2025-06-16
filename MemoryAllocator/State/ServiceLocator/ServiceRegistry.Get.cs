@@ -28,7 +28,7 @@ namespace Sapientia.MemoryAllocator
 			ref var ptr = ref _typeToPtr.GetValue(world, context, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(world);
-			return ref TDefaultValue<T>.value;
+			return ref UnsafeExt.DefaultRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,7 +39,7 @@ namespace Sapientia.MemoryAllocator
 			ref var ptr = ref _typeToPtr.GetValue(world, typeIndex, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(world);
-			return ref TDefaultValue<T>.value;
+			return ref UnsafeExt.DefaultRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,7 +56,7 @@ namespace Sapientia.MemoryAllocator
 			ref var ptr = ref _typeToPtr.GetValue(world, proxyPtr.indexedPtr.typeIndex, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(world);
-			return ref TDefaultValue<T>.value;
+			return ref UnsafeExt.DefaultRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -141,6 +141,12 @@ namespace Sapientia.MemoryAllocator
 		{
 			var typeIndex = TypeIndex.Create<T>();
 			return _typeToPtr.ContainsKey(world, typeIndex);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasService(World world, ServiceRegistryContext context)
+		{
+			return _typeToPtr.ContainsKey(world, context);
 		}
 	}
 }

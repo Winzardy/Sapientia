@@ -178,6 +178,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void Fill(World world, in T value)
+		{
+			innerArray.Fill(world, value, 0, Length);
+		}
+
+		[INLINE(256)]
 		public void Fill(World world, in T value, int fromIndex, int count)
 		{
 			innerArray.Fill(world, value, fromIndex, count);

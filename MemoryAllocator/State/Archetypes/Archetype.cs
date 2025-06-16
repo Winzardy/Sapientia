@@ -311,7 +311,7 @@ namespace Sapientia.MemoryAllocator.State
 				}
 			}
 			isExist = false;
-			return ref TDefaultValue<T>.value;
+			return ref UnsafeExt.DefaultRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

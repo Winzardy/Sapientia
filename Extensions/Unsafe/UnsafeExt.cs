@@ -1,18 +1,12 @@
-using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Sapientia.Data;
+using Unity.Burst;
 #if UNITY_5_3_OR_NEWER
 using Unity.Collections.LowLevel.Unsafe;
 #endif
 
 namespace Sapientia.Extensions
 {
-	public struct TDefaultValue<T>
-	{
-		public static T value = default;
-	}
-
 	public struct TSize<T> where T : struct
 	{
 		public static readonly int size = UnsafeExt.SizeOf<T>();
@@ -22,6 +16,16 @@ namespace Sapientia.Extensions
 	public struct TAlign<T> where T : struct
 	{
 		public static readonly int align = UnsafeExt.AlignOf<T>();
+	}
+
+	public struct TDefaultValue<T> where T : unmanaged
+	{
+		public static readonly SharedStatic<T> value = SharedStatic<T>.GetOrCreate<T>();
+	}
+
+	public struct TReadonlyDefaultValue<T>
+	{
+		public static readonly T value = default!;
 	}
 
 	/// <summary>
@@ -38,6 +42,18 @@ namespace Sapientia.Extensions
 		{
 			public byte dummy;
 			public T data;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T DefaultRef<T>() where T: unmanaged
+		{
+			return ref TDefaultValue<T>.value.Data;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref readonly T DefaultRefReadonly<T>()
+		{
+			return ref TReadonlyDefaultValue<T>.value;
 		}
 
 		// Copy of UnsafeUtility.SizeOf<T>()

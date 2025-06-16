@@ -129,7 +129,7 @@ namespace Sapientia.MemoryAllocator.State
 
 			SendDisposedMessage();
 
-			worldId.RemoveAllocator();
+			worldId.RemoveWorld();
 			this = default;
 		}
 	}

@@ -7,6 +7,9 @@ using Sapientia.TypeIndexer;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
+#if UNITY_5_3_OR_NEWER
+	[Unity.Burst.BurstCompile]
+#endif
 	public struct ServiceRegistryContext : IEquatable<ServiceRegistryContext>
 	{
 		public TypeIndex typeIndex;

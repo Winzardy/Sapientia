@@ -39,7 +39,7 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public static void SetCurrentAllocator(this ref WorldId worldId)
 		{
-			SetCurrentAllocator(worldId.GetWorld());
+			SetCurrentWorld(worldId.GetWorld());
 		}
 
 		[INLINE(256)]
@@ -47,11 +47,11 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!worldId.IsValid())
 				return;
-			SetCurrentAllocator(worldId.GetWorld());
+			SetCurrentWorld(worldId.GetWorld());
 		}
 
 		[INLINE(256)]
-		public static void SetCurrentAllocator(World world)
+		public static void SetCurrentWorld(World world)
 		{
 			_currentWorld = world;
 
@@ -79,7 +79,7 @@ namespace Sapientia.MemoryAllocator
 			return world;
 		}
 
-		public static World CreateAllocator(int initialSize = -1)
+		public static World CreateWorld(int initialSize = -1)
 		{
 			Prewarm(_count);
 
@@ -107,22 +107,21 @@ namespace Sapientia.MemoryAllocator
 			ArrayExt.Expand(ref _worlds, index + 1);
 		}
 
-		public static void RemoveAllocator(this ref WorldId worldId)
+		public static void RemoveWorld(this ref WorldId worldId)
 		{
 			if (!worldId.IsValid())
 				throw new ArgumentException($"{nameof(WorldId)} with such Id [id: {worldId.id}] doesn't exist.");
 
+			_worlds[worldId.index].Clear();
+
 			if (_currentWorld == _worlds[worldId.index])
-				SetCurrentAllocator(default(World));
+				SetCurrentWorld(default(World));
 
 			if (_count > 1)
 			{
 				// Не освобождаем память, будем её переиспользовать
 				// !!! Если её освободить, по по непонятной причине происходит краш !!!
-				ref var a = ref _worlds[worldId.index];
-				ref var b = ref _worlds[_count - 1];
-
-				(a, b) = (b, a);
+				_worlds[worldId.index].Swap(ref _worlds[_count - 1]);
 			}
 			_count--;
 		}

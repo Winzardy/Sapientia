@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.Extensions.Reflection;
 using Sapientia.MemoryAllocator;
@@ -180,18 +179,47 @@ namespace Sapientia.TypeIndexer
 				var parametersWithoutTypeString = CodeGenExt.GetParametersString(parameters, true);
 
 				{
-					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(World).FullName} __world" + (parameters.Length > 0 ? ", " : string.Empty));
-					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr(__world).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
+					{
+						var proxyPtrParametersString = parametersString.Replace("(",
+							$"(this in UnsafeProxyPtr<{baseType.Name}Proxy> __proxyPtr" +
+							(parameters.Length > 0 ? ", " : string.Empty));
+						var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(",
+							"(__proxyPtr.GetPtr().ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
-					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
-					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
-					sourceBuilder.AppendLine($"		{{");
-					if (returnType.IsVoid())
-						sourceBuilder.AppendLine($"			__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
-					else
-						sourceBuilder.AppendLine($"			return __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
-					sourceBuilder.AppendLine($"		}}");
-					sourceBuilder.AppendLine();
+						sourceBuilder.AppendLine($"		{MethodImplAttribute}");
+						sourceBuilder.AppendLine(
+							$"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
+						sourceBuilder.AppendLine($"		{{");
+						if (returnType.IsVoid())
+							sourceBuilder.AppendLine(
+								$"			__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+						else
+							sourceBuilder.AppendLine(
+								$"			return __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"		}}");
+						sourceBuilder.AppendLine();
+					}
+
+					{
+						var proxyPtrParametersString = parametersString.Replace("(",
+							$"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(World).FullName} __world" +
+							(parameters.Length > 0 ? ", " : string.Empty));
+						var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(",
+							"(__proxyPtr.GetPtr(__world).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
+
+						sourceBuilder.AppendLine($"		{MethodImplAttribute}");
+						sourceBuilder.AppendLine(
+							$"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
+						sourceBuilder.AppendLine($"		{{");
+						if (returnType.IsVoid())
+							sourceBuilder.AppendLine(
+								$"			__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+						else
+							sourceBuilder.AppendLine(
+								$"			return __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"		}}");
+						sourceBuilder.AppendLine();
+					}
 				}
 
 				{

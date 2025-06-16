@@ -46,6 +46,12 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IKillSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void EntityKilled(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
+		{
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr().ptr, world, in entity);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
 			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__world).ptr, world, in entity);
@@ -58,6 +64,12 @@ namespace Sapientia.TypeIndexer
 			{
 				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__world).ptr, world, in entity);
 			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]

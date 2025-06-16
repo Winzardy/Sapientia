@@ -185,7 +185,7 @@ namespace Sapientia.Data
 #if UNITY_5_3_OR_NEWER
 	[Unity.Burst.BurstCompile]
 #endif
-	public readonly unsafe struct SafePtr<T> where T : unmanaged
+	public readonly unsafe struct SafePtr<T> where T: unmanaged
 	{
 #if UNITY_5_3_OR_NEWER
 		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
@@ -294,7 +294,7 @@ namespace Sapientia.Data
 			}
 		}
 
-		public SafePtr<T> Slice(int index, int length)
+		public SafePtr<T> Slice(int index, int length = 1)
 		{
 #if DEBUG
 			var result = (byte*)(ptr + index);

@@ -6,6 +6,9 @@ using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
 {
+#if UNITY_5_3_OR_NEWER
+	[Unity.Burst.BurstCompile]
+#endif
 	public partial struct World : IEquatable<World>, IDisposable
 	{
 		private SafePtr<UnsafeWorld> _unsafeWorld;
@@ -33,13 +36,7 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(!IsValid);
 
 			_unsafeWorld = MemoryExt.MemAlloc<UnsafeWorld>();
-			_unsafeWorld.Value().worldId = worldId;
-			_unsafeWorld.Value().version = 1;
-
-			_unsafeWorld.Value().allocator = new Allocator();
-			_unsafeWorld.Value().allocator.Initialize(initialSize);
-
-			_unsafeWorld.Value().serviceRegistry = ServiceRegistry.Create(this);
+			_unsafeWorld.Value().Initialize(worldId, initialSize);
 		}
 
 		public void Dispose()
@@ -54,15 +51,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private ref Allocator GetAllocator()
+		public ref Allocator GetAllocator()
 		{
 			return ref _unsafeWorld.Value().allocator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private ref ServiceRegistry GetServiceRegistry()
+		public ref ServiceRegistry GetServiceRegistry()
 		{
 			return ref _unsafeWorld.Value().serviceRegistry;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref UnsafeServiceRegistry GetLocalServiceRegistry()
+		{
+			return ref _unsafeWorld.Value().localServiceRegistry;
 		}
 
 		public static World Deserialize(ref StreamBufferReader stream)
@@ -80,6 +83,13 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(IsValid);
 
 			_unsafeWorld.Value().Reset(worldId);
+		}
+
+		public void Clear()
+		{
+			E.ASSERT(IsValid);
+
+			_unsafeWorld.Value().Clear();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

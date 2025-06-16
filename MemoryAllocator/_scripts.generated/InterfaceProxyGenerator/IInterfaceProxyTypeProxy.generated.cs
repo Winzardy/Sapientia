@@ -37,6 +37,12 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IInterfaceProxyTypeProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this in UnsafeProxyPtr<IInterfaceProxyTypeProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyPtr<IInterfaceProxyTypeProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__world).ptr, world);

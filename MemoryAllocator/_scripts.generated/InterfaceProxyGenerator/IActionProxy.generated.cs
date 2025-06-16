@@ -46,6 +46,12 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IActionProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void Invoke(this in UnsafeProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr().ptr, world);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Invoke(this ref ProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr(__world).ptr, world);
@@ -58,6 +64,12 @@ namespace Sapientia.TypeIndexer
 			{
 				__proxyPtr->proxy.Invoke(__proxyPtr->GetPtr(__world).ptr, world);
 			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this in UnsafeProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]

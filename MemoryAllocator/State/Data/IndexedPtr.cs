@@ -8,7 +8,7 @@ namespace Sapientia.MemoryAllocator
 	public struct IndexedPtr : IEquatable<IndexedPtr>
 	{
 		public readonly TypeIndex typeIndex;
-		private CachedPtr _ptr;
+		public CachedPtr _ptr;
 
 		public readonly bool IsCreated
 		{

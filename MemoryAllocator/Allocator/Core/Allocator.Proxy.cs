@@ -25,7 +25,7 @@ namespace Sapientia.MemoryAllocator
 					using var list = new SimpleList<Dump>();
 					for (var i = 0; i < _allocator._zonesList.count; ++i)
 					{
-						var zone = _allocator._zonesList[i];
+						var zone = _allocator._zonesList.ptr.Slice(i);
 						using var blocks = new SimpleList<string>();
 
 						MemoryZoneDumpHeap(zone, blocks);

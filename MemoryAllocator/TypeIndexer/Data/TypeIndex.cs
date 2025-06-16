@@ -1,11 +1,17 @@
 using System;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace Sapientia.TypeIndexer
 {
 	public static class TypeIndex<T>
 	{
-		public static readonly TypeIndex typeIndex = IndexedTypes.GetTypeIndex(typeof(T));
+		public static readonly TypeIndex typeIndex;
+
+		static TypeIndex()
+		{
+			IndexedTypes.GetTypeIndex(typeof(T), out typeIndex);
+		}
 	}
 
 	public struct TypeIndex : IEquatable<TypeIndex>

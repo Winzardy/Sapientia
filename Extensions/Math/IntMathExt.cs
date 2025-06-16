@@ -131,7 +131,7 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Sqrt(this int v)
 		{
-			return MathF.Sqrt(v);
+			return FloatMathExt.Sqrt(v);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -10,35 +10,51 @@ namespace Sapientia.Collections
 	public struct UnsafeList<T> : IDisposable
 		where T : unmanaged
 	{
-		public SafePtr<T> array;
+		public SafePtr<T> ptr;
 		public int count;
 		public int capacity;
+#if UNITY_5_3_OR_NEWER
+		private Unity.Collections.Allocator _allocator;
+#endif
 
-		public bool IsValid => array != default;
+		public bool IsCreated => ptr != default;
 
-		public UnsafeList(int capacity = 8)
+		public UnsafeList(int capacity)
 		{
-			this.array = MemoryExt.MakeArray<T>(capacity, false);
+			this.ptr = MemoryExt.MakeArray<T>(capacity, false, false);
 			this.count = 0;
 			this.capacity = capacity;
+#if UNITY_5_3_OR_NEWER
+			_allocator = Unity.Collections.Allocator.None;
+#endif
 		}
+
+#if UNITY_5_3_OR_NEWER
+		public UnsafeList(int capacity, Unity.Collections.Allocator allocator)
+		{
+			this.ptr = MemoryExt.MakeArray<T>(capacity, allocator, false, false);
+			this.count = 0;
+			this.capacity = capacity;
+			_allocator = allocator;
+		}
+#endif
 
 		public ref T Last
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref array[count - 1];
+			get => ref ptr[count - 1];
 		}
 
 		public SafePtr<T> LastPtr
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => array.Slice(count - 1, 1);
+			get => ptr.Slice(count - 1, 1);
 		}
 
-		public SafePtr<T> this[int index]
+		public ref T this[int index]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => array.Slice(index, 1);
+			get => ref (ptr + index).Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,29 +62,39 @@ namespace Sapientia.Collections
 		{
 			EnsureCapacity(count + 1);
 
-			array[count] = item;
+			ptr[count] = item;
 			count++;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveAt(int index)
 		{
-			var result = array[index];
+			var result = ptr[index];
 
 			count--;
 			if (index < count)
 			{
-				MemoryExt.MemMove<T>((array + (index + 1)), (array + index), count - index);
+				MemoryExt.MemMove<T>((ptr + (index + 1)), (ptr + index), count - index);
 			}
 
 			return result;
 		}
 
+		public void Insert(int index, T value)
+		{
+			EnsureCapacity(count + 1);
+
+			MemoryExt.MemMove(ptr + index, ptr + index + 1, count - index);
+			ptr[index] = value;
+
+			count++;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveAtSwapBack(int index)
 		{
-			var result = array[index];
-			array[index] = array[--count];
+			var result = ptr[index];
+			ptr[index] = ptr[--count];
 
 			return result;
 		}
@@ -77,7 +103,7 @@ namespace Sapientia.Collections
 		public T RemoveLast()
 		{
 			count--;
-			return array[count];
+			return ptr[count];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -89,20 +115,34 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EnsureCapacity(int newCapacity)
 		{
-			MemoryExt.ResizeArray<T>(ref array, ref capacity, newCapacity, true, false);
+#if UNITY_5_3_OR_NEWER
+			if (_allocator != Unity.Collections.Allocator.None)
+				MemoryExt.ResizeArray<T>(ref ptr, ref capacity, newCapacity, _allocator, true, false, false);
+			else
+#endif
+			{
+				MemoryExt.ResizeArray<T>(ref ptr, ref capacity, newCapacity, true, false, false);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			if (!IsValid)
+			if (!IsCreated)
 				return;
 
-			MemoryExt.MemFree(array);
+#if UNITY_5_3_OR_NEWER
+			if (_allocator != Unity.Collections.Allocator.None)
+				MemoryExt.MemFree(ptr, _allocator, false);
+			else
+#endif
+			{
+				MemoryExt.MemFree(ptr, false);
+			}
 			this = default;
 		}
 
-		public unsafe class UnsafeListProxy
+		public class UnsafeListProxy
 		{
 			private UnsafeList<T> _arr;
 
@@ -122,7 +162,7 @@ namespace Sapientia.Collections
 					var arr = new T[_arr.count];
 					for (var i = 0; i < _arr.count; ++i)
 					{
-						arr[i] = _arr[i].Value();
+						arr[i] = _arr[i];
 					}
 
 					return arr;
