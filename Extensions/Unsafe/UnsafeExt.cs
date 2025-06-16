@@ -1,3 +1,4 @@
+using System; // Не убирать
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 #if UNITY_5_3_OR_NEWER
@@ -143,11 +144,10 @@ namespace Sapientia.Extensions
 		public static bool IsEquals<T>(this ref T a, ref T b) where T : struct
 		{
 #if UNITY_5_3_OR_NEWER
-			var size = UnsafeUtility.SizeOf<T>();
-			return UnsafeUtility.MemCmp(a.AsPointer(), b.AsPointer(), size) == 0;
+			return UnsafeUtility.MemCmp(a.AsPointer(), b.AsPointer(), TSize<T>.size) == 0;
 #else
-			var spanA = new ReadOnlySpan<T>(Unsafe.AsPointer(ref a), 1);
-			var spanB = new ReadOnlySpan<T>(Unsafe.AsPointer(ref b), 1);
+			var spanA = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref a), TSize<T>.size);
+			var spanB = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref b), TSize<T>.size);
 			return spanA.SequenceEqual(spanB);
 #endif
 		}
@@ -157,11 +157,10 @@ namespace Sapientia.Extensions
 		{
 			var defaultValue = default(T);
 #if UNITY_5_3_OR_NEWER
-			var size = UnsafeUtility.SizeOf<T>();
-			return UnsafeUtility.MemCmp(value.AsPointer(), defaultValue.AsPointer(), size) == 0;
+			return UnsafeUtility.MemCmp(value.AsPointer(), defaultValue.AsPointer(), TSize<T>.size) == 0;
 #else
-			var spanA = new ReadOnlySpan<T>(Unsafe.AsPointer(ref value), 1);
-			var spanB = new ReadOnlySpan<T>(Unsafe.AsPointer(ref defaultValue), 1);
+			var spanA = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref value), TSize<T>.size);
+			var spanB = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref defaultValue), TSize<T>.size);
 			return spanA.SequenceEqual(spanB);
 #endif
 		}
