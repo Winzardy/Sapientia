@@ -335,18 +335,18 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void FreeBlock(MemoryBlockRef blockRef)
 		{
-			var zone = _zonesList.ptr.Slice(blockRef.memoryZoneId);
-			var blockPtr = (zone.ptr->memory + blockRef.memoryZoneOffset).Cast<MemoryBlock>();
+			ref var zone = ref _zonesList[blockRef.memoryZoneId];
+			var blockPtr = (zone.memory + blockRef.memoryZoneOffset).Cast<MemoryBlock>();
 
 			E.ASSERT(blockRef.memoryZoneId >= 0 && blockRef.memoryZoneId < _zonesList.count);
-			E.ASSERT(zone.ptr->size >= blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
+			E.ASSERT(zone.size >= blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
 			E.ASSERT(!blockPtr.ptr->id.IsFree);
 
 			// Если предыдущий блок существует и свободен, то мерджим предыдущий блок
 			var prevBlockPtr = ((SafePtr)blockPtr + blockPtr.ptr->prevBlockOffset).Cast<MemoryBlock>();
 			if (prevBlockPtr != blockPtr && prevBlockPtr.ptr->id.IsFree)
 			{
-				E.ASSERT(prevBlockPtr.ptr >= zone.ptr->memory.ptr);
+				E.ASSERT(prevBlockPtr.ptr >= zone.memory.ptr);
 
 				E.ASSERT(prevBlockPtr.ptr->blockSize == -blockPtr.ptr->prevBlockOffset);
 				prevBlockPtr.ptr->blockSize += blockPtr.ptr->blockSize;
@@ -354,7 +354,7 @@ namespace Sapientia.MemoryAllocator
 
 				// Если следующий блок существует и он пустой, то мерджим следующий блок
 				var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
-				if (nextBlockPtr < zone.ptr->zoneEnd && nextBlockPtr->id.IsFree)
+				if (nextBlockPtr < zone.zoneEnd && nextBlockPtr->id.IsFree)
 				{
 					prevBlockPtr.ptr->blockSize += nextBlockPtr->blockSize;
 					RemoveFreeBlock(ref nextBlockPtr->id);
@@ -378,9 +378,9 @@ namespace Sapientia.MemoryAllocator
 			{
 				// Если следующий блок существует и он пустой, то мерджим следующий блок
 				var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
-				if (nextBlockPtr < zone.ptr->zoneEnd && nextBlockPtr->id.IsFree)
+				if (nextBlockPtr < zone.zoneEnd && nextBlockPtr->id.IsFree)
 				{
-					E.ASSERT(zone.ptr->size > blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
+					E.ASSERT(zone.size > blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
 
 					blockPtr.ptr->blockSize += nextBlockPtr->blockSize;
 					// Обновляем sizeId прежде чем добавлять блок в список свободных
