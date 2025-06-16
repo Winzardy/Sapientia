@@ -23,7 +23,7 @@ namespace Sapientia.Extensions
 #if UNITY_5_3_OR_NEWER
 		public static readonly SharedStatic<T> value = SharedStatic<T>.GetOrCreate<T>();
 #else
-		public static readonly T value = default(T);
+		public static T value = default(T);
 #endif
 	}
 
