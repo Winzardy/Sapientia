@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using Unity.Burst;
 #if UNITY_5_3_OR_NEWER
+using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 #endif
 
@@ -20,7 +20,11 @@ namespace Sapientia.Extensions
 
 	public struct TDefaultValue<T> where T : unmanaged
 	{
+#if UNITY_5_3_OR_NEWER
 		public static readonly SharedStatic<T> value = SharedStatic<T>.GetOrCreate<T>();
+#else
+		public static readonly T value = default(T);
+#endif
 	}
 
 	public struct TReadonlyDefaultValue<T>
@@ -47,7 +51,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T DefaultRef<T>() where T: unmanaged
 		{
+#if UNITY_5_3_OR_NEWER
 			return ref TDefaultValue<T>.value.Data;
+#else
+			return ref TDefaultValue<T>.value;
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
