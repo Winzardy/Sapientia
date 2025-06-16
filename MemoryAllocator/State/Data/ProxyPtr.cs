@@ -99,11 +99,6 @@ namespace Sapientia.MemoryAllocator
 			return indexedPtr == other.indexedPtr && proxy.FirstDelegateIndex.index == other.proxy.FirstDelegateIndex.index;
 		}
 
-		public ProxyPtr<T> CopyTo(World srsWorld, World dstWorld)
-		{
-			return new ProxyPtr<T>(indexedPtr.CopyTo(srsWorld, dstWorld));
-		}
-
 		public override int GetHashCode()
 		{
 			return indexedPtr.GetHashCode();

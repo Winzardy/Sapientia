@@ -91,12 +91,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public CachedPtr CopyTo(World srsWorld, World dstWorld)
-		{
-			return new CachedPtr(memPtr.CopyTo(srsWorld, dstWorld));
-		}
-
-		[INLINE(256)]
 		public static implicit operator CachedPtr(MemPtr value)
 		{
 			return new CachedPtr(value);
@@ -244,12 +238,6 @@ namespace Sapientia.MemoryAllocator
 		public ProxyPtr<TProxy> ToProxy<TProxy>() where TProxy : unmanaged, IProxy
 		{
 			return new ProxyPtr<TProxy>(this);
-		}
-
-		[INLINE(256)]
-		public CachedPtr<T> CopyTo(World srsWorld, World dstWorld)
-		{
-			return new CachedPtr<T>(memPtr.CopyTo(srsWorld, dstWorld));
 		}
 
 		[INLINE(256)]
