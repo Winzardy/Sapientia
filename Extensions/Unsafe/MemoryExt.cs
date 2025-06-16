@@ -449,14 +449,14 @@ namespace Sapientia.Extensions
 				newLength = newLength.NextPowerOfTwo().Max(8);
 
 			var size = newLength * TSize<T>.size;
-			var ptr = MemAlloc(size, TAlign<T>.align);
+			var ptr = MemAlloc(size, TAlign<T>.align, safetyCheck);
 			if (clearMemory)
 				MemClear(ptr, size);
 
 			if (arr != default)
 			{
 				MemCopy<T>(arr, (SafePtr<T>)ptr, length);
-				MemFree(arr);
+				MemFree(arr, safetyCheck);
 			}
 
 			arr = (SafePtr<T>)ptr;
