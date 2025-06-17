@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
 
@@ -132,9 +133,22 @@ namespace Content.Management
 
 		public static Type Resolve(string fullTypeKey, IEnumerable<string> assemblyNameFilter = null)
 		{
+#if CLIENT
 			TryFillMap(assemblyNameFilter);
 			return _keyToType.GetValueOrDefault(fullTypeKey);
+#else
+			var (typeName, assemblyName) = Split(fullTypeKey);
+			return JsonExt.serializationBinder.BindToType(assemblyName, typeName);
+#endif
 		}
+
+#if !CLIENT
+		private static (string typeName, string assemblyName) Split(string fullTypeKey)
+		{
+			var parts = fullTypeKey.Split(SEPARATOR);
+			return (parts[0], parts[1]);
+		}
+#endif
 
 		public static void Clear()
 		{

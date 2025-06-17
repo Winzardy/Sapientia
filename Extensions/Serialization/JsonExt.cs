@@ -138,13 +138,13 @@ namespace Sapientia.Extensions
 		// If you see error in Newtonsoft.Json.Serialization.JsonArrayContract.CreateWrapper check this - https://github.com/jilleJr/Newtonsoft.Json-for-Unity/issues/77
 		public static T FromJson<T>(this string json) => FromJson<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
 
-#if !CLIENT
-		private static DefaultSerializationBinder _binder = new CustomSerializationBinder();
+#if CLIENT
+		public static DefaultSerializationBinder serializationBinder = new CustomSerializationBinder();
 #endif
 		public static T FromJson<T>(this string json, JsonSerializerSettings settings)
 		{
 #if !CLIENT
-			settings.SerializationBinder = _binder;
+			settings.SerializationBinder = serializationBinder;
 #endif
 			return JsonConvert.DeserializeObject<T>(json, settings)!;
 		}
@@ -264,11 +264,18 @@ namespace Sapientia.Extensions
 
 	public class CustomSerializationBinder : DefaultSerializationBinder
 	{
-		private readonly ConcurrentDictionary<string, string> _assemblyNameMap = new();
+		private readonly ConcurrentDictionary<string, string> _rawToMatch = new();
 
 		public override Type BindToType(string assemblyName, string typeName)
 		{
-			if (!_assemblyNameMap.TryGetValue(assemblyName, out var correctAssemblyName))
+			if (_rawToMatch.TryGetValue(assemblyName, out var correctAssemblyName))
+				return base.BindToType(correctAssemblyName, typeName);
+
+			try
+			{
+				return base.BindToType(assemblyName, typeName);
+			}
+			catch
 			{
 				var match = AppDomain.CurrentDomain
 				   .GetAssemblies()
@@ -276,13 +283,14 @@ namespace Sapientia.Extensions
 				   .FirstOrDefault(x => x.Type != null);
 
 				if (match == null)
-					throw new JsonSerializationException($"Unable to resolve type '{typeName}' from any loaded assembly (original assembly: {assemblyName})");
+					throw new JsonSerializationException(
+						$"Unable to resolve type '{typeName}' from any loaded assembly (original assembly: {assemblyName})");
 
 				correctAssemblyName = match.Assembly.GetName().Name;
-				_assemblyNameMap[assemblyName] = correctAssemblyName;
-			}
+				_rawToMatch[assemblyName] = correctAssemblyName;
 
-			return base.BindToType(correctAssemblyName, typeName);
+				return base.BindToType(correctAssemblyName, typeName);
+			}
 		}
 	}
 }
