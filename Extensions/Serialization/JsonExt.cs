@@ -138,7 +138,7 @@ namespace Sapientia.Extensions
 		// If you see error in Newtonsoft.Json.Serialization.JsonArrayContract.CreateWrapper check this - https://github.com/jilleJr/Newtonsoft.Json-for-Unity/issues/77
 		public static T FromJson<T>(this string json) => FromJson<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
 
-#if CLIENT
+#if !CLIENT
 		public static DefaultSerializationBinder serializationBinder = new CustomSerializationBinder();
 #endif
 		public static T FromJson<T>(this string json, JsonSerializerSettings settings)
@@ -262,6 +262,7 @@ namespace Sapientia.Extensions
 		}
 	}
 
+#if !CLIENT
 	public class CustomSerializationBinder : DefaultSerializationBinder
 	{
 		private readonly ConcurrentDictionary<string, string> _rawToMatch = new();
@@ -293,4 +294,5 @@ namespace Sapientia.Extensions
 			}
 		}
 	}
+#endif
 }

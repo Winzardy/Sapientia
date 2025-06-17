@@ -13,7 +13,6 @@ namespace Content.Management
 	public partial class ContentJsonFormat : Dictionary<string, Dictionary<string, Dictionary<string, object>>>
 	{
 		internal const string IDS_KEY = "$identifiers";
-		private const string TYPE_KEY = "$type";
 		private static readonly string SINGLE_KEY = "$" + ContentConstants.DEFAULT_SINGLE_ID.ToLower();
 
 		[JsonProperty(IDS_KEY)]
