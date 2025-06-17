@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Sapientia.Collections;
 using Sapientia.JsonConverters;
 
@@ -28,6 +31,7 @@ namespace Sapientia.Extensions
 				new DictionaryConverter()
 			}
 		};
+
 		private static readonly JsonSerializerSettings JSON_SETTINGS_NONE_TYPED = new(JSON_SETTINGS_DEFAULT)
 		{
 			TypeNameHandling = TypeNameHandling.None,
@@ -134,8 +138,14 @@ namespace Sapientia.Extensions
 		// If you see error in Newtonsoft.Json.Serialization.JsonArrayContract.CreateWrapper check this - https://github.com/jilleJr/Newtonsoft.Json-for-Unity/issues/77
 		public static T FromJson<T>(this string json) => FromJson<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
 
+#if !CLIENT
+		private static DefaultSerializationBinder _binder = new CustomSerializationBinder();
+#endif
 		public static T FromJson<T>(this string json, JsonSerializerSettings settings)
 		{
+#if !CLIENT
+			settings.SerializationBinder = _binder;
+#endif
 			return JsonConvert.DeserializeObject<T>(json, settings)!;
 		}
 
@@ -249,6 +259,30 @@ namespace Sapientia.Extensions
 			{
 				return default;
 			}
+		}
+	}
+
+	public class CustomSerializationBinder : DefaultSerializationBinder
+	{
+		private readonly ConcurrentDictionary<string, string> _assemblyNameMap = new();
+
+		public override Type BindToType(string assemblyName, string typeName)
+		{
+			if (!_assemblyNameMap.TryGetValue(assemblyName, out var correctAssemblyName))
+			{
+				var match = AppDomain.CurrentDomain
+				   .GetAssemblies()
+				   .Select(a => new { Assembly = a, Type = a.GetType(typeName, throwOnError: false) })
+				   .FirstOrDefault(x => x.Type != null);
+
+				if (match == null)
+					throw new JsonSerializationException($"Unable to resolve type '{typeName}' from any loaded assembly (original assembly: {assemblyName})");
+
+				correctAssemblyName = match.Assembly.GetName().Name;
+				_assemblyNameMap[assemblyName] = correctAssemblyName;
+			}
+
+			return base.BindToType(correctAssemblyName, typeName);
 		}
 	}
 }
