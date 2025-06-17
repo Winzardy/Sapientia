@@ -50,6 +50,7 @@ namespace Trading.InAppPurchasing
 	[Serializable]
 	public struct IAPTradeModel
 	{
+		// Key to Receipt
 		public HashMap<string, IAPTradeReceipt> active;
 		public HashMap<string, IAPTradeReceipt> issued;
 		// Возможно придется хранить еще и refund...
