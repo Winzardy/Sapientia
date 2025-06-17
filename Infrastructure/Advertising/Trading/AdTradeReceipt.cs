@@ -1,8 +1,10 @@
+using System;
 using Advertising;
 using Content;
 
 namespace Trading.Advertising
 {
+	[Serializable]
 	public struct AdTradeReceipt : ITradeReceipt
 	{
 		public AdPlacementType type;

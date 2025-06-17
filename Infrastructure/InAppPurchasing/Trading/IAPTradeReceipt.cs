@@ -1,8 +1,10 @@
+using System;
 using Content;
 using InAppPurchasing;
 
 namespace Trading.InAppPurchasing
 {
+	[Serializable]
 	public struct IAPTradeReceipt : ITradeReceipt
 	{
 		public PurchaseReceipt receipt;
