@@ -13,7 +13,6 @@ namespace Content.Management
 	public partial class ContentJsonFormat : Dictionary<string, Dictionary<string, Dictionary<string, object>>>
 	{
 		internal const string IDS_KEY = "$identifiers";
-		private const string TYPE_KEY = "$type";
 		private static readonly string SINGLE_KEY = "$" + ContentConstants.DEFAULT_SINGLE_ID.ToLower();
 
 		[JsonProperty(IDS_KEY)]
@@ -47,13 +46,13 @@ namespace Content.Management
 
 		public void Fill(List<IContentEntry> list)
 		{
-			using var _ = HashSetPool<string>.Get(out var assmeblyFilter);
+			using var _ = HashSetPool<string>.Get(out var assemblyFilter);
 			foreach (var typeToGuidToValue in Values)
 			{
 				foreach (var typeKey in typeToGuidToValue.Keys)
 				{
 					var assemblyName = ContentJsonTypeResolver.ToAssemblyName(typeKey);
-					assmeblyFilter.Add(assemblyName);
+					assemblyFilter.Add(assemblyName);
 				}
 			}
 
@@ -61,7 +60,7 @@ namespace Content.Management
 			{
 				foreach (var (typeKey, keyToValue) in typeToGuidToValue)
 				{
-					var type = ContentJsonTypeResolver.Resolve(typeKey, assmeblyFilter);
+					var type = ContentJsonTypeResolver.Resolve(typeKey, assemblyFilter);
 
 					if (type == null)
 						throw ContentDebug.NullException("Type not found: " + typeKey);
