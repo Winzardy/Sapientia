@@ -17,8 +17,14 @@ namespace Targeting
 		public DefaultProjectDeskAttendant(ProjectInfo options, in PlatformEntry platform)
 		{
 			_options = options;
+			if (!options.platformToStore.TryGetValue(_platform, out var store))
+				store = StorePlatformType.UNDEFINED;
+
 			_platform = platform;
-			_store = options.platformToStore.TryGetValue(_platform, out var store) ? store : StorePlatformType.UNDEFINED;
+			_store = store;
+
+			ProjectDebug.Log($"Platform: {_platform}");
+			ProjectDebug.Log($"Distribution (store): {_store}");
 		}
 
 		public string GetReviewLink(StorePlatformEntry store) =>
