@@ -37,13 +37,13 @@ namespace InAppPurchasing
 		public abstract IAPProductType Type { get; }
 
 		/// <summary>
-		/// [Normal Priority] Обычно имя совпадает с id, можно установить свое, но также есть Store -> Id (самый приоритетный)
+		/// [Normal Priority] Обычно имя совпадает с id, можно установить свое, но также есть Billing -> Id (самый приоритетный)
 		/// </summary>
 		public bool useCustomId;
 
 		public string customId;
 
-		public Dictionary<IAPPlatformEntry, string> platformToId;
+		public Dictionary<IAPBillingEntry, string> billingToId;
 
 		public static implicit operator IAPProductType(IAPProductEntry entry) => entry.Type;
 		public static implicit operator bool(IAPProductEntry entry) => entry != null;
@@ -61,13 +61,13 @@ namespace InAppPurchasing
 
 	public static class IAPProductEntryExtensions
 	{
-		public static string GetId(this IAPProductEntry product, in IAPPlatformEntry platform)
+		public static string GetId(this IAPProductEntry product, in IAPBillingEntry billing)
 		{
 #if ENABLE_IAP_EMPTY_CHECK
 			if (product.id.IsNullOrEmpty())
 				throw new Exception("IAP Product Entry id is empty!");
 #endif
-			if (platform && product.platformToId.TryGetValue(platform, out var name))
+			if (billing && product.billingToId.TryGetValue(billing, out var name))
 				return name;
 
 			return product.useCustomId ? product.customId : product.id;

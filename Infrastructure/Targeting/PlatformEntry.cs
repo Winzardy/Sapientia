@@ -16,7 +16,7 @@ namespace Targeting
 	}
 
 	/// <summary>
-	/// Платформа приложения (iOS, Android, Windows...)
+	/// Платформа приложения/Операционная система (iOS, Android, Windows...)
 	/// </summary>
 	[Serializable]
 	public partial struct PlatformEntry

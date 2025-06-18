@@ -7,26 +7,26 @@ namespace Targeting
 {
 	// ReSharper disable once StructLacksIEquatable.Global
 	[JsonConverter(typeof(StorePlatformEntryJsonConverter))]
-	public partial struct StorePlatformEntry
+	public partial struct DistributionEntry
 	{
 	}
 
-	internal class StorePlatformEntryJsonConverter : JsonConverter<StorePlatformEntry>
+	internal class StorePlatformEntryJsonConverter : JsonConverter<DistributionEntry>
 	{
-		public override void WriteJson(JsonWriter writer, StorePlatformEntry value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, DistributionEntry value, JsonSerializer serializer)
 		{
-			var str = value.store.IsNullOrEmpty() ? StorePlatformType.UNDEFINED : value.ToString();
+			var str = value.name.IsNullOrEmpty() ? DistributionType.UNDEFINED : value.ToString();
 			writer.WriteValue(str);
 		}
 
-		public override StorePlatformEntry ReadJson(JsonReader reader, Type objectType, StorePlatformEntry existingValue,
+		public override DistributionEntry ReadJson(JsonReader reader, Type objectType, DistributionEntry existingValue,
 			bool hasExistingValue,
 			JsonSerializer serializer)
 		{
 			var str = reader.Value?.ToString();
 			return string.IsNullOrEmpty(str)
-				? new StorePlatformEntry(StorePlatformType.UNDEFINED)
-				: new StorePlatformEntry(str);
+				? new DistributionEntry(DistributionType.UNDEFINED)
+				: new DistributionEntry(str);
 		}
 	}
 }

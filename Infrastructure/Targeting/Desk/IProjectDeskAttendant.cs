@@ -8,8 +8,8 @@ namespace Targeting
 
 		public string GetVersion();
 		public ref readonly PlatformEntry GetPlatform();
-		public ref readonly StorePlatformEntry GetStorePlatform();
-		public string GetReviewLink(StorePlatformEntry store);
+		public ref readonly DistributionEntry GetDistribution();
+		public string GetStoreUrl(DistributionEntry distribution);
 
 		public IReactiveProperty<string> UserId { get; }
 		internal void SetUserId(string userId);

@@ -10,7 +10,7 @@ namespace Targeting
 		public string identifier;
 		public string version;
 
-		public Dictionary<PlatformEntry, StorePlatformEntry> platformToStore;
-		public Dictionary<StorePlatformEntry, string> storeToReviewLinks;
+		public Dictionary<PlatformEntry, DistributionEntry> platformToDistribution;
+		public Dictionary<DistributionEntry, string> distributionToStoreUrl;
 	}
 }
