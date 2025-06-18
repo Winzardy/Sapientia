@@ -11,7 +11,7 @@ namespace Sapientia.MemoryAllocator
 #endif
 	public partial struct World : IEquatable<World>, IDisposable
 	{
-		private SafePtr<UnsafeWorld> _unsafeWorld;
+		private SafePtr<WorldState> _unsafeWorld;
 
 		public bool IsValid
 		{
@@ -35,7 +35,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			E.ASSERT(!IsValid);
 
-			_unsafeWorld = MemoryExt.MemAlloc<UnsafeWorld>();
+			_unsafeWorld = MemoryExt.MemAlloc<WorldState>();
 			_unsafeWorld.Value().Initialize(worldId, initialSize);
 		}
 
@@ -72,8 +72,8 @@ namespace Sapientia.MemoryAllocator
 		{
 			var world = new World();
 
-			world._unsafeWorld = MemoryExt.MemAlloc<UnsafeWorld>();
-			world._unsafeWorld.Value() = UnsafeWorld.Deserialize(ref stream);
+			world._unsafeWorld = MemoryExt.MemAlloc<WorldState>();
+			world._unsafeWorld.Value() = WorldState.Deserialize(ref stream);
 
 			return world;
 		}

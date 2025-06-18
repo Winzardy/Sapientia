@@ -40,7 +40,7 @@ namespace Sapientia.MemoryAllocator.State
 		public State Build(int initialSize = -1)
 		{
 			_world = WorldManager.CreateWorld(initialSize);
-			var world = WorldState.Create(_world);
+			var world = WorldStatePart.Create(_world);
 
 			AddStateParts();
 			AddSystems();
@@ -50,7 +50,7 @@ namespace Sapientia.MemoryAllocator.State
 			return new State(_world.WorldId);
 		}
 
-		protected virtual void InitializeWorld(SafePtr<WorldState> worldState)
+		protected virtual void InitializeWorld(SafePtr<WorldStatePart> worldState)
 		{
 			worldState.Value().Initialize(_stateParts, _systems);
 		}

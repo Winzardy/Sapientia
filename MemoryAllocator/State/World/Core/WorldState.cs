@@ -1,10 +1,9 @@
 using System;
-using Sapientia.Data;
 using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
 {
-	public struct UnsafeWorld : IDisposable
+	public struct WorldState : IDisposable
 	{
 		public WorldId worldId;
 
@@ -29,9 +28,9 @@ namespace Sapientia.MemoryAllocator
 			localServiceRegistry = default;
 		}
 
-		public static UnsafeWorld Deserialize(ref StreamBufferReader stream)
+		public static WorldState Deserialize(ref StreamBufferReader stream)
 		{
-			var world = new UnsafeWorld();
+			var world = new WorldState();
 
 			stream.Read(ref world.worldId);
 			world.allocator = Allocator.Deserialize(ref stream);

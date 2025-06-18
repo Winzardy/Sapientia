@@ -4,7 +4,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public unsafe partial struct WorldState : IIndexedType
+	public unsafe partial struct WorldStatePart : IIndexedType
 	{
 		public uint Tick { get; private set; }
 		public float Time { get; private set; }
@@ -17,9 +17,9 @@ namespace Sapientia.MemoryAllocator.State
 
 		public bool IsStarted { get; private set; }
 
-		public static SafePtr<WorldState> Create(World world, int elementsCapacity = 64)
+		public static SafePtr<WorldStatePart> Create(World world, int elementsCapacity = 64)
 		{
-			var worldPtr = world.MemAlloc<WorldState>(out var worldSafePtr);
+			var worldPtr = world.MemAlloc<WorldStatePart>(out var worldSafePtr);
 			ref var worldState = ref worldSafePtr.Value();
 			worldState.Tick = 0u;
 			worldState.Time = 0f;
@@ -30,35 +30,35 @@ namespace Sapientia.MemoryAllocator.State
 			worldState.worldElements = new (world, elementsCapacity);
 			worldState.worldSystems = new (world, elementsCapacity);
 
-			world.RegisterService<WorldState>(worldPtr);
+			world.RegisterService<WorldStatePart>(worldPtr);
 
 			return worldSafePtr;
 		}
 
 		public void Initialize(IEnumerable<ProxyPtr<IWorldStatePartProxy>> stateParts, IEnumerable<ProxyPtr<IWorldSystemProxy>> systems)
 		{
-			using var scope = worldId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetWorldScope(out var world);
 
 			foreach (var statePart in stateParts)
 			{
-				AddWorldElement(allocator, statePart.ToProxy<IWorldElementProxy>());
+				AddWorldElement(world, statePart.ToProxy<IWorldElementProxy>());
 			}
 			foreach (var system in systems)
 			{
-				AddWorldElement(allocator, system.ToProxy<IWorldElementProxy>());
-				worldSystems.Add(allocator, system.ToProxy<IWorldSystemProxy>());
+				AddWorldElement(world, system.ToProxy<IWorldElementProxy>());
+				worldSystems.Add(world, system.ToProxy<IWorldSystemProxy>());
 			}
 
-			foreach (var element in worldElements.GetPtrEnumerable(allocator))
+			foreach (var element in worldElements.GetPtrEnumerable(world))
 			{
-				element.ptr->Initialize(allocator, allocator, element.ptr->indexedPtr);
+				element.ptr->Initialize(world, world, element.ptr->indexedPtr);
 			}
 
-			LocalStatePartService.Initialize(allocator);
+			LocalStatePartService.Initialize(world);
 
-			foreach (var element in worldElements.GetPtrEnumerable(allocator))
+			foreach (var element in worldElements.GetPtrEnumerable(world))
 			{
-				element.ptr->LateInitialize(allocator, allocator, element.ptr->indexedPtr);
+				element.ptr->LateInitialize(world, world, element.ptr->indexedPtr);
 			}
 		}
 
@@ -72,11 +72,11 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			E.ASSERT(!IsStarted);
 
-			using var scope = worldId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetWorldScope(out var world);
 
-			foreach (var element in worldElements.GetPtrEnumerable(allocator))
+			foreach (var element in worldElements.GetPtrEnumerable(world))
 			{
-				element.ptr->Start(allocator, allocator, element.ptr->indexedPtr);
+				element.ptr->Start(world, world, element.ptr->indexedPtr);
 			}
 			IsStarted = true;
 
@@ -87,14 +87,14 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			E.ASSERT(IsStarted);
 
-			using var scope = worldId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetWorldScope(out var world);
 
 			Tick++;
 			Time += deltaTime;
 
-			foreach (ProxyPtr<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable(allocator))
+			foreach (ProxyPtr<IWorldSystemProxy>* system in worldSystems.GetPtrEnumerable(world))
 			{
-				system->Update(allocator, allocator, system->indexedPtr, deltaTime);
+				system->Update(world, world, system->indexedPtr, deltaTime);
 			}
 
 			ScheduleLateUpdate = true;
@@ -106,7 +106,7 @@ namespace Sapientia.MemoryAllocator.State
 				return;
 			ScheduleLateUpdate = false;
 
-			using var scope = worldId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetWorldScope(out var allocator);
 
 			foreach (var system in worldSystems.GetPtrEnumerable(allocator))
 			{
@@ -119,7 +119,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void Dispose()
 		{
-			using var scope = worldId.GetAllocatorScope(out var allocator);
+			using var scope = worldId.GetWorldScope(out var allocator);
 			SendBeginDisposeMessage();
 
 			foreach (ProxyPtr<IWorldElementProxy>* element in worldElements.GetPtrEnumerable(allocator))

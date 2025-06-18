@@ -28,22 +28,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public static WorldScope GetAllocatorScope(this ref WorldId worldId, out World world)
+		public static WorldScope GetWorldScope(this ref WorldId worldId, out World world)
 		{
 			var scope = new WorldScope(_currentWorld.IsValid ? CurrentWorldId : default);
-			worldId.SetCurrentAllocator();
+			worldId.SetCurrentWorld();
 			world = _currentWorld;
 			return scope;
 		}
 
 		[INLINE(256)]
-		public static void SetCurrentAllocator(this ref WorldId worldId)
+		public static void SetCurrentWorld(this ref WorldId worldId)
 		{
 			SetCurrentWorld(worldId.GetWorld());
 		}
 
 		[INLINE(256)]
-		public static void SetCurrentAllocator(WorldId worldId)
+		public static void SetCurrentWorld(WorldId worldId)
 		{
 			if (!worldId.IsValid())
 				return;
@@ -59,7 +59,7 @@ namespace Sapientia.MemoryAllocator
 			ServiceContext<WorldId>.SetContext(context);
 		}
 
-		public static World DeserializeAllocator(ref StreamBufferReader stream)
+		public static World DeserializeWorld(ref StreamBufferReader stream)
 		{
 			var world = World.Deserialize(ref stream);
 
@@ -169,7 +169,7 @@ namespace Sapientia.MemoryAllocator
 
 			public void Dispose()
 			{
-				SetCurrentAllocator(_previousWorld);
+				SetCurrentWorld(_previousWorld);
 			}
 		}
 	}

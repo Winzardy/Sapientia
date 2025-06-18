@@ -7,13 +7,13 @@ namespace Sapientia.MemoryAllocator.State
 
 		private OneShotValue(TValue value)
 		{
-			_version = WorldManager.CurrentWorld.GetService<WorldState>().Tick;
+			_version = WorldManager.CurrentWorld.GetService<WorldStatePart>().Tick;
 			_value = value;
 		}
 
 		public readonly bool IsValid()
 		{
-			return _version == WorldManager.CurrentWorld.GetService<WorldState>().Tick;
+			return _version == WorldManager.CurrentWorld.GetService<WorldStatePart>().Tick;
 		}
 
 		public readonly bool TryGetValue(out TValue value)

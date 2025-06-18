@@ -22,9 +22,9 @@ namespace Sapientia.MemoryAllocator.State
 			_worldId = worldId;
 		}
 
-		private SafePtr<WorldState> GetWorldState()
+		private SafePtr<WorldStatePart> GetWorldState()
 		{
-			return _worldId.GetWorld().GetServicePtr<WorldState>();
+			return _worldId.GetWorld().GetServicePtr<WorldStatePart>();
 		}
 
 		public void Start()
