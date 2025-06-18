@@ -10,6 +10,9 @@ namespace Trading.Advertising
 		public AdPlacementType type;
 		public string placement;
 
+#if NEWTONSOFT
+		[Newtonsoft.Json.JsonIgnore]
+#endif
 		public string Key => AdTradeReceiptUtility.Combine(type, placement);
 
 		public AdTradeReceipt(AdPlacementEntry entry)

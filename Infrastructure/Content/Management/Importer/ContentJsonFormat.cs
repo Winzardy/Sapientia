@@ -137,7 +137,7 @@ namespace Content.Management
 			return _keyToType.GetValueOrDefault(fullTypeKey);
 #else
 			var (typeName, assemblyName) = Split(fullTypeKey);
-			return JsonExt.serializationBinder.BindToType(assemblyName, typeName);
+			return JsonUtility.serializationBinder.BindToType(assemblyName, typeName);
 #endif
 		}
 

@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Sapientia.Collections;
 using Sapientia.JsonConverters;
+#if !CLIENT
+using System.Collections.Concurrent;
+using System.Linq;
+using Newtonsoft.Json.Serialization;
+#endif
 
 namespace Sapientia.Extensions
 {
@@ -22,9 +24,9 @@ namespace Sapientia.Extensions
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#e03680965d0c4b1e885f63b536043428
 	/// </summary>
-	public static class JsonExt
+	public static class JsonUtility
 	{
-		private static readonly JsonSerializerSettings JSON_SETTINGS_DEFAULT = new()
+		public static readonly JsonSerializerSettings JSON_SETTINGS_DEFAULT = new()
 		{
 			Converters = new JsonConverter[]
 			{
@@ -37,7 +39,7 @@ namespace Sapientia.Extensions
 			TypeNameHandling = TypeNameHandling.None,
 		};
 
-		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED = new(JSON_SETTINGS_DEFAULT)
+		public static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED = new(JSON_SETTINGS_DEFAULT)
 		{
 			TypeNameHandling = TypeNameHandling.Auto,
 		};

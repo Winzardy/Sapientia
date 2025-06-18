@@ -9,8 +9,15 @@ namespace Trading.InAppPurchasing
 	{
 		public PurchaseReceipt receipt;
 
+#if NEWTONSOFT
+		[Newtonsoft.Json.JsonIgnore]
+#endif
 		public string Key => IAPTradeReceiptUtility.Combine(receipt.productType, receipt.productId);
+#if NEWTONSOFT
+		[Newtonsoft.Json.JsonIgnore]
+#endif
 		public string Id => receipt.transactionId;
+
 		public IAPTradeReceipt(in PurchaseReceipt receipt)
 		{
 			this.receipt = receipt;
