@@ -13,7 +13,6 @@ namespace Sapientia.TypeIndexer
 	public unsafe class InterfaceProxyGenerator
 	{
 		private static string MethodImplAttribute = $"[{typeof(System.Runtime.CompilerServices.MethodImplAttribute).FullName}(256)]";
-		private static string BurstAttribute = "[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]";
 
 		private static string PrepareDirectory(string generationPath)
 		{
@@ -273,9 +272,6 @@ namespace Sapientia.TypeIndexer
 
 				sourceBuilder.AppendLine("#if UNITY_5_3_OR_NEWER");
 				sourceBuilder.AppendLine("		[UnityEngine.Scripting.Preserve]");
-				sourceBuilder.AppendLine("#if BURST");
-				sourceBuilder.AppendLine($"		{BurstAttribute}");
-				sourceBuilder.AppendLine("#endif");
 				sourceBuilder.AppendLine("#endif");
 				sourceBuilder.AppendLine($"		private static {returnTypeString} {methodInfo.Name}{genericParametersString}{parametersString}");
 				sourceBuilder.AppendLine("		{");

@@ -123,9 +123,6 @@ namespace Sapientia.TypeIndexer
 	{
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void EntityPtrArrayDestroyed(void* executorPtr, Sapientia.MemoryAllocator.World world, void** elementsPtr, System.Int32 count)
 		{
@@ -146,9 +143,6 @@ namespace Sapientia.TypeIndexer
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void EntityArrayDestroyed(void* executorPtr, Sapientia.MemoryAllocator.World world, void* elementsPtr, System.Int32 count)
 		{
@@ -169,9 +163,6 @@ namespace Sapientia.TypeIndexer
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.World world)
 		{

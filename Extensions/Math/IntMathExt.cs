@@ -7,9 +7,6 @@ namespace Sapientia.Extensions
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#475c07dd42b6492fbfe02c809358689a
 	/// </summary>
-#if UNITY_5_3_OR_NEWER
-	[Unity.Burst.BurstCompile]
-#endif
 	public static partial class IntMathExt
 	{
 		public const int FIRST_TO_LAST_SHIFT = 32 - 1;
