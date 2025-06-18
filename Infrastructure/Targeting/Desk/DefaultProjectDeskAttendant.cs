@@ -6,18 +6,18 @@ namespace Targeting
 	{
 		private ReactiveField<string> _userId;
 
-		private ProjectInfo _options;
+		private readonly ProjectInfo _info;
 
-		private PlatformEntry _platform;
-		private StorePlatformEntry _store;
+		private readonly PlatformEntry _platform;
+		private readonly StorePlatformEntry _store;
 
 		public IReactiveProperty<string> UserId => _userId;
-		public string Identifier => _options.identifier;
+		public string Identifier => _info.identifier;
 
-		public DefaultProjectDeskAttendant(ProjectInfo options, in PlatformEntry platform)
+		public DefaultProjectDeskAttendant(in ProjectInfo info, in PlatformEntry platform)
 		{
-			_options = options;
-			if (!options.platformToStore.TryGetValue(_platform, out var store))
+			_info = info;
+			if (!info.platformToStore.TryGetValue(platform, out var store))
 				store = StorePlatformType.UNDEFINED;
 
 			_platform = platform;
@@ -28,10 +28,10 @@ namespace Targeting
 		}
 
 		public string GetReviewLink(StorePlatformEntry store) =>
-			_options.storeToReviewLinks.TryGetValue(store, out var url) ? url : string.Empty;
+			_info.storeToReviewLinks.TryGetValue(store, out var url) ? url : string.Empty;
 
 		public string GetVersion() =>
-			_options.buildNumber != 0 ? $"{_options.version} ({_options.buildNumber})" : _options.version;
+			_info.buildNumber != 0 ? $"{_info.version} ({_info.buildNumber})" : _info.version;
 
 		public ref readonly PlatformEntry GetPlatform() => ref _platform;
 		public ref readonly StorePlatformEntry GetStorePlatform() => ref _store;
