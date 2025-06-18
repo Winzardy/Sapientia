@@ -17,7 +17,7 @@ namespace Trading
 
 		public TradeReward[] Items => items;
 
-		protected internal override bool CanReceive(Tradeboard board, out TradeReceiveError? error)
+		protected override bool CanReceive(Tradeboard board, out TradeReceiveError? error)
 		{
 			using (ListPool<TradeReceiveError?>.Get(out var errors))
 			using (ListPool<TradeReward>.Get(out var sorted))
@@ -29,7 +29,7 @@ namespace Trading
 
 				foreach (var cost in sorted)
 				{
-					if (cost.CanReceive(board, out error))
+					if (cost.CanExecute(board, out error))
 						continue;
 
 					errors.Add(error);
@@ -54,7 +54,7 @@ namespace Trading
 
 					foreach (var reward in sorted)
 					{
-						if (!reward.ExecuteReturn(board))
+						if (!reward.Execute(board))
 						{
 							Return(board, received);
 							return false;

@@ -6,7 +6,7 @@ namespace Sapientia
 		where T : struct, IComparable<T>
 	{
 		T Next();
-		T Next(T max);
-		T Next(T min, T max);
+		T Next(T maxExclusive);
+		T Next(T minInclusive, T maxExclusive);
 	}
 }

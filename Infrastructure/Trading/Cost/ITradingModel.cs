@@ -40,27 +40,27 @@ namespace Trading
 		public string Key { get; }
 
 		// Намеренный хак чтобы избежать каста
-		public void Registry(ITradingModel model, string tradeId);
+		public void Register(ITradingModel model, string tradeId);
 	}
 
 	public static class TradeReceiptUtility
 	{
-		public static void Registry(this ITradeReceipt[] receipts, ITradingModel model, string tradeId)
+		public static void Register(this ITradeReceipt[] receipts, ITradingModel model, string tradeId)
 		{
 			if (tradeId.IsNullOrEmpty())
 				throw TradingDebug.NullException("Trade ID cannot be null or empty");
 
 			for (int i = 0; i < receipts.Length; i++)
-				receipts[i].Registry(model, tradeId);
+				receipts[i].Register(model, tradeId);
 		}
 
-		public static void Registry<T>(this T receipt, ITradingModel model, string tradeId)
+		public static void Register<T>(this T receipt, ITradingModel model, string tradeId)
 			where T : struct, ITradeReceipt
 		{
 			if (tradeId.IsNullOrEmpty())
 				throw TradingDebug.NullException("Trade ID cannot be null or empty");
 
-			TradeReceiptRegistry<T>.Registry(model, tradeId, in receipt);
+			TradeReceiptRegistry<T>.Register(model, tradeId, in receipt);
 		}
 	}
 
@@ -84,7 +84,7 @@ namespace Trading
 	public static class TradeReceiptRegistry<T>
 		where T : struct, ITradeReceipt
 	{
-		public static void Registry(ITradingModel model, string tradeId, in T receipt)
+		public static void Register(ITradingModel model, string tradeId, in T receipt)
 		{
 			var registry = model.Get<T>();
 			registry?.Register(tradeId, in receipt);
@@ -100,7 +100,7 @@ namespace Trading
 				return registry.CanIssue(board, key);
 
 			TradingDebug.LogWarning($"Not found receipt registry by type [ {typeof(T)} ]");
-			return true;
+			return true; // TODO: пока пропускаем такие кейсы из-за рекламы
 		}
 
 		public static bool Issue(Tradeboard board, string key)
@@ -112,7 +112,7 @@ namespace Trading
 				return registry.Issue(board, key);
 
 			TradingDebug.LogWarning($"Not found receipt registry by type [ {typeof(T)} ]");
-			return true;
+			return true; // TODO: пока пропускаем такие кейсы из-за рекламы
 		}
 	}
 }

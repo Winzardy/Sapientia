@@ -34,7 +34,6 @@ namespace Trading
 			var success = true;
 			foreach (var reward in items)
 			{
-				// ReSharper disable once MethodSupportsCancellation
 				if (!reward.ExecuteReturn(board))
 					success = false;
 			}
@@ -47,7 +46,6 @@ namespace Trading
 			var success = true;
 			foreach (var reward in received)
 			{
-				// ReSharper disable once MethodSupportsCancellation
 				if (!reward.ExecuteReturn(board))
 					success = false;
 			}

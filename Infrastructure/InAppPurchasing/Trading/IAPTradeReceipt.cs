@@ -23,7 +23,7 @@ namespace Trading.InAppPurchasing
 			this.receipt = receipt;
 		}
 
-		void ITradeReceipt.Registry(ITradingModel model, string tradeId) => this.Registry(model, tradeId);
+		void ITradeReceipt.Register(ITradingModel model, string tradeId) => this.Register(model, tradeId);
 
 		public override string ToString() => $"IAP Receipt: {Key}";
 	}

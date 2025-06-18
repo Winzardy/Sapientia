@@ -19,7 +19,7 @@ namespace Trading
 		/// <summary>
 		/// Доступно ли для получения? пример: нет места в инвентаре
 		/// </summary>
-		protected internal abstract bool CanReceive(Tradeboard board, out TradeReceiveError? error);
+		protected abstract bool CanReceive(Tradeboard board, out TradeReceiveError? error);
 
 		/// <summary>
 		/// Выдать

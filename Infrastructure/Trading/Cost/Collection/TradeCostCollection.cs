@@ -19,6 +19,11 @@ namespace Trading
 
 		public TradeCost[] Items => items;
 
+		public TradeCostCollection(TradeCost[] items)
+		{
+			this.items = items;
+		}
+
 		protected override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
 			using (ListPool<TradePayError?>.Get(out var errors))

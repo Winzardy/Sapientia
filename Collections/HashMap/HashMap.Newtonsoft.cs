@@ -1,7 +1,10 @@
 #if NEWTONSOFT
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Sapientia.JsonConverters;
 using Sapientia.Reflection;
 
 namespace Sapientia.Collections
@@ -50,13 +53,15 @@ namespace Sapientia.Collections
 			{
 				foreach (var (key, index) in value._keyToIndex)
 				{
-					writer.WritePropertyName(key.ToString());
+					var keyString = DictionaryConverter.ToString(key, serializer);
+					writer.WritePropertyName(keyString);
 					serializer.Serialize(writer, value._values[index]);
 				}
 			}
 
 			writer.WriteEndObject();
 		}
+
 
 		public override HashMap<TKey, TValue> ReadJson(JsonReader reader, Type objectType, HashMap<TKey, TValue>? existingValue,
 			bool hasExistingValue, JsonSerializer serializer)

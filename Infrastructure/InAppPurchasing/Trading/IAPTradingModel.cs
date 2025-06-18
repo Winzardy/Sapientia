@@ -29,7 +29,7 @@ namespace Trading.InAppPurchasing
 		public void Register(string tradeId, in IAPTradeReceipt receipt)
 		{
 			ref var tradeModel = ref tradeToModel.GetOrAdd(tradeId);
-			tradeModel.Registry(in receipt);
+			tradeModel.Register(in receipt);
 		}
 
 		public bool CanIssue(Tradeboard board, string key)

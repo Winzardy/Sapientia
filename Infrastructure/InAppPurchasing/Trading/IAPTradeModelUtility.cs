@@ -4,7 +4,7 @@ namespace Trading.InAppPurchasing
 {
 	public static class IAPTradeModelUtility
 	{
-		public static void Registry(this ref IAPTradeModel model, in IAPTradeReceipt receipt)
+		public static void Register(this ref IAPTradeModel model, in IAPTradeReceipt receipt)
 		{
 			if (model.issued != null && model.issued.Contains(receipt.Id))
 			{

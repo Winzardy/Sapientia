@@ -21,7 +21,7 @@ namespace Trading.Advertising
 			placement = entry.Id;
 		}
 
-		void ITradeReceipt.Registry(ITradingModel model, string tradeId) => this.Registry(model, tradeId);
+		void ITradeReceipt.Register(ITradingModel model, string tradeId) => this.Register(model, tradeId);
 
 		public override string ToString() => $"Ad Receipt: {Key}";
 	}

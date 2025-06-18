@@ -11,7 +11,8 @@ namespace Trading
 		public override IEnumerator<TradeCost> GetEnumerator()
 		{
 			foreach (var item in items)
-				yield return item;
+				foreach (var cost in item) // ограничение на одну вложенность в системе!
+					yield return cost;
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

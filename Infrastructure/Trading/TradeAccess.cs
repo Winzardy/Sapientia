@@ -1,7 +1,7 @@
 namespace Trading
 {
 	/// <summary>
-	/// Защита от дурака: только через этот класс можно вызывать ExecuteAsync
+	/// Защита от дурака: только через этот класс можно вызывать Execute
 	/// </summary>
 	public static class TradeAccess
 	{

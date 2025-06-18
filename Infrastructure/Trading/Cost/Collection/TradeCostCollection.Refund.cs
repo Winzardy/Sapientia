@@ -34,8 +34,6 @@ namespace Trading
 			var success = true;
 			foreach (var cost in items)
 			{
-				// ReSharper disable once MethodSupportsCancellation
-
 				if (!cost.ExecuteRefund(board))
 					success = false;
 			}
@@ -48,7 +46,6 @@ namespace Trading
 			var success = true;
 			foreach (var cost in paid)
 			{
-				// ReSharper disable once MethodSupportsCancellation
 				if (!cost.ExecuteRefund(board))
 					success = false;
 			}

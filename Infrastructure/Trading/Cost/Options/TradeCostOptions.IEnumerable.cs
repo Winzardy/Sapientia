@@ -11,7 +11,8 @@ namespace Trading
 		public new IEnumerator<TradeCost> GetEnumerator()
 		{
 			foreach (var option in options)
-				yield return option;
+				foreach (var cost in option) // ограничение на одну вложенность в системе!
+					yield return cost;
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

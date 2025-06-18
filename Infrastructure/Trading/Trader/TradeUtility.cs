@@ -10,7 +10,7 @@ namespace Trading
 			if (!trade.cost.CanExecute(board, out var payError))
 				result = false;
 
-			if (!trade.reward.CanReceive(board, out var receiveError))
+			if (!trade.reward.CanExecute(board, out var receiveError))
 				result = false;
 
 			if (!result)
