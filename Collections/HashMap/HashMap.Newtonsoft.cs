@@ -15,16 +15,6 @@ namespace Sapientia.Collections
 	{
 		public override bool CanConvert(Type _) => true;
 
-		public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
-		{
-			var keyType = objectType.GetGenericArguments()[0];
-			var valueType = objectType.GetGenericArguments()[1];
-
-			var converterType = typeof(HashMapConverter<,>).MakeGenericType(keyType, valueType);
-			var converter = converterType.CreateInstance<JsonConverter>();
-			return converter.ReadJson(reader, objectType, existingValue, serializer);
-		}
-
 		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
 		{
 			var objectType = value!.GetType();
@@ -35,6 +25,16 @@ namespace Sapientia.Collections
 			var converterType = typeof(HashMapConverter<,>).MakeGenericType(keyType, valueType);
 			var converter = converterType.CreateInstance<JsonConverter>();
 			converter.WriteJson(writer, value, serializer);
+		}
+
+		public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+		{
+			var keyType = objectType.GetGenericArguments()[0];
+			var valueType = objectType.GetGenericArguments()[1];
+
+			var converterType = typeof(HashMapConverter<,>).MakeGenericType(keyType, valueType);
+			var converter = converterType.CreateInstance<JsonConverter>();
+			return converter.ReadJson(reader, objectType, existingValue, serializer);
 		}
 	}
 
@@ -63,8 +63,11 @@ namespace Sapientia.Collections
 		{
 			var map = new HashMap<TKey, TValue>();
 			var dict = serializer.Deserialize<Dictionary<TKey, TValue>>(reader);
-			foreach (var kvp in dict!)
-				map.Add(kvp.Key, kvp.Value);
+
+			if (dict != null)
+				foreach (var kvp in dict)
+					map.Add(kvp.Key, kvp.Value);
+
 			return map;
 		}
 	}
