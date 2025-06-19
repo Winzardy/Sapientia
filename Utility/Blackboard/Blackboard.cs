@@ -7,8 +7,12 @@ using Sapientia.Pooling.Concurrent;
 
 namespace Sapientia
 {
+	/// <summary>
+	/// Blackboard — типобезопасное runtime-хранилище значений по типу <typeparamref name="T"/> и необязательному ключу.
+	/// Используется как общий контекст для обмена данными между подсистемами без прямых зависимостей
+	/// </summary>
 	/// <remarks>
-	/// ⚠️ Важно: only-runtime сущность
+	/// ⚠️ Важно: only-runtime
 	/// </remarks>
 	public abstract class Blackboard : IPoolable, IDisposable
 	{

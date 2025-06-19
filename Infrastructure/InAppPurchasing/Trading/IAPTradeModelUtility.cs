@@ -15,6 +15,7 @@ namespace Trading.InAppPurchasing
 			if (model.issued != null && model.active.Contains(receipt.Id))
 			{
 				TradingDebug.LogError($"Receipt is already registered in active receipts by id [ {receipt.Id} ]");
+				return;
 			}
 
 			model.active ??= new HashMap<string, IAPTradeReceipt>();

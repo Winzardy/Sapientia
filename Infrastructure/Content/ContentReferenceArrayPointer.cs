@@ -5,6 +5,10 @@ namespace Content
 	/// <summary>
 	/// Cсылка (указатель) на элемент массива, массива который из контента!
 	/// </summary>
+	/// <remarks>
+	/// Данное решение пришло с миграцией старого ValueEntry на новый ContentEntry.
+	/// В старую реализацию старался сильно не влезать
+	/// </remarks>
 	public struct ContentReferenceArrayPointer<T> : IEquatable<ContentReferenceArrayPointer<T>>
 	{
 		private readonly ArrayPointer _pointer;
@@ -30,6 +34,13 @@ namespace Content
 		public bool IsEmpty() => _pointer.IsEmpty || _arrayReference.IsEmpty();
 	}
 
+	/// <summary>
+	/// Cсылка (указатель) на элемент массива, массива который из контента!
+	/// </summary>
+	/// <remarks>
+	/// Данное решение пришло с миграцией старого ValueEntry на новый ContentEntry.
+	/// В старую реализацию старался сильно не влезать
+	/// </remarks>
 	public struct ArrayPointer : IEquatable<ArrayPointer>
 	{
 		private int _ptr;

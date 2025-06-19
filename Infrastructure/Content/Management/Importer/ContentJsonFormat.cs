@@ -137,7 +137,7 @@ namespace Content.Management
 			return _keyToType.GetValueOrDefault(fullTypeKey);
 #else
 			var (typeName, assemblyName) = Split(fullTypeKey);
-			return JsonUtility.serializationBinder.BindToType(assemblyName, typeName);
+			return NewtonsoftJsonUtility.serializationBinder.BindToType(assemblyName, typeName);
 #endif
 		}
 

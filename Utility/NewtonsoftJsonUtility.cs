@@ -24,7 +24,7 @@ namespace Sapientia.Extensions
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#e03680965d0c4b1e885f63b536043428
 	/// </summary>
-	public static class JsonUtility
+	public static class NewtonsoftJsonUtility
 	{
 		public static readonly JsonSerializerSettings JSON_SETTINGS_DEFAULT = new()
 		{

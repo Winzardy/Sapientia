@@ -6,7 +6,7 @@ namespace InAppPurchasing
 		public readonly IAPProductType type;
 		public readonly string priceLabel;
 
-		//TODO: дополнять по надобности
+		// Структуру можно дополнять, не является финальной
 
 		public ProductInfo(string id, IAPProductType type, string priceLabel)
 		{
