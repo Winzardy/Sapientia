@@ -107,6 +107,12 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly Span<T> GetSpan()
+		{
+			return ptr.GetSpan(0, count);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
 			count = 0;

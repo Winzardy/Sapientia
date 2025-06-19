@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -294,6 +295,7 @@ namespace Sapientia.Data
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> Slice(int index, int length = 1)
 		{
 #if DEBUG
@@ -301,6 +303,16 @@ namespace Sapientia.Data
 			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0));
 #endif
 			return new SafePtr<T>(ptr + index, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> GetSpan(int index, int length = 1)
+		{
+#if DEBUG
+			var result = (byte*)(ptr + index);
+			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0));
+#endif
+			return new Span<T>(ptr + index, length);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
