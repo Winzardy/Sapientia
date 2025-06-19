@@ -42,6 +42,6 @@ namespace Trading
 		{
 		}
 
-		public static TradePayError NotImplemented = new ("NotImplemented");
+		public static TradePayError NotImplemented = new("NotImplemented");
 	}
 }

@@ -14,6 +14,8 @@ namespace Trading.Advertising
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
 		public ContentReference<RewardedAdPlacementEntry> placement;
+		public int count = 1;
+		protected override int ReceiptCount => count;
 
 		protected override string ReceiptId => placement.ToReceiptId();
 
@@ -52,3 +54,4 @@ namespace Trading.Advertising
 		}
 	}
 }
+

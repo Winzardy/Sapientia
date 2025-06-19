@@ -6,6 +6,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
+#if !CLIENT
+using Sapientia.Extensions;
+#endif
 
 namespace Content.Management
 {
