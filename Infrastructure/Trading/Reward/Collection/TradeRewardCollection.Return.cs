@@ -29,19 +29,9 @@ namespace Trading
 			}
 		}
 
-		protected override bool Return(Tradeboard board)
-		{
-			var success = true;
-			foreach (var reward in items)
-			{
-				if (!reward.ExecuteReturn(board))
-					success = false;
-			}
+		protected override bool Return(Tradeboard board) => Return(board, items);
 
-			return success;
-		}
-
-		private bool Return(Tradeboard board, List<TradeReward> received)
+		private bool Return(Tradeboard board, IList<TradeReward> received)
 		{
 			var success = true;
 			foreach (var reward in received)

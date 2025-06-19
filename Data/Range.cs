@@ -8,7 +8,7 @@ namespace Sapientia
 
 
 	[Serializable]
-	public partial struct Range<T> : IMinMax, IHolder<T>
+	public partial struct Range<T> : IMinMax, IContainer<T>
 	{
 		public T min;
 		public T max;

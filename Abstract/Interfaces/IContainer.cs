@@ -2,13 +2,13 @@ using System;
 
 namespace Sapientia
 {
-	public interface IHolder
+	public interface IContainer
 	{
-		public Type Type { get; }
+		public Type ValueType { get; }
 	}
 
-	public interface IHolder<T> : IHolder
+	public interface IContainer<T> : IContainer
 	{
-		Type IHolder.Type => typeof(T);
+		Type IContainer.ValueType => typeof(T);
 	}
 }

@@ -1,36 +1,52 @@
 using System;
-using Sapientia;
+using System.Runtime.CompilerServices;
+#if CLIENT
+using UnityEngine;
+#endif
 
 namespace Trading
 {
-	public class TradingDebug
+	public static class TradingDebug
 	{
-		public static ILogger logger;
+		public static Sapientia.ILogger logger;
 
 #if CLIENT
-		[UnityEngine.HideInCallstack]
+		[HideInCallstack]
 #endif
-		public static void Log(object msg, object context = null) => logger?.Log(msg, context);
+		public static void Log(object msg, object context = null,
+			[CallerMemberName] string memberName = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+			=> logger?.Log(msg, context, memberName, sourceLineNumber);
 
 #if CLIENT
-		[UnityEngine.HideInCallstack]
+		[HideInCallstack]
 #endif
-		public static void LogWarning(object msg, object context = null) => logger?.LogWarning(msg, context);
+		public static void LogWarning(object msg, object context = null,
+			[CallerMemberName] string memberName = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+			=> logger?.LogWarning(msg, context, memberName, sourceLineNumber);
 
 #if CLIENT
-		[UnityEngine.HideInCallstack]
+		[HideInCallstack]
 #endif
-		public static void LogError(object msg, object context = null) => logger?.LogError(msg, context);
+		public static void LogError(object msg, object context = null,
+			[CallerMemberName] string memberName = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+			=> logger?.LogError(msg, context, memberName, sourceLineNumber);
 #if CLIENT
-		[UnityEngine.HideInCallstack]
+		[HideInCallstack]
 #endif
-		public static void LogException(Exception exception, object context = null) => logger?.LogException(exception, context);
+		public static void LogException(Exception exception, object context = null,
+			[CallerMemberName] string memberName = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+			=> logger?.LogException(exception, context, memberName, sourceLineNumber);
 
-		public static Exception NullException(object msg) => logger?.NullReferenceException(msg) ?? new NullReferenceException(msg.ToString());
+		public static Exception NullException(object msg)
+			=> logger?.NullReferenceException(msg) ?? new NullReferenceException(msg.ToString());
+
 		public static Exception Exception(object msg) => logger?.Exception(msg) ?? new Exception(msg.ToString());
-
 #if CLIENT
-		public static UnityEngine.Color COLOR = UnityEngine.Color.Lerp(TradeCost.COLOR, TradeReward.COLOR, 0.5f);
+		public static Color COLOR = Color.Lerp(TradeCost.COLOR, TradeReward.COLOR, 0.5f);
 #endif
 	}
 }

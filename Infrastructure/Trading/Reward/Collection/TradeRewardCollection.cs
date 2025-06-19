@@ -65,7 +65,7 @@ namespace Trading
 
 					return true;
 				}
-				catch (OperationCanceledException)
+				catch (Exception e)
 				{
 					Return(board, received);
 					throw;

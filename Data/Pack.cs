@@ -11,7 +11,7 @@ namespace Sapientia
 	/// </summary>
 	/// <typeparam name="T">Что в пачке</typeparam>
 	[Serializable]
-	public struct Pack<T> : IPack, IHolder<T>
+	public struct Pack<T> : IPack, IContainer<T>
 	{
 		public T target;
 #if CLIENT
