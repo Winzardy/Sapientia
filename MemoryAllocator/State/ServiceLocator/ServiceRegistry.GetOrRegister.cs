@@ -4,12 +4,12 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct ServiceRegistry
+	public partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(World world, ServiceRegistryContext context) where T: unmanaged
 		{
-			ref var result = ref _typeToPtr.GetValue(world, context, out var exist);
+			var result = _typeToPtr.GetValue(world, context, out var exist);
 			if (!exist)
 			{
 				result = new IndexedPtr(CachedPtr<T>.Create(world), context.typeIndex);
@@ -21,7 +21,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(World world, ServiceRegistryContext context, out bool exist) where T: unmanaged
 		{
-			ref var result = ref _typeToPtr.GetValue(world, context, out exist);
+			var result = _typeToPtr.GetValue(world, context, out exist);
 			if (!exist)
 			{
 				result = new IndexedPtr(CachedPtr<T>.Create(world), context.typeIndex);

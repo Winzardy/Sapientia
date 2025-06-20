@@ -39,25 +39,25 @@ namespace Sapientia.MemoryAllocator.State
 
 		public State Build(int initialSize = -1)
 		{
-			_world = WorldManager.CreateAllocator(initialSize);
-			var world = WorldState.Create(_world);
+			_world = WorldManager.CreateWorld(initialSize);
+			var world = WorldStatePart.Create(_world);
 
 			AddStateParts();
 			AddSystems();
 
 			InitializeWorld(world);
 
-			return new State(_world.worldId);
+			return new State(_world.WorldId);
 		}
 
-		protected virtual void InitializeWorld(SafePtr<WorldState> worldState)
+		protected virtual void InitializeWorld(SafePtr<WorldStatePart> worldState)
 		{
 			worldState.Value().Initialize(_stateParts, _systems);
 		}
 
 		protected virtual void AddStateParts()
 		{
-			AddLocalStatePart(new UpdateLocalStatePart(_stateUpdateData));
+			AddUnmanagedLocalStatePart(new UpdateLocalStatePart(_stateUpdateData));
 		}
 
 		protected virtual void AddSystems()
@@ -65,15 +65,28 @@ namespace Sapientia.MemoryAllocator.State
 
 		}
 
-		public void AddLocalStatePart<T>() where T: IWoldLocalStatePart, new()
+		public void AddUnmanagedLocalStatePart<T>() where T: unmanaged, IWorldUnmanagedLocalStatePart
+		{
+			AddUnmanagedLocalStatePart(new T());
+		}
+
+		public void AddUnmanagedLocalStatePart<T>(in T value) where T: unmanaged, IWorldUnmanagedLocalStatePart
+		{
+			var ptr = _world.GetOrCreateUnmanagedLocalServicePtr<T>();
+			ptr.Value() = value;
+
+			LocalStatePartService.AddStatePart(_world, ptr);
+		}
+
+		public void AddLocalStatePart<T>() where T: IWorldLocalStatePart, new()
 		{
 			AddLocalStatePart(new T());
 		}
 
-		public void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
+		public void AddLocalStatePart<T>(in T value) where T: IWorldLocalStatePart
 		{
 			LocalStatePartService.AddStatePart(_world, value);
-			ServiceContext<WorldId>.SetService(_world.worldId, value);
+			ServiceContext<WorldId>.SetService(_world.WorldId, value);
 		}
 
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart
@@ -123,12 +136,17 @@ namespace Sapientia.MemoryAllocator.State
 			_builder.AddStatePart<T>(value);
 		}
 
-		protected void AddLocalStatePart<T>() where T: IWoldLocalStatePart, new()
+		protected void AddUnmanagedLocalStatePart<T>() where T: unmanaged, IWorldUnmanagedLocalStatePart
+		{
+			_builder.AddUnmanagedLocalStatePart<T>();
+		}
+
+		protected void AddLocalStatePart<T>() where T: IWorldLocalStatePart, new()
 		{
 			_builder.AddLocalStatePart<T>();
 		}
 
-		protected void AddLocalStatePart<T>(in T value) where T: IWoldLocalStatePart
+		protected void AddLocalStatePart<T>(in T value) where T: IWorldLocalStatePart
 		{
 			_builder.AddLocalStatePart<T>(value);
 		}

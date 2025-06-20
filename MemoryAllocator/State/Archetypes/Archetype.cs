@@ -223,7 +223,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement<T>(Entity entity) where T : unmanaged
 		{
-			return ref ReadElement<T>(entity.GetAllocator(), entity);
+			return ref ReadElement<T>(entity.GetWorld(), entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -270,7 +270,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasElement(Entity entity)
 		{
-			return HasElement(entity.GetAllocator(), entity);
+			return HasElement(entity.GetWorld(), entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -311,7 +311,7 @@ namespace Sapientia.MemoryAllocator.State
 				}
 			}
 			isExist = false;
-			return ref TDefaultValue<T>.value;
+			return ref UnsafeExt.DefaultRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

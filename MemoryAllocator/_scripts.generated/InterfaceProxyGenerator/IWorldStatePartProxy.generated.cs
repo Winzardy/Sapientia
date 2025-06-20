@@ -7,7 +7,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IWorldStatePartProxy : IProxy
 	{
-		public static readonly ProxyId ProxyId = 15;
+		public static readonly ProxyId ProxyId = 16;
 		ProxyId IProxy.ProxyId
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -73,6 +73,12 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IWorldStatePartProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this in UnsafeProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__world).ptr, world);
@@ -85,6 +91,12 @@ namespace Sapientia.TypeIndexer
 			{
 				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__world).ptr, world);
 			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void Initialize(this in UnsafeProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.Initialize(__proxyPtr.GetPtr().ptr, world, self);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -103,6 +115,12 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void LateInitialize(this in UnsafeProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr().ptr, world, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void LateInitialize(this ref ProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr(__world).ptr, world, self);
@@ -118,6 +136,12 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void Start(this in UnsafeProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.Start(__proxyPtr.GetPtr().ptr, world, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Start(this ref ProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			__proxyPtr.proxy.Start(__proxyPtr.GetPtr(__world).ptr, world, self);
@@ -130,6 +154,12 @@ namespace Sapientia.TypeIndexer
 			{
 				__proxyPtr->proxy.Start(__proxyPtr->GetPtr(__world).ptr, world, self);
 			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void Dispose(this in UnsafeProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.Dispose(__proxyPtr.GetPtr().ptr, world, self);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -153,9 +183,6 @@ namespace Sapientia.TypeIndexer
 	{
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.World world)
 		{
@@ -176,9 +203,6 @@ namespace Sapientia.TypeIndexer
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void Initialize(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
@@ -199,9 +223,6 @@ namespace Sapientia.TypeIndexer
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void LateInitialize(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
@@ -222,9 +243,6 @@ namespace Sapientia.TypeIndexer
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void Start(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
@@ -245,9 +263,6 @@ namespace Sapientia.TypeIndexer
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void Dispose(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.IndexedPtr self)
 		{

@@ -8,7 +8,7 @@ namespace Sapientia.MemoryAllocator
 	public struct IndexedPtr : IEquatable<IndexedPtr>
 	{
 		public readonly TypeIndex typeIndex;
-		private CachedPtr _ptr;
+		public CachedPtr _ptr;
 
 		public readonly bool IsCreated
 		{
@@ -117,12 +117,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			_ptr.Dispose(world);
 			this = default;
-		}
-
-		[INLINE(256)]
-		public IndexedPtr CopyTo(World srsWorld, World dstWorld)
-		{
-			return new IndexedPtr(_ptr.CopyTo(srsWorld, dstWorld), typeIndex);
 		}
 
 		public static bool operator ==(IndexedPtr a, IndexedPtr b)

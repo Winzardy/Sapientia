@@ -17,11 +17,5 @@ namespace Sapientia.MemoryAllocator
 			world.MemFree(memPtr);
 			memPtr = MemPtr.Invalid;
 		}
-
-		[MethodImpl(256)]
-		public static MemPtr CopyTo(this ref MemPtr memPtr, World srsWorld, World dstWorld)
-		{
-			return srsWorld.CopyPtrTo(dstWorld, memPtr);
-		}
 	}
 }

@@ -21,7 +21,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetSafePtr(in MemPtr memPtr)
 		{
-			var memory = _zonesList[memPtr.zoneId].ptr->memory;
+			var memory = _zonesList[memPtr.zoneId].memory;
 			var safePtr = memory + memPtr.zoneOffset;
 #if DEBUG
 			var size = (safePtr.Cast<MemoryBlock>() - 1).ptr->blockSize - TSize<MemoryBlock>.size;

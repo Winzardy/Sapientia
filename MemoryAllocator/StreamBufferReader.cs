@@ -29,7 +29,7 @@ namespace Sapientia.MemoryAllocator.Core
 		[INLINE(256)]
 		public void Dispose()
 		{
-			if (arr != null)
+			if (arr.IsValid)
 				MemoryExt.MemFree(arr);
 		}
 
@@ -132,7 +132,7 @@ namespace Sapientia.MemoryAllocator.Core
 		[INLINE(256)]
 		public void Dispose()
 		{
-			if (arr != null)
+			if (arr.IsValid)
 				MemoryExt.MemFree(arr);
 			this = default;
 		}

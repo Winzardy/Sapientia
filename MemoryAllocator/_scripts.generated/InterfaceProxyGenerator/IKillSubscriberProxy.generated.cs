@@ -46,6 +46,12 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IKillSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void EntityKilled(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
+		{
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr().ptr, world, in entity);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
 			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__world).ptr, world, in entity);
@@ -58,6 +64,12 @@ namespace Sapientia.TypeIndexer
 			{
 				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__world).ptr, world, in entity);
 			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -81,9 +93,6 @@ namespace Sapientia.TypeIndexer
 	{
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
@@ -104,9 +113,6 @@ namespace Sapientia.TypeIndexer
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.World world)
 		{

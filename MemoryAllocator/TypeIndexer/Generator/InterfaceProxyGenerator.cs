@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.Extensions.Reflection;
 using Sapientia.MemoryAllocator;
@@ -14,7 +13,6 @@ namespace Sapientia.TypeIndexer
 	public unsafe class InterfaceProxyGenerator
 	{
 		private static string MethodImplAttribute = $"[{typeof(System.Runtime.CompilerServices.MethodImplAttribute).FullName}(256)]";
-		private static string BurstAttribute = "[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]";
 
 		private static string PrepareDirectory(string generationPath)
 		{
@@ -180,18 +178,47 @@ namespace Sapientia.TypeIndexer
 				var parametersWithoutTypeString = CodeGenExt.GetParametersString(parameters, true);
 
 				{
-					var proxyPtrParametersString = parametersString.Replace("(", $"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(World).FullName} __world" + (parameters.Length > 0 ? ", " : string.Empty));
-					var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr(__world).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
+					{
+						var proxyPtrParametersString = parametersString.Replace("(",
+							$"(this in UnsafeProxyPtr<{baseType.Name}Proxy> __proxyPtr" +
+							(parameters.Length > 0 ? ", " : string.Empty));
+						var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(",
+							"(__proxyPtr.GetPtr().ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
-					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
-					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
-					sourceBuilder.AppendLine($"		{{");
-					if (returnType.IsVoid())
-						sourceBuilder.AppendLine($"			__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
-					else
-						sourceBuilder.AppendLine($"			return __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
-					sourceBuilder.AppendLine($"		}}");
-					sourceBuilder.AppendLine();
+						sourceBuilder.AppendLine($"		{MethodImplAttribute}");
+						sourceBuilder.AppendLine(
+							$"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
+						sourceBuilder.AppendLine($"		{{");
+						if (returnType.IsVoid())
+							sourceBuilder.AppendLine(
+								$"			__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+						else
+							sourceBuilder.AppendLine(
+								$"			return __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"		}}");
+						sourceBuilder.AppendLine();
+					}
+
+					{
+						var proxyPtrParametersString = parametersString.Replace("(",
+							$"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(World).FullName} __world" +
+							(parameters.Length > 0 ? ", " : string.Empty));
+						var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(",
+							"(__proxyPtr.GetPtr(__world).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
+
+						sourceBuilder.AppendLine($"		{MethodImplAttribute}");
+						sourceBuilder.AppendLine(
+							$"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{proxyPtrParametersString}");
+						sourceBuilder.AppendLine($"		{{");
+						if (returnType.IsVoid())
+							sourceBuilder.AppendLine(
+								$"			__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+						else
+							sourceBuilder.AppendLine(
+								$"			return __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{proxyPtrParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"		}}");
+						sourceBuilder.AppendLine();
+					}
 				}
 
 				{
@@ -245,9 +272,6 @@ namespace Sapientia.TypeIndexer
 
 				sourceBuilder.AppendLine("#if UNITY_5_3_OR_NEWER");
 				sourceBuilder.AppendLine("		[UnityEngine.Scripting.Preserve]");
-				sourceBuilder.AppendLine("#if BURST");
-				sourceBuilder.AppendLine($"		{BurstAttribute}");
-				sourceBuilder.AppendLine("#endif");
 				sourceBuilder.AppendLine("#endif");
 				sourceBuilder.AppendLine($"		private static {returnTypeString} {methodInfo.Name}{genericParametersString}{parametersString}");
 				sourceBuilder.AppendLine("		{");

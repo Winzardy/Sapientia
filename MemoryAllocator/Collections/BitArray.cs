@@ -308,11 +308,11 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = WorldManager.CurrentWorld;
+				var world = WorldManager.CurrentWorld;
 				var array = new bool[_data.length];
 				for (var i = 0; i < _data.length; ++i)
 				{
-					array[i] = _data.IsSet(allocator, i);
+					array[i] = _data.IsSet(world, i);
 				}
 
 				return array;
@@ -323,11 +323,11 @@ namespace Sapientia.MemoryAllocator
 		{
 			get
 			{
-				var allocator = WorldManager.CurrentWorld;
+				var world = WorldManager.CurrentWorld;
 				var array = new System.Collections.Generic.List<int>(_data.length);
 				for (var i = 0; i < _data.length; ++i)
 				{
-					if (_data.IsSet(allocator, i)) array.Add(i);
+					if (_data.IsSet(world, i)) array.Add(i);
 				}
 
 				return array.ToArray();

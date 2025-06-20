@@ -46,6 +46,12 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IActionProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void Invoke(this in UnsafeProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr().ptr, world);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Invoke(this ref ProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
 		{
 			__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr(__world).ptr, world);
@@ -58,6 +64,12 @@ namespace Sapientia.TypeIndexer
 			{
 				__proxyPtr->proxy.Invoke(__proxyPtr->GetPtr(__world).ptr, world);
 			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void ProxyDispose(this in UnsafeProxyPtr<IActionProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		{
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -81,9 +93,6 @@ namespace Sapientia.TypeIndexer
 	{
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void Invoke(void* executorPtr, Sapientia.MemoryAllocator.World world)
 		{
@@ -104,9 +113,6 @@ namespace Sapientia.TypeIndexer
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
-#if BURST
-		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
-#endif
 #endif
 		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.World world)
 		{

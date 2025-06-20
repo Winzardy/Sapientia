@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Sapientia.Data;
@@ -16,6 +15,9 @@ namespace Sapientia.MemoryAllocator
 	}
 
 	[DebuggerTypeProxy(typeof(Dictionary<,>.EquatableDictionaryProxy))]
+#if UNITY_5_3_OR_NEWER
+	[Unity.Burst.BurstCompile]
+#endif
 	public struct Dictionary<TKey, TValue> : IDictionaryEnumerable<TKey, TValue>
 		where TKey : unmanaged, IEquatable<TKey>
 		where TValue : unmanaged
@@ -151,7 +153,7 @@ namespace Sapientia.MemoryAllocator
 				return ref entries[world, entry].value;
 			}
 
-			return ref TDefaultValue<TValue>.value;
+			return ref UnsafeExt.DefaultRef<TValue>();
 		}
 
 		[INLINE(256)]
@@ -165,7 +167,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			success = false;
-			return ref TDefaultValue<TValue>.value;
+			return ref UnsafeExt.DefaultRef<TValue>();
 		}
 
 		[INLINE(256)]
@@ -178,7 +180,7 @@ namespace Sapientia.MemoryAllocator
 				return true;
 			}
 
-			value = TDefaultValue<TValue>.value;
+			value = UnsafeExt.DefaultRef<TValue>();
 			return false;
 		}
 
@@ -199,7 +201,7 @@ namespace Sapientia.MemoryAllocator
 			var clearCount = count;
 			if (clearCount > 0)
 			{
-				buckets.Clear(world);
+				buckets.Fill(world, -1);
 				count = 0;
 				freeList = -1;
 				freeCount = 0;
@@ -233,7 +235,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		private int FindEntry(World world, in TKey key)
+		public int FindEntry(World world, in TKey key)
 		{
 			if (buckets.IsCreated)
 			{

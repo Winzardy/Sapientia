@@ -17,12 +17,12 @@ namespace Sapientia.TypeIndexer
 	[IndexedType]
 	public interface IIndexedType {}
 
-	public unsafe interface IInterfaceProxyType : IIndexedType
+	public interface IInterfaceProxyType : IIndexedType
 	{
 		public virtual void ProxyDispose(World world) {}
 	}
 
-	public static unsafe class IndexedTypes
+	public static class IndexedTypes
 	{
 		private static System.Collections.Generic.Dictionary<Type, TypeIndex> _typeToIndex = new();
 		private static Type[] _types = Array.Empty<Type>();
@@ -75,6 +75,15 @@ namespace Sapientia.TypeIndexer
 		{
 			index = -1;
 			return _typeToIndex.TryGetValue(type, out index);
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[Unity.Burst.BurstDiscard]
+#endif
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void GetTypeIndex(Type type, out TypeIndex index)
+		{
+			index = _typeToIndex[type];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

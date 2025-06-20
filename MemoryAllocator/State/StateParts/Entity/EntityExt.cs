@@ -16,13 +16,13 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			if (!entity.worldId.IsValid())
 				return false;
-			return !entity.IsEmpty() && entity.IsExist(entity.GetAllocator());
+			return !entity.IsEmpty() && entity.IsExist(entity.GetWorld());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
-			return entity.Has<T>(entity.GetAllocator());
+			return entity.Has<T>(entity.GetWorld());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -34,7 +34,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryRead<T>(this ref Entity entity, out T result) where T: unmanaged, IComponent
 		{
-			return entity.TryRead<T>(entity.GetAllocator(), out result);
+			return entity.TryRead<T>(entity.GetWorld(), out result);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
-			return ref entity.Read<T>(entity.GetAllocator());
+			return ref entity.Read<T>(entity.GetWorld());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,7 +64,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T Get<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
-			return ref entity.Get<T>(entity.GetAllocator());
+			return ref entity.Get<T>(entity.GetWorld());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T Get<T>(this ref Entity entity, out bool isCreated) where T: unmanaged, IComponent
 		{
-			return ref entity.Get<T>(entity.GetAllocator(), out isCreated);
+			return ref entity.Get<T>(entity.GetWorld(), out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,7 +88,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Remove<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
-			entity.Remove<T>(entity.GetAllocator());
+			entity.Remove<T>(entity.GetWorld());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
