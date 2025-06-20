@@ -23,16 +23,16 @@ namespace Content
 
 		public ref readonly SerializableGuid Guid => ref guid;
 
-		public string id;
+		private string _id;
 
-		public string Id => id.IsNullOrEmpty() ? Guid.ToString() : id;
+		public virtual string Id => _id.IsNullOrEmpty() ? guid.ToString() : _id;
 
 		public sealed override bool IsUnique() => true;
 
 		protected UniqueContentEntry(in T value, in SerializableGuid guid, string id = null) : base(in value)
 		{
 			this.guid = guid;
-			this.id = id;
+			_id = id;
 		}
 
 		protected override void OnRegister() => ContentManager.Register(this);
