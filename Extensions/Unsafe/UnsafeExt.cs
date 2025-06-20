@@ -105,6 +105,12 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Swap<T>(this ref T a, ref T b) where T : struct
+		{
+			(a, b) = (b, a);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsEquals<T>(this ref T a, ref T b) where T : struct
 		{
 #if UNITY_5_3_OR_NEWER

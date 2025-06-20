@@ -1,12 +1,19 @@
 using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+#if UNITY_5_3_OR_NEWER
+using Unity.Burst;
+using Unity.Mathematics;
+#endif
 
 namespace Sapientia.Extensions
 {
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#de24076fb1f44a2795403edc13914eb0
 	/// </summary>
+#if UNITY_5_3_OR_NEWER
+	[BurstCompile]
+#endif
 	public static class FloatMathExt
 	{
 		public const float EPSILON = 0.0000001f;
@@ -14,6 +21,7 @@ namespace Sapientia.Extensions
 		public const float PI = 3.141593f;
 		public const float HALF_PI = PI / 2f;
 		public const float TWO_PI = PI * 2f;
+		public const float INV_TWO_PI = 1f / TWO_PI;
 		public const float DEG_TO_RAD = PI / 180f;
 		public const float RAD_TO_DEG = 180f / PI;
 		// 0.00000001f - 1f = -1f
@@ -26,7 +34,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Pow(this float value, float power)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.pow(value, power);
+#else
 			return MathF.Pow(value, power);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -101,7 +113,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Floor(this float value)
 		{
-			return (float)Math.Floor(value);
+#if UNITY_5_3_OR_NEWER
+			return (int)math.floor(value);
+#else
+			return (int)MathF.Floor(value);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -113,7 +129,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int RoundToInt(this float value)
 		{
+#if UNITY_5_3_OR_NEWER
+			return (int)math.round(value);
+#else
 			return (int)MathF.Round(value);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -208,7 +228,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Sqrt(this float value)
 		{
-			return (float)Math.Sqrt(value);
+#if UNITY_5_3_OR_NEWER
+			return math.sqrt(value);
+#else
+			return MathF.Sqrt(value);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -220,37 +244,83 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Cos(this float rad)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.cos(rad);
+#else
 			return MathF.Cos(rad);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Acos(this float cos)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.acos(cos);
+#else
 			return MathF.Acos(cos);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Sin(this float rad)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.sin(rad);
+#else
 			return MathF.Sin(rad);
+#endif
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void SinCos(this float rad, out float sin, out float cos)
+		{
+#if UNITY_5_3_OR_NEWER
+			math.sincos(rad, out sin, out cos);
+#else
+			sin = rad.Sin();
+			cos = rad.Cos();
+#endif
+		}
+
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Asin(this float sin)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.asin(sin);
+#else
 			return MathF.Asin(sin);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float Tan(this float rad)
+		{
+#if UNITY_5_3_OR_NEWER
+			return math.tan(rad);
+#else
+			return MathF.Tan(rad);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Atan2(this float sin, float cos)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.atan2(sin, cos);
+#else
 			return MathF.Atan2(sin, cos);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Atan(this float tan)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.atan(tan);
+#else
 			return MathF.Atan(tan);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -309,7 +379,7 @@ namespace Sapientia.Extensions
 		public static float NormalizeRad(this float rad)
 		{
 			rad %= TWO_PI;
-			return rad < 0f ? rad + TWO_PI: rad;
+			return rad < 0f ? rad + TWO_PI : rad;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

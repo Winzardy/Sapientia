@@ -98,6 +98,13 @@ namespace Sapientia.Extensions
 
 #if UNITY_5_4_OR_NEWER
 		[INLINE(256)]
+		public static SafePtr NoCheckMemAlloc(int size, int align, Unity.Collections.Allocator allocator)
+		{
+			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, allocator);
+			return new SafePtr(ptr, size);
+		}
+
+		[INLINE(256)]
 		public static SafePtr MemAlloc(int size, int align, Unity.Collections.Allocator allocator)
 		{
 			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, allocator);
@@ -165,6 +172,14 @@ namespace Sapientia.Extensions
 
 			return (SafePtr<T>)safePtr;
 		}
+
+#if UNITY_5_3_OR_NEWER
+		[INLINE(256)]
+		public static void NoCheckMemFree(SafePtr memory, Unity.Collections.Allocator allocator)
+		{
+			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, allocator);
+		}
+#endif
 
 #if UNITY_5_3_OR_NEWER
 		[INLINE(256)]
@@ -338,6 +353,19 @@ namespace Sapientia.Extensions
 			temp.CopyTo(destinationSpan);
 #endif
 		}
+
+#if UNITY_5_4_OR_NEWER
+		[INLINE(256)]
+		public static SafePtr<T> NoCheckMakeArray<T>(int length, Unity.Collections.Allocator allocator, bool clearMemory = true) where T : unmanaged
+		{
+			var size = TSize<T>.size * length;
+			var ptr = NoCheckMemAlloc(size, TAlign<T>.align, allocator);
+			if (clearMemory)
+				MemClear(ptr, size);
+
+			return (SafePtr<T>)ptr;
+		}
+#endif
 
 #if UNITY_5_4_OR_NEWER
 		[INLINE(256)]

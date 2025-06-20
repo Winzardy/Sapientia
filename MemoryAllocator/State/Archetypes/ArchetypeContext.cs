@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -37,6 +38,12 @@ namespace Sapientia.MemoryAllocator.State
 		public SafePtr<ArchetypeElement<T>> GetRawElements()
 		{
 			return innerArchetype.ptr->GetRawElements<T>(world);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<ArchetypeElement<T>> GetSpan()
+		{
+			return innerArchetype.ptr->GetSpan<T>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
