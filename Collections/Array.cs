@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
-using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {

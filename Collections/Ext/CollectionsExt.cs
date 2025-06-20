@@ -127,6 +127,33 @@ namespace Sapientia.Collections
 			return enumerable == null || IsEmpty(enumerable);
 		}
 
+		public static bool ReferenceContains<T>(this IList<T> collection, T item)
+		{
+			if (!Any(collection))
+				return false;
+
+			// ReSharper disable once ForCanBeConvertedToForeach
+			// ReSharper disable once LoopCanBeConvertedToQuery
+			for (var i = 0; i < collection.Count; i++)
+			{
+				if (ReferenceEquals(collection[i], item))
+					return true;
+			}
+
+			return false;
+		}
+
+		public static bool ReferenceContains<T>(this IEnumerable<T> collection, T target)
+		{
+			foreach (var item in collection)
+			{
+				if (ReferenceEquals(item, target))
+					return true;
+			}
+
+			return false;
+		}
+
 		public static bool Any<T>(this IList<T> collection, Func<T, bool> predicate)
 		{
 			if (!Any(collection))
@@ -234,6 +261,14 @@ namespace Sapientia.Collections
 				return false;
 
 			return index >= 0 && index < array.Length;
+		}
+
+		public static bool ContainsIndexSafe<T>(this IList<T> list, int index)
+		{
+			if (list == null)
+				return false;
+
+			return index >= 0 && index < list.Count;
 		}
 
 		public static T First<T>(this IList<T> list) => list[0];
