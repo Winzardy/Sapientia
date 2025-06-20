@@ -1,7 +1,6 @@
 using System;
 using Sapientia.Collections;
 using Sapientia.Pooling;
-using UnityEngine;
 
 namespace Trading
 {
@@ -11,7 +10,7 @@ namespace Trading
 		public const string ERROR_CATEGORY = "Collection";
 
 #if CLIENT
-		[SerializeReference]
+		[UnityEngine.SerializeReference]
 #endif
 		// ReSharper disable once UseArrayEmptyMethod
 		// ReSharper disable once MemberInitializerValueIgnored
