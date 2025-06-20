@@ -21,7 +21,7 @@ namespace Content.Management
 			NullValueHandling = NullValueHandling.Ignore,
 		};
 
-		public static readonly JsonSerializer defaultSerializer = JsonSerializer.Create(serializerSettings);
+		public static readonly JsonSerializer defaultSerializer = CreateSerializer();
 
 		private readonly IContentJsonTextResolver _resolver;
 		private readonly bool _useCache;
@@ -53,6 +53,15 @@ namespace Content.Management
 		{
 			_cache.Clear();
 			_cache = null;
+		}
+
+		private static JsonSerializer CreateSerializer()
+		{
+			var serializer = JsonSerializer.Create(serializerSettings);
+#if !CLIENT
+			serializer.SerializationBinder = NewtonsoftJsonUtility.serializationBinder;
+#endif
+			return serializer;
 		}
 	}
 }

@@ -84,44 +84,6 @@ namespace Content.Management
 			writer.WriteEndObject();
 		}
 
-		// public JObject ToJObject(JsonSerializer serializer)
-		// {
-		// 	foreach (var (typeName, entries) in typeMap)
-		// 	{
-		// 		var typeObject = new JObject();
-		//
-		// 		foreach (var (key, rawValue) in entries)
-		// 		{
-		// 			if (rawValue != null)
-		// 			{
-		// 				var jToken = JToken.FromObject(rawValue, serializer);
-		//
-		// 				if (jToken is JObject originalObject)
-		// 				{
-		// 					var type = ContentJsonTypeResolver.Resolve(typeName);
-		// 					if (type.IsAbstract)
-		// 					{
-		// 						var valueType = rawValue.GetType();
-		// 						var reorderedJObject = new JObject
-		// 						{
-		// 							[TYPE_KEY] = ContentJsonTypeResolver.ToKey(valueType)
-		// 						};
-		//
-		// 						foreach (var property in originalObject.Properties())
-		// 							reorderedJObject[property.Name] = property.Value;
-		//
-		// 						jToken = reorderedJObject;
-		// 					}
-		// 				}
-		//
-		// 				typeObject[key] = jToken;
-		// 			}
-		// 			else
-		// 				typeObject[key] = null;
-		// 		}
-		// 	}
-		// }
-
 		public override ContentJsonFormat ReadJson(JsonReader reader, Type objectType, ContentJsonFormat existingValue,
 			bool hasExistingValue,
 			JsonSerializer serializer)
