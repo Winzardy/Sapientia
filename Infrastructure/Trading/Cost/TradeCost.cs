@@ -10,7 +10,7 @@ namespace Trading
 		/// </summary>
 		public virtual int Priority => TradeCostPriority.NORMAL;
 
-		public bool CanExecute(Tradeboard board, out TradePayError? error) => CanPay(board, out error);
+		internal bool CanExecute(Tradeboard board, out TradePayError? error) => CanPay(board, out error);
 		internal bool Execute(Tradeboard board) => Pay(board);
 
 		/// <summary>

@@ -4,16 +4,16 @@ using Sapientia.Collections;
 namespace Trading.InAppPurchasing
 {
 	[Serializable]
-	public class IAPTradingModel : ITradeReceiptRegistry<IAPTradeReceipt>
+	public class InAppPurchasingTradingModel : ITradeReceiptRegistry<IAPTradeReceipt>
 	{
 		public HashMap<string, IAPTradeModel> tradeToModel;
 
-		public IAPTradingModel()
+		public InAppPurchasingTradingModel()
 		{
 			tradeToModel = new();
 		}
 
-		public IAPTradingModel(IAPTradingModel source)
+		public InAppPurchasingTradingModel(InAppPurchasingTradingModel source)
 		{
 			tradeToModel = new(source.tradeToModel);
 

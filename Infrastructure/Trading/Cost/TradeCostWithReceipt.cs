@@ -9,16 +9,20 @@ namespace Trading
 	{
 		protected abstract string ReceiptId { get; }
 
-		protected virtual int ReceiptCount => 1;
-
 		protected sealed override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
-			return TradeReceiptRegistry<T>.CanIssue(board, ReceiptId, out error);
+			OnBeforePayCheck(board);
+			var canIssue = TradeReceiptRegistry<T>.CanIssue(board, ReceiptId, out error);
+			OnAfterPayCheck(board);
+			return canIssue;
 		}
 
 		protected sealed override bool Pay(Tradeboard board)
 		{
-			return TradeReceiptRegistry<T>.Issue(board, ReceiptId);
+			OnBeforePay(board);
+			var issue = TradeReceiptRegistry<T>.Issue(board, ReceiptId);
+			OnAfterPay(board);
+			return issue;
 		}
 
 		protected abstract bool CanFetch(Tradeboard board, out TradePayError? error);
@@ -29,6 +33,22 @@ namespace Trading
 
 		async Task<ITradeReceipt> ITradeCostWithReceipt.FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 			=> await FetchAsync(board, cancellationToken);
+
+		protected virtual void OnBeforePayCheck(Tradeboard board)
+		{
+		}
+
+		protected virtual void OnBeforePay(Tradeboard board)
+		{
+		}
+
+		protected virtual void OnAfterPayCheck(Tradeboard board)
+		{
+		}
+
+		protected virtual void OnAfterPay(Tradeboard board)
+		{
+		}
 	}
 
 	public interface ITradeCostWithReceipt
@@ -43,6 +63,8 @@ namespace Trading
 
 		// Намеренный хак чтобы избежать каста
 		public void Register(ITradingModel model, string tradeId);
+
+		public bool NeedPush() => true;
 	}
 
 	public static class TradeReceiptUtility

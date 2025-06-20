@@ -32,11 +32,13 @@ namespace Trading
 			var model = board.Get<ITradingModel>();
 			var registry = model.Get<T>();
 
-			if (registry != null)
-				return registry.CanIssue(board, key);
+			if (registry == null)
+			{
+				TradingDebug.LogError($"Not found receipt registry by type [ {typeof(T)} ]");
+				return false;
+			}
 
-			TradingDebug.LogWarning($"Not found receipt registry by type [ {typeof(T)} ]");
-			return true; // TODO: пока пропускаем такие кейсы из-за рекламы
+			return registry.CanIssue(board, key);
 		}
 
 		public static bool Issue(Tradeboard board, string key)
@@ -44,11 +46,13 @@ namespace Trading
 			var model = board.Get<ITradingModel>();
 			var registry = model.Get<T>();
 
-			if (registry != null)
-				return registry.Issue(board, key);
+			if (registry == null)
+			{
+				TradingDebug.LogError($"Not found receipt registry by type [ {typeof(T)} ]");
+				return false;
+			}
 
-			TradingDebug.LogWarning($"Not found receipt registry by type [ {typeof(T)} ]");
-			return true; // TODO: пока пропускаем такие кейсы из-за рекламы
+			return registry.Issue(board, key);
 		}
 	}
 }

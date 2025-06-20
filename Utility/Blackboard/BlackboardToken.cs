@@ -7,9 +7,9 @@ namespace Sapientia
 		public Type ValueType { get; }
 
 		/// <param name="unregister">
-		/// Отписывать ли токен в <see cref="Blackboard"/>
+		/// Отписывать ли токен в <see cref="Blackboard"/>, нужно чтобы массово отписывать токены
 		/// </param>
-		public void Release(bool unregister);
+		public void Release(bool unregister = true);
 
 		internal IBlackboardToken Clone(Blackboard blackboard);
 	}

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Advertising;
 using Content;
+using Sapientia;
 
 namespace Trading.Advertising
 {
@@ -15,13 +16,19 @@ namespace Trading.Advertising
 
 		public ContentReference<RewardedAdPlacementEntry> placement;
 		public int count = 1;
-		protected override int ReceiptCount => count;
 
 		protected override string ReceiptId => placement.ToReceiptId();
 
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
+
+			if (board.Contains<IAdvertisingTradingModel>())
+			{
+				var model = board.Get<IAdvertisingTradingModel>();
+				if (model.TokenCount >= count)
+					return true;
+			}
 
 			var success = AdManager.CanShow(placement, out var localError);
 
@@ -33,6 +40,13 @@ namespace Trading.Advertising
 
 		protected override async Task<AdTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
+			if (board.Contains<IAdvertisingTradingModel>())
+			{
+				var model = board.Get<IAdvertisingTradingModel>();
+				if (model.TokenCount >= count)
+					return AdTradeReceipt.Empty(placement);
+			}
+
 			//TODO: может быть какую-то защиту от дурака, что нельзя посмотреть рекламу за секунду)
 			var success = await AdManager.ShowAsync(placement, cancellationToken);
 
@@ -52,6 +66,11 @@ namespace Trading.Advertising
 			error = null;
 			return false;
 		}
+
+		private IBlackboardToken _token;
+		protected override void OnBeforePayCheck(Tradeboard board) => _token = board.Register(this);
+		protected override void OnAfterPayCheck(Tradeboard board) => _token.Release();
+		protected override void OnBeforePay(Tradeboard board) => _token = board.Register(this);
+		protected override void OnAfterPay(Tradeboard board) => _token.Release();
 	}
 }
-

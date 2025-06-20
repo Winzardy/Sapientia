@@ -5,6 +5,9 @@ namespace Trading
 	/// </summary>
 	public static class TradeAccess
 	{
+		public static bool CanPay(TradeCost cost, Tradeboard board, out TradePayError? error)
+			=> cost.CanExecute(board, out error);
+
 		public static bool Pay(TradeCost cost, Tradeboard board)
 			=> cost.Execute(board);
 

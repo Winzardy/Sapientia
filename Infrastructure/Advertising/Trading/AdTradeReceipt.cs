@@ -1,6 +1,7 @@
 using System;
 using Advertising;
 using Content;
+using Sapientia.Extensions;
 
 namespace Trading.Advertising
 {
@@ -24,6 +25,13 @@ namespace Trading.Advertising
 		void ITradeReceipt.Register(ITradingModel model, string tradeId) => this.Register(model, tradeId);
 
 		public override string ToString() => $"Ad Receipt: {Key}";
+
+		public static AdTradeReceipt Empty(AdPlacementEntry entry) => new()
+			{
+				type = entry.Type
+			};
+
+		bool ITradeReceipt.NeedPush() => !placement.IsNullOrEmpty();
 	}
 
 	public static class AdTradeReceiptUtility
