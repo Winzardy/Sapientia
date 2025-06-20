@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Sapientia.Pooling;
 
 namespace Trading
 {
@@ -10,9 +11,15 @@ namespace Trading
 	{
 		public override IEnumerator<TradeCost> GetEnumerator()
 		{
-			foreach (var item in items)
-				foreach (var cost in item) // ограничение на одну вложенность в системе!
-					yield return cost;
+			using (ListPool<TradeCost>.Get(out var sorted))
+			{
+				sorted.AddRange(items);
+				sorted.Sort(SortByPriority);
+
+				foreach (var item in sorted)
+					foreach (var cost in item) // ограничение на одну вложенность в системе!
+						yield return cost;
+			}
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

@@ -67,6 +67,7 @@ namespace Trading
 				}
 				catch (Exception e)
 				{
+					TradingDebug.LogException(e);
 					Return(board, received);
 					throw;
 				}

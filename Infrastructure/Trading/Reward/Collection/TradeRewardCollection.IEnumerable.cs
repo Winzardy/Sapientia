@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Sapientia.Pooling;
 
 namespace Trading
 {
@@ -8,10 +9,17 @@ namespace Trading
 #endif
 	public partial class TradeRewardCollection : IEnumerable<TradeReward>
 	{
-		public IEnumerator<TradeReward> GetEnumerator()
+		public override IEnumerator<TradeReward> GetEnumerator()
 		{
-			foreach (var item in items)
-				yield return item;
+			using (ListPool<TradeReward>.Get(out var sorted))
+			{
+				sorted.AddRange(items);
+				sorted.Sort(SortByPriority);
+
+				foreach (var item in sorted)
+					foreach (var reward in item)
+						yield return reward;
+			}
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

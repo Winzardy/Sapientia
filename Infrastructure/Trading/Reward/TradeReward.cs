@@ -1,6 +1,4 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Trading
 {
@@ -44,6 +42,6 @@ namespace Trading
 		{
 		}
 
-		public static TradeReceiveError NotImplemented = new TradeReceiveError("NotImplemented");
+		public static TradeReceiveError NotImplemented = new("NotImplemented");
 	}
 }

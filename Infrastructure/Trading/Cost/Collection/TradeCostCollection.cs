@@ -1,8 +1,7 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Sapientia.Collections;
 using Sapientia.Pooling;
+using UnityEngine;
 
 namespace Trading
 {
@@ -12,9 +11,10 @@ namespace Trading
 		public const string ERROR_CATEGORY = "Collection";
 
 #if CLIENT
-		[UnityEngine.SerializeReference]
+		[SerializeReference]
 #endif
 		// ReSharper disable once UseArrayEmptyMethod
+		// ReSharper disable once MemberInitializerValueIgnored
 		public TradeCost[] items = new TradeCost[0];
 
 		public TradeCost[] Items => items;
@@ -72,8 +72,9 @@ namespace Trading
 
 					return true;
 				}
-				catch (OperationCanceledException)
+				catch (Exception e)
 				{
+					TradingDebug.LogException(e);
 					Refund(board, paid);
 					throw;
 				}
