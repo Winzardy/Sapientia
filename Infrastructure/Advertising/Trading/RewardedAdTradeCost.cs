@@ -33,7 +33,12 @@ namespace Trading.Advertising
 			var success = AdManager.CanShow(placement, out var localError);
 
 			if (localError.HasValue)
+			{
+				if (localError.Value.code == AdShowErrorCode.NotLoaded) // TODO: временный фикс, недоступности рекламы
+					return true;
+
 				error = new TradePayError(ERROR_CATEGORY, (int) localError.Value.code, localError);
+			}
 
 			return success;
 		}
