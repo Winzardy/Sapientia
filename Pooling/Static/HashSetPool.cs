@@ -17,7 +17,5 @@ namespace Sapientia.Pooling
 		{
 			public override void OnRelease(HashSet<T> hashSet) => hashSet.Clear();
 		}
-
-
 	}
 }

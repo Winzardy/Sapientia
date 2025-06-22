@@ -1,35 +1,35 @@
 using System;
 
-namespace Sapientia.Messaging
+namespace Messaging
 {
 	public interface IMessageSubscriptionToken : IDisposable
 	{
+		public int HubIndex { get; }
 		public void Unsubscribe() => Dispose();
 	}
 
 	/// <summary>
-	/// Represents an active subscription to a message
+	/// Представляет активную подписку на сообщение.
 	/// </summary>
-	public sealed class MessageSubscriptionToken<T> : IMessageSubscriptionToken where T : struct
+	public sealed class MessageSubscriptionToken<T> : IMessageSubscriptionToken
+		where T : struct
 	{
-		private readonly WeakReference<MessengerHub> _hub;
+		private readonly int _hubIndex;
+
+		public int HubIndex => _hubIndex;
 
 		/// <summary>
-		/// Initializes a new instance of the MessageSubscriptionToken class.
+		/// Инициализирует новый экземпляр класса MessageSubscriptionToken.
 		/// </summary>
-		internal MessageSubscriptionToken(MessengerHub hub)
+		/// <param name="hub">Экземпляр MessengerHub, в который зарегистрирована подписка</param>
+		internal MessageSubscriptionToken(int hubIndex)
 		{
-			if (hub == null)
-				throw new ArgumentNullException(nameof(hub));
-
-			_hub = new WeakReference<MessengerHub>(hub);
+			_hubIndex = hubIndex;
 		}
 
 		public void Dispose()
 		{
-			if (_hub != null && _hub.TryGetTarget(out var hub))
-				hub.Unsubscribe(this);
-
+			MessageBus.SubscriptionMap<T>.Remove(this);
 			GC.SuppressFinalize(this);
 		}
 	}

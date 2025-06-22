@@ -3,9 +3,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using Sapientia.Collections;
 
 namespace Sapientia.Pooling
 {
+	// TODO: Динамическое capacity, например: сцена требует очень много звуков,
+	// а следующая нет, можно было бы подумать чтобы для пула менять капасити по контексту))
 	/// <summary>
 	/// Default implementation of <see cref="ObjectPool{T}"/>.
 	/// </summary>
@@ -15,6 +18,8 @@ namespace Sapientia.Pooling
 	public class ObjectPool<T> : IObjectPool<T>, IDisposable
 		where T : class
 	{
+		protected static readonly int DEFAULT_CAPACITY = Environment.ProcessorCount * 3;
+
 		private readonly ConcurrentQueue<T> _queue;
 		private readonly IObjectPoolPolicy<T> _policy;
 
@@ -27,7 +32,7 @@ namespace Sapientia.Pooling
 		/// Creates an instance of <see cref="ObjectPool{T}"/>.
 		/// </summary>
 		/// <param name="policy">The pooling policy to use.</param>
-		public ObjectPool(IObjectPoolPolicy<T> policy) : this(policy, Environment.ProcessorCount * 2)
+		public ObjectPool(IObjectPoolPolicy<T> policy) : this(policy, DEFAULT_CAPACITY)
 		{
 		}
 
@@ -35,12 +40,12 @@ namespace Sapientia.Pooling
 		/// Creates an instance of <see cref="ObjectPool{T}"/>.
 		/// </summary>
 		/// <param name="policy">The pooling policy to use.</param>
-		/// <param name="maximumRetained">The maximum number of objects to retain in the pool.</param>
+		/// <param name="maximumRetained">The maximum number of objects to retain in the pool. <c>-1</c> - infinity</param>
 		public ObjectPool(IObjectPoolPolicy<T> policy, int maximumRetained)
 		{
 			_policy = policy ?? throw new ArgumentNullException(nameof(policy));
 			_queue = new ConcurrentQueue<T>();
-			_maxCapacity = maximumRetained - 1; // -1 to account for _fastItem
+			_maxCapacity = maximumRetained - 1; // -1 to account for _single
 		}
 
 		public void Dispose() => Clear();
@@ -62,15 +67,22 @@ namespace Sapientia.Pooling
 
 		public void Release(T obj)
 		{
+#if DebugLog
+			if (ReferenceEquals(_single, obj) || _queue.ReferenceContains(obj))
+				throw new ArgumentException("Already in pool", nameof(obj));
+#endif
+
 			if (_single != null || Interlocked.CompareExchange(ref _single, obj, null) != null)
 			{
-				if (Interlocked.Increment(ref _count) <= _maxCapacity)
+				if (Interlocked.Increment(ref _count) <= _maxCapacity || _maxCapacity < 0)
 				{
 					_queue.Enqueue(obj);
 				}
 				else
 				{
 					Interlocked.Decrement(ref _count);
+					_policy.OnDispose(obj);
+					return;
 				}
 			}
 

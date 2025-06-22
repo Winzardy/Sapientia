@@ -1,4 +1,4 @@
-using Sapientia.Messaging;
+using Messaging;
 
 namespace Sapientia.MemoryAllocator.State
 {

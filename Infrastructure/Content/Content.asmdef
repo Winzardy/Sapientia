@@ -1,0 +1,17 @@
+{
+    "name": "Content",
+    "rootNamespace": "",
+    "references": [
+        "Sapientia",
+        "Fusumity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

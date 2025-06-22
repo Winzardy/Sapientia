@@ -3,8 +3,6 @@ using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Sapientia.Collections;
-using Sapientia.Extensions;
 
 namespace Sapientia.Collections
 {

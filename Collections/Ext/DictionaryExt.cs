@@ -26,6 +26,7 @@ namespace Sapientia.Collections
 				}
 				else if (!aEnumerator.Current.Key.Equals(bEnumerator.Current.Key))
 					return false;
+
 				if (aEnumerator.Current.Value is IEquatable<TValue> equatableValue)
 				{
 					if (!equatableValue.Equals(bEnumerator.Current.Value))
@@ -36,6 +37,15 @@ namespace Sapientia.Collections
 			}
 
 			return true;
+		}
+
+		public static Dictionary<TKey, TValue> Clone<TKey, TValue>(this Dictionary<TKey, TValue> source)
+			where TValue : ICloneable<TValue>
+		{
+			var dictionary = new Dictionary<TKey, TValue>(source.Count);
+			foreach (var (key, pair) in source)
+				dictionary.Add(key, pair.Clone());
+			return dictionary;
 		}
 	}
 }

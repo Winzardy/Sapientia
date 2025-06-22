@@ -3,7 +3,6 @@ using INLINE = NoInlineAttribute;
 #else
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 #endif
-using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
