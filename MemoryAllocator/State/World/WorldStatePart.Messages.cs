@@ -19,6 +19,21 @@ namespace Sapientia.MemoryAllocator.State
 			new StartedMessage(worldId).Send();
 		}
 
+		private void SendLateUpdateMessage()
+		{
+			new LateUpdateMessage(worldId).Send();
+		}
+
+		public struct LateUpdateMessage
+		{
+			public readonly WorldId worldId;
+
+			public LateUpdateMessage(WorldId worldId)
+			{
+				this.worldId = worldId;
+			}
+		}
+
 		public struct BeginDisposeMessage
 		{
 			public readonly WorldId worldId;

@@ -113,8 +113,7 @@ namespace Sapientia.MemoryAllocator.State
 				system.ptr->LateUpdate(allocator, allocator, system.ptr->indexedPtr);
 			}
 
-			// TODO: TASK-1379 SendLateUpdateMessage();
-			// TODO: TASK-1379 SendLateUpdateOnceMessage();
+			SendLateUpdateMessage();
 		}
 
 		public void Dispose()
