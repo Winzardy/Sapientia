@@ -13,6 +13,7 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly ArchetypeContext<KillElement> killElementArchetype;
 		public readonly ArchetypeContext<DestroyRequest> destroyRequestArchetype;
 		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
+		public readonly ArchetypeContext<DelayKillRequest> delayKillRequestArchetype;
 
 		public DestroyLogic(World world)
 		{
@@ -21,6 +22,7 @@ namespace Sapientia.MemoryAllocator.State
 			killElementArchetype = new ArchetypeContext<KillElement>(world);
 			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(world);
 			killRequestArchetype = new ArchetypeContext<KillRequest>(world);
+			delayKillRequestArchetype = new ArchetypeContext<DelayKillRequest>(world);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,8 +49,8 @@ namespace Sapientia.MemoryAllocator.State
 		public void RequestKill(Entity entity, float delay)
 		{
 			E.ASSERT(IsAlive(entity));
-			ref var request = ref entity.Get<DelayKillRequest>(world, out var hasRequest);
-			if (!hasRequest || request.delay > delay)
+			ref var request = ref delayKillRequestArchetype.GetElement(entity, out var isCreated);
+			if (isCreated || request.delay > delay)
 				request.delay = delay;
 		}
 
