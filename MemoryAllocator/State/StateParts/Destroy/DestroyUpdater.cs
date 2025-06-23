@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				ref var request = ref delayKillRequests[i];
 				if (request.value.delay <= 0)
-					_delayKillRequestArchetype.GetElement(request.entity);
+					_killRequestArchetype.GetElement(request.entity);
 				else
 					request.value.delay -= deltaTime;
 			}
