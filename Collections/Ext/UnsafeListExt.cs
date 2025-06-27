@@ -52,7 +52,7 @@ namespace Sapientia.Collections
 			var indexToBottom = index - 1;
 			while (indexToBottom >= 0 && comparer.Compare(list[indexToBottom], value) == 0)
 			{
-				if (list[indexToBottom].Equals(value))
+				if (comparer.Compare(list[indexToBottom], value) == 0)
 				{
 					list.RemoveAt(indexToBottom);
 					return;
@@ -63,7 +63,7 @@ namespace Sapientia.Collections
 			var indexToTop = index + 1;
 			while (indexToTop < list.count && comparer.Compare(list[indexToTop], value) == 0)
 			{
-				if (list[indexToTop].Equals(value))
+				if (comparer.Compare(list[indexToTop], value) == 0)
 				{
 					list.RemoveAt(indexToTop);
 					return;
