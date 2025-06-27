@@ -38,7 +38,7 @@ namespace Submodules.Sapientia.Safety
 #if UNITY_5_3_OR_NEWER
 		private static readonly Unity.Burst.SharedStatic<UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>> _safetyHandleAllocators = Unity.Burst.SharedStatic<UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>>.GetOrCreate<DisposeSentinelAllocator>();
 #else
-		private static UnsafeIndexAllocSparseSet<SafetyHandleAllocator> _safetyHandleAllocators;
+		private static UnsafeIndexAllocSparseSet<DisposeSentinelAllocator> _safetyHandleAllocators;
 #endif
 
 		// Нельзя инициализировать `_safetyHandleAllocators` из конструктора, `BURST` не поддерживает
