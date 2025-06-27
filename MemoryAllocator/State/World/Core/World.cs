@@ -28,10 +28,8 @@ namespace Sapientia.MemoryAllocator
 			get => _worldState.Value().version;
 		}
 
-		public void Initialize(WorldId worldId, int initialSize)
+		public World(WorldId worldId, int initialSize)
 		{
-			E.ASSERT(!IsValid);
-
 			_worldState = MemoryExt.NullableMemAlloc<WorldState>();
 			_worldState.Value().Initialize(worldId, initialSize);
 		}

@@ -93,8 +93,7 @@ namespace Sapientia.MemoryAllocator
 			}
 			else
 			{
-				world = new World();
-				world.Initialize(worldId, initialSize);
+				world = new World(worldId, initialSize);
 			}
 
 			return world;
