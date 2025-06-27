@@ -5,9 +5,6 @@ using System.Runtime.InteropServices;
 namespace Sapientia.Data
 {
 	[StructLayout(LayoutKind.Sequential)]
-#if UNITY_5_3_OR_NEWER
-	[Unity.Burst.BurstCompile]
-#endif
 	public readonly unsafe struct SafePtr
 	{
 #if UNITY_5_3_OR_NEWER
@@ -183,9 +180,6 @@ namespace Sapientia.Data
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-#if UNITY_5_3_OR_NEWER
-	[Unity.Burst.BurstCompile]
-#endif
 	public readonly unsafe struct SafePtr<T> where T: unmanaged
 	{
 #if UNITY_5_3_OR_NEWER

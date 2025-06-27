@@ -150,7 +150,6 @@ namespace Sapientia.Extensions
 		}
 #endif
 
-
 		[INLINE(256)]
 		public static SafePtr MemAlloc(int size, int align, bool safetyCheck = true)
 		{
@@ -171,6 +170,13 @@ namespace Sapientia.Extensions
 		public static SafePtr MemAlloc(int size, bool safetyCheck = true)
 		{
 			return MemAlloc(size, TAlign<byte>.align, safetyCheck);
+		}
+
+		[INLINE(256)]
+		public static NullablePtr<T> NullableMemAlloc<T>() where T : unmanaged
+		{
+			var ptr = MemAlloc(TSize<T>.size, TAlign<T>.align);
+			return NullablePtr<T>.Create(ptr);
 		}
 
 		[INLINE(256)]
@@ -200,6 +206,13 @@ namespace Sapientia.Extensions
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, allocator);
 		}
 #endif
+
+		[INLINE(256)]
+		public static void MemFree(NullablePtr memory, bool safetyCheck = true)
+		{
+			MemFree(memory.GetPtr(), safetyCheck);
+			memory.Dispose();
+		}
 
 		[INLINE(256)]
 		public static void MemFree(SafePtr memory, bool safetyCheck = true)

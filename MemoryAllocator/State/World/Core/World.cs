@@ -6,37 +6,34 @@ using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
 {
-#if UNITY_5_3_OR_NEWER
-	[Unity.Burst.BurstCompile]
-#endif
 	public partial struct World : IEquatable<World>, IDisposable
 	{
-		private SafePtr<WorldState> _unsafeWorld;
+		private NullablePtr<WorldState> _worldState;
 
 		public bool IsValid
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _unsafeWorld != default && _unsafeWorld.Value().version > 0;
+			get => _worldState != default && _worldState.Value().version > 0;
 		}
 
 		public ref WorldId WorldId
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _unsafeWorld.Value().worldId;
+			get => ref _worldState.Value().worldId;
 		}
 
 		public ushort Version
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _unsafeWorld.Value().version;
+			get => _worldState.Value().version;
 		}
 
 		public void Initialize(WorldId worldId, int initialSize)
 		{
 			E.ASSERT(!IsValid);
 
-			_unsafeWorld = MemoryExt.MemAlloc<WorldState>();
-			_unsafeWorld.Value().Initialize(worldId, initialSize);
+			_worldState = MemoryExt.NullableMemAlloc<WorldState>();
+			_worldState.Value().Initialize(worldId, initialSize);
 		}
 
 		public void Dispose()
@@ -44,36 +41,36 @@ namespace Sapientia.MemoryAllocator
 			if (!IsValid)
 				return;
 
-			_unsafeWorld.Value().Dispose();
-			MemoryExt.MemFree(_unsafeWorld);
+			_worldState.Value().Dispose();
+			MemoryExt.MemFree(_worldState);
 
 			this = default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref Allocator GetAllocator()
+		private ref Allocator GetAllocator()
 		{
-			return ref _unsafeWorld.Value().allocator;
+			return ref _worldState.Value().allocator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref ServiceRegistry GetServiceRegistry()
+		private ref ServiceRegistry GetServiceRegistry()
 		{
-			return ref _unsafeWorld.Value().serviceRegistry;
+			return ref _worldState.Value().serviceRegistry;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref UnsafeServiceRegistry GetLocalServiceRegistry()
+		private ref UnsafeServiceRegistry GetLocalServiceRegistry()
 		{
-			return ref _unsafeWorld.Value().localServiceRegistry;
+			return ref _worldState.Value().localServiceRegistry;
 		}
 
 		public static World Deserialize(ref StreamBufferReader stream)
 		{
 			var world = new World();
 
-			world._unsafeWorld = MemoryExt.MemAlloc<WorldState>();
-			world._unsafeWorld.Value() = WorldState.Deserialize(ref stream);
+			world._worldState = MemoryExt.NullableMemAlloc<WorldState>();
+			world._worldState.Value() = WorldState.Deserialize(ref stream);
 
 			return world;
 		}
@@ -82,32 +79,32 @@ namespace Sapientia.MemoryAllocator
 		{
 			E.ASSERT(IsValid);
 
-			_unsafeWorld.Value().Reset(worldId);
+			_worldState.Value().Reset(worldId);
 		}
 
 		public void Clear()
 		{
 			E.ASSERT(IsValid);
 
-			_unsafeWorld.Value().Clear();
+			_worldState.Value().Clear();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(World left, World right)
 		{
-			return left._unsafeWorld == right._unsafeWorld;
+			return left._worldState == right._worldState;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(World left, World right)
 		{
-			return left._unsafeWorld != right._unsafeWorld;
+			return left._worldState != right._worldState;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(World other)
 		{
-			return _unsafeWorld == other._unsafeWorld;
+			return _worldState == other._worldState;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
-			return _unsafeWorld.GetHashCode();
+			return _worldState.GetHashCode();
 		}
 	}
 }

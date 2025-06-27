@@ -40,10 +40,10 @@ namespace Sapientia.Collections
 			get => _sparseSet.IsCreated;
 		}
 
-		public UnsafeIndexAllocSparseSet(int capacity, int sparseCapacity, int expandStep = 0)
+		public UnsafeIndexAllocSparseSet(int capacity, int expandStep = 0)
 		{
 			_ids = new UnsafeList<int>(capacity);
-			_sparseSet = new UnsafeSparseSet<T>(capacity, sparseCapacity, expandStep);
+			_sparseSet = new UnsafeSparseSet<T>(capacity, capacity, expandStep);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
