@@ -22,7 +22,7 @@ namespace Submodules.Sapientia.Safety
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DisposeSentinel AllocateSafetyHandle()
+		public DisposeSentinel AllocateDisposeSentinel()
 		{
 			_asyncValue.SetBusy();
 
@@ -35,7 +35,7 @@ namespace Submodules.Sapientia.Safety
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool CheckSafetyHandle(DisposeSentinel handle)
+		public bool CheckDisposeSentinel(DisposeSentinel handle)
 		{
 			if (handle.typeId != _typeId)
 				throw new ArgumentException($"Handle type id is not equal to {nameof(DisposeSentinelAllocator)} type id");
@@ -47,7 +47,7 @@ namespace Submodules.Sapientia.Safety
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ReleaseSafetyHandle(DisposeSentinel handle)
+		public void ReleaseDisposeSentinel(DisposeSentinel handle)
 		{
 			if (handle.typeId != _typeId)
 				throw new ArgumentException($"Handle type id is not equal to {nameof(DisposeSentinelAllocator)} type id");

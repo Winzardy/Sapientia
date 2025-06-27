@@ -20,19 +20,19 @@ namespace Submodules.Sapientia.Safety
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DisposeSentinel Create<T>()
 		{
-			return DisposeSentinelManager.AllocateSafetyHandle<T>();
+			return DisposeSentinelManager.AllocateDisposeSentinel<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DisposeSentinel Create()
 		{
-			return DisposeSentinelManager.AllocateSafetyHandle<DisposeSentinel>();
+			return DisposeSentinelManager.AllocateDisposeSentinel<DisposeSentinel>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsValid()
 		{
-			return DisposeSentinelManager.CheckSafetyHandle(this);
+			return DisposeSentinelManager.CheckDisposeSentinel(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -40,7 +40,7 @@ namespace Submodules.Sapientia.Safety
 		{
 			if (!IsValid())
 				return;
-			DisposeSentinelManager.ReleaseSafetyHandle(this);
+			DisposeSentinelManager.ReleaseDisposeSentinel(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

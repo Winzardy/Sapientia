@@ -36,18 +36,18 @@ namespace Submodules.Sapientia.Safety
 		}
 
 #if UNITY_5_3_OR_NEWER
-		private static readonly Unity.Burst.SharedStatic<UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>> _safetyHandleAllocators = Unity.Burst.SharedStatic<UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>>.GetOrCreate<DisposeSentinelAllocator>();
+		private static readonly Unity.Burst.SharedStatic<UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>> _disposeSentinelAllocators = Unity.Burst.SharedStatic<UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>>.GetOrCreate<DisposeSentinelAllocator>();
 #else
-		private static UnsafeIndexAllocSparseSet<DisposeSentinelAllocator> _safetyHandleAllocators;
+		private static UnsafeIndexAllocSparseSet<DisposeSentinelAllocator> _disposeSentinelAllocators;
 #endif
 
 		// Нельзя инициализировать `_safetyHandleAllocators` из конструктора, `BURST` не поддерживает
-		private static ref UnsafeIndexAllocSparseSet<DisposeSentinelAllocator> GetSafetyHandleAllocators()
+		private static ref UnsafeIndexAllocSparseSet<DisposeSentinelAllocator> GetDisposeSentinelAllocators()
 		{
 #if UNITY_5_3_OR_NEWER
-			ref var result = ref _safetyHandleAllocators.Data;
+			ref var result = ref _disposeSentinelAllocators.Data;
 #else
-			ref var result = ref _safetyHandleAllocators;
+			ref var result = ref _disposeSentinelAllocators;
 #endif
 			if (!result.IsCreated)
 				result = new UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>(64);
@@ -67,32 +67,34 @@ namespace Submodules.Sapientia.Safety
 		/// </summary>
 		private static int AllocateTypeId()
 		{
-			var typeId = _safetyHandleAllocators.Data.AllocateId();
-			GetSafetyHandleAllocators().Get(typeId) = DisposeSentinelAllocator.Create(typeId);
+			ref var disposeSentinelAllocators = ref GetDisposeSentinelAllocators();
+
+			var typeId = disposeSentinelAllocators.AllocateId();
+			disposeSentinelAllocators.Get(typeId) = DisposeSentinelAllocator.Create(typeId);
 
 			return typeId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DisposeSentinel AllocateSafetyHandle<T>()
+		public static DisposeSentinel AllocateDisposeSentinel<T>()
 		{
 			var typeId = GetTypeId<T>();
-			ref var safetyHandleAllocator = ref GetSafetyHandleAllocators().Get(typeId);
-			return safetyHandleAllocator.AllocateSafetyHandle();
+			ref var safetyHandleAllocator = ref GetDisposeSentinelAllocators().Get(typeId);
+			return safetyHandleAllocator.AllocateDisposeSentinel();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool CheckSafetyHandle(DisposeSentinel handle)
+		public static bool CheckDisposeSentinel(DisposeSentinel handle)
 		{
-			ref var safetyHandleAllocator = ref GetSafetyHandleAllocators().Get(handle.typeId);
-			return safetyHandleAllocator.CheckSafetyHandle(handle);
+			ref var safetyHandleAllocator = ref GetDisposeSentinelAllocators().Get(handle.typeId);
+			return safetyHandleAllocator.CheckDisposeSentinel(handle);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void ReleaseSafetyHandle(DisposeSentinel handle)
+		public static void ReleaseDisposeSentinel(DisposeSentinel handle)
 		{
-			ref var safetyHandleAllocator = ref GetSafetyHandleAllocators().Get(handle.typeId);
-			safetyHandleAllocator.ReleaseSafetyHandle(handle);
+			ref var safetyHandleAllocator = ref GetDisposeSentinelAllocators().Get(handle.typeId);
+			safetyHandleAllocator.ReleaseDisposeSentinel(handle);
 		}
 	}
 }
