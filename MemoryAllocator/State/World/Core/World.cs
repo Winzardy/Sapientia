@@ -80,11 +80,13 @@ namespace Sapientia.MemoryAllocator
 			_worldState.Value().Reset(worldId);
 		}
 
-		public void Clear()
+		public void Reset()
 		{
 			E.ASSERT(IsValid);
 
 			_worldState.Value().Clear();
+			// Обновляем ссылку на стейт
+			_worldState.ResetDisposeSentinel();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

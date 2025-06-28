@@ -111,7 +111,7 @@ namespace Sapientia.MemoryAllocator
 			if (!worldId.IsValid())
 				throw new ArgumentException($"{nameof(WorldId)} with such Id [id: {worldId.id}] doesn't exist.");
 
-			_worlds[worldId.index].Clear();
+			_worlds[worldId.index].Reset();
 
 			if (_currentWorld == _worlds[worldId.index])
 				SetCurrentWorld(default(World));

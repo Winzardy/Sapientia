@@ -136,6 +136,13 @@ namespace Sapientia.Data
 			_disposeSentinel.Dispose();
 			_disposeSentinel = default;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ResetDisposeSentinel()
+		{
+			_disposeSentinel.Dispose();
+			_disposeSentinel = DisposeSentinel.Create();
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -192,6 +199,13 @@ namespace Sapientia.Data
 		{
 			CheckNullRef();
 			return ref _ptr.Value();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> GetPtr()
+		{
+			CheckNullRef();
+			return _ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -297,6 +311,13 @@ namespace Sapientia.Data
 		{
 			_disposeSentinel.Dispose();
 			_disposeSentinel = default;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ResetDisposeSentinel()
+		{
+			_disposeSentinel.Dispose();
+			_disposeSentinel = DisposeSentinel.Create<T>();
 		}
 	}
 }
