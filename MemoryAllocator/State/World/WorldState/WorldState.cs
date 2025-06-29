@@ -13,7 +13,7 @@ namespace Sapientia.MemoryAllocator
 		public bool IsValid
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _worldStateData != default && _worldStateData.Value().version > 0;
+			get => _worldStateData.IsValid && _worldStateData.Value().version > 0;
 		}
 
 		public ref WorldId WorldId

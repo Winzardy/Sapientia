@@ -121,6 +121,7 @@ namespace Sapientia.MemoryAllocator
 
 			var worldId = new WorldId((ushort)_count++, (ushort)++_currentId);
 			ref var worldState = ref _worldsStates[worldId.index];
+			ref var world = ref _worlds[worldId.index];
 
 			if (worldState.IsValid)
 			{
@@ -132,14 +133,16 @@ namespace Sapientia.MemoryAllocator
 				worldState = new WorldState(worldId, initialSize);
 			}
 
-			return new World(worldState);
+			world = new World(worldState);
+			return world;
 		}
 
 		private static void Prewarm(int index)
 		{
-			if (index < _worldsStates.Length)
-				return;
-			ArrayExt.Expand(ref _worldsStates, index + 1);
+			if (index >= _worlds.Length)
+				ArrayExt.Expand(ref _worlds, index + 1);
+			if (index >= _worldsStates.Length)
+				ArrayExt.Expand(ref _worldsStates, index + 1);
 		}
 
 		public static void RemoveWorld(this ref WorldState world)
@@ -161,7 +164,10 @@ namespace Sapientia.MemoryAllocator
 			{
 				// Не освобождаем память, будем её переиспользовать
 				// !!! Если её освободить, по по непонятной причине происходит краш !!!
+				ValuesExt.Swap(ref _worlds[worldId.index], ref _worlds[_count - 1]);
 				_worldsStates[worldId.index].Swap(ref _worldsStates[_count - 1]);
+
+				_worlds[_count - 1] = null;
 			}
 			_count--;
 		}

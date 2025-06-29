@@ -34,7 +34,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			using var scope = worldState.GetWorldScope();
 
-			ref var elementsService = ref worldState.GetOrRegisterService<WorldElementsService>();
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
 			foreach (var statePart in stateParts)
 			{
@@ -64,7 +64,7 @@ namespace Sapientia.MemoryAllocator
 
 			using var scope = worldState.GetWorldScope();
 
-			ref var elementsService = ref worldState.GetOrRegisterService<WorldElementsService>();
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (var element in elementsService.worldElements.GetPtrEnumerable(worldState))
 			{
 				element.ptr->Start(worldState, worldState, element.ptr->indexedPtr);
@@ -83,7 +83,7 @@ namespace Sapientia.MemoryAllocator
 			worldState.Tick++;
 			worldState.Time += deltaTime;
 
-			ref var elementsService = ref worldState.GetOrRegisterService<WorldElementsService>();
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ProxyPtr<IWorldSystemProxy>* system in elementsService.worldSystems.GetPtrEnumerable(worldState))
 			{
 				system->Update(worldState, worldState, system->indexedPtr, deltaTime);
@@ -100,7 +100,7 @@ namespace Sapientia.MemoryAllocator
 
 			using var scope = worldState.GetWorldScope();
 
-			ref var elementsService = ref worldState.GetOrRegisterService<WorldElementsService>();
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (var system in elementsService.worldSystems.GetPtrEnumerable(worldState))
 			{
 				system.ptr->LateUpdate(worldState, worldState, system.ptr->indexedPtr);
@@ -116,7 +116,7 @@ namespace Sapientia.MemoryAllocator
 			LocalStatePartService.Dispose(worldState);
 			SendBeginDisposeMessage();
 
-			ref var elementsService = ref worldState.GetOrRegisterService<WorldElementsService>();
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ProxyPtr<IWorldElementProxy>* element in elementsService.worldElements.GetPtrEnumerable(worldState))
 			{
 				element->Dispose(worldState, worldState, element->indexedPtr);

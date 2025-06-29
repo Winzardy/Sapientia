@@ -91,6 +91,15 @@ namespace Sapientia.Collections
 			_ids.Add(id);
 		}
 
+		/// <param name="releaseFromSparseSet"> Если `false`, то не удаляет `id` из `SparseSet` (Значение по `id` будет всё ещё доступно), но возвращает `id` в список свободных</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ReleaseId(int id, bool releaseFromSparseSet)
+		{
+			if (releaseFromSparseSet)
+				_sparseSet.RemoveSwapBack(id);
+			_ids.Add(id);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{

@@ -1,5 +1,5 @@
-using System;
 using System.Runtime.CompilerServices;
+using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Data;
 
@@ -37,8 +37,8 @@ namespace Submodules.Sapientia.Safety
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool CheckDisposeSentinel(DisposeSentinel handle)
 		{
-			if (handle.typeId != _typeId)
-				throw new ArgumentException($"Handle type id is not equal to {nameof(DisposeSentinelAllocator)} type id");
+			E.ASSERT(handle.typeId == _typeId, $"Handle type id is not equal to {nameof(DisposeSentinelAllocator)} type id");
+
 			if (!_versions.Has(handle.id))
 				return false;
 
@@ -49,10 +49,13 @@ namespace Submodules.Sapientia.Safety
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReleaseDisposeSentinel(DisposeSentinel handle)
 		{
-			if (handle.typeId != _typeId)
-				throw new ArgumentException($"Handle type id is not equal to {nameof(DisposeSentinelAllocator)} type id");
+			E.ASSERT(handle.typeId == _typeId, $"Handle type id is not equal to {nameof(DisposeSentinelAllocator)} type id");
+
 			_asyncValue.SetBusy();
-			_versions.ReleaseId(handle.id);
+
+			_versions.Get(handle.id)++;
+			_versions.ReleaseId(handle.id, false);
+
 			_asyncValue.SetFree();
 		}
 	}
