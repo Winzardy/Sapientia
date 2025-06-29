@@ -41,6 +41,8 @@ namespace Sapientia.MemoryAllocator
 			world.allocator = Allocator.Deserialize(ref stream);
 			stream.Read(ref world.serviceRegistry);
 			stream.Read(ref world.version);
+			stream.Read(ref world.tick);
+			stream.Read(ref world.time);
 
 			world.version++;
 			// При добавлении сервиса происходит инициализация
