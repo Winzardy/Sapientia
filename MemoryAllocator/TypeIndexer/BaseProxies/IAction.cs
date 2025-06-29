@@ -4,6 +4,6 @@ namespace Sapientia.TypeIndexer.BaseProxies
 {
 	public unsafe interface IAction : IInterfaceProxyType
 	{
-		public void Invoke(World world);
+		public void Invoke(WorldState worldState);
 	}
 }

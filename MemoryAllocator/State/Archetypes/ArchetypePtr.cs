@@ -4,14 +4,14 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		private CachedPtr<Archetype> _archetypePtr;
 
-		public ref Archetype GetArchetype(World world)
+		public ref Archetype GetArchetype(WorldState worldState)
 		{
-			return ref _archetypePtr.GetValue(world);
+			return ref _archetypePtr.GetValue(worldState);
 		}
 
-		public ArchetypeContext<T> GetArchetypeContext(World world)
+		public ArchetypeContext<T> GetArchetypeContext(WorldState worldState)
 		{
-			return new ArchetypeContext<T>(world, _archetypePtr.GetPtr(world));
+			return new ArchetypeContext<T>(worldState, _archetypePtr.GetPtr(worldState));
 		}
 
 		public static implicit operator ArchetypePtr<T>(CachedPtr<Archetype> ptr)

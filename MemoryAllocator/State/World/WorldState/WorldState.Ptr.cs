@@ -3,7 +3,7 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial struct World
+	public partial struct WorldState
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetSafePtr(in MemPtr memPtr)
@@ -18,9 +18,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemPtr CopyPtrTo(World dstWorld, in MemPtr srsPtr)
+		public MemPtr CopyPtrTo(WorldState dstWorldState, in MemPtr srsPtr)
 		{
-			return GetAllocator().CopyPtrTo(ref dstWorld.GetAllocator(), srsPtr);
+			return GetAllocator().CopyPtrTo(ref dstWorldState.GetAllocator(), srsPtr);
 		}
 	}
 }

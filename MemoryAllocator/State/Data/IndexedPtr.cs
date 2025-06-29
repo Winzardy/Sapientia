@@ -30,9 +30,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public IndexedPtr(World world, SafePtr cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
+		public IndexedPtr(WorldState worldState, SafePtr cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
 		{
-			_ptr = new CachedPtr(world, cachedPtr, memPtr);
+			_ptr = new CachedPtr(worldState, cachedPtr, memPtr);
 			this.typeIndex = typeIndex;
 		}
 
@@ -49,46 +49,46 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(World world) where T : unmanaged
+		public static IndexedPtr Create<T>(WorldState worldState) where T : unmanaged
 		{
-			var memPtr = world.MemAlloc<T>(out var rawPtr);
-			return new IndexedPtr(world, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			var memPtr = worldState.MemAlloc<T>(out var rawPtr);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public static IndexedPtr Create<T>(World world, in T value) where T : unmanaged
+		public static IndexedPtr Create<T>(WorldState worldState, in T value) where T : unmanaged
 		{
-			var memPtr = world.MemAlloc<T>(value, out var rawPtr);
-			return new IndexedPtr(world, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			var memPtr = worldState.MemAlloc<T>(value, out var rawPtr);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
 		public static IndexedPtr Create<T>(in T value) where T : unmanaged
 		{
-			var world = WorldManager.CurrentWorld;
-			var memPtr = world.MemAlloc<T>(value, out var rawPtr);
-			return new IndexedPtr(world, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			var worldState = WorldManager.CurrentWorldState;
+			var memPtr = worldState.MemAlloc<T>(value, out var rawPtr);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
 		[INLINE(256)]
-		public ref T GetValue<T>(World world) where T : unmanaged
+		public ref T GetValue<T>(WorldState worldState) where T : unmanaged
 		{
 			E.ASSERT(IsCreated);
-			return ref _ptr.Get<T>(world);
+			return ref _ptr.Get<T>(worldState);
 		}
 
 		[INLINE(256)]
-		public SafePtr GetPtr(World world)
+		public SafePtr GetPtr(WorldState worldState)
 		{
 			E.ASSERT(IsCreated);
-			return _ptr.GetPtr(world);
+			return _ptr.GetPtr(worldState);
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetPtr<T>(World world) where T: unmanaged
+		public SafePtr<T> GetPtr<T>(WorldState worldState) where T: unmanaged
 		{
 			E.ASSERT(IsCreated);
-			return _ptr.GetPtr(world);
+			return _ptr.GetPtr(worldState);
 		}
 
 		[INLINE(256)]
@@ -113,9 +113,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Dispose(World world)
+		public void Dispose(WorldState worldState)
 		{
-			_ptr.Dispose(world);
+			_ptr.Dispose(worldState);
 			this = default;
 		}
 

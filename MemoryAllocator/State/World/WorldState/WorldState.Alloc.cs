@@ -3,7 +3,7 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial struct World
+	public partial struct WorldState
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemPtr MemAlloc(int size)

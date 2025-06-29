@@ -4,7 +4,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial struct World
+	public partial struct WorldState
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void RegisterService<T>(MemPtr ptr) where T: unmanaged, IIndexedType

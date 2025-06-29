@@ -3,7 +3,7 @@ using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
 {
-	public struct WorldState : IDisposable
+	internal struct WorldStateData : IDisposable
 	{
 		public WorldId worldId;
 
@@ -14,10 +14,15 @@ namespace Sapientia.MemoryAllocator
 
 		public ushort version;
 
-		public void Initialize(WorldId worldId, int initialSize)
+		public uint tick;
+		public float time;
+
+		public WorldStateData(WorldId worldId, int initialSize)
 		{
 			this.worldId = worldId;
 			version = 1;
+			tick = 0u;
+			time = 0f;
 
 			allocator = new Allocator();
 			allocator.Initialize(initialSize);
@@ -28,9 +33,9 @@ namespace Sapientia.MemoryAllocator
 			localServiceRegistry = default;
 		}
 
-		public static WorldState Deserialize(ref StreamBufferReader stream)
+		public static WorldStateData Deserialize(ref StreamBufferReader stream)
 		{
-			var world = new WorldState();
+			var world = new WorldStateData();
 
 			stream.Read(ref world.worldId);
 			world.allocator = Allocator.Deserialize(ref stream);
@@ -44,13 +49,12 @@ namespace Sapientia.MemoryAllocator
 			return world;
 		}
 
-		public void Reset(WorldId worldId)
+		public void SetupNewWorldId(WorldId newWorldId)
 		{
-			version++;
-			this.worldId = worldId;
+			worldId = newWorldId;
 		}
 
-		public void Clear()
+		public void Reset()
 		{
 			// При добавлении сервиса происходит инициализация
 			// Серввисы выделяются в аллокаторе, который будет очищен
@@ -58,6 +62,10 @@ namespace Sapientia.MemoryAllocator
 			// Обязательно нужно очистить, т.к. сервисы выделяются в неуправляемой памяти
 			localServiceRegistry.Clear();
 			allocator.Clear();
+
+			tick = 0u;
+			time = 0f;
+			version++;
 		}
 
 		public void Dispose()

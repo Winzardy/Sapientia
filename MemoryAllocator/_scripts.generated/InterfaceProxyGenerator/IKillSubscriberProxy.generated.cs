@@ -7,7 +7,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IKillSubscriberProxy : IProxy
 	{
-		public static readonly ProxyId ProxyId = 11;
+		public static readonly ProxyId ProxyId = 14;
 		ProxyId IProxy.ProxyId
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -23,22 +23,22 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		public delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity);
+		public delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void EntityKilled(void* __executorPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
+		public readonly void EntityKilled(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
 			var __method = UnsafeExt.As<Delegate, EntityKilledDelegate>(__delegate);
-			__method.Invoke(__executorPtr, world, in entity);
+			__method.Invoke(__executorPtr, worldState, in entity);
 		}
 
-		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.World world);
+		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.World world)
+		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 1);
 			var __method = UnsafeExt.As<Delegate, ProxyDisposeDelegate>(__delegate);
-			__method.Invoke(__executorPtr, world);
+			__method.Invoke(__executorPtr, worldState);
 		}
 
 	}
@@ -46,44 +46,44 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IKillSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void EntityKilled(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr().ptr, world, in entity);
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr().ptr, worldState, in entity);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__world).ptr, world, in entity);
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__worldState).ptr, worldState, in entity);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
-			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
+			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__world).ptr, world, in entity);
+				__proxyPtr->proxy.EntityKilled(__proxyPtr->GetPtr(__worldState).ptr, worldState, in entity);
 			}
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World world)
+		public static void ProxyDispose(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, world);
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr().ptr, worldState);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
+		public static void ProxyDispose(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__world).ptr, world);
+			__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__worldState).ptr, worldState);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void ProxyDispose(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.World __world, Sapientia.MemoryAllocator.World world)
+		public static void ProxyDispose(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))
+			foreach (ProxyPtr<IKillSubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__world).ptr, world);
+				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__worldState).ptr, worldState);
 			}
 		}
 
@@ -94,12 +94,12 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
-		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
+		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.EntityKilled(world, in entity);
+			__source.EntityKilled(worldState, in entity);
 #endif
 		}
 
@@ -114,12 +114,12 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
-		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.World world)
+		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.ProxyDispose(world);
+			__source.ProxyDispose(worldState);
 #endif
 		}
 

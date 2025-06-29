@@ -6,15 +6,15 @@ namespace Sapientia.MemoryAllocator
 	public static class MemPtrWorldExt
 	{
 		[MethodImpl(256)]
-		public static SafePtr GetPtr(this ref MemPtr memPtr, World world)
+		public static SafePtr GetPtr(this ref MemPtr memPtr, WorldState worldState)
 		{
-			return world.GetSafePtr(memPtr);
+			return worldState.GetSafePtr(memPtr);
 		}
 
 		[MethodImpl(256)]
-		public static void Dispose(this ref MemPtr memPtr, World world)
+		public static void Dispose(this ref MemPtr memPtr, WorldState worldState)
 		{
-			world.MemFree(memPtr);
+			worldState.MemFree(memPtr);
 			memPtr = MemPtr.Invalid;
 		}
 	}

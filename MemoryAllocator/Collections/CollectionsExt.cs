@@ -2,18 +2,18 @@ namespace Sapientia.MemoryAllocator
 {
 	public static unsafe class CollectionsExt
 	{
-		public static void FillIndexes(this ref List<int> list, World world)
+		public static void FillIndexes(this ref List<int> list, WorldState worldState)
 		{
-			var values = list.GetValuePtr(world);
+			var values = list.GetValuePtr(worldState);
 			for (var i = 0; i < list.Count; i++)
 			{
 				values[i] = i;
 			}
 		}
 
-		public static void Shuffle<T>(this ref List<T> list, World world) where T: unmanaged
+		public static void Shuffle<T>(this ref List<T> list, WorldState worldState) where T: unmanaged
 		{
-			var values = list.GetValuePtr(world);
+			var values = list.GetValuePtr(worldState);
 			var count = list.Count;
 			for (var i = 0; i < count; i++)
 			{

@@ -11,30 +11,30 @@ namespace Sapientia.MemoryAllocator
 		public int HeadIndex { get; }
 		public int Count { get; }
 		public int Capacity { get; }
-		public SafePtr<T> GetValuePtr(World world);
+		public SafePtr<T> GetValuePtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(World world)
+		public CircularBufferEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(World world)
+		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(WorldState worldState)
 		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
+			return new CircularBufferPtrEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(World world)
+		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(WorldState worldState)
 		{
-			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
+			return new (new (GetValuePtr(worldState), HeadIndex, Count, Capacity));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(World world)
+		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
 		{
-			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
+			return new (new (GetValuePtr(worldState), HeadIndex, Count, Capacity));
 		}
 	}
 

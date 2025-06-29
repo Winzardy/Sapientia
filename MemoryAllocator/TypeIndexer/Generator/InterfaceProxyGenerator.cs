@@ -201,10 +201,10 @@ namespace Sapientia.TypeIndexer
 
 					{
 						var proxyPtrParametersString = parametersString.Replace("(",
-							$"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(World).FullName} __world" +
+							$"(this ref ProxyPtr<{baseType.Name}Proxy> __proxyPtr, {typeof(WorldState).FullName} __worldState" +
 							(parameters.Length > 0 ? ", " : string.Empty));
 						var proxyPtrParametersWithoutTypeString = parametersWithoutTypeString.Replace("(",
-							"(__proxyPtr.GetPtr(__world).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
+							"(__proxyPtr.GetPtr(__worldState).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
 						sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 						sourceBuilder.AppendLine(
@@ -222,15 +222,15 @@ namespace Sapientia.TypeIndexer
 				}
 
 				{
-					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent, {typeof(World).FullName} __world" + (parameters.Length > 0 ? ", " : string.Empty));
-					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr(__world).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
+					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent, {typeof(WorldState).FullName} __worldState" + (parameters.Length > 0 ? ", " : string.Empty));
+					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr(__worldState).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{eventParametersString}");
 					sourceBuilder.AppendLine($"		{{");
 					if (!returnType.IsVoid())
 						sourceBuilder.AppendLine($"			{returnTypeString} __result = default;");
-					sourceBuilder.AppendLine($"			foreach (ProxyPtr<{baseType.Name}Proxy>* __proxyPtr in __proxyEvent.GetEnumerable(__world))");
+					sourceBuilder.AppendLine($"			foreach (ProxyPtr<{baseType.Name}Proxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))");
 					sourceBuilder.AppendLine($"			{{");
 					if (returnType.IsVoid())
 						sourceBuilder.AppendLine($"				__proxyPtr->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");

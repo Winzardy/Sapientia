@@ -34,59 +34,59 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public CachedPtr(World world, SafePtr cachedPtr, MemPtr memPtr)
+		public CachedPtr(WorldState worldState, SafePtr cachedPtr, MemPtr memPtr)
 		{
-			_version = world.Version;
+			_version = worldState.Version;
 			_cachedPtr = cachedPtr;
 			this.memPtr = memPtr;
 		}
 
 		[INLINE(256)]
-		public bool IsValid(World world)
+		public bool IsValid(WorldState worldState)
 		{
-			return _version == world.Version;
+			return _version == worldState.Version;
 		}
 
 		[INLINE(256)]
-		public SafePtr GetPtr(World world)
+		public SafePtr GetPtr(WorldState worldState)
 		{
-			if (world.Version != _version)
+			if (worldState.Version != _version)
 			{
-				_cachedPtr = world.GetSafePtr(memPtr);
-				_version = world.Version;
+				_cachedPtr = worldState.GetSafePtr(memPtr);
+				_version = worldState.Version;
 			}
 
 			return _cachedPtr;
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetPtr<T>(World world) where T: unmanaged
+		public SafePtr<T> GetPtr<T>(WorldState worldState) where T: unmanaged
 		{
-			if (world.Version != _version)
+			if (worldState.Version != _version)
 			{
-				_cachedPtr = world.GetSafePtr(memPtr);
-				_version = world.Version;
+				_cachedPtr = worldState.GetSafePtr(memPtr);
+				_version = worldState.Version;
 			}
 
 			return _cachedPtr;
 		}
 
 		[INLINE(256)]
-		public ref T Get<T>(World world) where T : unmanaged
+		public ref T Get<T>(WorldState worldState) where T : unmanaged
 		{
-			if (world.Version != _version)
+			if (worldState.Version != _version)
 			{
-				_cachedPtr = world.GetSafePtr(memPtr);
-				_version = world.Version;
+				_cachedPtr = worldState.GetSafePtr(memPtr);
+				_version = worldState.Version;
 			}
 
 			return ref _cachedPtr.Value<T>();
 		}
 
 		[INLINE(256)]
-		public void Dispose(World world)
+		public void Dispose(WorldState worldState)
 		{
-			memPtr.Dispose(world);
+			memPtr.Dispose(worldState);
 			this = Invalid;
 		}
 
@@ -157,17 +157,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public CachedPtr(World world, MemPtr memPtr, SafePtr<T> cachedPtr)
+		public CachedPtr(WorldState worldState, MemPtr memPtr, SafePtr<T> cachedPtr)
 		{
-			_version = world.Version;
+			_version = worldState.Version;
 			_cachedPtr = cachedPtr;
 			this.memPtr = memPtr;
 		}
 
 		[INLINE(256)]
-		public CachedPtr(World world, MemPtr memPtr, SafePtr<T> cachedPtr, in T value)
+		public CachedPtr(WorldState worldState, MemPtr memPtr, SafePtr<T> cachedPtr, in T value)
 		{
-			_version = world.Version;
+			_version = worldState.Version;
 			_cachedPtr = cachedPtr;
 			this.memPtr = memPtr;
 
@@ -175,33 +175,33 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public static CachedPtr<T> Create(World world)
+		public static CachedPtr<T> Create(WorldState worldState)
 		{
-			var memPtr = world.MemAlloc<T>(out var cachedPtr);
-			return new CachedPtr<T>(world, memPtr, cachedPtr);
+			var memPtr = worldState.MemAlloc<T>(out var cachedPtr);
+			return new CachedPtr<T>(worldState, memPtr, cachedPtr);
 		}
 
 		[INLINE(256)]
-		public static CachedPtr<T> Create(World world, in T value)
+		public static CachedPtr<T> Create(WorldState worldState, in T value)
 		{
-			var memPtr = world.MemAlloc<T>(out var cachedPtr);
-			return new CachedPtr<T>(world, memPtr, cachedPtr, value);
+			var memPtr = worldState.MemAlloc<T>(out var cachedPtr);
+			return new CachedPtr<T>(worldState, memPtr, cachedPtr, value);
 		}
 
 		[INLINE(256)]
-		public static SafePtr<T> Create(World world, out CachedPtr<T> ptr)
+		public static SafePtr<T> Create(WorldState worldState, out CachedPtr<T> ptr)
 		{
-			var memPtr = world.MemAlloc<T>(out var cachedPtr);
-			ptr = new CachedPtr<T>(world, memPtr, cachedPtr);
+			var memPtr = worldState.MemAlloc<T>(out var cachedPtr);
+			ptr = new CachedPtr<T>(worldState, memPtr, cachedPtr);
 			return cachedPtr;
 		}
 
 		[INLINE(256)]
 		public static CachedPtr<T> Create()
 		{
-			var world = WorldManager.CurrentWorld;
-			var memPtr = world.MemAlloc<T>(out var cachedPtr);
-			return new CachedPtr<T>(world, memPtr, cachedPtr);
+			var worldState = WorldManager.CurrentWorldState;
+			var memPtr = worldState.MemAlloc<T>(out var cachedPtr);
+			return new CachedPtr<T>(worldState, memPtr, cachedPtr);
 		}
 
 		[INLINE(256)]
@@ -211,24 +211,24 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public SafePtr<T> GetPtr(World world)
+		public SafePtr<T> GetPtr(WorldState worldState)
 		{
-			if (world.Version != _version && memPtr.IsValid())
+			if (worldState.Version != _version && memPtr.IsValid())
 			{
-				_cachedPtr = world.GetSafePtr(memPtr);
-				_version = world.Version;
+				_cachedPtr = worldState.GetSafePtr(memPtr);
+				_version = worldState.Version;
 			}
 
 			return _cachedPtr;
 		}
 
 		[INLINE(256)]
-		public ref T GetValue(World world)
+		public ref T GetValue(WorldState worldState)
 		{
-			if (world.Version != _version)
+			if (worldState.Version != _version)
 			{
-				_cachedPtr = world.GetSafePtr(memPtr);
-				_version = world.Version;
+				_cachedPtr = worldState.GetSafePtr(memPtr);
+				_version = worldState.Version;
 			}
 
 			return ref _cachedPtr.Value();
@@ -241,9 +241,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void Dispose(World world)
+		public void Dispose(WorldState worldState)
 		{
-			memPtr.Dispose(world);
+			memPtr.Dispose(worldState);
 			this = Invalid;
 		}
 
@@ -311,9 +311,9 @@ namespace Sapientia.MemoryAllocator
 	public static class PtrExt
 	{
 		[INLINE(256)]
-		public static CachedPtr<T> CreatePtr<T>(this World world) where T : unmanaged
+		public static CachedPtr<T> CreatePtr<T>(this WorldState worldState) where T : unmanaged
 		{
-			return CachedPtr<T>.Create(world);
+			return CachedPtr<T>.Create(worldState);
 		}
 	}
 }

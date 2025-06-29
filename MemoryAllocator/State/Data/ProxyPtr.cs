@@ -24,15 +24,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProxyPtr<T> Create<TInstance>(World world) where TInstance: unmanaged
+		public static ProxyPtr<T> Create<TInstance>(WorldState worldState) where TInstance: unmanaged
 		{
-			return new ProxyPtr<T>(IndexedPtr.Create<TInstance>(world));
+			return new ProxyPtr<T>(IndexedPtr.Create<TInstance>(worldState));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProxyPtr<T> Create<TInstance>(World world, in TInstance value) where TInstance: unmanaged
+		public static ProxyPtr<T> Create<TInstance>(WorldState worldState, in TInstance value) where TInstance: unmanaged
 		{
-			return new ProxyPtr<T>(IndexedPtr.Create(world, value));
+			return new ProxyPtr<T>(IndexedPtr.Create(worldState, value));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -54,9 +54,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T1 GetValue<T1>(World world) where T1: unmanaged
+		public ref T1 GetValue<T1>(WorldState worldState) where T1: unmanaged
 		{
-			return ref indexedPtr.GetValue<T1>(world);
+			return ref indexedPtr.GetValue<T1>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,18 +66,18 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetPtr(World world)
+		public SafePtr GetPtr(WorldState worldState)
 		{
-			return indexedPtr.GetPtr(world);
+			return indexedPtr.GetPtr(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(World world)
+		public void Dispose(WorldState worldState)
 		{
 			if (IsCreated)
 			{
-				proxy.ProxyDispose(GetPtr(world).ptr, world);
-				indexedPtr.Dispose(world);
+				proxy.ProxyDispose(GetPtr(worldState).ptr, worldState);
+				indexedPtr.Dispose(worldState);
 			}
 		}
 

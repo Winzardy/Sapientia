@@ -59,33 +59,33 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public Dictionary(World world, int capacity)
+		public Dictionary(WorldState worldState, int capacity)
 		{
 			this = default;
-			Initialize(world, capacity);
+			Initialize(worldState, capacity);
 		}
 
 		[INLINE(256)]
-		private void Initialize(World world, int capacity)
+		private void Initialize(WorldState worldState, int capacity)
 		{
 			var prime = capacity.GetPrime();
 			freeList = -1;
-			buckets = new MemArray<int>(world, prime, -1);
-			entries = new MemArray<Entry>(world, prime);
+			buckets = new MemArray<int>(worldState, prime, -1);
+			entries = new MemArray<Entry>(worldState, prime);
 		}
 
 		[INLINE(256)]
-		public void Dispose(World world)
+		public void Dispose(WorldState worldState)
 		{
-			buckets.Dispose(world);
-			entries.Dispose(world);
+			buckets.Dispose(worldState);
+			entries.Dispose(worldState);
 			this = default;
 		}
 
 		[INLINE(256)]
-		public SafePtr<Entry> GetEntryPtr(World world)
+		public SafePtr<Entry> GetEntryPtr(WorldState worldState)
 		{
-			return entries.GetValuePtr(world);
+			return entries.GetValuePtr(worldState);
 		}
 
 		[INLINE(256)]
@@ -95,16 +95,16 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public void ReplaceWith(World world, in Dictionary<TKey, TValue> other)
+		public void ReplaceWith(WorldState worldState, in Dictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr()) return;
 
-			Dispose(world);
+			Dispose(worldState);
 			this = other;
 		}
 
 		[INLINE(256)]
-		public void CopyFrom(World world, in Dictionary<TKey, TValue> other)
+		public void CopyFrom(WorldState worldState, in Dictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 				return;
@@ -112,15 +112,15 @@ namespace Sapientia.MemoryAllocator
 				return;
 			if (GetMemPtr().IsValid() && !other.GetMemPtr().IsValid())
 			{
-				Dispose(world);
+				Dispose(worldState);
 				return;
 			}
 
 			if (!GetMemPtr().IsValid())
-				this = new Dictionary<TKey, TValue>(world, other.Count);
+				this = new Dictionary<TKey, TValue>(worldState, other.Count);
 
-			MemArrayExt.CopyExact(world, other.buckets, ref buckets);
-			MemArrayExt.CopyExact(world, other.entries, ref entries);
+			MemArrayExt.CopyExact(worldState, other.buckets, ref buckets);
+			MemArrayExt.CopyExact(worldState, other.entries, ref entries);
 			count = other.count;
 			freeCount = other.freeCount;
 			freeList = other.freeList;
@@ -129,15 +129,15 @@ namespace Sapientia.MemoryAllocator
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
 		/// <param name="worldator"></param>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public ref TValue this[World world, in TKey key]
+		public ref TValue this[WorldState worldState, in TKey key]
 		{
 			[INLINE(256)]
 			get
 			{
-				var entry = FindEntry(world, key);
+				var entry = FindEntry(worldState, key);
 				if (entry >= 0)
 				{
-					return ref entries[world, entry].value;
+					return ref entries[worldState, entry].value;
 				}
 
 				throw new KeyNotFoundException();
@@ -145,25 +145,25 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ref TValue GetValue(World world, TKey key)
+		public ref TValue GetValue(WorldState worldState, TKey key)
 		{
-			var entry = FindEntry(world, key);
+			var entry = FindEntry(worldState, key);
 			if (entry >= 0)
 			{
-				return ref entries[world, entry].value;
+				return ref entries[worldState, entry].value;
 			}
 
 			return ref UnsafeExt.DefaultRef<TValue>();
 		}
 
 		[INLINE(256)]
-		public ref TValue GetValue(World world, TKey key, out bool success)
+		public ref TValue GetValue(WorldState worldState, TKey key, out bool success)
 		{
-			var entry = FindEntry(world, key);
+			var entry = FindEntry(worldState, key);
 			if (entry >= 0)
 			{
 				success = true;
-				return ref entries[world, entry].value;
+				return ref entries[worldState, entry].value;
 			}
 
 			success = false;
@@ -171,12 +171,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool TryGetValue(World world, TKey key, out TValue value)
+		public bool TryGetValue(WorldState worldState, TKey key, out TValue value)
 		{
-			var entry = FindEntry(world, key);
+			var entry = FindEntry(worldState, key);
 			if (entry >= 0)
 			{
-				value = entries[world, entry].value;
+				value = entries[worldState, entry].value;
 				return true;
 			}
 
@@ -189,23 +189,23 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="key">The key of the element to add to the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public void Add(World world, TKey key, TValue value)
+		public void Add(WorldState worldState, TKey key, TValue value)
 		{
-			TryInsert(world, key, value, InsertionBehavior.ThrowOnExisting);
+			TryInsert(worldState, key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
 		[INLINE(256)]
-		public void Clear(World world)
+		public void Clear(WorldState worldState)
 		{
 			var clearCount = count;
 			if (clearCount > 0)
 			{
-				buckets.Fill(world, -1);
+				buckets.Fill(worldState, -1);
 				count = 0;
 				freeList = -1;
 				freeCount = 0;
-				entries.Clear(world, 0, clearCount);
+				entries.Clear(worldState, 0, clearCount);
 			}
 		}
 
@@ -213,18 +213,18 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="worldator"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
 		[INLINE(256)]
-		public bool ContainsKey(World world, TKey key)
+		public bool ContainsKey(WorldState worldState, TKey key)
 		{
-			return FindEntry(world, key) >= 0;
+			return FindEntry(worldState, key) >= 0;
 		}
 
 		/// <summary><para>Determines whether the dictionary contains an element with a specific value.</para></summary>
 		/// <param name="worldator"></param>
 		/// <param name="value">The value to locate in the dictionary.</param>
 		[INLINE(256)]
-		public bool ContainsValue(World world, TValue value)
+		public bool ContainsValue(WorldState worldState, TValue value)
 		{
-			var rawEntries = entries.GetValuePtr(world);
+			var rawEntries = entries.GetValuePtr(worldState);
 			for (var i = 0; i < count; i++)
 			{
 				if (rawEntries[i].hashCode >= 0 && value.Equals(rawEntries[i].value))
@@ -235,13 +235,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public int FindEntry(World world, in TKey key)
+		public int FindEntry(WorldState worldState, in TKey key)
 		{
 			if (buckets.IsCreated)
 			{
 				var hashCode = key.GetHashCode() & _hashCodeMask;
-				var rawBuckets = buckets.GetValuePtr(world);
-				var rawEntries = entries.GetValuePtr(world);
+				var rawBuckets = buckets.GetValuePtr(worldState);
+				var rawEntries = entries.GetValuePtr(worldState);
 
 				for (var i = rawBuckets[hashCode % buckets.Length]; i >= 0; i = rawEntries[i].next)
 				{
@@ -253,18 +253,18 @@ namespace Sapientia.MemoryAllocator
 			return -1;
 		}
 
-		private bool TryInsert(World world, TKey key, TValue value, InsertionBehavior behavior)
+		private bool TryInsert(WorldState worldState, TKey key, TValue value, InsertionBehavior behavior)
 		{
 			if (!buckets.IsCreated)
 			{
-				Initialize(world, 0);
+				Initialize(worldState, 0);
 			}
 
 			var hashCode = key.GetHashCode() & _hashCodeMask;
 			var targetBucket = hashCode % buckets.Length;
 
-			var rawBuckets = buckets.GetValuePtr(world);
-			var rawEntries = entries.GetValuePtr(world);
+			var rawBuckets = buckets.GetValuePtr(worldState);
+			var rawEntries = entries.GetValuePtr(worldState);
 
 			for (var i = rawBuckets[targetBucket]; i >= 0; i = rawEntries[i].next)
 			{
@@ -296,11 +296,11 @@ namespace Sapientia.MemoryAllocator
 			{
 				if (count == entries.Length)
 				{
-					IncreaseCapacity(world);
+					IncreaseCapacity(worldState);
 					targetBucket = hashCode % buckets.Length;
 
-					rawBuckets = buckets.GetValuePtr(world);
-					rawEntries = entries.GetValuePtr(world);
+					rawBuckets = buckets.GetValuePtr(worldState);
+					rawEntries = entries.GetValuePtr(worldState);
 				}
 
 				index = count;
@@ -308,7 +308,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			rawEntries[index].hashCode = hashCode;
-			rawEntries[index].next = buckets[world, targetBucket];
+			rawEntries[index].next = buckets[worldState, targetBucket];
 			rawEntries[index].key = key;
 			rawEntries[index].value = value;
 			rawBuckets[targetBucket] = index;
@@ -317,21 +317,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		private void IncreaseCapacity(World world)
+		private void IncreaseCapacity(WorldState worldState)
 		{
-			IncreaseCapacity(world, count.ExpandPrime());
+			IncreaseCapacity(worldState, count.ExpandPrime());
 		}
 
 		[INLINE(256)]
-		private void IncreaseCapacity(World world, int newSize)
+		private void IncreaseCapacity(WorldState worldState, int newSize)
 		{
-			var bucketsArray = new MemArray<int>(world, newSize, -1);
-			var entryArray = new MemArray<Entry>(world, newSize);
+			var bucketsArray = new MemArray<int>(worldState, newSize, -1);
+			var entryArray = new MemArray<Entry>(worldState, newSize);
 
-			MemArrayExt.CopyNoChecks(world, entries, 0, ref entryArray, 0, count);
+			MemArrayExt.CopyNoChecks(worldState, entries, 0, ref entryArray, 0, count);
 
-			var rawBuckets = bucketsArray.GetValuePtr(world);
-			var rawEntries = entryArray.GetValuePtr(world);
+			var rawBuckets = bucketsArray.GetValuePtr(worldState);
+			var rawEntries = entryArray.GetValuePtr(worldState);
 
 			for (var i = 0; i < count; i++)
 			{
@@ -343,8 +343,8 @@ namespace Sapientia.MemoryAllocator
 				}
 			}
 
-			buckets.Dispose(world);
-			entries.Dispose(world);
+			buckets.Dispose(worldState);
+			entries.Dispose(worldState);
 
 			buckets = bucketsArray;
 			entries = entryArray;
@@ -355,9 +355,9 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public bool Remove(World world, TKey key)
+		public bool Remove(WorldState worldState, TKey key)
 		{
-			return Remove(world, key, out _);
+			return Remove(worldState, key, out _);
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
@@ -365,7 +365,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[INLINE(256)]
-		public bool Remove(World world, TKey key, out TValue value)
+		public bool Remove(WorldState worldState, TKey key, out TValue value)
 		{
 			value = default;
 
@@ -376,8 +376,8 @@ namespace Sapientia.MemoryAllocator
 			var bucket = hashCode % buckets.Length;
 			var last = -1;
 
-			var rawBuckets = buckets.GetValuePtr(world);
-			var rawEntries = entries.GetValuePtr(world);
+			var rawBuckets = buckets.GetValuePtr(worldState);
+			var rawEntries = entries.GetValuePtr(worldState);
 
 			for (var i = rawBuckets[bucket]; i >= 0; last = i, i = rawEntries[i].next)
 			{
@@ -389,7 +389,7 @@ namespace Sapientia.MemoryAllocator
 					}
 					else
 					{
-						entries[world, last].next = rawEntries[i].next;
+						entries[worldState, last].next = rawEntries[i].next;
 					}
 
 					value = rawEntries[i].value;
@@ -410,13 +410,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public bool TryAdd(World world, TKey key, TValue value)
+		public bool TryAdd(WorldState worldState, TKey key, TValue value)
 		{
-			return TryInsert(world, key, value, InsertionBehavior.None);
+			return TryInsert(worldState, key, value, InsertionBehavior.None);
 		}
 
 		[INLINE(256)]
-		public int EnsureCapacity(World world, int capacity)
+		public int EnsureCapacity(WorldState worldState, int capacity)
 		{
 			E.ASSERT(IsCreated);
 
@@ -428,37 +428,37 @@ namespace Sapientia.MemoryAllocator
 
 			if (buckets.IsCreated == false)
 			{
-				Initialize(world, capacity);
+				Initialize(worldState, capacity);
 				return Capacity;
 			}
 
 			var prime = capacity.GetPrime();
-			IncreaseCapacity(world, prime);
+			IncreaseCapacity(worldState, prime);
 			return prime;
 		}
 
 		[INLINE(256)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(World world)
+		public DictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
 		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
+			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 
 		[INLINE(256)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(World world)
+		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(WorldState worldState)
 		{
-			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
+			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 
 		[INLINE(256)]
-		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(World world)
+		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(WorldState worldState)
 		{
-			return new(new(GetEntryPtr(world), LastIndex));
+			return new(new(GetEntryPtr(worldState), LastIndex));
 		}
 
 		[INLINE(256)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(World world)
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(WorldState worldState)
 		{
-			return new(new(GetEntryPtr(world), LastIndex));
+			return new(new(GetEntryPtr(worldState), LastIndex));
 		}
 
 		private class EquatableDictionaryProxy
@@ -483,8 +483,8 @@ namespace Sapientia.MemoryAllocator
 #if DEBUG
 					var arr = new KeyValuePair<TKey, TValue>[_dictionary.Count];
 					var i = 0;
-					var world = _dictionary.buckets.GetWorld_DEBUG();
-					var e = _dictionary.GetEnumerator(world);
+					var worldState = _dictionary.buckets.GetWorldState_DEBUG();
+					var e = _dictionary.GetEnumerator(worldState);
 					while (e.MoveNext())
 					{
 						arr[i++] = new KeyValuePair<TKey, TValue>(e.Current.key, e.Current.value);
