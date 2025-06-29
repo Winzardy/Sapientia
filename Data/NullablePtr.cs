@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Submodules.Sapientia.Safety;
@@ -54,6 +55,7 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional("DEBUG")]
 		private void CheckNullRef()
 		{
 			if (!_disposeSentinel.IsValid())
@@ -188,6 +190,7 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional("DEBUG")]
 		private void CheckNullRef()
 		{
 			if (!_disposeSentinel.IsValid())
