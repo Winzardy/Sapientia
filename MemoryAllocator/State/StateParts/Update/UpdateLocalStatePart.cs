@@ -26,12 +26,12 @@ namespace Sapientia.MemoryAllocator.State
 			_pauseCount++;
 		}
 
-		public bool CanUpdate()
+		public bool IsPaused()
 		{
-			return _pauseCount == 0;
+			return _pauseCount > 0;
 		}
 
-		public bool CanLateUpdate()
+		public bool ShouldLateUpdate()
 		{
 			return true;
 		}

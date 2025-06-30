@@ -43,6 +43,12 @@ namespace Sapientia.MemoryAllocator
 			updateStatePart.PauseSimulation();
 		}
 
+		public bool IsPaused()
+		{
+			var updateStatePart = _world.worldState.GetLocalService<UpdateLocalStatePart>();
+			return updateStatePart.IsPaused();
+		}
+
 		public void Start()
 		{
 			if (!IsValid)
@@ -56,7 +62,7 @@ namespace Sapientia.MemoryAllocator
 				return;
 
 			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
-			if (!updateStatePart.CanUpdate())
+			if (updateStatePart.IsPaused())
 				return;
 
 			var tickTime = updateStatePart.stateUpdateData.tickTime;
@@ -98,7 +104,7 @@ namespace Sapientia.MemoryAllocator
 				return;
 
 			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
-			if (!updateStatePart.CanLateUpdate())
+			if (!updateStatePart.ShouldLateUpdate())
 				return;
 
 			_world.LateUpdate();
