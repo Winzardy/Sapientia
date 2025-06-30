@@ -11,30 +11,30 @@ namespace Sapientia.MemoryAllocator
 		where TValue: unmanaged
 	{
 		public int LastIndex { get; }
-		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(World world);
+		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(World world)
+		public DictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
 		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
+			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(World world)
+		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(WorldState worldState)
 		{
-			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(world), LastIndex);
+			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(World world)
+		public Enumerable<Dictionary<TKey, TValue>.Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(WorldState worldState)
 		{
-			return new (new (GetEntryPtr(world), LastIndex));
+			return new (new (GetEntryPtr(worldState), LastIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(World world)
+		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(WorldState worldState)
 		{
-			return new (new (GetEntryPtr(world), LastIndex));
+			return new (new (GetEntryPtr(worldState), LastIndex));
 		}
 	}
 

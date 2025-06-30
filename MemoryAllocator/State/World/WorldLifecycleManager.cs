@@ -1,35 +1,53 @@
 using System;
-using Sapientia.Data;
 using Sapientia.Extensions;
+using Sapientia.MemoryAllocator.State;
 #if UNITY_EDITOR
 using Debug = UnityEngine.Debug;
 #endif
 
-namespace Sapientia.MemoryAllocator.State
+namespace Sapientia.MemoryAllocator
 {
-	public struct State : IDisposable
+	public struct WorldLifecycleManager : IDisposable
 	{
 		public const int MAX_TICKS_PER_FRAME = 5;
 
-		private WorldId _worldId;
+		private World _world;
+		public bool IsValid => _world is { IsValid: true };
 
-		public WorldId WorldId => _worldId;
-		public World World => _worldId.GetWorld();
-		public bool IsValid => _worldId.IsValid();
-
-		public State(WorldId worldId)
+		public WorldLifecycleManager(World world)
 		{
-			_worldId = worldId;
+			_world = world;
 		}
 
-		private SafePtr<WorldState> GetWorld()
+		public float GetResumeDelay()
 		{
-			return _worldId.GetWorld().GetServicePtr<WorldState>();
+			if (!IsValid)
+				return 0f;
+			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
+			return updateStatePart.stateUpdateData.resumeDelay;
+		}
+
+		public void ResumeSimulation()
+		{
+			if (!IsValid)
+				return;
+			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
+			updateStatePart.ResumeSimulation();
+		}
+
+		public void PauseSimulation()
+		{
+			if (!IsValid)
+				return;
+			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
+			updateStatePart.PauseSimulation();
 		}
 
 		public void Start()
 		{
-			GetWorld().Value().Start();
+			if (!IsValid)
+				return;
+			_world.Start();
 		}
 
 		public void Update(float deltaTime)
@@ -37,7 +55,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (!IsValid)
 				return;
 
-			var updateStatePart = _worldId.GetLocalService<UpdateLocalStatePart>();
+			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
 			if (!updateStatePart.CanUpdate())
 				return;
 
@@ -70,7 +88,7 @@ namespace Sapientia.MemoryAllocator.State
 				else
 					updateStatePart.worldTimeDebt -= logicDeltaTime;
 
-				GetWorld().Value().Update(logicDeltaTime);
+				_world.Update(logicDeltaTime);
 			}
 		}
 
@@ -78,11 +96,12 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			if (!IsValid)
 				return;
-			var updateStatePart = _worldId.GetLocalService<UpdateLocalStatePart>();
+
+			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
 			if (!updateStatePart.CanLateUpdate())
 				return;
 
-			GetWorld().Value().LateUpdate();
+			_world.LateUpdate();
 		}
 
 		public void Dispose()
@@ -90,8 +109,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (!IsValid)
 				return;
 
-			LocalStatePartService.Dispose(_worldId.GetWorld());
-			GetWorld().Value().Dispose();
+			_world.Dispose();
 		}
 	}
 }

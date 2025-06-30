@@ -9,30 +9,30 @@ namespace Sapientia.MemoryAllocator
 		where T: unmanaged
 	{
 		public int Count { get; }
-		public SafePtr<T> GetValuePtr(World world);
+		public SafePtr<T> GetValuePtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator(World world)
+		public ListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new ListEnumerator<T>(GetValuePtr(world), Count);
+			return new ListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(World world)
+		public ListPtrEnumerator<T> GetPtrEnumerator(WorldState worldState)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(world), 0, Count);
+			return new ListPtrEnumerator<T>(GetValuePtr(worldState), 0, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(World world)
+		public Enumerable<T, ListEnumerator<T>> GetEnumerable(WorldState worldState)
 		{
-			return new (new (GetValuePtr(world), Count));
+			return new (new (GetValuePtr(worldState), Count));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(World world)
+		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
 		{
-			return new (new (GetValuePtr(world), 0, Count));
+			return new (new (GetValuePtr(worldState), 0, Count));
 		}
 	}
 

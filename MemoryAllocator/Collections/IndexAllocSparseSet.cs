@@ -30,72 +30,72 @@ namespace Sapientia.MemoryAllocator
 			get => _sparseSet.IsFull;
 		}
 
-		public IndexAllocSparseSet(World world, int capacity, int sparseCapacity, int expandStep = 0)
+		public IndexAllocSparseSet(WorldState worldState, int capacity, int sparseCapacity, int expandStep = 0)
 		{
-			_ids = new Stack<int>(world, capacity);
-			_sparseSet = new SparseSet<T>(world, capacity, sparseCapacity, expandStep);
+			_ids = new Stack<int>(worldState, capacity);
+			_sparseSet = new SparseSet<T>(worldState, capacity, sparseCapacity, expandStep);
 			_count = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr(World world)
+		public SafePtr<T> GetValuePtr(WorldState worldState)
 		{
-			return _sparseSet.GetValuePtr(world);
+			return _sparseSet.GetValuePtr(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get(World world, int id)
+		public ref T Get(WorldState worldState, int id)
 		{
-			return ref _sparseSet.Get(world, id);
+			return ref _sparseSet.Get(worldState, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(World world, int id)
+		public bool Has(WorldState worldState, int id)
 		{
-			return _sparseSet.Has(world, id);
+			return _sparseSet.Has(worldState, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int AllocateId(World world)
+		public int AllocateId(WorldState worldState)
 		{
 			if (_ids.Count <= 0)
-				_ids.Push(world, _count + 1);
+				_ids.Push(worldState, _count + 1);
 
-			var id = _ids.Pop(world);
+			var id = _ids.Pop(worldState);
 			_count++;
 
-			_sparseSet.EnsureGet(world, id);
+			_sparseSet.EnsureGet(worldState, id);
 			return id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ReleaseIndex(World world, int index)
+		public void ReleaseIndex(WorldState worldState, int index)
 		{
-			var id = _sparseSet.GetIdByDenseId(world, index);
-			ReleaseId(world, id);
+			var id = _sparseSet.GetIdByDenseId(worldState, index);
+			ReleaseId(worldState, id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ReleaseId(World world, int id)
+		public void ReleaseId(WorldState worldState, int id)
 		{
-			_sparseSet.RemoveSwapBack(world, id);
-			_ids.Push(world, id);
+			_sparseSet.RemoveSwapBack(worldState, id);
+			_ids.Push(worldState, id);
 			_count--;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(World world)
+		public void Dispose(WorldState worldState)
 		{
-			_ids.Dispose(world);
-			_sparseSet.Dispose(world);
+			_ids.Dispose(worldState);
+			_sparseSet.Dispose(worldState);
 			_count = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear(World world)
+		public void Clear(WorldState worldState)
 		{
 			_ids.Clear();
-			_sparseSet.Clear(world);
+			_sparseSet.Clear(worldState);
 			_count = 0;
 		}
 

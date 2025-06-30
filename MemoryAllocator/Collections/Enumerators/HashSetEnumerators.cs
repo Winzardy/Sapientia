@@ -10,30 +10,30 @@ namespace Sapientia.MemoryAllocator
 		where T: unmanaged, IEquatable<T>
 	{
 		public int LastIndex { get; }
-		public SafePtr<HashSet<T>.Slot> GetSlotPtr(World world);
+		public SafePtr<HashSet<T>.Slot> GetSlotPtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerator<T> GetEnumerator(World world)
+		public HashSetEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new HashSetEnumerator<T>(GetSlotPtr(world), LastIndex);
+			return new HashSetEnumerator<T>(GetSlotPtr(worldState), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<T> GetPtrEnumerator(World world)
+		public HashSetPtrEnumerator<T> GetPtrEnumerator(WorldState worldState)
 		{
-			return new HashSetPtrEnumerator<T>(GetSlotPtr(world), LastIndex);
+			return new HashSetPtrEnumerator<T>(GetSlotPtr(worldState), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(World world)
+		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(WorldState worldState)
 		{
-			return new (new (GetSlotPtr(world), LastIndex));
+			return new (new (GetSlotPtr(worldState), LastIndex));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(World world)
+		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
 		{
-			return new (new (GetSlotPtr(world), LastIndex));
+			return new (new (GetSlotPtr(worldState), LastIndex));
 		}
 	}
 

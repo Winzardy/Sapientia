@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -170,9 +171,16 @@ namespace Sapientia.Data
 #endif
 			return left.ptr != right.ptr;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			return (int)ptr;
+		}
 	}
 
-	public readonly unsafe struct SafePtr<T> where T : unmanaged
+	[StructLayout(LayoutKind.Sequential)]
+	public readonly unsafe struct SafePtr<T> where T: unmanaged
 	{
 #if UNITY_5_3_OR_NEWER
 		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
@@ -281,13 +289,24 @@ namespace Sapientia.Data
 			}
 		}
 
-		public SafePtr<T> Slice(int index, int length)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> Slice(int index, int length = 1)
 		{
 #if DEBUG
 			var result = (byte*)(ptr + index);
 			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0));
 #endif
 			return new SafePtr<T>(ptr + index, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> GetSpan(int index, int length = 1)
+		{
+#if DEBUG
+			var result = (byte*)(ptr + index);
+			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0));
+#endif
+			return new Span<T>(ptr + index, length);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -370,6 +389,12 @@ namespace Sapientia.Data
 				return true;
 #endif
 			return left.ptr != right.ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override int GetHashCode()
+		{
+			return (int)ptr;
 		}
 	}
 }

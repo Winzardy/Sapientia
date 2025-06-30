@@ -6,33 +6,33 @@ namespace Sapientia.MemoryAllocator.State
 	public static unsafe class ArchetypeExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetDestroyHandler<THandler>(this ref CachedPtr<Archetype> archetypePtr, World world) where THandler : unmanaged, IElementDestroyHandler
+		public static void SetDestroyHandler<THandler>(this ref CachedPtr<Archetype> archetypePtr, WorldState worldState) where THandler : unmanaged, IElementDestroyHandler
 		{
-			archetypePtr.GetValue(world).SetDestroyHandler<THandler>(world);
+			archetypePtr.GetValue(worldState).SetDestroyHandler<THandler>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype GetArchetype<TComponent>(this World world) where TComponent : unmanaged, IComponent
+		public static ref Archetype GetArchetype<TComponent>(this WorldState worldState) where TComponent : unmanaged, IComponent
 		{
-			return ref ServiceRegistryContext.Create<TComponent, Archetype>().GetService<Archetype>(world);
+			return ref ServiceRegistryContext.Create<TComponent, Archetype>().GetService<Archetype>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SafePtr<Archetype> GetArchetypePtr<TComponent>(this World world) where TComponent : unmanaged, IComponent
+		public static SafePtr<Archetype> GetArchetypePtr<TComponent>(this WorldState worldState) where TComponent : unmanaged, IComponent
 		{
-			return ServiceRegistryContext.Create<TComponent, Archetype>().GetServicePtr<Archetype>(world);
+			return ServiceRegistryContext.Create<TComponent, Archetype>().GetServicePtr<Archetype>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref Archetype GetArchetype<TComponent>(this ref WorldId worldId) where TComponent : unmanaged, IComponent
 		{
-			return ref GetArchetype<TComponent>(worldId.GetWorld());
+			return ref GetArchetype<TComponent>(worldId.GetWorldState());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<Archetype> GetArchetypePtr<TComponent>(this ref WorldId worldId) where TComponent : unmanaged, IComponent
 		{
-			return GetArchetypePtr<TComponent>(worldId.GetWorld());
+			return GetArchetypePtr<TComponent>(worldId.GetWorldState());
 		}
 	}
 }

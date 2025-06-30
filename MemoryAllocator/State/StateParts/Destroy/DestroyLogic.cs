@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public readonly unsafe ref struct DestroyLogic
 	{
-		public readonly World world;
+		public readonly WorldState worldState;
 
 		public readonly SafePtr<EntityStatePart> entityStatePart;
 		public readonly ArchetypeContext<KillElement> killElementArchetype;
@@ -15,14 +15,14 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
 		public readonly ArchetypeContext<DelayKillRequest> delayKillRequestArchetype;
 
-		public DestroyLogic(World world)
+		public DestroyLogic(WorldState worldState)
 		{
-			this.world = world;
-			entityStatePart = world.GetServicePtr<EntityStatePart>();
-			killElementArchetype = new ArchetypeContext<KillElement>(world);
-			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(world);
-			killRequestArchetype = new ArchetypeContext<KillRequest>(world);
-			delayKillRequestArchetype = new ArchetypeContext<DelayKillRequest>(world);
+			this.worldState = worldState;
+			entityStatePart = worldState.GetServicePtr<EntityStatePart>();
+			killElementArchetype = new ArchetypeContext<KillElement>(worldState);
+			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(worldState);
+			killRequestArchetype = new ArchetypeContext<KillRequest>(worldState);
+			delayKillRequestArchetype = new ArchetypeContext<DelayKillRequest>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -70,18 +70,18 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			E.ASSERT(IsAlive(child));
 			E.ASSERT(!destroyRequestArchetype.HasElement(parent));
-			E.ASSERT(entityStatePart.ptr->IsEntityExist(world, parent));
+			E.ASSERT(entityStatePart.ptr->IsEntityExist(worldState, parent));
 
 			ref var childElement = ref killElementArchetype.GetElement(child);
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
 
 			if (!childElement.parents.IsCreated)
-				childElement.parents = new List<Entity>(world);
+				childElement.parents = new List<Entity>(worldState);
 			if (!childElement.children.IsCreated)
-				childElement.children = new List<Entity>(world);
+				childElement.children = new List<Entity>(worldState);
 
-			childElement.parents.Add(world, parent);
-			parentElement.children.Add(world, child);
+			childElement.parents.Add(worldState, parent);
+			parentElement.children.Add(worldState, child);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -97,16 +97,16 @@ namespace Sapientia.MemoryAllocator.State
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
 
 			if (!parentElement.children.IsCreated)
-				parentElement.children = new List<Entity>(world);
-			parentElement.children.AddRange(world, children);
+				parentElement.children = new List<Entity>(worldState);
+			parentElement.children.AddRange(worldState, children);
 
 			foreach (var child in children)
 			{
 				E.ASSERT(IsAlive(child));
 				ref var childElement = ref killElementArchetype.GetElement(child);
 				if (!childElement.parents.IsCreated)
-					childElement.parents = new List<Entity>(world);
-				childElement.parents.Add(world, parent);
+					childElement.parents = new List<Entity>(worldState);
+				childElement.parents.Add(worldState, parent);
 			}
 		}
 
@@ -115,17 +115,17 @@ namespace Sapientia.MemoryAllocator.State
 			ref var holderElement = ref killElementArchetype.GetElement(holder);
 
 			if (!holderElement.killCallbacks.IsCreated)
-				holderElement.killCallbacks = new List<KillCallback>(world);
-			holderElement.killCallbacks.Add(world, new KillCallback
+				holderElement.killCallbacks = new List<KillCallback>(worldState);
+			holderElement.killCallbacks.Add(worldState, new KillCallback
 			{
-				callback = ProxyPtr<IKillSubscriberProxy>.Create(world, callback),
+				callback = ProxyPtr<IKillSubscriberProxy>.Create(worldState, callback),
 				target = target,
 			});
 
 			ref var targetElement = ref killElementArchetype.GetElement(target);
 			if (!targetElement.killCallbackHolders.IsCreated)
-				targetElement.killCallbackHolders = new List<Entity>(world);
-			targetElement.killCallbackHolders.Add(world, holder);
+				targetElement.killCallbackHolders = new List<Entity>(worldState);
+			targetElement.killCallbackHolders.Add(worldState, holder);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,13 +135,13 @@ namespace Sapientia.MemoryAllocator.State
 				return false;
 			if (killRequestArchetype.HasElement(entity))
 				return false;
-			return entityStatePart.ptr->IsEntityExist(world, entity);
+			return entityStatePart.ptr->IsEntityExist(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsExist(Entity entity)
 		{
-			return entityStatePart.ptr->IsEntityExist(world, entity);
+			return entityStatePart.ptr->IsEntityExist(worldState, entity);
 		}
 	}
 }

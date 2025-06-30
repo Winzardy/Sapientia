@@ -1,17 +1,13 @@
-using System;
+using System; // Не убирать
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 #if UNITY_5_3_OR_NEWER
+using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 #endif
 
 namespace Sapientia.Extensions
 {
-	public struct TDefaultValue<T>
-	{
-		public static T value = default;
-	}
-
 	public struct TSize<T> where T : struct
 	{
 		public static readonly int size = UnsafeExt.SizeOf<T>();
@@ -23,9 +19,27 @@ namespace Sapientia.Extensions
 		public static readonly int align = UnsafeExt.AlignOf<T>();
 	}
 
+	public struct TDefaultValue<T> where T : unmanaged
+	{
+#if UNITY_5_3_OR_NEWER
+		public static readonly SharedStatic<T> value = SharedStatic<T>.GetOrCreate<T>();
+#else
+		public static T value = default(T);
+#endif
+	}
+
+	public struct TReadonlyDefaultValue<T>
+	{
+		public static readonly T value = default!;
+	}
+
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#cdd8c9f157a24ed3951f9de198b67b59
 	/// </summary>
+
+#if UNITY_5_3_OR_NEWER
+	[Unity.Burst.BurstCompile]
+#endif
 	public static unsafe class UnsafeExt
 	{
 		// Copy of UnsafeUtility.AlignOfHelper<T> for AlignOf<T>()
@@ -33,6 +47,22 @@ namespace Sapientia.Extensions
 		{
 			public byte dummy;
 			public T data;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T DefaultRef<T>() where T: unmanaged
+		{
+#if UNITY_5_3_OR_NEWER
+			return ref TDefaultValue<T>.value.Data;
+#else
+			return ref TDefaultValue<T>.value;
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref readonly T DefaultRefReadonly<T>()
+		{
+			return ref TReadonlyDefaultValue<T>.value;
 		}
 
 		// Copy of UnsafeUtility.SizeOf<T>()
@@ -105,20 +135,13 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Swap<T>(this ref T a, ref T b) where T : struct
-		{
-			(a, b) = (b, a);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsEquals<T>(this ref T a, ref T b) where T : struct
 		{
 #if UNITY_5_3_OR_NEWER
-			var size = UnsafeUtility.SizeOf<T>();
-			return UnsafeUtility.MemCmp(a.AsPointer(), b.AsPointer(), size) == 0;
+			return UnsafeUtility.MemCmp(a.AsPointer(), b.AsPointer(), TSize<T>.size) == 0;
 #else
-			var spanA = new ReadOnlySpan<T>(Unsafe.AsPointer(ref a), 1);
-			var spanB = new ReadOnlySpan<T>(Unsafe.AsPointer(ref b), 1);
+			var spanA = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref a), TSize<T>.size);
+			var spanB = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref b), TSize<T>.size);
 			return spanA.SequenceEqual(spanB);
 #endif
 		}
@@ -128,11 +151,10 @@ namespace Sapientia.Extensions
 		{
 			var defaultValue = default(T);
 #if UNITY_5_3_OR_NEWER
-			var size = UnsafeUtility.SizeOf<T>();
-			return UnsafeUtility.MemCmp(value.AsPointer(), defaultValue.AsPointer(), size) == 0;
+			return UnsafeUtility.MemCmp(value.AsPointer(), defaultValue.AsPointer(), TSize<T>.size) == 0;
 #else
-			var spanA = new ReadOnlySpan<T>(Unsafe.AsPointer(ref value), 1);
-			var spanB = new ReadOnlySpan<T>(Unsafe.AsPointer(ref defaultValue), 1);
+			var spanA = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref value), TSize<T>.size);
+			var spanB = new ReadOnlySpan<byte>(Unsafe.AsPointer(ref defaultValue), TSize<T>.size);
 			return spanA.SequenceEqual(spanB);
 #endif
 		}

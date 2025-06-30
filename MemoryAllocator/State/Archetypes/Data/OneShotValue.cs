@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Sapientia.MemoryAllocator.State
 {
 	public readonly struct OneShotValue<TValue>
@@ -5,20 +7,22 @@ namespace Sapientia.MemoryAllocator.State
 		private readonly uint _version;
 		private readonly TValue _value;
 
-		private OneShotValue(TValue value)
+		public OneShotValue(uint worldTick, TValue value)
 		{
-			_version = WorldManager.CurrentWorld.GetService<WorldState>().Tick;
+			_version = worldTick;
 			_value = value;
 		}
 
-		public readonly bool IsValid()
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool IsValid(uint worldTick)
 		{
-			return _version == WorldManager.CurrentWorld.GetService<WorldState>().Tick;
+			return _version == worldTick;
 		}
 
-		public readonly bool TryGetValue(out TValue value)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetValue(uint worldTick, out TValue value)
 		{
-			if (IsValid())
+			if (IsValid(worldTick))
 			{
 				value = _value;
 				return true;
@@ -27,14 +31,12 @@ namespace Sapientia.MemoryAllocator.State
 			return false;
 		}
 
-		public static implicit operator TValue(OneShotValue<TValue> value)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TValue GetValue(uint worldTick)
 		{
-			return value.IsValid() ? value._value : default;
-		}
-
-		public static implicit operator OneShotValue<TValue>(TValue value)
-		{
-			return new OneShotValue<TValue>(value);
+			if (IsValid(worldTick))
+				return _value;
+			return default;
 		}
 	}
 }

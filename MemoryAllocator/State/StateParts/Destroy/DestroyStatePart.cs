@@ -4,7 +4,7 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe interface IKillSubscriber : IInterfaceProxyType
 	{
-		public void EntityKilled(World world, in Entity entity);
+		public void EntityKilled(WorldState worldState, in Entity entity);
 	}
 
 	public struct KillCallback
@@ -33,18 +33,18 @@ namespace Sapientia.MemoryAllocator.State
 
 	public struct DestroyStatePart : IWorldStatePart
 	{
-		public unsafe void Initialize(World world, IndexedPtr self)
+		public unsafe void Initialize(WorldState worldState, IndexedPtr self)
 		{
-			Archetype.RegisterArchetype<KillElement>(world, 2048).SetDestroyHandler<KillElementDestroyHandler>(world);
-			Archetype.RegisterArchetype<KillRequest>(world, 256);
-			Archetype.RegisterArchetype<DelayKillRequest>(world, 64);
-			Archetype.RegisterArchetype<DestroyRequest>(world, 256);
+			Archetype.RegisterArchetype<KillElement>(worldState, 2048).SetDestroyHandler<KillElementDestroyHandler>(worldState);
+			Archetype.RegisterArchetype<KillRequest>(worldState, 256);
+			Archetype.RegisterArchetype<DelayKillRequest>(worldState, 64);
+			Archetype.RegisterArchetype<DestroyRequest>(worldState, 256);
 		}
 	}
 
 	public unsafe struct KillElementDestroyHandler : IElementDestroyHandler<KillElement>
 	{
-		public void EntityPtrArrayDestroyed(World world, ArchetypeElement<KillElement>** elementsPtr, int count)
+		public void EntityPtrArrayDestroyed(WorldState worldState, ArchetypeElement<KillElement>** elementsPtr, int count)
 		{
 			for (var i = 0; i < count; i++)
 			{
@@ -55,15 +55,15 @@ namespace Sapientia.MemoryAllocator.State
 
 				if (!value.killCallbacks.IsCreated)
 					continue;
-				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(world))
+				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(worldState))
 				{
-					component->callback.Dispose(world);
+					component->callback.Dispose(worldState);
 				}
 				value.killCallbacks.Clear();
 			}
 		}
 
-		public void EntityArrayDestroyed(World world, ArchetypeElement<KillElement>* elementsPtr, int count)
+		public void EntityArrayDestroyed(WorldState worldState, ArchetypeElement<KillElement>* elementsPtr, int count)
 		{
 			for (var i = 0; i < count; i++)
 			{
@@ -71,9 +71,9 @@ namespace Sapientia.MemoryAllocator.State
 				value.children.Clear();
 				value.parents.Clear();
 				value.killCallbackHolders.Clear();
-				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(world))
+				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(worldState))
 				{
-					component->callback.Dispose(world);
+					component->callback.Dispose(worldState);
 				}
 				value.killCallbacks.Clear();
 			}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Sapientia.Extensions.Reflection;
 
@@ -122,9 +123,21 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.Initialize)}(types, indexToType, delegateIndexToDelegate, delegates);");
+			sourceBuilder.AppendLine();
+			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");
+			sourceBuilder.AppendLine($"			var openGeneric = typeof({nameof(TypeIndex)}<>);");
+			sourceBuilder.AppendLine($"			foreach (var (typeArg, _) in types)");
+			sourceBuilder.AppendLine($"			{{");
+			sourceBuilder.AppendLine($"				var closedGeneric = openGeneric.MakeGenericType(typeArg);");
+			sourceBuilder.AppendLine($"				{typeof(RuntimeHelpers).FullName}.{nameof(RuntimeHelpers.RunClassConstructor)}(closedGeneric.TypeHandle);");
+			sourceBuilder.AppendLine($"			}}");
+			sourceBuilder.AppendLine("#else");
+			sourceBuilder.Append(GenerateTypeIndexInitialization(types));
+			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("		}");
 			sourceBuilder.AppendLine("	}");
 			sourceBuilder.AppendLine("}");
+			RuntimeHelpers.RunClassConstructor(typeof(int).TypeHandle);
 
 			return sourceBuilder.ToString();
 		}
@@ -185,6 +198,17 @@ namespace Sapientia.TypeIndexer
 					sourceBuilder.AppendLine(body);
 					delegateIndex += methodsCount;
 				}
+			}
+
+			return sourceBuilder.ToString();
+		}
+
+		private static string GenerateTypeIndexInitialization(Type[] types)
+		{
+			var sourceBuilder = new StringBuilder();
+			foreach (var type in types)
+			{
+				sourceBuilder.AppendLine($"			_ = {nameof(TypeIndex)}<{type.GetFullName()}>.typeIndex;");
 			}
 
 			return sourceBuilder.ToString();

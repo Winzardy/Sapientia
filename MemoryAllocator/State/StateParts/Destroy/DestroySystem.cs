@@ -2,9 +2,9 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public struct DestroySystem : IWorldSystem
 	{
-		public void Update(World world, IndexedPtr self, float deltaTime)
+		public void Update(WorldState worldState, IndexedPtr self, float deltaTime)
 		{
-			var updater = new DestroyUpdater(world);
+			var updater = new DestroyUpdater(worldState);
 			updater.Update(deltaTime);
 		}
 	}

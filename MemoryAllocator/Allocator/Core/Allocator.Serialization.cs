@@ -12,7 +12,7 @@ namespace Sapientia.MemoryAllocator
 			stream.Write(_zonesList.count);
 			for (var i = 0; i < _zonesList.count; ++i)
 			{
-				var zone = _zonesList[i];
+				var zone = _zonesList.ptr.Slice(i);
 
 				stream.Write(zone.ptr->size);
 				E.ASSERT(zone.ptr->size > 0);
@@ -24,13 +24,14 @@ namespace Sapientia.MemoryAllocator
 			stream.Write(_freeBlockPools.count);
 			for (var i = 0; i < _freeBlockPools.count; i++)
 			{
-				stream.Write(_freeBlockPools[i].ptr->blockSize);
-				stream.Write(_freeBlockPools[i].ptr->Count);
+				ref var pool = ref _freeBlockPools[i];
+				stream.Write(pool.blockSize);
+				stream.Write(pool.Count);
 
-				if (_freeBlockPools[i].ptr->Count == 0)
+				if (pool.Count == 0)
 					continue;
 
-				stream.Write(_freeBlockPools[i].ptr->GetInnerArray(), _freeBlockPools[i].ptr->Count);
+				stream.Write(pool.GetInnerArray(), pool.Count);
 			}
 		}
 
@@ -46,7 +47,7 @@ namespace Sapientia.MemoryAllocator
 				E.ASSERT(zoneSize > 0);
 
 				allocator._zonesList.Add(new MemoryZone(default, zoneSize));
-				var zoneMemoryPtr = allocator._zonesList[i].ptr->memory;
+				var zoneMemoryPtr = allocator._zonesList[i].memory;
 
 				stream.Read(ref zoneMemoryPtr, zoneSize);
 			}
@@ -64,7 +65,7 @@ namespace Sapientia.MemoryAllocator
 				if (blocksCount == 0)
 					continue;
 
-				ref var freeBlocks = ref freeBlockPools[i].Value();
+				ref var freeBlocks = ref freeBlockPools[i];
 				freeBlocks.Count = blocksCount;
 
 				var arrayPtr = freeBlocks.GetInnerArray();

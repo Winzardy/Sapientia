@@ -90,25 +90,15 @@ namespace Sapientia.Data
 	{
 		public T value;
 
-		private int _millisecondsTimeout;
-
 		private volatile int _threadId;
 		private volatile int _count;
 
-		public AsyncValue(T value, int millisecondsTimeout = 1)
+		public AsyncValue(T value)
 		{
 			this.value = value;
 
-			_millisecondsTimeout = millisecondsTimeout;
 			_threadId = -1;
 			_count = 0;
-		}
-
-		public void SetMillisecondsTimeout(int millisecondsTimeout)
-		{
-			SetBusy();
-			_millisecondsTimeout = millisecondsTimeout;
-			SetFree();
 		}
 
 		public T ReadValue()
@@ -142,10 +132,11 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBusy()
 		{
+			var spin = new SpinWait();
 			var currentThreadId = Environment.CurrentManagedThreadId;
 			while (_count > 0 && _threadId != currentThreadId)
 			{
-				Thread.Sleep(_millisecondsTimeout);
+				spin.SpinOnce();
 			}
 			Interlocked.Increment(ref _count);
 			Interlocked.Exchange(ref _threadId, currentThreadId);
