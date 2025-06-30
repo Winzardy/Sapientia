@@ -84,12 +84,12 @@ namespace Sapientia.MemoryAllocator.State
 		public Entity CreateEntity(WorldState worldState, in FixedString64Bytes name = default)
 #else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Entity CreateEntity(World worldState, in FixedString64Bytes name)
+		public Entity CreateEntity(WorldState worldState, in FixedString64Bytes name)
 		{
 			return CreateEntity(worldState);
 		}
 
-		public Entity CreateEntity(World worldState, string name = null)
+		public Entity CreateEntity(WorldState worldState, string name = null)
 #endif
 		{
 			EnsureCapacity(worldState, EntitiesCount);
