@@ -85,6 +85,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IEntityDestroySubscriberProxyExt` найдите `usages` методов `EntityArrayDestroyed`
 		private static void EntityArrayDestroyed(void* executorPtr, Sapientia.MemoryAllocator.World world, Sapientia.MemoryAllocator.State.Entity* entities, System.Int32 count)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -108,6 +109,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IEntityDestroySubscriberProxyExt` найдите `usages` методов `ProxyDispose`
 		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.World world)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);

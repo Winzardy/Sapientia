@@ -85,6 +85,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IKillSubscriberProxyExt` найдите `usages` методов `EntityKilled`
 		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.World world, in Sapientia.MemoryAllocator.State.Entity entity)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -108,6 +109,7 @@ namespace Sapientia.TypeIndexer
 		[Unity.Burst.BurstCompileAttribute(Unity.Burst.FloatPrecision.High, Unity.Burst.FloatMode.Deterministic, CompileSynchronously = true, Debug = false)]
 #endif
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IKillSubscriberProxyExt` найдите `usages` методов `ProxyDispose`
 		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.World world)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
