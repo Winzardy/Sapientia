@@ -273,6 +273,7 @@ namespace Sapientia.TypeIndexer
 				sourceBuilder.AppendLine("#if UNITY_5_3_OR_NEWER");
 				sourceBuilder.AppendLine("		[UnityEngine.Scripting.Preserve]");
 				sourceBuilder.AppendLine("#endif");
+				sourceBuilder.AppendLine($"		// Чтобы найти дальнейшие `usages` метода - выше в классе `{baseType.Name}ProxyExt` найдите `usages` методов `{methodInfo.Name}`");
 				sourceBuilder.AppendLine($"		private static {returnTypeString} {methodInfo.Name}{genericParametersString}{parametersString}");
 				sourceBuilder.AppendLine("		{");
 				sourceBuilder.AppendLine($"			ref var __source = ref {typeof(UnsafeExt).FullName}.AsRef<TSource>(executorPtr);");
