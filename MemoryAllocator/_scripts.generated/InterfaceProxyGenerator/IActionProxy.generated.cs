@@ -94,6 +94,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IActionProxyExt` найдите `usages` методов `Invoke`
 		private static void Invoke(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -114,6 +115,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IActionProxyExt` найдите `usages` методов `ProxyDispose`
 		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);

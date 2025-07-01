@@ -244,6 +244,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `Update`
 		private static void Update(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -264,6 +265,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `LateUpdate`
 		private static void LateUpdate(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -284,6 +286,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `ProxyDispose`
 		private static void ProxyDispose(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -304,6 +307,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `Initialize`
 		private static void Initialize(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -324,6 +328,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `LateInitialize`
 		private static void LateInitialize(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -344,6 +349,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `Start`
 		private static void Start(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
@@ -364,6 +370,7 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `Dispose`
 		private static void Dispose(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
