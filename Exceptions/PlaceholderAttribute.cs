@@ -2,12 +2,12 @@ using System;
 
 namespace Sapientia
 {
-	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+	[AttributeUsage(AttributeTargets.All)]
 	internal class PlaceholderAttribute : Attribute
 	{
 	}
 
-	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+	[AttributeUsage(AttributeTargets.All)]
 	internal class PlaceholderAttribute1 : Attribute
 	{
 	}

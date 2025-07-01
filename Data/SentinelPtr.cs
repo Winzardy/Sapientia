@@ -205,14 +205,14 @@ namespace Sapientia.Data
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		[Conditional("DEBUG")]
-		private void CheckNullRef()
+		private readonly void CheckNullRef()
 		{
 			if (!_disposeSentinel.IsValid())
 				throw new NullReferenceException("SafetyHandle is not valid");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Value()
+		public readonly ref T Value()
 		{
 			CheckNullRef();
 			return ref _ptr.Value();

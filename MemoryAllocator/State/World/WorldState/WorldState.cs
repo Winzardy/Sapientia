@@ -58,19 +58,19 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private ref Allocator GetAllocator()
+		private readonly ref Allocator GetAllocator()
 		{
 			return ref _worldStateData.Value().allocator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private ref ServiceRegistry GetServiceRegistry()
+		private readonly ref ServiceRegistry GetServiceRegistry()
 		{
 			return ref _worldStateData.Value().serviceRegistry;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private ref UnsafeServiceRegistry GetLocalServiceRegistry()
+		private readonly ref UnsafeServiceRegistry GetLocalServiceRegistry()
 		{
 			return ref _worldStateData.Value().localServiceRegistry;
 		}

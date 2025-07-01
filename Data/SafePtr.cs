@@ -243,7 +243,7 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Value()
+		public readonly ref T Value()
 		{
 			return ref *ptr;
 		}

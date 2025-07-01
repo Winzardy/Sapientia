@@ -7,11 +7,11 @@ using Debug = UnityEngine.Debug;
 
 namespace Sapientia.MemoryAllocator
 {
-	public struct WorldLifecycleManager : IDisposable
+	public readonly struct WorldLifecycleManager : IDisposable
 	{
 		public const int MAX_TICKS_PER_FRAME = 5;
 
-		private World _world;
+		private readonly World _world;
 		public bool IsValid => _world is { IsValid: true };
 
 		public WorldLifecycleManager(World world)
