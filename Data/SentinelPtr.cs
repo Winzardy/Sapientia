@@ -7,8 +7,9 @@ using Submodules.Sapientia.Safety;
 namespace Sapientia.Data
 {
 	/// <summary>
-	/// SentinelPtr — указатель с проверкой валидности и автоматическим контролем времени жизни через DisposeSentinel.
-	/// Обеспечивает проверку валидности и выбрасывает исключение при обращении к невалидной памяти.
+	/// SentinelPtr — указатель с проверкой валидности через DisposeSentinel.
+	/// Контроль времени жизни осуществляется вручную через Dispose и ResetDisposeSentinel.
+	/// Выбрасывает исключение при обращении к невалидной памяти.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct SentinelPtr : IDisposable
@@ -156,8 +157,9 @@ namespace Sapientia.Data
 	}
 
 	/// <summary>
-	/// SentinelPtr&lt;T&gt; — указатель с проверкой валидности и автоматическим контролем времени жизни через DisposeSentinel.
-	/// Обеспечивает проверку валидности и выбрасывает исключение при обращении к невалидной памяти.
+	/// SentinelPtr&lt;T&gt; — указатель с проверкой валидности через DisposeSentinel.
+	/// Контроль времени жизни осуществляется вручную через Dispose и ResetDisposeSentinel.
+	/// Выбрасывает исключение при обращении к невалидной памяти.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct SentinelPtr<T> : IDisposable where T: unmanaged
