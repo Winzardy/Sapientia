@@ -8,7 +8,7 @@ namespace Sapientia.MemoryAllocator
 {
 	public partial struct WorldState : IEquatable<WorldState>, IDisposable
 	{
-		private NullablePtr<WorldStateData> _worldStateData;
+		private SentinelPtr<WorldStateData> _worldStateData;
 
 		public bool IsValid
 		{

@@ -173,10 +173,10 @@ namespace Sapientia.Extensions
 		}
 
 		[INLINE(256)]
-		public static NullablePtr<T> NullableMemAlloc<T>() where T : unmanaged
+		public static SentinelPtr<T> NullableMemAlloc<T>() where T : unmanaged
 		{
 			var ptr = MemAlloc(TSize<T>.size, TAlign<T>.align);
-			return NullablePtr<T>.Create(ptr);
+			return SentinelPtr<T>.Create(ptr);
 		}
 
 		[INLINE(256)]
@@ -208,7 +208,7 @@ namespace Sapientia.Extensions
 #endif
 
 		[INLINE(256)]
-		public static void MemFree(NullablePtr memory, bool safetyCheck = true)
+		public static void MemFree(SentinelPtr memory, bool safetyCheck = true)
 		{
 			MemFree(memory.GetPtr(), safetyCheck);
 			memory.Dispose();

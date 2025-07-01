@@ -6,8 +6,12 @@ using Submodules.Sapientia.Safety;
 
 namespace Sapientia.Data
 {
+	/// <summary>
+	/// SentinelPtr — указатель с проверкой валидности и автоматическим контролем времени жизни через DisposeSentinel.
+	/// Обеспечивает проверку валидности и выбрасывает исключение при обращении к невалидной памяти.
+	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe struct NullablePtr : IDisposable
+	public unsafe struct SentinelPtr : IDisposable
 	{
 		private SafePtr _ptr;
 		private DisposeSentinel _disposeSentinel;
@@ -29,29 +33,29 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public NullablePtr(SafePtr ptr)
+		public SentinelPtr(SafePtr ptr)
 		{
 			_ptr = ptr;
 			_disposeSentinel = DisposeSentinel.Create();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public NullablePtr(SafePtr ptr, DisposeSentinel disposeSentinel)
+		public SentinelPtr(SafePtr ptr, DisposeSentinel disposeSentinel)
 		{
 			_ptr = ptr;
 			_disposeSentinel = disposeSentinel;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr Create(SafePtr ptr)
+		public static SentinelPtr Create(SafePtr ptr)
 		{
-			return new NullablePtr(ptr);
+			return new SentinelPtr(ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr Create<T>(SafePtr ptr)
+		public static SentinelPtr Create<T>(SafePtr ptr)
 		{
-			return new NullablePtr(ptr, DisposeSentinel.Create<T>());
+			return new SentinelPtr(ptr, DisposeSentinel.Create<T>());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -63,7 +67,7 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static explicit operator byte*(NullablePtr safePtr)
+		public static explicit operator byte*(SentinelPtr safePtr)
 		{
 			safePtr.CheckNullRef();
 			return (byte*)safePtr._ptr;
@@ -84,10 +88,10 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public NullablePtr<U> Cast<U>() where U : unmanaged
+		public SentinelPtr<U> Cast<U>() where U : unmanaged
 		{
 			CheckNullRef();
-			return new NullablePtr<U>(_ptr, _disposeSentinel);
+			return new SentinelPtr<U>(_ptr, _disposeSentinel);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,31 +102,31 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr operator +(NullablePtr nullablePtr, int index)
+		public static SentinelPtr operator +(SentinelPtr sentinelPtr, int index)
 		{
-			nullablePtr.CheckNullRef();
-			nullablePtr._ptr += index;
-			return nullablePtr;
+			sentinelPtr.CheckNullRef();
+			sentinelPtr._ptr += index;
+			return sentinelPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr operator -(NullablePtr nullablePtr, int index)
+		public static SentinelPtr operator -(SentinelPtr sentinelPtr, int index)
 		{
-			nullablePtr.CheckNullRef();
-			nullablePtr._ptr -= index;
-			return nullablePtr;
+			sentinelPtr.CheckNullRef();
+			sentinelPtr._ptr -= index;
+			return sentinelPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(NullablePtr left, NullablePtr right)
+		public static bool operator ==(SentinelPtr left, SentinelPtr right)
 		{
 			return left._ptr == right._ptr && left._disposeSentinel == right._disposeSentinel;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(NullablePtr left, NullablePtr right)
+		public static bool operator !=(SentinelPtr left, SentinelPtr right)
 		{
-			return left._ptr != right._ptr && left._disposeSentinel != right._disposeSentinel;
+			return left._ptr != right._ptr || left._disposeSentinel != right._disposeSentinel;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -139,6 +143,10 @@ namespace Sapientia.Data
 			_disposeSentinel = default;
 		}
 
+		/// <summary>
+		/// Сбрасывает текущий DisposeSentinel, освобождая старый и создавая новый для контроля времени жизни указателя.
+		/// Используется для обновления механизма отслеживания валидности указателя после повторного использования или переназначения.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ResetDisposeSentinel()
 		{
@@ -147,8 +155,12 @@ namespace Sapientia.Data
 		}
 	}
 
+	/// <summary>
+	/// SentinelPtr&lt;T&gt; — указатель с проверкой валидности и автоматическим контролем времени жизни через DisposeSentinel.
+	/// Обеспечивает проверку валидности и выбрасывает исключение при обращении к невалидной памяти.
+	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe struct NullablePtr<T> : IDisposable where T: unmanaged
+	public unsafe struct SentinelPtr<T> : IDisposable where T: unmanaged
 	{
 		private SafePtr<T> _ptr;
 		private DisposeSentinel _disposeSentinel;
@@ -170,23 +182,23 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public NullablePtr(SafePtr<T> ptr)
+		public SentinelPtr(SafePtr<T> ptr)
 		{
 			_ptr = ptr;
 			_disposeSentinel = DisposeSentinel.Create<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public NullablePtr(SafePtr<T> ptr, DisposeSentinel disposeSentinel)
+		public SentinelPtr(SafePtr<T> ptr, DisposeSentinel disposeSentinel)
 		{
 			_ptr = ptr;
 			_disposeSentinel = disposeSentinel;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr<T> Create(SafePtr<T> ptr)
+		public static SentinelPtr<T> Create(SafePtr<T> ptr)
 		{
-			return new NullablePtr<T>(ptr);
+			return new SentinelPtr<T>(ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -212,10 +224,10 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public NullablePtr<U> Cast<U>() where U : unmanaged
+		public SentinelPtr<U> Cast<U>() where U : unmanaged
 		{
 			CheckNullRef();
-			return new NullablePtr<U>(_ptr.Cast<U>(), _disposeSentinel);
+			return new SentinelPtr<U>(_ptr.Cast<U>(), _disposeSentinel);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -240,66 +252,66 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator NullablePtr(NullablePtr<T> nullablePtr)
+		public static implicit operator SentinelPtr(SentinelPtr<T> sentinelPtr)
 		{
-			return new NullablePtr(nullablePtr._ptr, nullablePtr._disposeSentinel);
+			return new SentinelPtr(sentinelPtr._ptr, sentinelPtr._disposeSentinel);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator NullablePtr<T>(NullablePtr nullablePtr)
+		public static implicit operator SentinelPtr<T>(SentinelPtr sentinelPtr)
 		{
-			return nullablePtr.Cast<T>();
+			return sentinelPtr.Cast<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static explicit operator T*(NullablePtr<T> nullablePtr)
+		public static explicit operator T*(SentinelPtr<T> sentinelPtr)
 		{
-			nullablePtr.CheckNullRef();
-			return (T*)nullablePtr._ptr;
+			sentinelPtr.CheckNullRef();
+			return (T*)sentinelPtr._ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr<T> operator ++(NullablePtr<T> nullablePtr)
+		public static SentinelPtr<T> operator ++(SentinelPtr<T> sentinelPtr)
 		{
-			nullablePtr.CheckNullRef();
-			nullablePtr._ptr++;
-			return nullablePtr;
+			sentinelPtr.CheckNullRef();
+			sentinelPtr._ptr++;
+			return sentinelPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr<T> operator --(NullablePtr<T> nullablePtr)
+		public static SentinelPtr<T> operator --(SentinelPtr<T> sentinelPtr)
 		{
-			nullablePtr.CheckNullRef();
-			nullablePtr._ptr--;
-			return nullablePtr;
+			sentinelPtr.CheckNullRef();
+			sentinelPtr._ptr--;
+			return sentinelPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr<T> operator +(NullablePtr<T> nullablePtr, int index)
+		public static SentinelPtr<T> operator +(SentinelPtr<T> sentinelPtr, int index)
 		{
-			nullablePtr.CheckNullRef();
-			nullablePtr._ptr += index;
-			return nullablePtr;
+			sentinelPtr.CheckNullRef();
+			sentinelPtr._ptr += index;
+			return sentinelPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static NullablePtr<T> operator -(NullablePtr<T> nullablePtr, int index)
+		public static SentinelPtr<T> operator -(SentinelPtr<T> sentinelPtr, int index)
 		{
-			nullablePtr.CheckNullRef();
-			nullablePtr._ptr -= index;
-			return nullablePtr;
+			sentinelPtr.CheckNullRef();
+			sentinelPtr._ptr -= index;
+			return sentinelPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(NullablePtr<T> left, NullablePtr<T> right)
+		public static bool operator ==(SentinelPtr<T> left, SentinelPtr<T> right)
 		{
 			return left._ptr == right._ptr && left._disposeSentinel == right._disposeSentinel;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(NullablePtr<T> left, NullablePtr<T> right)
+		public static bool operator !=(SentinelPtr<T> left, SentinelPtr<T> right)
 		{
-			return left._ptr != right._ptr && left._disposeSentinel != right._disposeSentinel;
+			return left._ptr != right._ptr || left._disposeSentinel != right._disposeSentinel;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -316,6 +328,10 @@ namespace Sapientia.Data
 			_disposeSentinel = default;
 		}
 
+		/// <summary>
+		/// Сбрасывает текущий DisposeSentinel, освобождая старый и создавая новый для контроля времени жизни указателя.
+		/// Используется для обновления механизма отслеживания валидности указателя после повторного использования или переназначения.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ResetDisposeSentinel()
 		{

@@ -163,7 +163,7 @@ namespace Sapientia.MemoryAllocator
 			if (_count > 1)
 			{
 				// Не освобождаем память, будем её переиспользовать
-				// !!! Если её освободить, по по непонятной причине происходит краш !!!
+				// !!! Если её освободить, по непонятной причине происходит краш !!!
 				ValuesExt.Swap(ref _worlds[worldId.index], ref _worlds[_count - 1]);
 				_worldsStates[worldId.index].Swap(ref _worldsStates[_count - 1]);
 

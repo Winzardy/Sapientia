@@ -114,7 +114,7 @@ namespace Sapientia.MemoryAllocator
 			if (index < 0)
 				return;
 
-			if (list[worldState, index].Equals(value))
+			if (comparer.Compare(list[worldState, index], value) == 0)
 			{
 				list.RemoveAt(worldState, index);
 				return;

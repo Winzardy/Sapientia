@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Sapientia.Collections
 {
-
 	public static class UnsafeListExt
 	{
 		public struct LambdaComparer<T> : IComparer<T>
@@ -43,7 +42,7 @@ namespace Sapientia.Collections
 			if (index < 0)
 				return;
 
-			if (list[index].Equals(value))
+			if (comparer.Compare(list[index], value) == 0)
 			{
 				list.RemoveAt(index);
 				return;
