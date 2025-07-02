@@ -9,13 +9,12 @@ namespace Sapientia.MemoryAllocator
 	{
 		private Stack<int> _ids;
 		private SparseSet<T> _sparseSet;
-
-		private int _count;
+		private int _nextIdToAllocate;
 
 		public int Count
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _count;
+			get => _sparseSet.Count;
 		}
 
 		public int Capacity
@@ -34,7 +33,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			_ids = new Stack<int>(worldState, capacity);
 			_sparseSet = new SparseSet<T>(worldState, capacity, sparseCapacity, expandStep);
-			_count = 0;
+			_nextIdToAllocate = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,11 +58,9 @@ namespace Sapientia.MemoryAllocator
 		public int AllocateId(WorldState worldState)
 		{
 			if (_ids.Count <= 0)
-				_ids.Push(worldState, _count + 1);
+				_ids.Push(worldState, _nextIdToAllocate++);
 
 			var id = _ids.Pop(worldState);
-			_count++;
-
 			_sparseSet.EnsureGet(worldState, id);
 			return id;
 		}
@@ -80,7 +77,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			_sparseSet.RemoveSwapBack(worldState, id);
 			_ids.Push(worldState, id);
-			_count--;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,7 +84,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			_ids.Dispose(worldState);
 			_sparseSet.Dispose(worldState);
-			_count = 0;
+			_nextIdToAllocate = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -96,7 +92,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			_ids.Clear();
 			_sparseSet.Clear(worldState);
-			_count = 0;
+			_nextIdToAllocate = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -104,7 +100,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			_ids.Clear();
 			_sparseSet.ClearFast();
-			_count = 0;
+			_nextIdToAllocate = 0;
 		}
 	}
 }

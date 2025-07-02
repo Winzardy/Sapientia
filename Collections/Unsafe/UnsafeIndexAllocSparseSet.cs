@@ -9,6 +9,7 @@ namespace Sapientia.Collections
 	{
 		private UnsafeList<int> _ids;
 		private UnsafeSparseSet<T> _sparseSet;
+		private int _nextIdToAllocate;
 
 		public int Count
 		{
@@ -44,6 +45,7 @@ namespace Sapientia.Collections
 		{
 			_ids = new UnsafeList<int>(capacity);
 			_sparseSet = new UnsafeSparseSet<T>(capacity, capacity, expandStep);
+			_nextIdToAllocate = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -68,7 +70,7 @@ namespace Sapientia.Collections
 		public int AllocateId()
 		{
 			if (_ids.count <= 0)
-				_ids.Add(Count);
+				_ids.Add(_nextIdToAllocate++);
 
 			_ids.count--;
 			var id = _ids[_ids.count];
@@ -105,6 +107,7 @@ namespace Sapientia.Collections
 		{
 			_ids.Dispose();
 			_sparseSet.Dispose();
+			_nextIdToAllocate = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -112,6 +115,7 @@ namespace Sapientia.Collections
 		{
 			_ids.Clear();
 			_sparseSet.Clear();
+			_nextIdToAllocate = 0;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,6 +123,7 @@ namespace Sapientia.Collections
 		{
 			_ids.Clear();
 			_sparseSet.ClearFast();
+			_nextIdToAllocate = 0;
 		}
 	}
 }
