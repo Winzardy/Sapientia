@@ -5,7 +5,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct Allocator : IDisposable
+	public partial struct Allocator : IDisposable
 	{
 		private UnsafeList<MemoryZone> _zonesList;
 		private UnsafeList<MemoryBlockPtrCollection> _freeBlockPools;
@@ -13,7 +13,7 @@ namespace Sapientia.MemoryAllocator
 		public int ZoneSize
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _zonesList[0].ptr->size;
+			get => _zonesList[0].size;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,7 +21,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			zoneSize = zoneSize.Max(MIN_ZONE_SIZE);
 
-			_zonesList = new UnsafeList<MemoryZone>();
+			_zonesList = new UnsafeList<MemoryZone>(8);
 
 			var maxBlockSizeId = GetBlockSizeId(zoneSize) + 1;
 			_freeBlockPools = new UnsafeList<MemoryBlockPtrCollection>(maxBlockSizeId);
@@ -36,17 +36,17 @@ namespace Sapientia.MemoryAllocator
 			AllocateMemoryZone(zoneSize);
 		}
 
-		public void Reset()
+		public void Clear()
 		{
 			for (var i = 0; i < _freeBlockPools.count; i++)
 			{
-				_freeBlockPools[i].Value().Reset();
+				_freeBlockPools[i].Reset();
 			}
 
 			for (var i = 0; i < _zonesList.count; i++)
 			{
-				ref var pool = ref _freeBlockPools[_freeBlockPools.count - 1].Value();
-				ref var zone = ref _zonesList[i].Value();
+				ref var pool = ref _freeBlockPools[_freeBlockPools.count - 1];
+				ref var zone = ref _zonesList[i];
 				var blockId = new BlockId(_freeBlockPools.count - 1, pool.Count);
 				var memoryBlock = MemoryBlock.CreateFirstBlock(blockId, zone.size);
 
@@ -60,13 +60,13 @@ namespace Sapientia.MemoryAllocator
 		{
 			for (var i = 0; i < _freeBlockPools.count; i++)
 			{
-				_freeBlockPools[i].ptr->Dispose();
+				_freeBlockPools[i].Dispose();
 			}
 			_freeBlockPools.Dispose();
 
 			for (var i = 0; i < _zonesList.count; i++)
 			{
-				_zonesList[i].ptr->Dispose();
+				_zonesList[i].Dispose();
 			}
 			_zonesList.Dispose();
 
@@ -96,7 +96,7 @@ namespace Sapientia.MemoryAllocator
 			var size = 0;
 			for (var i = 0; i < _zonesList.count; i++)
 			{
-				size += _zonesList[i].ptr->size;
+				size += _zonesList[i].size;
 			}
 
 			return size;

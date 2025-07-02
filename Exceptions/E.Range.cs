@@ -28,7 +28,7 @@ namespace Sapientia
 			[BURST_DISCARD]
 			[HIDE_CALLSTACK]
 			private static void ThrowNotBurst(int index, int startIndex, int count) =>
-				throw new OutOfRangeException(Format($"index {index} out of range {startIndex}..{count}"));
+				throw new OutOfRangeException($"index {index} out of range {startIndex}..{count}");
 		}
 	}
 

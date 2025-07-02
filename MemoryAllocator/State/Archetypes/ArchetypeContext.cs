@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
@@ -7,18 +6,18 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public readonly unsafe struct ArchetypeContext<T> : IEnumerable<ArchetypeElement<T>> where T: unmanaged, IComponent
+	public readonly unsafe struct ArchetypeContext<T> where T: unmanaged, IComponent
 	{
-		public readonly World world;
+		public readonly WorldState worldState;
 		public readonly SafePtr<Archetype> innerArchetype;
 
-		public ArchetypeContext(World world) : this(world, world.GetArchetypePtr<T>())
+		public ArchetypeContext(WorldState worldState) : this(worldState, worldState.GetArchetypePtr<T>())
 		{
 		}
 
-		public ArchetypeContext(World world, SafePtr<Archetype> innerArchetype)
+		public ArchetypeContext(WorldState worldState, SafePtr<Archetype> innerArchetype)
 		{
-			this.world = world;
+			this.worldState = worldState;
 			this.innerArchetype = innerArchetype;
 		}
 
@@ -31,112 +30,106 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetDestroyHandler<THandler>() where THandler : unmanaged, IElementDestroyHandler
 		{
-			innerArchetype.ptr->SetDestroyHandler<THandler>(world);
+			innerArchetype.ptr->SetDestroyHandler<THandler>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<ArchetypeElement<T>> GetRawElements()
 		{
-			return innerArchetype.ptr->GetRawElements<T>(world);
+			return innerArchetype.ptr->GetRawElements<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Span<ArchetypeElement<T>> GetSpan()
 		{
-			return innerArchetype.ptr->GetSpan<T>(world);
+			return innerArchetype.ptr->GetSpan<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement(Entity entity)
 		{
-			return ref innerArchetype.ptr->ReadElement<T>(world, entity);
+			return ref innerArchetype.ptr->ReadElement<T>(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElement(Entity entity, out bool isExist)
 		{
-			return ref innerArchetype.ptr->ReadElement<T>(world, entity, out isExist);
+			return ref innerArchetype.ptr->ReadElement<T>(worldState, entity, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref readonly T ReadElementNoCheck(Entity entity)
 		{
-			return ref innerArchetype.ptr->ReadElementNoCheck<T>(world, entity);
+			return ref innerArchetype.ptr->ReadElementNoCheck<T>(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SimpleList<T> ReadElements<TEnumerable>(in TEnumerable entities) where TEnumerable: IEnumerable<Entity>
 		{
-			return innerArchetype.ptr->ReadElements<T, TEnumerable>(world, entities);
+			return innerArchetype.ptr->ReadElements<T, TEnumerable>(worldState, entities);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasElement(Entity entity)
 		{
-			return innerArchetype.ptr->HasElement(world, entity);
+			return innerArchetype.ptr->HasElement(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement(Entity entity)
 		{
-			return ref innerArchetype.ptr->GetElement<T>(world, entity);
+			return ref innerArchetype.ptr->GetElement<T>(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement(Entity entity, out bool isCreated)
 		{
-			return ref innerArchetype.ptr->GetElement<T>(world, entity, out isCreated);
+			return ref innerArchetype.ptr->GetElement<T>(worldState, entity, out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T TryGetElement(Entity entity, out bool isExist)
 		{
-			return ref innerArchetype.ptr->TryGetElement<T>(world, entity, out isExist);
+			return ref innerArchetype.ptr->TryGetElement<T>(worldState, entity, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
-			innerArchetype.ptr->Clear<T>(world);
+			innerArchetype.ptr->Clear<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ClearFast()
 		{
-			innerArchetype.ptr->ClearFast<T>(world);
+			innerArchetype.ptr->ClearFast<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveSwapBackElement(Entity entity)
 		{
-			innerArchetype.ptr->RemoveSwapBackElement(world, entity);
+			innerArchetype.ptr->RemoveSwapBackElement(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			innerArchetype.ptr->Dispose(world);
+			innerArchetype.ptr->Dispose(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListEnumerator<ArchetypeElement<T>> GetEnumerator()
 		{
 			ref var elements = ref innerArchetype.Value()._elements;
-			var ptr = elements.GetValuePtr<ArchetypeElement<T>>(world);
+			var ptr = elements.GetValuePtr<ArchetypeElement<T>>(worldState);
 
 			return new ListEnumerator<ArchetypeElement<T>>(ptr, innerArchetype.ptr->Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<ArchetypeElement<T>> IEnumerable<ArchetypeElement<T>>.GetEnumerator()
+		public ListEnumerable<ArchetypeElement<T>> GetEnumerable()
 		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
+			return new ListEnumerable<ArchetypeElement<T>>(GetEnumerator());
 		}
 	}
 }

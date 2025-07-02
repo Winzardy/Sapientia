@@ -9,11 +9,19 @@ namespace Sapientia.MemoryAllocator
 {
 	public static class WorldManager
 	{
+		private static WorldState _currentWorldState = default;
 		private static World _currentWorld = null;
 
+		private static WorldState[] _worldsStates = Array.Empty<WorldState>();
 		private static World[] _worlds = Array.Empty<World>();
 		private static int _count = 0;
 		private static int _currentId = 0;
+
+		public static WorldState CurrentWorldState
+		{
+			[INLINE(256)]
+			get => _currentWorldState;
+		}
 
 		public static World CurrentWorld
 		{
@@ -24,46 +32,74 @@ namespace Sapientia.MemoryAllocator
 		public static WorldId CurrentWorldId
 		{
 			[INLINE(256)]
-			get => _currentWorld.worldId;
+			get => _currentWorldState.WorldId;
 		}
 
 		[INLINE(256)]
-		public static WorldScope GetAllocatorScope(this ref WorldId worldId, out World world)
+		public static WorldScope GetWorldScope(this World world)
 		{
-			var scope = new WorldScope(_currentWorld == default ? default : CurrentWorldId);
-			worldId.SetCurrentAllocator();
-			world = _currentWorld;
+			return world.worldState.GetWorldScope();
+		}
+
+		[INLINE(256)]
+		public static WorldScope GetWorldScope(this ref WorldState worldState)
+		{
+			return worldState.WorldId.GetWorldScope(out _);
+		}
+
+		[INLINE(256)]
+		public static WorldScope GetWorldScope(this ref WorldId worldId)
+		{
+			return worldId.GetWorldScope(out _);
+		}
+
+		[INLINE(256)]
+		public static WorldScope GetWorldScope(this ref WorldId worldId, out WorldState worldState)
+		{
+			var scope = new WorldScope(_currentWorldState.IsValid ? CurrentWorldId : default);
+			worldId.SetCurrentWorld();
+			worldState = _currentWorldState;
 			return scope;
 		}
 
 		[INLINE(256)]
-		public static void SetCurrentAllocator(this ref WorldId worldId)
+		public static void SetCurrentWorld(this ref WorldId worldId)
 		{
-			SetCurrentAllocator(worldId.GetWorld());
+			SetCurrentWorld(worldId.GetWorld(), worldId.GetWorldState());
 		}
 
 		[INLINE(256)]
-		public static void SetCurrentAllocator(WorldId worldId)
+		public static void SetCurrentWorld(WorldId worldId)
 		{
 			if (!worldId.IsValid())
 				return;
-			SetCurrentAllocator(worldId.GetWorld());
+			SetCurrentWorld(worldId.GetWorld(), worldId.GetWorldState());
 		}
 
 		[INLINE(256)]
-		public static void SetCurrentAllocator(World world)
+		public static void SetCurrentWorld(this World world)
+		{
+			var worldState = world?.worldState ?? default;
+			E.ASSERT(worldState.IsValid);
+
+			SetCurrentWorld(world, worldState);
+		}
+
+		[INLINE(256)]
+		private static void SetCurrentWorld(World world, WorldState worldState)
 		{
 			_currentWorld = world;
+			_currentWorldState = worldState;
 
-			var context = world?.worldId ?? default;
+			var context = worldState.IsValid ? worldState.WorldId : default;
 			ServiceContext<WorldId>.SetContext(context);
 		}
 
-		public static World DeserializeAllocator(ref StreamBufferReader stream)
+		public static WorldState DeserializeWorld(ref StreamBufferReader stream)
 		{
-			var world = World.Deserialize(ref stream);
+			var world = WorldState.Deserialize(ref stream);
 
-			ref var worldId = ref world.worldId;
+			ref var worldId = ref world.WorldId;
 
 			// На момент создания не должно существовать мира с таким же Id
 			if (worldId.IsValid())
@@ -73,65 +109,90 @@ namespace Sapientia.MemoryAllocator
 
 			worldId.index = (ushort)_count++;
 
-			_worlds[worldId.index] = world;
+			_worldsStates[worldId.index] = world;
 			_currentId = _currentId.Max(worldId.id + 1);
 
 			return world;
 		}
 
-		public static World CreateAllocator(int initialSize = -1)
+		public static World CreateWorld(int initialSize = -1)
 		{
 			Prewarm(_count);
 
 			var worldId = new WorldId((ushort)_count++, (ushort)++_currentId);
+			ref var worldState = ref _worldsStates[worldId.index];
 			ref var world = ref _worlds[worldId.index];
 
-			if (world != null)
+			if (worldState.IsValid)
 			{
 				// Переиспользуем память
-				world.Reset(worldId);
+				worldState.SetupNewWorldId(worldId);
 			}
 			else
 			{
-				world = new World();
-				world.Initialize(worldId, initialSize);
+				worldState = new WorldState(worldId, initialSize);
 			}
 
+			world = new World(worldState);
 			return world;
 		}
 
 		private static void Prewarm(int index)
 		{
-			if (index < _worlds.Length)
-				return;
-			ArrayExt.Expand(ref _worlds, index + 1);
+			if (index >= _worlds.Length)
+				ArrayExt.Expand(ref _worlds, index + 1);
+			if (index >= _worldsStates.Length)
+				ArrayExt.Expand(ref _worldsStates, index + 1);
 		}
 
-		public static void RemoveAllocator(this ref WorldId worldId)
+		public static void RemoveWorld(this ref WorldState world)
+		{
+			world.WorldId.RemoveWorld();
+		}
+
+		public static void RemoveWorld(this ref WorldId worldId)
 		{
 			if (!worldId.IsValid())
 				throw new ArgumentException($"{nameof(WorldId)} with such Id [id: {worldId.id}] doesn't exist.");
 
-			if (_currentWorld == _worlds[worldId.index])
-				SetCurrentAllocator(null);
+			_worldsStates[worldId.index].Reset();
+
+			if (_currentWorldState == _worldsStates[worldId.index])
+				SetCurrentWorld(null, default(WorldState));
 
 			if (_count > 1)
 			{
 				// Не освобождаем память, будем её переиспользовать
-				// !!! Если её освободить, по по непонятной причине происходит краш !!!
-				ref var a = ref _worlds[worldId.index];
-				ref var b = ref _worlds[_count - 1];
+				// !!! Если её освободить, по непонятной причине происходит краш !!!
+				ValuesExt.Swap(ref _worlds[worldId.index], ref _worlds[_count - 1]);
+				_worldsStates[worldId.index].Swap(ref _worldsStates[_count - 1]);
 
-				(a, b) = (b, a);
+				_worlds[_count - 1] = null;
 			}
 			_count--;
+		}
+
+		[INLINE(256)]
+		public static WorldState GetWorldState(WorldId worldId)
+		{
+			if (!worldId.IsValid())
+				return default;
+			return _worldsStates[worldId.index];
+		}
+
+		[INLINE(256)]
+		public static WorldState GetWorldState(this ref WorldId worldId)
+		{
+			if (!worldId.IsValid())
+				return default;
+			return _worldsStates[worldId.index];
 		}
 
 		[INLINE(256)]
 		public static World GetWorld(WorldId worldId)
 		{
 			if (!worldId.IsValid())
-				return null;
+				return default;
 			return _worlds[worldId.index];
 		}
 
@@ -139,19 +200,19 @@ namespace Sapientia.MemoryAllocator
 		public static World GetWorld(this ref WorldId worldId)
 		{
 			if (!worldId.IsValid())
-				return null;
+				return default;
 			return _worlds[worldId.index];
 		}
 
 		[INLINE(256)]
 		public static bool IsValid(this ref WorldId worldId)
 		{
-			if (worldId.index < _count && _worlds[worldId.index].worldId.id == worldId.id)
+			if (worldId.index < _count && _worldsStates[worldId.index].WorldId.id == worldId.id)
 				return true;
 
 			for (ushort i = 0; i < _count; i++)
 			{
-				if (_worlds[i].worldId.id != worldId.id)
+				if (_worldsStates[i].WorldId.id != worldId.id)
 					continue;
 				worldId.index = i;
 				return true;
@@ -170,7 +231,7 @@ namespace Sapientia.MemoryAllocator
 
 			public void Dispose()
 			{
-				SetCurrentAllocator(_previousWorld);
+				SetCurrentWorld(_previousWorld);
 			}
 		}
 	}

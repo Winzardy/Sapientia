@@ -42,7 +42,7 @@ namespace Sapientia.MemoryAllocator
 
 		private int GetMemoryZoneSize(int zoneId, out int usedSize, out int freeSize)
 		{
-			var zone = _zonesList[zoneId];
+			var zone = _zonesList.ptr.Slice(zoneId);
 			var blockPtr = zone.ptr->memory.Cast<MemoryBlock>();
 			var totalSize = 0;
 
@@ -70,11 +70,11 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void AllocateMemoryZone(int zoneSize)
 		{
-			var blockId = new BlockId(_freeBlockPools.count - 1, _freeBlockPools[_freeBlockPools.count - 1].ptr->Count);
+			var blockId = new BlockId(_freeBlockPools.count - 1, _freeBlockPools[_freeBlockPools.count - 1].Count);
 			var memoryBlock = MemoryBlock.CreateFirstBlock(blockId, zoneSize);
 			var zone = new MemoryZone(memoryBlock, zoneSize);
 
-			_freeBlockPools[_freeBlockPools.count - 1].ptr->AddBlock(new MemoryBlockRef(_zonesList.count, 0));
+			_freeBlockPools[_freeBlockPools.count - 1].AddBlock(new MemoryBlockRef(_zonesList.count, 0));
 			_zonesList.Add(zone);
 
 #if UNITY_5_3_OR_NEWER

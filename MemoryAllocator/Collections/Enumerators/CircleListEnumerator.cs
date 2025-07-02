@@ -5,105 +5,46 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface ICircularBufferEnumerable<T>
+	public interface ICircularBufferEnumerable<T>
 		where T: unmanaged
 	{
 		public int HeadIndex { get; }
 		public int Count { get; }
 		public int Capacity { get; }
-		public SafePtr<T> GetValuePtr(World world);
+		public SafePtr<T> GetValuePtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(World world)
+		public CircularBufferEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
+			return new CircularBufferEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(World world)
+		public CircularBufferEnumerable<T> GetEnumerable(WorldState worldState)
 		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(world), HeadIndex, Count, Capacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(World world)
-		{
-			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(World world)
-		{
-			return new (new (GetValuePtr(world), HeadIndex, Count, Capacity));
+			return new (GetEnumerator(worldState));
 		}
 	}
 
-	public unsafe struct CircularBufferPtrEnumerator<T> : IEnumerator<SafePtr>, IEnumerator<SafePtr<T>>
+	public readonly ref struct CircularBufferEnumerable<T>
 		where T: unmanaged
 	{
-		private readonly SafePtr<T> _valuePtr;
-		private readonly int _headBytesIndex;
-		private readonly int _count;
-		private readonly int _capacity;
+		private readonly CircularBufferEnumerator<T> _enumerator;
 
-		private int _index;
-		private int _currentCount;
-
-		SafePtr<T> IEnumerator<SafePtr<T>>.Current
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal CircularBufferEnumerable(CircularBufferEnumerator<T> enumerator)
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (_valuePtr + _index);
-		}
-
-		public SafePtr Current
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (_valuePtr + _index);
-		}
-
-		object IEnumerator.Current
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => Current;
+			_enumerator = enumerator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator(SafePtr<T> valuePtr, int headIndex, int count, int capacity)
+		public CircularBufferEnumerator<T> GetEnumerator()
 		{
-			_valuePtr = valuePtr;
-			_headBytesIndex = headIndex;
-			_count = count;
-			_capacity = capacity;
-
-			_index = _headBytesIndex;
-			_currentCount = 0;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool MoveNext()
-		{
-			if (_currentCount == _count)
-				return false;
-
-			_index = (_headBytesIndex + _currentCount) % _capacity;
-			_currentCount ++;
-			return true;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Reset()
-		{
-			_index = 0;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			this = default;
+			return _enumerator;
 		}
 	}
 
-	public unsafe struct CircularBufferEnumerator<T> : IEnumerator<T>, IEnumerator<SafePtr<T>>
+	public struct CircularBufferEnumerator<T>
 		where T: unmanaged
 	{
 		private readonly SafePtr<T> _valuePtr;
@@ -137,22 +78,10 @@ namespace Sapientia.MemoryAllocator
 			return true;
 		}
 
-		SafePtr<T> IEnumerator<SafePtr<T>>.Current
+		public ref T Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (_valuePtr + _index);
-		}
-
-		public T Current
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => (_valuePtr + _index).Value();
-		}
-
-		object IEnumerator.Current
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => Current;
+			get => ref (_valuePtr + _index).Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

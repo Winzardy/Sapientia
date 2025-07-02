@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public unsafe interface IEntityDestroySubscriber : IInterfaceProxyType
 	{
-		public void EntityArrayDestroyed(World world, Entity* entities, int count);
+		public void EntityArrayDestroyed(WorldState worldState, Entity* entities, int count);
 	}
 
 	public unsafe struct EntityStatePart : IWorldStatePart
@@ -25,11 +25,11 @@ namespace Sapientia.MemoryAllocator.State
 		public MemArray<FixedString64Bytes> entityIdToName;
 		public int MaxEntitiesCount { get; private set; }
 
-		public string GetEntityName(World world, in Entity entity)
+		public string GetEntityName(WorldState worldState, in Entity entity)
 		{
-			if (!IsEntityExist(world, entity))
+			if (!IsEntityExist(worldState, entity))
 				return "[Destroyed]";
-			return entityIdToName[world, entity.id].ToString();
+			return entityIdToName[worldState, entity.id].ToString();
 		}
 #endif
 
@@ -49,89 +49,89 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 		}
 
-		public void Initialize(World world, IndexedPtr self)
+		public void Initialize(WorldState worldState, IndexedPtr self)
 		{
-			_freeEntitiesIds = new MemArray<ushort>(world, EntitiesCapacity, ClearOptions.UninitializedMemory);
-			_entityIdToGeneration = new MemArray<ushort>(world, EntitiesCapacity);
-			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(world, 256);
+			_freeEntitiesIds = new MemArray<ushort>(worldState, EntitiesCapacity, ClearOptions.UninitializedMemory);
+			_entityIdToGeneration = new MemArray<ushort>(worldState, EntitiesCapacity);
+			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(worldState, 256);
 #if ENABLE_ENTITY_NAMES
-			entityIdToName = new MemArray<FixedString64Bytes>(world, EntitiesCapacity);
+			entityIdToName = new MemArray<FixedString64Bytes>(worldState, EntitiesCapacity);
 #endif
 
 			for (ushort i = 0; i < EntitiesCapacity; i++)
 			{
-				_freeEntitiesIds[world, i] = i;
+				_freeEntitiesIds[worldState, i] = i;
 			}
 
 #if ENABLE_ENTITY_NAMES
-			WorldEntity = CreateEntity(world, "World");
+			WorldEntity = CreateEntity(worldState, "World");
 #else
-			WorldEntity = CreateEntity(world);
+			WorldEntity = CreateEntity(worldState);
 #endif
 		}
 
-		public void AddSubscriber(World world, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
+		public void AddSubscriber(WorldState worldState, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
-			_entityDestroySubscribers.Subscribe(world, subscriber);
+			_entityDestroySubscribers.Subscribe(worldState, subscriber);
 		}
 
-		public void RemoveSubscriber(World world, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
+		public void RemoveSubscriber(WorldState worldState, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
 		{
-			_entityDestroySubscribers.UnSubscribe(world, subscriber);
+			_entityDestroySubscribers.UnSubscribe(worldState, subscriber);
 		}
 
 #if ENABLE_ENTITY_NAMES
-		public Entity CreateEntity(World world, in FixedString64Bytes name = default)
+		public Entity CreateEntity(WorldState worldState, in FixedString64Bytes name = default)
 #else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Entity CreateEntity(World world, in FixedString64Bytes name)
+		public Entity CreateEntity(WorldState worldState, in FixedString64Bytes name)
 		{
-			return CreateEntity(world);
+			return CreateEntity(worldState);
 		}
 
-		public Entity CreateEntity(World world, string name = null)
+		public Entity CreateEntity(WorldState worldState, string name = null)
 #endif
 		{
-			EnsureCapacity(world, EntitiesCount);
+			EnsureCapacity(worldState, EntitiesCount);
 
-			var id = _freeEntitiesIds[world, EntitiesCount++];
-			var generation = ++_entityIdToGeneration[world, id];
+			var id = _freeEntitiesIds[worldState, EntitiesCount++];
+			var generation = ++_entityIdToGeneration[worldState, id];
 
-			var entity = new Entity(id, generation, world.worldId);
+			var entity = new Entity(id, generation, worldState.WorldId);
 #if ENABLE_ENTITY_NAMES
-			entityIdToName[world, id] = name;
+			entityIdToName[worldState, id] = name;
 			if (MaxEntitiesCount < EntitiesCount)
 				MaxEntitiesCount = EntitiesCount;
 #endif
 			return entity;
 		}
 
-		public bool IsEntityExist(World world, in Entity entity)
+		public bool IsEntityExist(WorldState worldState, in Entity entity)
 		{
-			return entity.id < EntitiesCapacity && _entityIdToGeneration[world, entity.id] == entity.generation;
+			return entity.id < EntitiesCapacity && _entityIdToGeneration[worldState, entity.id] == entity.generation;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DestroyEntities(World world, Entity* entities, int count)
+		public void DestroyEntities(WorldState worldState, Entity* entities, int count)
 		{
 #if DEBUG
 			for (var i = 0; i < count; i++)
 			{
-				E.ASSERT(IsEntityExist(world, entities[i]), "Попытка уничтожить уже мёртвую entity!");
+				E.ASSERT(IsEntityExist(worldState, entities[i]), "Попытка уничтожить уже мёртвую entity!");
 			}
 #endif
-			_entityDestroySubscribers.EntityArrayDestroyed(world, world, entities, count);
+			_entityDestroySubscribers.EntityArrayDestroyed(worldState, worldState, entities, count);
 
 			for (var i = 0; i < count; i++)
 			{
 				var entityId = entities[i].id;
 
-				_entityIdToGeneration[world, entityId]++;
-				_freeEntitiesIds[world, --EntitiesCount] = entityId;
+				_entityIdToGeneration[worldState, entityId]++;
+				_freeEntitiesIds[worldState, --EntitiesCount] = entityId;
 			}
 		}
 
-		private void EnsureCapacity(World world, int index)
+		private void EnsureCapacity(WorldState worldState, int index)
 		{
 			if (index < EntitiesCapacity)
 				return;
@@ -142,10 +142,10 @@ namespace Sapientia.MemoryAllocator.State
 
 			var freeStartIndex = _freeEntitiesIds.Length;
 
-			_freeEntitiesIds.Resize(world, EntitiesCapacity, ClearOptions.UninitializedMemory);
-			_entityIdToGeneration.Resize(world, EntitiesCapacity);
+			_freeEntitiesIds.Resize(worldState, EntitiesCapacity, ClearOptions.UninitializedMemory);
+			_entityIdToGeneration.Resize(worldState, EntitiesCapacity);
 #if ENABLE_ENTITY_NAMES
-			entityIdToName.Resize(world, EntitiesCapacity);
+			entityIdToName.Resize(worldState, EntitiesCapacity);
 #endif
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 			UnityEngine.Debug.LogWarning($"Entities Capacity was expanded to {EntitiesCapacity}");
@@ -153,7 +153,7 @@ namespace Sapientia.MemoryAllocator.State
 
 			for (ushort i = (ushort)freeStartIndex; i < EntitiesCapacity; i++)
 			{
-				_freeEntitiesIds[world, i] = i;
+				_freeEntitiesIds[worldState, i] = i;
 			}
 		}
 	}

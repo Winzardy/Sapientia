@@ -19,14 +19,20 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			get
 			{
-				var world = worldId.GetWorld();
-				return world.GetService<EntityStatePart>().GetEntityName(world, this);
+				var worldState = worldId.GetWorldState();
+				return worldState.GetService<EntityStatePart>().GetEntityName(worldState, this);
 			}
 		}
 #endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public World GetAllocator()
+		public WorldState GetWorldState()
+		{
+			return worldId.GetWorldState();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public World GetWorld()
 		{
 			return worldId.GetWorld();
 		}
@@ -42,53 +48,53 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(string name)
 		{
-			var world = WorldManager.CurrentWorld;
+			var worldState = WorldManager.CurrentWorldState;
 #if UNITY_EDITOR
-			return world.GetService<EntityStatePart>().CreateEntity(world, name);
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState, name);
 #else
-			return world.GetService<EntityStatePart>().CreateEntity(world);
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create()
 		{
-			var allocator = WorldManager.CurrentWorld;
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			var worldState = WorldManager.CurrentWorldState;
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(World world, string name)
+		public static Entity Create(WorldState worldState, string name)
 		{
 #if UNITY_EDITOR
-			return world.GetService<EntityStatePart>().CreateEntity(world, name);
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState, name);
 #else
-			return world.GetService<EntityStatePart>().CreateEntity(world);
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Entity Create(World world)
+		public static Entity Create(WorldState worldState)
 		{
-			return world.GetService<EntityStatePart>().CreateEntity(world);
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(WorldId worldId, string name)
 		{
-			var world = worldId.GetWorld();
+			var worldState = worldId.GetWorldState();
 #if UNITY_EDITOR
-			return world.GetService<EntityStatePart>().CreateEntity(world, name);
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState, name);
 #else
-			return world.GetService<EntityStatePart>().CreateEntity(world);
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity Create(WorldId worldId)
 		{
-			var allocator = worldId.GetWorld();
-			return allocator.GetService<EntityStatePart>().CreateEntity(allocator);
+			var worldState = worldId.GetWorldState();
+			return worldState.GetService<EntityStatePart>().CreateEntity(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

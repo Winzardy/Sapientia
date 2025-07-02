@@ -11,9 +11,6 @@ namespace Sapientia.Extensions
 	/// <summary>
 	/// https://www.notion.so/Extension-b985410501c742dabb3a08ca171a319c?pvs=4#de24076fb1f44a2795403edc13914eb0
 	/// </summary>
-#if UNITY_5_3_OR_NEWER
-	[BurstCompile]
-#endif
 	public static class FloatMathExt
 	{
 		public const float EPSILON = 0.0000001f;

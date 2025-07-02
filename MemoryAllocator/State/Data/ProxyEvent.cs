@@ -15,44 +15,44 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ProxyEvent(World world, int capacity = 8)
+		public ProxyEvent(WorldState worldState, int capacity = 8)
 		{
-			_proxies = new HashSet<ProxyPtr<T>>(world, capacity);
+			_proxies = new HashSet<ProxyPtr<T>>(worldState, capacity);
 		}
 
-		public bool Subscribe(World world, in ProxyPtr<T> proxyPtr)
+		public bool Subscribe(WorldState worldState, in ProxyPtr<T> proxyPtr)
 		{
-			return _proxies.Add(world, proxyPtr);
+			return _proxies.Add(worldState, proxyPtr);
 		}
 
-		public bool UnSubscribe(World world, in ProxyPtr<T> proxyPtr)
+		public bool UnSubscribe(WorldState worldState, in ProxyPtr<T> proxyPtr)
 		{
-			return _proxies.Remove(world, proxyPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<ProxyPtr<T>>, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable(World world)
-		{
-			return _proxies.GetPtrEnumerable(world);
+			return _proxies.Remove(worldState, proxyPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<ProxyPtr<T>> GetEnumerator(World world)
+		public HashSetEnumerator<ProxyPtr<T>> GetEnumerator(WorldState worldState)
 		{
-			return _proxies.GetPtrEnumerator(world);
+			return _proxies.GetEnumerator(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(World world, bool disposeProxies = true)
+		public HashSetEnumerable<ProxyPtr<T>> GetEnumerable(WorldState worldState)
+		{
+			return _proxies.GetEnumerable(worldState);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose(WorldState worldState, bool disposeProxies = true)
 		{
 			if (disposeProxies)
 			{
-				foreach (ProxyPtr<T>* proxy in _proxies.GetPtrEnumerable(world))
+				foreach (ref var proxy in _proxies.GetEnumerable(worldState))
 				{
-					proxy->Dispose(world);
+					proxy.Dispose(worldState);
 				}
 			}
-			_proxies.Dispose(world);
+			_proxies.Dispose(worldState);
 		}
 	}
 }

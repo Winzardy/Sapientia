@@ -54,131 +54,131 @@ namespace Sapientia.MemoryAllocator
 			get => _values.ElementSize;
 		}
 
-		public SparseSet(int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorld, valueSize, capacity, sparseCapacity, expandStep) {}
+		public SparseSet(int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorldState, valueSize, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(WorldId worldId, int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorld(), valueSize, capacity, sparseCapacity, expandStep) {}
+		public SparseSet(WorldId worldId, int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorldState(), valueSize, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(World world, int valueSize, int capacity, int sparseCapacity, int expandStep = 0)
+		public SparseSet(WorldState worldState, int valueSize, int capacity, int sparseCapacity, int expandStep = 0)
 		{
 			this.expandStep = expandStep == 0 ? capacity : expandStep;
 
 			_count = 0;
 
-			_values = new (world, valueSize, capacity, ClearOptions.ClearMemory);
-			_dense = new (world, capacity, ClearOptions.ClearMemory);
-			_sparse = new (world, sparseCapacity, ClearOptions.ClearMemory);
+			_values = new (worldState, valueSize, capacity, ClearOptions.ClearMemory);
+			_dense = new (worldState, capacity, ClearOptions.ClearMemory);
+			_sparse = new (worldState, sparseCapacity, ClearOptions.ClearMemory);
 
 			_capacity = _dense.Length.Min(_values.Length);
 			_sparseCapacity = _sparse.Length;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr<T>(World world) where T: unmanaged
+		public SafePtr<T> GetValuePtr<T>(WorldState worldState) where T: unmanaged
 		{
-			return _values.GetValuePtr<T>(world);
+			return _values.GetValuePtr<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetValuePtr(World world)
+		public SafePtr GetValuePtr(WorldState worldState)
 		{
-			return _values.GetValuePtr(world);
+			return _values.GetValuePtr(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetValuePtr(World world, int id)
+		public SafePtr GetValuePtr(WorldState worldState, int id)
 		{
-			return _values.GetValuePtr(world, _sparse[world, id]);
+			return _values.GetValuePtr(worldState, _sparse[worldState, id]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtr<T>(World world, int id) where T: unmanaged
+		public SafePtr<T> GetValuePtr<T>(WorldState worldState, int id) where T: unmanaged
 		{
-			return _values.GetValuePtr<T>(world, _sparse[world, id]);
+			return _values.GetValuePtr<T>(worldState, _sparse[worldState, id]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr GetValuePtrByDenseId(World world, int denseId)
+		public SafePtr GetValuePtrByDenseId(WorldState worldState, int denseId)
 		{
-			return _values.GetValuePtr(world, denseId);
+			return _values.GetValuePtr(worldState, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetValuePtrByDenseId<T>(World world, int denseId) where T: unmanaged
+		public SafePtr<T> GetValuePtrByDenseId<T>(WorldState worldState, int denseId) where T: unmanaged
 		{
-			return _values.GetValuePtr<T>(world, denseId);
+			return _values.GetValuePtr<T>(worldState, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int GetIdByDenseId(World world, int denseId)
+		public int GetIdByDenseId(WorldState worldState, int denseId)
 		{
-			return _dense[world, denseId];
+			return _dense[worldState, denseId];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get<T>(World world, int id) where T: unmanaged
+		public ref T Get<T>(WorldState worldState, int id) where T: unmanaged
 		{
-			return ref _values.GetValue<T>(world, _sparse[world, id]);
+			return ref _values.GetValue<T>(worldState, _sparse[worldState, id]);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetByDenseId<T>(World world, int denseId) where T: unmanaged
+		public ref T GetByDenseId<T>(WorldState worldState, int denseId) where T: unmanaged
 		{
-			return ref _values.GetValue<T>(world, denseId);
+			return ref _values.GetValue<T>(worldState, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TryGetDenseId(World world, int id, out int denseId)
+		public bool TryGetDenseId(WorldState worldState, int id, out int denseId)
 		{
 			if (_sparseCapacity <= id)
 			{
 				denseId = 0;
 				return false;
 			}
-			denseId = _sparse[world, id];
-			return denseId < _count && _dense[world, denseId] == id;
+			denseId = _sparse[worldState, id];
+			return denseId < _count && _dense[worldState, denseId] == id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(World world, int id)
+		public bool Has(WorldState worldState, int id)
 		{
 			if (_sparseCapacity <= id)
 				return false;
-			var denseId = _sparse[world, id];
-			return denseId < _count && _dense[world, denseId] == id;
+			var denseId = _sparse[worldState, id];
+			return denseId < _count && _dense[worldState, denseId] == id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T EnsureGet<T>(World world, int id) where T: unmanaged
+		public ref T EnsureGet<T>(WorldState worldState, int id) where T: unmanaged
 		{
-			ExpandSparseIfNeeded(world, id + 1);
-			ref var denseId = ref _sparse[world, id];
-			if (denseId >= _count || _dense[world, denseId] != id)
+			ExpandSparseIfNeeded(worldState, id + 1);
+			ref var denseId = ref _sparse[worldState, id];
+			if (denseId >= _count || _dense[worldState, denseId] != id)
 			{
-				ExpandIfNeeded(world, _count + 1);
-				_dense[world, _count] = id;
+				ExpandIfNeeded(worldState, _count + 1);
+				_dense[worldState, _count] = id;
 				denseId = _count++;
 			}
-			return ref _values.GetValue<T>(world, denseId);
+			return ref _values.GetValue<T>(worldState, denseId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveSwapBack(World world, int id)
+		public bool RemoveSwapBack(WorldState worldState, int id)
 		{
 			if (id >= _sparseCapacity)
 				return false;
-			var denseId = _sparse[world, id];
+			var denseId = _sparse[worldState, id];
 			if (denseId >= _count)
 				return false;
 
-			var denseRaw = _dense.GetValuePtr(world);
+			var denseRaw = _dense.GetValuePtr(worldState);
 			if (denseRaw[denseId] != id)
 				return false;
 
 			var sparseId = denseRaw[denseId] = denseRaw[--_count];
-			_sparse[world, sparseId] = denseId;
+			_sparse[worldState, sparseId] = denseId;
 
-			var valueA = _values.GetValuePtr(world, denseId);
-			var valueB = _values.GetValuePtr(world, _count);
+			var valueA = _values.GetValuePtr(worldState, denseId);
+			var valueB = _values.GetValuePtr(worldState, _count);
 			var size = _values.ElementSize;
 
 			MemoryExt.MemMove(valueB, valueA, size);
@@ -189,15 +189,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveSwapBackByDenseId(World world, int denseId)
+		public bool RemoveSwapBackByDenseId(WorldState worldState, int denseId)
 		{
-			var denseRaw = _dense.GetValuePtr(world);
+			var denseRaw = _dense.GetValuePtr(worldState);
 
 			var sparseId = denseRaw[denseId] = denseRaw[--_count];
-			_sparse[world, sparseId] = denseId;
+			_sparse[worldState, sparseId] = denseId;
 
-			var valueA = _values.GetValuePtr(world, denseId);
-			var valueB = _values.GetValuePtr(world, _count);
+			var valueA = _values.GetValuePtr(worldState, denseId);
+			var valueB = _values.GetValuePtr(worldState, _count);
 			var size = _values.ElementSize;
 
 			MemoryExt.MemMove(valueB, valueA, size);
@@ -208,37 +208,37 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ExpandSparseIfNeeded(World world, int newCapacity)
+		private void ExpandSparseIfNeeded(WorldState worldState, int newCapacity)
 		{
 			if (_sparseCapacity >= newCapacity)
 				return;
 
 			newCapacity = SnapCeilCapacity(newCapacity);
 
-			ExpandSparse(world, newCapacity);
+			ExpandSparse(worldState, newCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ExpandSparse(World world, int newCapacity)
+		private void ExpandSparse(WorldState worldState, int newCapacity)
 		{
-			_sparse.Resize(world, newCapacity, ClearOptions.ClearMemory);
+			_sparse.Resize(worldState, newCapacity, ClearOptions.ClearMemory);
 			_sparseCapacity = _sparse.Length;
 		}
 
-		private void ExpandIfNeeded(World world, int newCapacity)
+		private void ExpandIfNeeded(WorldState worldState, int newCapacity)
 		{
 			if (_capacity >= newCapacity)
 				return;
 
 			newCapacity = SnapCeilCapacity(newCapacity);
 
-			Expand(world, newCapacity);
+			Expand(worldState, newCapacity);
 		}
 
-		private void Expand(World world, int newCapacity)
+		private void Expand(WorldState worldState, int newCapacity)
 		{
-			_dense.Resize(world, newCapacity, ClearOptions.ClearMemory);
-			_values.Resize(world, newCapacity, ElementSize, ClearOptions.ClearMemory);
+			_dense.Resize(worldState, newCapacity, ClearOptions.ClearMemory);
+			_values.Resize(worldState, newCapacity, ElementSize, ClearOptions.ClearMemory);
 
 			_capacity = _dense.Length.Min(_values.Length);
 		}
@@ -250,17 +250,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose(World world)
+		public void Dispose(WorldState worldState)
 		{
-			_sparse.Dispose(world);
-			_dense.Dispose(world);
-			_values.Dispose(world);
+			_sparse.Dispose(worldState);
+			_dense.Dispose(worldState);
+			_values.Dispose(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear(World world)
+		public void Clear(WorldState worldState)
 		{
-			_values.Clear(world, 0, _count);
+			_values.Clear(worldState, 0, _count);
 			_count = 0;
 		}
 
@@ -271,27 +271,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator<T>(World world) where T: unmanaged
+		public ListEnumerator<T> GetEnumerator<T>(WorldState worldState) where T: unmanaged
 		{
-			return new ListEnumerator<T>(GetValuePtr<T>(world), Count);
+			return new ListEnumerator<T>(GetValuePtr<T>(worldState), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator<T>(World world) where T: unmanaged
+		public ListEnumerable<T> GetEnumerable<T>(WorldState worldState) where T: unmanaged
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(world), ElementSize, Count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>(World world) where T: unmanaged
-		{
-			return new (new (GetValuePtr<T>(world), Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>(World world) where T: unmanaged
-		{
-			return new (new (GetValuePtr(world), ElementSize, Count));
+			return new (GetEnumerator<T>(worldState));
 		}
 	}
 }

@@ -7,6 +7,9 @@ using Sapientia.TypeIndexer;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
+#if UNITY_5_3_OR_NEWER
+	[Unity.Burst.BurstCompile]
+#endif
 	public struct ServiceRegistryContext : IEquatable<ServiceRegistryContext>
 	{
 		public TypeIndex typeIndex;
@@ -53,115 +56,115 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService(MemPtr ptr)
 		{
-			WorldManager.CurrentWorld.RegisterService(this, ptr);
+			WorldManager.CurrentWorldState.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService(CachedPtr ptr)
 		{
-			WorldManager.CurrentWorld.RegisterService(this, ptr);
+			WorldManager.CurrentWorldState.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService(IndexedPtr indexedPtr)
 		{
-			WorldManager.CurrentWorld.RegisterService(this, indexedPtr);
+			WorldManager.CurrentWorldState.RegisterService(this, indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveService()
 		{
-			WorldManager.CurrentWorld.RemoveService(this);
+			WorldManager.CurrentWorldState.RemoveService(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>() where T: unmanaged
 		{
-			return ref GetService<T>(WorldManager.CurrentWorld);
+			return ref GetService<T>(WorldManager.CurrentWorldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(out bool exist) where T: unmanaged
 		{
-			return ref TryGetService<T>(WorldManager.CurrentWorld, out exist);
+			return ref TryGetService<T>(WorldManager.CurrentWorldState, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr GetServiceIndexedPtr<T>() where T: unmanaged
 		{
-			return GetServiceIndexedPtr<T>(WorldManager.CurrentWorld);
+			return GetServiceIndexedPtr<T>(WorldManager.CurrentWorldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CachedPtr<T> GetServiceCachedPtr<T>() where T: unmanaged
 		{
-			return GetServiceCachedPtr<T>(WorldManager.CurrentWorld);
+			return GetServiceCachedPtr<T>(WorldManager.CurrentWorldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetServicePtr<T>() where T: unmanaged
 		{
-			return GetServicePtr<T>(WorldManager.CurrentWorld);
+			return GetServicePtr<T>(WorldManager.CurrentWorldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(World world, MemPtr ptr)
+		public void RegisterService(WorldState worldState, MemPtr ptr)
 		{
-			world.RegisterService(this, ptr);
+			worldState.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(World world, CachedPtr ptr)
+		public void RegisterService(WorldState worldState, CachedPtr ptr)
 		{
-			world.RegisterService(this, ptr);
+			worldState.RegisterService(this, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(World world, CachedPtr<T> ptr) where T: unmanaged
+		public void RegisterService<T>(WorldState worldState, CachedPtr<T> ptr) where T: unmanaged
 		{
-			world.RegisterService(this, (CachedPtr)ptr);
+			worldState.RegisterService(this, (CachedPtr)ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(World world, IndexedPtr indexedPtr)
+		public void RegisterService(WorldState worldState, IndexedPtr indexedPtr)
 		{
-			world.RegisterService(this, indexedPtr);
+			worldState.RegisterService(this, indexedPtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService(World world)
+		public void RemoveService(WorldState worldState)
 		{
-			world.RemoveService(this);
+			worldState.RemoveService(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(World world) where T: unmanaged
+		public ref T GetService<T>(WorldState worldState) where T: unmanaged
 		{
-			return ref world.GetService<T>(this);
+			return ref worldState.GetService<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T TryGetService<T>(World world, out bool exist) where T: unmanaged
+		public ref T TryGetService<T>(WorldState worldState, out bool exist) where T: unmanaged
 		{
-			return ref world.TryGetService<T>(this, out exist);
+			return ref worldState.TryGetService<T>(this, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetServiceIndexedPtr<T>(World world) where T: unmanaged
+		public IndexedPtr GetServiceIndexedPtr<T>(WorldState worldState) where T: unmanaged
 		{
-			return world.GetServiceIndexedPtr<T>(this);
+			return worldState.GetServiceIndexedPtr<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CachedPtr<T> GetServiceCachedPtr<T>(World world) where T: unmanaged
+		public CachedPtr<T> GetServiceCachedPtr<T>(WorldState worldState) where T: unmanaged
 		{
-			return world.GetServiceCachedPtr<T>(this);
+			return worldState.GetServiceCachedPtr<T>(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetServicePtr<T>(World world) where T: unmanaged
+		public SafePtr<T> GetServicePtr<T>(WorldState worldState) where T: unmanaged
 		{
-			return world.GetServicePtr<T>(this);
+			return worldState.GetServicePtr<T>(this);
 		}
 	}
 }

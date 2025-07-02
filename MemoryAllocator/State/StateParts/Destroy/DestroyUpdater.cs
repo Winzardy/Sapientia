@@ -6,21 +6,21 @@ namespace Sapientia.MemoryAllocator.State
 {
 	internal readonly unsafe ref struct DestroyUpdater
 	{
-		private readonly World _world;
+		private readonly WorldState _worldState;
 		private readonly SafePtr<EntityStatePart> _entitiesStatePart;
 		private readonly ArchetypeContext<DestroyRequest> _destroyRequestArchetype;
 		private readonly ArchetypeContext<KillRequest> _killRequestArchetype;
 		private readonly ArchetypeContext<DelayKillRequest> _delayKillRequestArchetype;
 		private readonly ArchetypeContext<KillElement> _killElementsArchetype;
 
-		public DestroyUpdater(World world)
+		public DestroyUpdater(WorldState worldState)
 		{
-			_world = world;
-			_entitiesStatePart = _world.GetServicePtr<EntityStatePart>();
-			_destroyRequestArchetype = new (_world);
-			_killRequestArchetype = new (_world);
-			_delayKillRequestArchetype = new (_world);
-			_killElementsArchetype = new (_world);
+			_worldState = worldState;
+			_entitiesStatePart = _worldState.GetServicePtr<EntityStatePart>();
+			_destroyRequestArchetype = new (_worldState);
+			_killRequestArchetype = new (_worldState);
+			_delayKillRequestArchetype = new (_worldState);
+			_killElementsArchetype = new (_worldState);
 		}
 
 		public void Update(float deltaTime)
@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator.State
 				elementsToDestroy[i] = destroyRequests[i].entity;
 			}
 
-			_entitiesStatePart.ptr->DestroyEntities(_world, elementsToDestroy, count);
+			_entitiesStatePart.ptr->DestroyEntities(_worldState, elementsToDestroy, count);
 		}
 
 		/// <summary>
@@ -105,24 +105,24 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				for (var i = 0; i < destroyElement.killCallbacks.Count; i++)
 				{
-					ref var killCallback = ref destroyElement.killCallbacks[_world, i];
+					ref var killCallback = ref destroyElement.killCallbacks[_worldState, i];
 
 					if (killCallback.callback.IsCreated)
 					{
-						killCallback.callback.EntityKilled(_world, _world, killCallback.target);
-						killCallback.callback.Dispose(_world);
+						killCallback.callback.EntityKilled(_worldState, _worldState, killCallback.target);
+						killCallback.callback.Dispose(_worldState);
 					}
 
 					ref var targetElement = ref _killElementsArchetype.TryGetElement(killCallback.target, out var isTargetExist);
-					if (!isTargetExist || !_entitiesStatePart.ptr->IsEntityExist(_world, killCallback.target))
+					if (!isTargetExist || !_entitiesStatePart.ptr->IsEntityExist(_worldState, killCallback.target))
 						continue;
 					if (targetElement.killCallbackHolders.IsCreated)
 						continue;
 
 					for (var j = 0; j < targetElement.killCallbackHolders.Count; j++)
 					{
-						if (targetElement.killCallbackHolders[_world, i].id == entity.id)
-							targetElement.killCallbackHolders.RemoveAtSwapBack(_world, i);
+						if (targetElement.killCallbackHolders[_worldState, i].id == entity.id)
+							targetElement.killCallbackHolders.RemoveAtSwapBack(_worldState, i);
 					}
 				}
 				destroyElement.killCallbacks.Clear();
@@ -132,16 +132,16 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				for (var i = 0; i < destroyElement.killCallbackHolders.Count; i++)
 				{
-					var holder = destroyElement.killCallbackHolders[_world, i];
-					if (!_killElementsArchetype.HasElement(holder) || !_entitiesStatePart.ptr->IsEntityExist(_world, holder))
+					var holder = destroyElement.killCallbackHolders[_worldState, i];
+					if (!_killElementsArchetype.HasElement(holder) || !_entitiesStatePart.ptr->IsEntityExist(_worldState, holder))
 						continue;
 					ref var holderElement = ref _killElementsArchetype.GetElement(holder);
 					for (var j = 0; j < holderElement.killCallbacks.Count; j++)
 					{
-						if (holderElement.killCallbacks[_world, j].target.id == entity.id)
+						if (holderElement.killCallbacks[_worldState, j].target.id == entity.id)
 						{
-							holderElement.killCallbacks[_world, j].callback.Dispose(_world);
-							holderElement.killCallbacks.RemoveAtSwapBack(_world, j);
+							holderElement.killCallbacks[_worldState, j].callback.Dispose(_worldState);
+							holderElement.killCallbacks.RemoveAtSwapBack(_worldState, j);
 							break;
 						}
 					}
@@ -165,16 +165,16 @@ namespace Sapientia.MemoryAllocator.State
 
 			for (var i = 0; i < destroyElement.parents.Count; i++)
 			{
-				var parent = destroyElement.parents[_world, i];
+				var parent = destroyElement.parents[_worldState, i];
 				ref var parentElement = ref _killElementsArchetype.TryGetElement(parent, out var isParentExist);
-				if (!isParentExist || !_entitiesStatePart.ptr->IsEntityExist(_world, parent))
+				if (!isParentExist || !_entitiesStatePart.ptr->IsEntityExist(_worldState, parent))
 					continue;
 
 				for (var j = 0; j < parentElement.children.Count; j++)
 				{
-					if (parentElement.children[_world, j].id == entity.id)
+					if (parentElement.children[_worldState, j].id == entity.id)
 					{
-						parentElement.children.RemoveAtSwapBack(_world, j);
+						parentElement.children.RemoveAtSwapBack(_worldState, j);
 						break;
 					}
 				}
@@ -196,9 +196,9 @@ namespace Sapientia.MemoryAllocator.State
 				return;
 			for (var i = 0; i < destroyElement.children.Count; i++)
 			{
-				var child = destroyElement.children[_world, i];
+				var child = destroyElement.children[_worldState, i];
 
-				if (!_entitiesStatePart.ptr->IsEntityExist(_world, child))
+				if (!_entitiesStatePart.ptr->IsEntityExist(_worldState, child))
 					continue;
 
 				_killRequestArchetype.GetElement(child, out var isChildExist);

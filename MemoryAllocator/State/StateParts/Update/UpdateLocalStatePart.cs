@@ -1,16 +1,18 @@
 namespace Sapientia.MemoryAllocator.State
 {
-	public class UpdateLocalStatePart : IWoldLocalStatePart
+	public struct UpdateLocalStatePart : IWorldUnmanagedLocalStatePart
 	{
 		public StateUpdateData stateUpdateData;
 
-		public float worldTimeDebt = 0;
+		public float worldTimeDebt;
 
-		private int _pauseCount = 0;
+		private int _pauseCount;
 
 		public UpdateLocalStatePart(StateUpdateData stateUpdateData)
 		{
 			this.stateUpdateData = stateUpdateData;
+			worldTimeDebt = 0;
+			_pauseCount = 0;
 		}
 
 		public void ResumeSimulation()
@@ -24,12 +26,12 @@ namespace Sapientia.MemoryAllocator.State
 			_pauseCount++;
 		}
 
-		public bool CanUpdate()
+		public bool IsPaused()
 		{
-			return _pauseCount == 0;
+			return _pauseCount > 0;
 		}
 
-		public bool CanLateUpdate()
+		public bool ShouldLateUpdate()
 		{
 			return true;
 		}
