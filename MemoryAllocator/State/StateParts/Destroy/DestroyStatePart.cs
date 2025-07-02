@@ -33,7 +33,7 @@ namespace Sapientia.MemoryAllocator.State
 
 	public struct DestroyStatePart : IWorldStatePart
 	{
-		public unsafe void Initialize(WorldState worldState, IndexedPtr self)
+		public void Initialize(WorldState worldState, IndexedPtr self)
 		{
 			Archetype.RegisterArchetype<KillElement>(worldState, 2048).SetDestroyHandler<KillElementDestroyHandler>(worldState);
 			Archetype.RegisterArchetype<KillRequest>(worldState, 256);
