@@ -1,35 +1,16 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace Sapientia.Data
 {
 	public class AsyncClass
 	{
-		private volatile int _threadId = -1;
-		private volatile int _count = 0;
+		private AsyncValue _asyncValue = AsyncValue.Create();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TrySetBusy(bool ignoreThreadId = false)
 		{
-			if (_count > 0)
-			{
-				if (ignoreThreadId)
-					return false;
-				var currentThreadId = Environment.CurrentManagedThreadId;
-				if (_threadId != currentThreadId)
-					return false;
-			}
-			else
-			{
-				var currentThreadId = Environment.CurrentManagedThreadId;
-				var threadId = _threadId;
-				if (Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) != threadId)
-					return false;
-			}
-
-			Interlocked.Increment(ref _count);
-			return true;
+			return _asyncValue.TrySetBusy(ignoreThreadId);
 		}
 
 		/// <param name="ignoreThreadId">
@@ -63,45 +44,13 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBusy(bool ignoreThreadId = false)
 		{
-			var currentThreadId = Environment.CurrentManagedThreadId;
-			var spin = new SpinWait();
-
-			if (ignoreThreadId)
-			{
-				var threadId = _threadId;
-				while (_count > 0 || Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) != threadId)
-				{
-					spin.SpinOnce();
-					threadId = _threadId;
-				}
-			}
-			else
-			{
-				while (true)
-				{
-					if (_count == 0)
-					{
-						var threadId = _threadId;
-						if (Interlocked.CompareExchange(ref _threadId, currentThreadId, threadId) == threadId)
-							break;
-					}
-					else if (_threadId == currentThreadId)
-						break;
-
-					spin.SpinOnce();
-				}
-			}
-
-			Interlocked.Increment(ref _count);
+			_asyncValue.SetBusy(ignoreThreadId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetFree(bool ignoreThreadId = false)
 		{
-			if (!ignoreThreadId)
-				E.ASSERT(_threadId == Environment.CurrentManagedThreadId);
-			E.ASSERT(_count > 0);
-			Interlocked.Decrement(ref _count);
+			_asyncValue.SetFree(ignoreThreadId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
