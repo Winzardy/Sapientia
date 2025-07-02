@@ -220,21 +220,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(WorldState worldState)
+		public ListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(worldState), 0, Count);
-		}
-
-		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(WorldState worldState)
-		{
-			return new (new (GetValuePtr(worldState), Count));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
-		{
-			return new (new (GetValuePtr(worldState), 0, Count));
+			return new (GetEnumerator(worldState));
 		}
 
 		private class MemArrayProxy

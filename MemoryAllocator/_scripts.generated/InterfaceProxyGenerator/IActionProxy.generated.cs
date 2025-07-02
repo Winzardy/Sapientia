@@ -60,9 +60,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Invoke(this ref ProxyEvent<IActionProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			foreach (ProxyPtr<IActionProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IActionProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.Invoke(__proxyPtr->GetPtr(__worldState).ptr, worldState);
+				__proxyPtr.proxy.Invoke(__proxyPtr.GetPtr(__worldState).ptr, worldState);
 			}
 		}
 
@@ -81,9 +81,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyEvent<IActionProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			foreach (ProxyPtr<IActionProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IActionProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__worldState).ptr, worldState);
+				__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__worldState).ptr, worldState);
 			}
 		}
 

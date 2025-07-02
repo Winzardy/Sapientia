@@ -60,9 +60,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void EntityArrayDestroyed(this ref ProxyEvent<IEntityDestroySubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.State.Entity* entities, System.Int32 count)
 		{
-			foreach (ProxyPtr<IEntityDestroySubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IEntityDestroySubscriberProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.EntityArrayDestroyed(__proxyPtr->GetPtr(__worldState).ptr, worldState, entities, count);
+				__proxyPtr.proxy.EntityArrayDestroyed(__proxyPtr.GetPtr(__worldState).ptr, worldState, entities, count);
 			}
 		}
 
@@ -81,9 +81,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyEvent<IEntityDestroySubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			foreach (ProxyPtr<IEntityDestroySubscriberProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IEntityDestroySubscriberProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__worldState).ptr, worldState);
+				__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__worldState).ptr, worldState);
 			}
 		}
 

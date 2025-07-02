@@ -52,6 +52,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public List(WorldState worldState, ListEnumerable<T> enumerable, int capacity) : this(worldState, capacity)
+		{
+			AddRange(worldState, enumerable);
+		}
+
+		[INLINE(256)]
 		public void ReplaceWith(WorldState worldState, in List<T> other)
 		{
 			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
@@ -288,6 +294,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
+		public void AddRange(WorldState worldState, ListEnumerable<T> collection)
+		{
+			foreach (var value in collection)
+			{
+				Add(worldState, value);
+			}
+		}
+
+		[INLINE(256)]
 		public readonly void CopyTo(WorldState worldState, MemArray<T> arr, int srcOffset, int index, int count)
 		{
 			worldState.MemCopy<T>(_arr.innerArray.ptr.memPtr, srcOffset, arr.innerArray.ptr.memPtr, index, count);
@@ -307,25 +322,13 @@ namespace Sapientia.MemoryAllocator
 		[INLINE(256)]
 		public ListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new ListEnumerator<T>(GetValuePtr(worldState), Count);
+			return new ListEnumerator<T>(GetValuePtr(worldState),0 , Count);
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(WorldState worldState)
+		public ListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(worldState), 0, Count);
-		}
-
-		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(WorldState worldState)
-		{
-			return new (new (GetValuePtr(worldState), Count));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
-		{
-			return new (new (GetValuePtr(worldState), 0, Count));
+			return new (GetEnumerator(worldState));
 		}
 
 		private class ListProxy

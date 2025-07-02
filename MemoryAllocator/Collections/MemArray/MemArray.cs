@@ -244,21 +244,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public ListPtrEnumerator<T> GetPtrEnumerator<T>(WorldState worldState) where T: unmanaged
+		public ListEnumerable<T> GetEnumerable<T>(WorldState worldState) where T: unmanaged
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(worldState), ElementSize, Count);
-		}
-
-		[INLINE(256)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable<T>(WorldState worldState) where T: unmanaged
-		{
-			return new (new (GetValuePtr<T>(worldState), Count));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable<T>(WorldState worldState) where T: unmanaged
-		{
-			return new (new (GetValuePtr(worldState), ElementSize, Count));
+			return new (GetEnumerator<T>(worldState));
 		}
 	}
 }

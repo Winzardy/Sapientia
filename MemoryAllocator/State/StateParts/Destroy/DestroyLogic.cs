@@ -90,7 +90,7 @@ namespace Sapientia.MemoryAllocator.State
 			AddKillParent(child, parent);
 		}
 
-		public void AddKillChildren<T>(Entity parent, in T children) where T: IEnumerable<Entity>
+		public void AddKillChildren(Entity parent, ListEnumerable<Entity> children)
 		{
 			E.ASSERT(IsAlive(parent));
 

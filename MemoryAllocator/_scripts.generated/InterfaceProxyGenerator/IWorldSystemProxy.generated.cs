@@ -105,9 +105,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Update(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IWorldSystemProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.Update(__proxyPtr->GetPtr(__worldState).ptr, worldState, self, deltaTime);
+				__proxyPtr.proxy.Update(__proxyPtr.GetPtr(__worldState).ptr, worldState, self, deltaTime);
 			}
 		}
 
@@ -126,9 +126,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void LateUpdate(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IWorldSystemProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.LateUpdate(__proxyPtr->GetPtr(__worldState).ptr, worldState, self);
+				__proxyPtr.proxy.LateUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
 			}
 		}
 
@@ -147,9 +147,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void ProxyDispose(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IWorldSystemProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.ProxyDispose(__proxyPtr->GetPtr(__worldState).ptr, worldState);
+				__proxyPtr.proxy.ProxyDispose(__proxyPtr.GetPtr(__worldState).ptr, worldState);
 			}
 		}
 
@@ -168,9 +168,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Initialize(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IWorldSystemProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.Initialize(__proxyPtr->GetPtr(__worldState).ptr, worldState, self);
+				__proxyPtr.proxy.Initialize(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
 			}
 		}
 
@@ -189,9 +189,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void LateInitialize(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IWorldSystemProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.LateInitialize(__proxyPtr->GetPtr(__worldState).ptr, worldState, self);
+				__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
 			}
 		}
 
@@ -210,9 +210,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Start(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IWorldSystemProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.Start(__proxyPtr->GetPtr(__worldState).ptr, worldState, self);
+				__proxyPtr.proxy.Start(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
 			}
 		}
 
@@ -231,9 +231,9 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Dispose(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			foreach (ProxyPtr<IWorldSystemProxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			foreach (ref ProxyPtr<IWorldSystemProxy> __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr->proxy.Dispose(__proxyPtr->GetPtr(__worldState).ptr, worldState, self);
+				__proxyPtr.proxy.Dispose(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
 			}
 		}
 

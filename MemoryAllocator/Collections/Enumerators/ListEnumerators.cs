@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 
@@ -14,56 +12,54 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new ListEnumerator<T>(GetValuePtr(worldState), Count);
+			return new ListEnumerator<T>(GetValuePtr(worldState), 0, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator<T> GetPtrEnumerator(WorldState worldState)
+		public ListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
-			return new ListPtrEnumerator<T>(GetValuePtr(worldState), 0, Count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(WorldState worldState)
-		{
-			return new (new (GetValuePtr(worldState), Count));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
-		{
-			return new (new (GetValuePtr(worldState), 0, Count));
+			return new (GetEnumerator(worldState));
 		}
 	}
 
-	public struct ListPtrEnumerator<T> : IEnumerator<SafePtr>, IEnumerator<SafePtr<T>>
-		where T: unmanaged
+	public readonly ref struct ListEnumerable<T>
+		where T : unmanaged
+	{
+		private readonly ListEnumerator<T> _enumerator;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal ListEnumerable(ListEnumerator<T> enumerator)
+		{
+			_enumerator = enumerator;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ListEnumerator<T> GetEnumerator()
+		{
+			return _enumerator;
+		}
+	}
+
+	public ref struct ListEnumerator<T> where T: unmanaged
 	{
 		private readonly SafePtr<T> _valuePtr;
 		private readonly int _count;
 
 		private int _index;
 
-		SafePtr<T> IEnumerator<SafePtr<T>>.Current
+		public ref T Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _valuePtr + _index;
-		}
-
-		public SafePtr Current
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _valuePtr + _index;
-		}
-
-		object IEnumerator.Current
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => Current;
+			get => ref (_valuePtr + _index).Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListPtrEnumerator(SafePtr<T> valuePtr, int startIndex, int count)
+		public ListEnumerator(SafePtr<T> valuePtr, int count) : this(valuePtr, 0, count)
+		{
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ListEnumerator(SafePtr<T> valuePtr, int startIndex, int count)
 		{
 			_valuePtr = valuePtr;
 			_index = startIndex - 1;
@@ -87,56 +83,5 @@ namespace Sapientia.MemoryAllocator
 		{
 			this = default;
 		}
-	}
-
-	public struct ListEnumerator<T> : IEnumerator<T> where T: unmanaged
-	{
-		private readonly SafePtr<T> _valuePtr;
-		private readonly int _count;
-
-		private int _index;
-
-		public T Current
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _valuePtr[_index];
-		}
-
-		object IEnumerator.Current
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => Current;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator(SafePtr<T> valuePtr, int count)
-		{
-			_valuePtr = valuePtr;
-			_index = -1;
-			_count = count;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator(SafePtr<T> valuePtr, int startIndex, int count)
-		{
-			_valuePtr = valuePtr;
-			_index = startIndex;
-			_count = count;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool MoveNext()
-		{
-			return ++_index < _count;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Reset()
-		{
-			_index = -1;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose() {}
 	}
 }

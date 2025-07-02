@@ -45,16 +45,16 @@ namespace Sapientia.MemoryAllocator
 				elementsService.AddWorldSystem(worldState, system);
 			}
 
-			foreach (var element in elementsService.worldElements.GetPtrEnumerable(worldState))
+			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
-				element.ptr->Initialize(worldState, worldState, element.ptr->indexedPtr);
+				element.Initialize(worldState, worldState, element.indexedPtr);
 			}
 
 			LocalStatePartService.Initialize(worldState);
 
-			foreach (var element in elementsService.worldElements.GetPtrEnumerable(worldState))
+			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
-				element.ptr->LateInitialize(worldState, worldState, element.ptr->indexedPtr);
+				element.LateInitialize(worldState, worldState, element.indexedPtr);
 			}
 		}
 
@@ -65,9 +65,9 @@ namespace Sapientia.MemoryAllocator
 			using var scope = worldState.GetWorldScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
-			foreach (var element in elementsService.worldElements.GetPtrEnumerable(worldState))
+			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
-				element.ptr->Start(worldState, worldState, element.ptr->indexedPtr);
+				element.Start(worldState, worldState, element.indexedPtr);
 			}
 			IsStarted = true;
 
@@ -84,9 +84,9 @@ namespace Sapientia.MemoryAllocator
 			worldState.Time += deltaTime;
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
-			foreach (ProxyPtr<IWorldSystemProxy>* system in elementsService.worldSystems.GetPtrEnumerable(worldState))
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
-				system->Update(worldState, worldState, system->indexedPtr, deltaTime);
+				system.Update(worldState, worldState, system.indexedPtr, deltaTime);
 			}
 
 			ScheduleLateUpdate = true;
@@ -101,9 +101,9 @@ namespace Sapientia.MemoryAllocator
 			using var scope = worldState.GetWorldScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
-			foreach (var system in elementsService.worldSystems.GetPtrEnumerable(worldState))
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
-				system.ptr->LateUpdate(worldState, worldState, system.ptr->indexedPtr);
+				system.LateUpdate(worldState, worldState, system.indexedPtr);
 			}
 
 			SendLateUpdateMessage();
@@ -117,9 +117,9 @@ namespace Sapientia.MemoryAllocator
 			SendBeginDisposeMessage();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
-			foreach (ProxyPtr<IWorldElementProxy>* element in elementsService.worldElements.GetPtrEnumerable(worldState))
+			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
-				element->Dispose(worldState, worldState, element->indexedPtr);
+				element.Dispose(worldState, worldState, element.indexedPtr);
 			}
 
 			SendDisposedMessage();

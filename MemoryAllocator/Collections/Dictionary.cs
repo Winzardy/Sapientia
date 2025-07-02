@@ -444,21 +444,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public DictionaryPtrEnumerator<TKey, TValue> GetPtrEnumerator(WorldState worldState)
+		public DictionaryEnumerable<TKey, TValue> GetEnumerable(WorldState worldState)
 		{
-			return new DictionaryPtrEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
-		}
-
-		[INLINE(256)]
-		public Enumerable<Entry, DictionaryEnumerator<TKey, TValue>> GetEnumerable(WorldState worldState)
-		{
-			return new(new(GetEntryPtr(worldState), LastIndex));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<TValue>, DictionaryPtrEnumerator<TKey, TValue>> GetPtrEnumerable(WorldState worldState)
-		{
-			return new(new(GetEntryPtr(worldState), LastIndex));
+			return new (GetEnumerator(worldState));
 		}
 
 		private class EquatableDictionaryProxy

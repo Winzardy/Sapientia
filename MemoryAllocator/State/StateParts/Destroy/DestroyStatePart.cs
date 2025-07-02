@@ -55,9 +55,9 @@ namespace Sapientia.MemoryAllocator.State
 
 				if (!value.killCallbacks.IsCreated)
 					continue;
-				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(worldState))
+				foreach (ref var component in value.killCallbacks.GetEnumerable(worldState))
 				{
-					component->callback.Dispose(worldState);
+					component.callback.Dispose(worldState);
 				}
 				value.killCallbacks.Clear();
 			}
@@ -71,9 +71,9 @@ namespace Sapientia.MemoryAllocator.State
 				value.children.Clear();
 				value.parents.Clear();
 				value.killCallbackHolders.Clear();
-				foreach (KillCallback* component in value.killCallbacks.GetPtrEnumerable(worldState))
+				foreach (ref var component in value.killCallbacks.GetEnumerable(worldState))
 				{
-					component->callback.Dispose(worldState);
+					component.callback.Dispose(worldState);
 				}
 				value.killCallbacks.Clear();
 			}

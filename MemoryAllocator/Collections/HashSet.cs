@@ -419,21 +419,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[INLINE(256)]
-		public HashSetPtrEnumerator<T> GetPtrEnumerator(WorldState worldState)
+		public HashSetEnumerable<T> GetEnumerable(WorldState worldState)
 		{
-			return new HashSetPtrEnumerator<T>(GetSlotPtr(worldState), LastIndex);
-		}
-
-		[INLINE(256)]
-		public Enumerable<T, HashSetEnumerator<T>> GetEnumerable(WorldState worldState)
-		{
-			return new (new (GetSlotPtr(worldState), LastIndex));
-		}
-
-		[INLINE(256)]
-		public Enumerable<SafePtr<T>, HashSetPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
-		{
-			return new (new (GetSlotPtr(worldState), LastIndex));
+			return new (GetEnumerator(worldState));
 		}
 
 		private class HashSetProxy

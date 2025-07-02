@@ -223,19 +223,19 @@ namespace Sapientia.TypeIndexer
 
 				{
 					var eventParametersString = parametersString.Replace("(", $"(this ref ProxyEvent<{baseType.Name}Proxy> __proxyEvent, {typeof(WorldState).FullName} __worldState" + (parameters.Length > 0 ? ", " : string.Empty));
-					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr->GetPtr(__worldState).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
+					var eventParametersWithoutTypeString = parametersWithoutTypeString.Replace("(", "(__proxyPtr.GetPtr(__worldState).ptr" + (parameters.Length > 0 ? ", " : string.Empty));
 
 					sourceBuilder.AppendLine($"		{MethodImplAttribute}");
 					sourceBuilder.AppendLine($"		public static {returnTypeString} {methodInfo.Name}{genericParametersString}{eventParametersString}");
 					sourceBuilder.AppendLine($"		{{");
 					if (!returnType.IsVoid())
 						sourceBuilder.AppendLine($"			{returnTypeString} __result = default;");
-					sourceBuilder.AppendLine($"			foreach (ProxyPtr<{baseType.Name}Proxy>* __proxyPtr in __proxyEvent.GetEnumerable(__worldState))");
+					sourceBuilder.AppendLine($"			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))");
 					sourceBuilder.AppendLine($"			{{");
 					if (returnType.IsVoid())
-						sourceBuilder.AppendLine($"				__proxyPtr->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"				__proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
 					else
-						sourceBuilder.AppendLine($"				__result = __proxyPtr->proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
+						sourceBuilder.AppendLine($"				__result = __proxyPtr.proxy.{methodInfo.Name}{genericParametersString}{eventParametersWithoutTypeString};");
 					sourceBuilder.AppendLine($"			}}");
 					if (!returnType.IsVoid())
 						sourceBuilder.AppendLine($"			return __result;");

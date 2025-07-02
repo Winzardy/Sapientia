@@ -31,15 +31,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<ProxyPtr<T>>, HashSetPtrEnumerator<ProxyPtr<T>>> GetEnumerable(WorldState worldState)
+		public HashSetEnumerator<ProxyPtr<T>> GetEnumerator(WorldState worldState)
 		{
-			return _proxies.GetPtrEnumerable(worldState);
+			return _proxies.GetEnumerator(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetPtrEnumerator<ProxyPtr<T>> GetEnumerator(WorldState worldState)
+		public HashSetEnumerable<ProxyPtr<T>> GetEnumerable(WorldState worldState)
 		{
-			return _proxies.GetPtrEnumerator(worldState);
+			return _proxies.GetEnumerable(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,9 +47,9 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (disposeProxies)
 			{
-				foreach (ProxyPtr<T>* proxy in _proxies.GetPtrEnumerable(worldState))
+				foreach (ref var proxy in _proxies.GetEnumerable(worldState))
 				{
-					proxy->Dispose(worldState);
+					proxy.Dispose(worldState);
 				}
 			}
 			_proxies.Dispose(worldState);

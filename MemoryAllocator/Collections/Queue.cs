@@ -140,21 +140,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferPtrEnumerator<T> GetPtrEnumerator(WorldState worldState)
+		public CircularBufferEnumerable<T> GetEnumerable(WorldState worldState)
 		{
-			return new CircularBufferPtrEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, CircularBufferEnumerator<T>> GetEnumerable(WorldState worldState)
-		{
-			return new (new (GetValuePtr(worldState), HeadIndex, Count, Capacity));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, CircularBufferPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
-		{
-			return new (new (GetValuePtr(worldState), HeadIndex, Count, Capacity));
+			return new (GetEnumerator(worldState));
 		}
 
 		private class QueueProxy

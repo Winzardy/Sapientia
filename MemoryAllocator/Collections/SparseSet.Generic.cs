@@ -110,15 +110,15 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<T, ListEnumerator<T>> GetEnumerable(WorldState worldState)
+		public ListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new (new (GetValuePtr(worldState), Count));
+			return new ListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Enumerable<SafePtr<T>, ListPtrEnumerator<T>> GetPtrEnumerable(WorldState worldState)
+		public ListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
-			return new (new (GetValuePtr(worldState), 0, Count));
+			return new (GetEnumerator(worldState));
 		}
 	}
 }
