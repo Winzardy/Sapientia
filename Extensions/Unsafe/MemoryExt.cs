@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Data;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 #if !UNITY_5_3_OR_NEWER || FORCE_MARSHAL_ALLOC
 using System.Runtime.InteropServices;
@@ -12,6 +12,11 @@ using System.Runtime.InteropServices;
 
 namespace Sapientia.Extensions
 {
+#if UNITY_5_3_OR_NEWER
+	using BurstDiscard = Unity.Burst.BurstDiscardAttribute;
+#else
+	using BurstDiscard = PlaceholderAttribute;
+#endif
 	public enum ClearOptions
 	{
 		ClearMemory,
@@ -26,9 +31,7 @@ namespace Sapientia.Extensions
 		private static readonly SimpleList<long> _memorySpaces = new SimpleList<long>(128);
 #endif
 
-#if UNITY_5_3_OR_NEWER
-		[Unity.Burst.BurstDiscard]
-#endif
+		[BurstDiscard]
 		[Conditional(E.DEBUG)]
 		private static void DebugMemAlloc(void* ptr, int size)
 		{
@@ -40,9 +43,7 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-#if UNITY_5_3_OR_NEWER
-		[Unity.Burst.BurstDiscard]
-#endif
+		[BurstDiscard]
 		[Conditional(E.DEBUG)]
 		private static void DebugMemFree(void* ptr)
 		{
@@ -55,9 +56,7 @@ namespace Sapientia.Extensions
 		}
 
 #if DEBUG
-#if UNITY_5_3_OR_NEWER
-		[Unity.Burst.BurstDiscard]
-#endif
+		[BurstDiscard]
 		private static void DebugRemoveMemorySpace(IntPtr ptr, out int size)
 		{
 			E.ASSERT(_allocations.Remove(ptr, out size));
@@ -72,9 +71,7 @@ namespace Sapientia.Extensions
 			_memorySpaces.RemoveAt(lowIndex);
 		}
 
-#if UNITY_5_3_OR_NEWER
-		[Unity.Burst.BurstDiscard]
-#endif
+		[BurstDiscard]
 		private static void DebugInsertMemorySpace(IntPtr ptr, int size)
 		{
 			var low = ptr.ToInt64();
@@ -90,9 +87,7 @@ namespace Sapientia.Extensions
 			_allocations.Add(ptr, size);
 		}
 
-#if UNITY_5_3_OR_NEWER
-		[Unity.Burst.BurstDiscard]
-#endif
+		[BurstDiscard]
 		private static bool DebugIsInBound(byte* lowPtr, byte* hiPtr)
 		{
 			if (!DebugIsInBound(((IntPtr)lowPtr).ToInt64(), out _))
@@ -100,9 +95,7 @@ namespace Sapientia.Extensions
 			return DebugIsInBound(((IntPtr)(hiPtr - 1)).ToInt64(), out _);
 		}
 
-#if UNITY_5_3_OR_NEWER
-		[Unity.Burst.BurstDiscard]
-#endif
+		[BurstDiscard]
 		private static bool DebugIsInBound(long ptr, out int index)
 		{
 			index = _memorySpaces.BinarySearch(ptr);
@@ -115,7 +108,7 @@ namespace Sapientia.Extensions
 #endif
 
 #if UNITY_5_4_OR_NEWER
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr MemAlloc(int size, int align, Unity.Collections.Allocator allocator, bool safetyCheck = true)
 		{
 			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, allocator);
@@ -127,19 +120,19 @@ namespace Sapientia.Extensions
 			return new SafePtr(ptr, size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr MemAlloc(int size, Unity.Collections.Allocator allocator)
 		{
 			return MemAlloc(size, TAlign<byte>.align, allocator);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> MemAlloc<T>(Unity.Collections.Allocator allocator) where T : unmanaged
 		{
 			return (SafePtr<T>)MemAlloc(TSize<T>.size, TAlign<T>.align, allocator);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> MemAllocAndClear<T>(Unity.Collections.Allocator allocator) where T : unmanaged
 		{
 			var size = TSize<T>.size;
@@ -150,7 +143,7 @@ namespace Sapientia.Extensions
 		}
 #endif
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr MemAlloc(int size, int align, bool safetyCheck = true)
 		{
 #if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
@@ -166,26 +159,26 @@ namespace Sapientia.Extensions
 			return new SafePtr(ptr, size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr MemAlloc(int size, bool safetyCheck = true)
 		{
 			return MemAlloc(size, TAlign<byte>.align, safetyCheck);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SentinelPtr<T> NullableMemAlloc<T>() where T : unmanaged
 		{
 			var ptr = MemAlloc(TSize<T>.size, TAlign<T>.align);
 			return SentinelPtr<T>.Create(ptr);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> MemAlloc<T>() where T : unmanaged
 		{
 			return MemAlloc(TSize<T>.size, TAlign<T>.align);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> MemAllocAndClear<T>() where T : unmanaged
 		{
 			var size = TSize<T>.size;
@@ -196,7 +189,7 @@ namespace Sapientia.Extensions
 		}
 
 #if UNITY_5_3_OR_NEWER
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemFree(SafePtr memory, Unity.Collections.Allocator allocator, bool safetyCheck = true)
 		{
 #if DEBUG
@@ -207,14 +200,14 @@ namespace Sapientia.Extensions
 		}
 #endif
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemFree(SentinelPtr memory, bool safetyCheck = true)
 		{
 			MemFree(memory.GetPtr(), safetyCheck);
 			memory.Dispose();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemFree(SafePtr memory, bool safetyCheck = true)
 		{
 #if DEBUG
@@ -228,7 +221,7 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemSet(SafePtr destination, byte value, int size)
 		{
 #if DEBUG
@@ -242,7 +235,7 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemFill<T>(T source, SafePtr<T> destination, int count) where T: unmanaged
 		{
 #if DEBUG
@@ -257,7 +250,7 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemFill<T>(SafePtr<T> source, SafePtr<T> destination, int count) where T: unmanaged
 		{
 #if DEBUG
@@ -272,13 +265,13 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemClear<T>(SafePtr<T> destination, int count) where T: unmanaged
 		{
 			MemClear((SafePtr)destination, TSize<T>.size * count);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemClear(SafePtr destination, int size)
 		{
 #if DEBUG
@@ -292,7 +285,7 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemCopy<T>(SafePtr<T> source, SafePtr<T> destination, int length) where T: unmanaged
 		{
 #if DEBUG
@@ -302,7 +295,7 @@ namespace Sapientia.Extensions
 			MemCopy<T>(source.ptr, destination.ptr, length);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemCopy<T>(T* source, T* destination, int length) where T: unmanaged
 		{
 			var size = length * TSize<T>.size;
@@ -313,7 +306,7 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemCopy(SafePtr source, SafePtr destination, int size)
 		{
 #if DEBUG
@@ -327,13 +320,13 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemSwap<T>(SafePtr<T> a, SafePtr<T> b) where T: unmanaged
 		{
 			MemSwap((SafePtr)a, (SafePtr)b, TSize<T>.size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemSwap(SafePtr a, SafePtr b, int size)
 		{
 #if DEBUG
@@ -353,13 +346,13 @@ namespace Sapientia.Extensions
 #endif
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemMove<T>(SafePtr<T> source, SafePtr<T> destination, int count) where T: unmanaged
 		{
 			MemMove((SafePtr)source, (SafePtr)destination, count * TSize<T>.size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemMove(SafePtr source, SafePtr destination, int size)
 		{
 #if DEBUG
@@ -380,7 +373,7 @@ namespace Sapientia.Extensions
 		}
 
 #if UNITY_5_4_OR_NEWER
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> MakeArray<T>(int length, Unity.Collections.Allocator allocator, bool clearMemory = true, bool safetyCheck = true) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
@@ -392,7 +385,7 @@ namespace Sapientia.Extensions
 		}
 #endif
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> MakeArray<T>(int length, bool clearMemory = true, bool safetyCheck = true) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
@@ -403,7 +396,7 @@ namespace Sapientia.Extensions
 			return (SafePtr<T>)ptr;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void ResizeArray(ref SafePtr arr, ref int length, int newLength, bool powerOfTwo = false, bool clearMemory = false, bool safetyCheck = true)
 		{
 			if (newLength <= length)
@@ -427,7 +420,7 @@ namespace Sapientia.Extensions
 		}
 
 #if UNITY_5_3_OR_NEWER
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void ResizeArray<T>(ref SafePtr<T> arr, ref int length, int newLength, Unity.Collections.Allocator allocator, bool powerOfTwo = false, bool clearMemory = false, bool safetyCheck = true)
 			where T : unmanaged
 		{
@@ -452,7 +445,7 @@ namespace Sapientia.Extensions
 		}
 #endif
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void ResizeArray<T>(ref SafePtr<T> arr, ref int length, int newLength, bool powerOfTwo = false, bool clearMemory = false, bool safetyCheck = true)
 			where T : unmanaged
 		{
@@ -487,7 +480,7 @@ namespace Sapientia.Extensions
 		/// <param name="alignmentPowerOfTwo">A non-zero, positive power of two.</param>
 		/// <returns>The smallest integer that is greater than or equal to `size` and is a multiple of `alignmentPowerOfTwo`.</returns>
 		/// <exception cref="ArgumentException">Thrown if `alignmentPowerOfTwo` is not a non-zero, positive power of two.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Align(int size, int alignmentPowerOfTwo)
 		{
 			// Copy of Unity CollectionHelper.Align
