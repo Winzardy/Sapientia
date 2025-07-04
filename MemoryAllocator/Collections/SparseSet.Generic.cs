@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
@@ -59,6 +60,12 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr<T> GetValuePtr(WorldState worldState)
 		{
 			return _innerSet.GetValuePtr<T>(worldState);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> GetSpan(WorldState worldState)
+		{
+			return _innerSet.GetSpan<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

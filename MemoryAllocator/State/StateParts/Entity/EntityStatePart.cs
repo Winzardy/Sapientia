@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections.FixedString;
 using Sapientia.Extensions;
@@ -20,6 +21,7 @@ namespace Sapientia.MemoryAllocator.State
 		private MemArray<ushort> _freeEntitiesIds;
 		private MemArray<ushort> _entityIdToGeneration;
 		private ProxyEvent<IEntityDestroySubscriberProxy> _entityDestroySubscribers;
+		private SparseSet<Entity> _aliveEntities;
 
 #if ENABLE_ENTITY_NAMES
 		public MemArray<FixedString64Bytes> entityIdToName;
@@ -43,10 +45,16 @@ namespace Sapientia.MemoryAllocator.State
 			_freeEntitiesIds = default;
 			_entityIdToGeneration = default;
 			_entityDestroySubscribers = default;
+			_aliveEntities = default;
 #if ENABLE_ENTITY_NAMES
 			entityIdToName = default;
 			MaxEntitiesCount = 0;
 #endif
+		}
+
+		public Span<Entity> GetAliveEntities(WorldState worldState)
+		{
+			return _aliveEntities.GetSpan(worldState);
 		}
 
 		public void Initialize(WorldState worldState, IndexedPtr self)
@@ -54,6 +62,7 @@ namespace Sapientia.MemoryAllocator.State
 			_freeEntitiesIds = new MemArray<ushort>(worldState, EntitiesCapacity, ClearOptions.UninitializedMemory);
 			_entityIdToGeneration = new MemArray<ushort>(worldState, EntitiesCapacity);
 			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(worldState, 256);
+			_aliveEntities = new SparseSet<Entity>(worldState, EntitiesCapacity, EntitiesCapacity);
 #if ENABLE_ENTITY_NAMES
 			entityIdToName = new MemArray<FixedString64Bytes>(worldState, EntitiesCapacity);
 #endif
@@ -98,6 +107,8 @@ namespace Sapientia.MemoryAllocator.State
 			var generation = ++_entityIdToGeneration[worldState, id];
 
 			var entity = new Entity(id, generation, worldState.WorldId);
+			_aliveEntities.EnsureGet(worldState, entity.id) = entity;
+
 #if ENABLE_ENTITY_NAMES
 			entityIdToName[worldState, id] = name;
 			if (MaxEntitiesCount < EntitiesCount)
@@ -128,6 +139,7 @@ namespace Sapientia.MemoryAllocator.State
 
 				_entityIdToGeneration[worldState, entityId]++;
 				_freeEntitiesIds[worldState, --EntitiesCount] = entityId;
+				_aliveEntities.RemoveSwapBack(worldState, entityId);
 			}
 		}
 

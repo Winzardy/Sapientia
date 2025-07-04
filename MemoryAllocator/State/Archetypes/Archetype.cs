@@ -205,7 +205,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Span<ArchetypeElement<T>> GetSpan<T>(WorldState worldState) where T: unmanaged
 		{
-			return new Span<ArchetypeElement<T>>(_elements.GetValuePtr<ArchetypeElement<T>>(worldState).ptr, Count);
+			return _elements.GetSpan<ArchetypeElement<T>>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

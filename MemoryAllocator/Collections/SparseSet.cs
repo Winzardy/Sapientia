@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
@@ -94,6 +95,12 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr<T> GetValuePtr<T>(WorldState worldState, int id) where T: unmanaged
 		{
 			return _values.GetValuePtr<T>(worldState, _sparse[worldState, id]);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> GetSpan<T>(WorldState worldState) where T: unmanaged
+		{
+			return GetValuePtr<T>(worldState).GetSpan(_count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
