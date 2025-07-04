@@ -47,7 +47,9 @@ namespace Sapientia.MemoryAllocator.State
 			_freeEntitiesIds = default;
 			_entityIdToGeneration = default;
 			_entityDestroySubscribers = default;
+#if DEBUG
 			_aliveEntities = default;
+#endif
 #if ENABLE_ENTITY_NAMES
 			entityIdToName = default;
 			MaxEntitiesCount = 0;
