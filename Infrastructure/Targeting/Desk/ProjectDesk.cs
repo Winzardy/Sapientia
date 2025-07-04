@@ -8,17 +8,8 @@ namespace Targeting
 	/// </summary>
 	public class ProjectDesk : StaticProvider<IProjectDeskAttendant>
 	{
-		private static IProjectDeskAttendant attendant
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _instance;
-		}
-
-		public static bool IsInitialized
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _instance != null;
-		}
+		private static IProjectDeskAttendant attendant => _instance;
+		public static bool IsInitialized => _instance != null;
 
 		public static string Version => attendant.GetVersion();
 		public static string Identifier => attendant.Identifier;
@@ -28,8 +19,10 @@ namespace Targeting
 		public static IReactiveProperty<string> UserId => attendant.UserId;
 
 		public static string GetReviewLink() => GetReviewLink(Distribution);
-
 		public static string GetReviewLink(DistributionEntry store) => attendant.GetStoreUrl(store);
+
+		public static string GetStoreUrl() => GetStoreUrl(Distribution);
+		public static string GetStoreUrl(DistributionEntry store) => attendant.GetStoreUrl(store);
 
 		public static void SetUserId(string userId) => attendant.SetUserId(userId);
 	}
