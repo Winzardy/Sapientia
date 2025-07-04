@@ -21,7 +21,9 @@ namespace Sapientia.MemoryAllocator.State
 		private MemArray<ushort> _freeEntitiesIds;
 		private MemArray<ushort> _entityIdToGeneration;
 		private ProxyEvent<IEntityDestroySubscriberProxy> _entityDestroySubscribers;
+#if DEBUG
 		private SparseSet<Entity> _aliveEntities;
+#endif
 
 #if ENABLE_ENTITY_NAMES
 		public MemArray<FixedString64Bytes> entityIdToName;
@@ -52,17 +54,21 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 		}
 
+#if DEBUG
 		public Span<Entity> GetAliveEntities(WorldState worldState)
 		{
 			return _aliveEntities.GetSpan(worldState);
 		}
+#endif
 
 		public void Initialize(WorldState worldState, IndexedPtr self)
 		{
 			_freeEntitiesIds = new MemArray<ushort>(worldState, EntitiesCapacity, ClearOptions.UninitializedMemory);
 			_entityIdToGeneration = new MemArray<ushort>(worldState, EntitiesCapacity);
 			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(worldState, 256);
+#if DEBUG
 			_aliveEntities = new SparseSet<Entity>(worldState, EntitiesCapacity, EntitiesCapacity);
+#endif
 #if ENABLE_ENTITY_NAMES
 			entityIdToName = new MemArray<FixedString64Bytes>(worldState, EntitiesCapacity);
 #endif
@@ -107,7 +113,9 @@ namespace Sapientia.MemoryAllocator.State
 			var generation = ++_entityIdToGeneration[worldState, id];
 
 			var entity = new Entity(id, generation, worldState.WorldId);
+#if DEBUG
 			_aliveEntities.EnsureGet(worldState, entity.id) = entity;
+#endif
 
 #if ENABLE_ENTITY_NAMES
 			entityIdToName[worldState, id] = name;
@@ -139,7 +147,9 @@ namespace Sapientia.MemoryAllocator.State
 
 				_entityIdToGeneration[worldState, entityId]++;
 				_freeEntitiesIds[worldState, --EntitiesCount] = entityId;
+#if DEBUG
 				_aliveEntities.RemoveSwapBack(worldState, entityId);
+#endif
 			}
 		}
 

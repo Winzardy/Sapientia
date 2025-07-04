@@ -100,7 +100,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Span<T> GetSpan<T>(WorldState worldState) where T: unmanaged
 		{
-			return GetValuePtr<T>(worldState).GetSpan(_count);
+			return GetValuePtr<T>(worldState).GetSpan(0, _count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

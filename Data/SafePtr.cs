@@ -293,7 +293,13 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<T> GetSpan(int index, int length = 1)
+		public Span<T> GetSpan(int length)
+		{
+			return GetSpan(0, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> GetSpan(int index, int length)
 		{
 #if DEBUG
 			var result = (byte*)(ptr + index);
