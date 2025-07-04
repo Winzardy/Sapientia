@@ -9,7 +9,7 @@ namespace Sapientia.Collections.FixedString
 		int Length { get; set; }
 		int Capacity { get; }
 
-		unsafe SafePtr GetSafePtr();
+		SafePtr GetSafePtr();
 
 		bool TryResize(int newLength, ClearOptions clearOptions = ClearOptions.ClearMemory);
 	}

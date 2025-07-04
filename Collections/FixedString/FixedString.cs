@@ -18,9 +18,6 @@ namespace Sapientia.Collections.FixedString
 	/// </summary>
 	[Serializable]
 	[StructLayout(LayoutKind.Explicit, Size = 16)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
 	public struct FixedBytes16
 	{
 		/// <summary>
@@ -114,9 +111,7 @@ namespace Sapientia.Collections.FixedString
 	/// </summary>
 	[Serializable]
 	[StructLayout(LayoutKind.Explicit, Size = 30)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public struct FixedBytes30
 	{
 		/// <summary>
@@ -210,9 +205,7 @@ namespace Sapientia.Collections.FixedString
 	/// </remarks>
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential, Size = 32)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public unsafe struct FixedString32Bytes
 		: IFixedString
 			, IComparable<String>
@@ -245,9 +238,6 @@ namespace Sapientia.Collections.FixedString
 		[Unity.Properties.CreateProperty]
 #endif
 		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public string Value => ToString();
 
 		/// <summary>
@@ -472,11 +462,6 @@ namespace Sapientia.Collections.FixedString
 		/// -1 denotes that this string should be sorted to precede the other string.<br/>
 		/// +1 denotes that this string should be sorted to follow the other string.<br/>
 		/// </returns>
-#if BURST
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
-#endif
 		public int CompareTo(string other)
 		{
 			return ToString().CompareTo(other);
@@ -487,9 +472,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="other">A string to compare for equality.</param>
 		/// <returns>True if this string and the other have the same length and all the same characters.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public bool Equals(string other)
 		{
 			int alen = utf8LengthInBytes;
@@ -506,9 +488,6 @@ namespace Sapientia.Collections.FixedString
 		/// Initializes and returns an instance of FixedString32Bytes with the characters copied from a string.
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public FixedString32Bytes(string source)
 		{
 			this = default;
@@ -521,9 +500,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
 		/// <returns>zero on success, or non-zero on error.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		internal int Initialize(string source)
 		{
 			bytes = default;
@@ -884,18 +860,12 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="b">A string to copy.</param>
 		/// <returns>A new FixedString32Bytes that is a copy of another string.</returns>
 		/// <exception cref="IndexOutOfRangeException">Thrown if the string to copy's length exceeds the capacity of FixedString32Bytes.</exception>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public static implicit operator FixedString32Bytes(string b) => new FixedString32Bytes(b);
 
 		/// <summary>
 		/// Returns a new managed string that is a copy of this string.
 		/// </summary>
 		/// <returns>A new managed string that is a copy of this string.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override string ToString()
 		{
 			return this.ConvertToString();
@@ -920,9 +890,6 @@ namespace Sapientia.Collections.FixedString
 		/// Two strings are equal if they have equal length and all their characters match.</remarks>
 		/// <param name="obj">An object to compare for equality.</param>
 		/// <returns>True if this string and the object are equal.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
@@ -988,9 +955,7 @@ namespace Sapientia.Collections.FixedString
 	/// </summary>
 	[Serializable]
 	[StructLayout(LayoutKind.Explicit, Size = 62)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public struct FixedBytes62
 	{
 		/// <summary>
@@ -1094,9 +1059,7 @@ namespace Sapientia.Collections.FixedString
 	/// </remarks>
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential, Size = 64)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public unsafe struct FixedString64Bytes
 		: IFixedString
 			, IComparable<String>
@@ -1129,9 +1092,6 @@ namespace Sapientia.Collections.FixedString
 		[Unity.Properties.CreateProperty]
 #endif
 		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public string Value => ToString();
 
 		/// <summary>
@@ -1356,9 +1316,6 @@ namespace Sapientia.Collections.FixedString
 		/// -1 denotes that this string should be sorted to precede the other string.<br/>
 		/// +1 denotes that this string should be sorted to follow the other string.<br/>
 		/// </returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public int CompareTo(string other)
 		{
 			return ToString().CompareTo(other);
@@ -1369,9 +1326,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="other">A string to compare for equality.</param>
 		/// <returns>True if this string and the other have the same length and all the same characters.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public bool Equals(string other)
 		{
 			int alen = utf8LengthInBytes;
@@ -1388,9 +1342,6 @@ namespace Sapientia.Collections.FixedString
 		/// Initializes and returns an instance of FixedString64Bytes with the characters copied from a string.
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public FixedString64Bytes(string source)
 		{
 			this = default;
@@ -1403,9 +1354,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
 		/// <returns>zero on success, or non-zero on error.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		internal int Initialize(string source)
 		{
 			bytes = default;
@@ -1772,18 +1720,12 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="b">A string to copy.</param>
 		/// <returns>A new FixedString64Bytes that is a copy of another string.</returns>
 		/// <exception cref="IndexOutOfRangeException">Thrown if the string to copy's length exceeds the capacity of FixedString64Bytes.</exception>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public static implicit operator FixedString64Bytes(string b) => new FixedString64Bytes(b);
 
 		/// <summary>
 		/// Returns a new managed string that is a copy of this string.
 		/// </summary>
 		/// <returns>A new managed string that is a copy of this string.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override string ToString()
 		{
 			return this.ConvertToString();
@@ -1808,9 +1750,6 @@ namespace Sapientia.Collections.FixedString
 		/// Two strings are equal if they have equal length and all their characters match.</remarks>
 		/// <param name="obj">An object to compare for equality.</param>
 		/// <returns>True if this string and the object are equal.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
@@ -1876,9 +1815,7 @@ namespace Sapientia.Collections.FixedString
 	/// </summary>
 	[Serializable]
 	[StructLayout(LayoutKind.Explicit, Size = 126)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public struct FixedBytes126
 	{
 		/// <summary>
@@ -2002,9 +1939,7 @@ namespace Sapientia.Collections.FixedString
 	/// </remarks>
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential, Size = 128)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public unsafe struct FixedString128Bytes
 		: IFixedString
 			, IComparable<String>
@@ -2037,9 +1972,6 @@ namespace Sapientia.Collections.FixedString
 		[Unity.Properties.CreateProperty]
 #endif
 		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public string Value => ToString();
 
 		/// <summary>
@@ -2263,9 +2195,6 @@ namespace Sapientia.Collections.FixedString
 		/// -1 denotes that this string should be sorted to precede the other string.<br/>
 		/// +1 denotes that this string should be sorted to follow the other string.<br/>
 		/// </returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public int CompareTo(string other)
 		{
 			return ToString().CompareTo(other);
@@ -2276,9 +2205,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="other">A string to compare for equality.</param>
 		/// <returns>True if this string and the other have the same length and all the same characters.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public bool Equals(string other)
 		{
 			int alen = utf8LengthInBytes;
@@ -2295,9 +2221,6 @@ namespace Sapientia.Collections.FixedString
 		/// Initializes and returns an instance of FixedString128Bytes with the characters copied from a string.
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public FixedString128Bytes(string source)
 		{
 			this = default;
@@ -2310,9 +2233,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
 		/// <returns>zero on success, or non-zero on error.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		internal int Initialize(string source)
 		{
 			bytes = default;
@@ -2679,18 +2599,12 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="b">A string to copy.</param>
 		/// <returns>A new FixedString128Bytes that is a copy of another string.</returns>
 		/// <exception cref="IndexOutOfRangeException">Thrown if the string to copy's length exceeds the capacity of FixedString128Bytes.</exception>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public static implicit operator FixedString128Bytes(string b) => new FixedString128Bytes(b);
 
 		/// <summary>
 		/// Returns a new managed string that is a copy of this string.
 		/// </summary>
 		/// <returns>A new managed string that is a copy of this string.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override string ToString()
 		{
 			return this.ConvertToString();
@@ -2715,9 +2629,6 @@ namespace Sapientia.Collections.FixedString
 		/// Two strings are equal if they have equal length and all their characters match.</remarks>
 		/// <param name="obj">An object to compare for equality.</param>
 		/// <returns>True if this string and the object are equal.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
@@ -2783,9 +2694,7 @@ namespace Sapientia.Collections.FixedString
 	/// </summary>
 	[Serializable]
 	[StructLayout(LayoutKind.Explicit, Size = 510)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public struct FixedBytes510
 	{
 		/// <summary>
@@ -3029,9 +2938,7 @@ namespace Sapientia.Collections.FixedString
 	/// </remarks>
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential, Size = 512)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public unsafe struct FixedString512Bytes
 		: IFixedString
 			, IComparable<String>
@@ -3064,9 +2971,6 @@ namespace Sapientia.Collections.FixedString
 		[Unity.Properties.CreateProperty]
 #endif
 		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public string Value => ToString();
 
 		/// <summary>
@@ -3291,9 +3195,6 @@ namespace Sapientia.Collections.FixedString
 		/// -1 denotes that this string should be sorted to precede the other string.<br/>
 		/// +1 denotes that this string should be sorted to follow the other string.<br/>
 		/// </returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public int CompareTo(string other)
 		{
 			return ToString().CompareTo(other);
@@ -3304,9 +3205,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="other">A string to compare for equality.</param>
 		/// <returns>True if this string and the other have the same length and all the same characters.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public bool Equals(string other)
 		{
 			int alen = utf8LengthInBytes;
@@ -3323,9 +3221,6 @@ namespace Sapientia.Collections.FixedString
 		/// Initializes and returns an instance of FixedString512Bytes with the characters copied from a string.
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public FixedString512Bytes(string source)
 		{
 			this = default;
@@ -3338,9 +3233,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
 		/// <returns>zero on success, or non-zero on error.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		internal int Initialize(string source)
 		{
 			bytes = default;
@@ -3707,18 +3599,12 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="b">A string to copy.</param>
 		/// <returns>A new FixedString512Bytes that is a copy of another string.</returns>
 		/// <exception cref="IndexOutOfRangeException">Thrown if the string to copy's length exceeds the capacity of FixedString512Bytes.</exception>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public static implicit operator FixedString512Bytes(string b) => new FixedString512Bytes(b);
 
 		/// <summary>
 		/// Returns a new managed string that is a copy of this string.
 		/// </summary>
 		/// <returns>A new managed string that is a copy of this string.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override string ToString()
 		{
 			return this.ConvertToString();
@@ -3743,9 +3629,6 @@ namespace Sapientia.Collections.FixedString
 		/// Two strings are equal if they have equal length and all their characters match.</remarks>
 		/// <param name="obj">An object to compare for equality.</param>
 		/// <returns>True if this string and the object are equal.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
@@ -3811,9 +3694,7 @@ namespace Sapientia.Collections.FixedString
 	/// </summary>
 	[Serializable]
 	[StructLayout(LayoutKind.Explicit, Size = 4094)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public struct FixedBytes4094
 	{
 		/// <summary>
@@ -5177,9 +5058,7 @@ namespace Sapientia.Collections.FixedString
 	/// </remarks>
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential, Size = 4096)]
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public partial struct FixedString4096Bytes
 		: IFixedString
 			, IComparable<String>
@@ -5212,9 +5091,6 @@ namespace Sapientia.Collections.FixedString
 		[Unity.Properties.CreateProperty]
 #endif
 		[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public string Value => ToString();
 
 		/// <summary>
@@ -5457,9 +5333,6 @@ namespace Sapientia.Collections.FixedString
 		/// -1 denotes that this string should be sorted to precede the other string.<br/>
 		/// +1 denotes that this string should be sorted to follow the other string.<br/>
 		/// </returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public int CompareTo(string other)
 		{
 			return ToString().CompareTo(other);
@@ -5470,9 +5343,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="other">A string to compare for equality.</param>
 		/// <returns>True if this string and the other have the same length and all the same characters.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public bool Equals(string other)
 		{
 			unsafe
@@ -5492,9 +5362,6 @@ namespace Sapientia.Collections.FixedString
 		/// Initializes and returns an instance of FixedString4096Bytes with the characters copied from a string.
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public FixedString4096Bytes(string source)
 		{
 			this = default;
@@ -5507,9 +5374,6 @@ namespace Sapientia.Collections.FixedString
 		/// </summary>
 		/// <param name="source">The source string to copy.</param>
 		/// <returns>zero on success, or non-zero on error.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		internal int Initialize(string source)
 		{
 			bytes = default;
@@ -5894,18 +5758,12 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="b">A string to copy.</param>
 		/// <returns>A new FixedString4096Bytes that is a copy of another string.</returns>
 		/// <exception cref="IndexOutOfRangeException">Thrown if the string to copy's length exceeds the capacity of FixedString4096Bytes.</exception>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public static implicit operator FixedString4096Bytes(string b) => new FixedString4096Bytes(b);
 
 		/// <summary>
 		/// Returns a new managed string that is a copy of this string.
 		/// </summary>
 		/// <returns>A new managed string that is a copy of this string.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override string ToString()
 		{
 			return this.ConvertToString();
@@ -5930,9 +5788,6 @@ namespace Sapientia.Collections.FixedString
 		/// Two strings are equal if they have equal length and all their characters match.</remarks>
 		/// <param name="obj">An object to compare for equality.</param>
 		/// <returns>True if this string and the object are equal.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;

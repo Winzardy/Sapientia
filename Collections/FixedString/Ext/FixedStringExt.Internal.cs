@@ -1,16 +1,10 @@
 namespace Sapientia.Collections.FixedString
 {
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
 	public static unsafe partial class FixedStringExt
 	{
 		/// <summary>
 		/// Append two characters to this IFixedString.  This is used as a helper for internal formatting.
 		/// </summary>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		internal static FormatError Append<T>(ref this T fs, char a, char b)
 			where T : struct, IFixedString
 		{
@@ -25,9 +19,6 @@ namespace Sapientia.Collections.FixedString
 		/// <summary>
 		/// Append three characters to this IFixedString.  This is used as a helper for internal formatting.
 		/// </summary>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		internal static FormatError Append<T>(ref this T fs, char a, char b, char c)
 			where T : struct, IFixedString
 		{
@@ -43,9 +34,6 @@ namespace Sapientia.Collections.FixedString
 		/// <summary>
 		/// Append 'I' 'n' 'f' 'i' 'n' 'i' 't' 'y' characters to this IFixedString.  This is used as a helper for internal formatting.
 		/// </summary>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		internal static FormatError Append<T>(ref this T fs, char a, char b, char c, char d, char e, char f, char g,
 			char h)
 			where T : struct, IFixedString
@@ -64,9 +52,6 @@ namespace Sapientia.Collections.FixedString
 			return FormatError.None;
 		}
 
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		internal static FormatError AppendScientific<T>(ref this T fs, char* source, int sourceLength,
 			int decimalExponent, char decimalSeparator = '.')
 			where T : struct, IFixedString
@@ -124,9 +109,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="b">rune b</param>
 		/// <param name="c">rune c</param>
 		/// <returns></returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		internal static bool Found<T>(ref this T fs, ref int offset, char a, char b, char c)
 			where T : struct, IFixedString
 		{
@@ -152,9 +134,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="g"></param>
 		/// <param name="h"></param>
 		/// <returns></returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		internal static bool Found<T>(ref this T fs, ref int offset, char a, char b, char c, char d, char e, char f,
 			char g, char h)
 			where T : struct, IFixedString

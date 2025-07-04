@@ -8,9 +8,6 @@ namespace Sapientia.Collections.FixedString
 	/// <summary>
 	/// Provides extension methods for FixedString*N*Bytes.
 	/// </summary>
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
 	public static unsafe partial class FixedStringExt
 	{
 		[StructLayout(LayoutKind.Explicit)]
@@ -136,9 +133,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">A FixedString*N*Bytes.</param>
 		/// <param name="rune">A Unicode.Rune to append.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T>(ref this T fs, Unicode.Rune rune)
 			where T : struct, IFixedString
 		{
@@ -156,9 +150,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">A FixedString*N*Bytes.</param>
 		/// <param name="ch">A char to append.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T>(ref this T fs, char ch)
 			where T : struct, IFixedString
 		{
@@ -175,9 +166,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">A FixedString*N*Bytes.</param>
 		/// <param name="a">A byte to append.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError AppendRawByte<T>(ref this T fs, byte a)
 			where T : struct, IFixedString
 		{
@@ -196,9 +184,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="rune">A Unicode.Rune to append some number of times.</param>
 		/// <param name="count">The number of times to append the rune.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T>(ref this T fs, Unicode.Rune rune, int count)
 			where T : struct, IFixedString
 		{
@@ -227,9 +212,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">A FixedString*N*Bytes.</param>
 		/// <param name="input">A long integer to append to the string.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T>(ref this T fs, long input)
 			where T : struct, IFixedString
 		{
@@ -268,9 +250,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">A FixedString*N*Bytes.</param>
 		/// <param name="input">An int to append to the string.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T>(ref this T fs, int input)
 			where T : struct, IFixedString
 		{
@@ -284,9 +263,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">A FixedString*N*Bytes.</param>
 		/// <param name="input">A ulong integer to append to the string.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T>(ref this T fs, ulong input)
 			where T : struct, IFixedString
 		{
@@ -311,9 +287,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">A FixedString*N*Bytes.</param>
 		/// <param name="input">A uint to append to the string.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T>(ref this T fs, uint input)
 			where T : struct, IFixedString
 		{
@@ -328,9 +301,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="input">A float to append to the string.</param>
 		/// <param name="decimalSeparator">The character to use as the decimal separator. Defaults to a period ('.').</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T>(ref this T fs, float input, char decimalSeparator = '.')
 			where T : struct, IFixedString
 		{
@@ -438,9 +408,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">The destination string.</param>
 		/// <param name="input">The source string.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the destination string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes), typeof(FixedString128Bytes) })]
-#endif
 		public static FormatError Append<T, T2>(ref this T fs, ref T2 input)
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
@@ -459,9 +426,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">The destination string.</param>
 		/// <param name="input">The source string.</param>
 		/// <returns>CopyError.None if successful. Returns CopyError.Truncation if the source string is too large to fit in the destination.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes), typeof(FixedString128Bytes) })]
-#endif
 		public static CopyError CopyFrom<T, T2>(ref this T fs, ref T2 input)
 			where T : struct, IFixedString
 			where T2 : struct, IFixedString
@@ -486,9 +450,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="utf8Bytes">The bytes to append.</param>
 		/// <param name="utf8BytesLength">The number of bytes to append.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the destination string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.BurstCompatible(GenericTypeArguments = new[] { typeof(FixedString128Bytes) })]
-#endif
 		public unsafe static FormatError Append<T>(ref this T fs, SafePtr utf8Bytes, int utf8BytesLength)
 			where T : struct, IFixedString
 		{
@@ -509,9 +470,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">The destination string.</param>
 		/// <param name="s">The string to append.</param>
 		/// <returns>FormatError.None if successful. Returns FormatError.Overflow if the capacity of the destination string is exceeded.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public unsafe static FormatError Append<T>(ref this T fs, string s)
 			where T : struct, IFixedString
 		{
@@ -544,9 +502,6 @@ namespace Sapientia.Collections.FixedString
 		/// <param name="fs">The destination string.</param>
 		/// <param name="s">The source string.</param>
 		/// <returns>CopyError.None if successful. Returns CopyError.Truncation if the source string is too large to fit in the destination.</returns>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public static CopyError CopyFrom<T>(ref this T fs, string s)
 			where T : struct, IFixedString
 		{
@@ -563,9 +518,6 @@ namespace Sapientia.Collections.FixedString
 		/// <typeparam name="T">The type of the destination string.</typeparam>
 		/// <param name="fs">The destination string.</param>
 		/// <param name="s">The source string.</param>
-#if BURST
-		[Unity.Collections.NotBurstCompatible]
-#endif
 		public static void CopyFromTruncated<T>(ref this T fs, string s)
 			where T : struct, IFixedString
 		{

@@ -6,10 +6,7 @@ namespace Sapientia.Collections.FixedString
 	/// <summary>
 	/// Provides methods for copying and encoding Unicode text.
 	/// </summary>
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
-	public static unsafe class UTF8Ext
+	public static class UTF8Ext
 	{
 		/// <summary>
 		/// Copies a buffer of UCS-2 text. The copy is encoded as UTF-8.

@@ -47,8 +47,8 @@ namespace Sapientia.Collections
 
 		public void Dispose()
 		{
-			_firstToSecond = null;
-			_secondToFirst = null;
+			_firstToSecond = null!;
+			_secondToFirst = null!;
 		}
 
 		public void Clear()

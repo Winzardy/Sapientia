@@ -36,7 +36,7 @@ namespace Sapientia.Extensions
 		private static void DebugMemAlloc(void* ptr, int size)
 		{
 #if DEBUG
-			DebugInsertMemorySpace((IntPtr)ptr, size);
+			DebugInsertMemorySpace(ptr, size);
 #if UNITY_5_3_OR_NEWER
 			UnityEngine.Debug.LogWarning($"MemAlloc: {size}b. Allocations Remains: {_allocations.Count}");
 #endif
@@ -48,7 +48,7 @@ namespace Sapientia.Extensions
 		private static void DebugMemFree(void* ptr)
 		{
 #if DEBUG
-			DebugRemoveMemorySpace((IntPtr)ptr, out var size);
+			DebugRemoveMemorySpace(ptr, out var size);
 #if UNITY_5_3_OR_NEWER
 			UnityEngine.Debug.LogWarning($"MemFree: {size}b. Allocations Remains: {_allocations.Count}");
 #endif
@@ -57,11 +57,12 @@ namespace Sapientia.Extensions
 
 #if DEBUG
 		[BurstDiscard]
-		private static void DebugRemoveMemorySpace(IntPtr ptr, out int size)
+		private static void DebugRemoveMemorySpace(void* ptr, out int size)
 		{
-			E.ASSERT(_allocations.Remove(ptr, out size));
-			var low = ptr.ToInt64();
-			var hi = (ptr + size).ToInt64() - 1;
+			var intPtr = (IntPtr)ptr;
+			E.ASSERT(_allocations.Remove(intPtr, out size));
+			var low = intPtr.ToInt64();
+			var hi = (intPtr + size).ToInt64() - 1;
 
 			E.ASSERT(DebugIsInBound(low, out var lowIndex));
 			E.ASSERT(DebugIsInBound(hi, out var hiIndex));
@@ -72,10 +73,11 @@ namespace Sapientia.Extensions
 		}
 
 		[BurstDiscard]
-		private static void DebugInsertMemorySpace(IntPtr ptr, int size)
+		private static void DebugInsertMemorySpace(void* ptr, int size)
 		{
-			var low = ptr.ToInt64();
-			var hi = (ptr + size).ToInt64() - 1;
+			var intPtr = (IntPtr)ptr;
+			var low = intPtr.ToInt64();
+			var hi = (intPtr + size).ToInt64() - 1;
 
 			E.ASSERT(!DebugIsInBound(low, out var lowIndex));
 			E.ASSERT(!DebugIsInBound(hi, out var hiIndex));
@@ -84,7 +86,7 @@ namespace Sapientia.Extensions
 			_memorySpaces.Insert(hiIndex, hi);
 			_memorySpaces.Insert(lowIndex, low);
 
-			_allocations.Add(ptr, size);
+			_allocations.Add(intPtr, size);
 		}
 
 		[BurstDiscard]
@@ -114,7 +116,7 @@ namespace Sapientia.Extensions
 			var ptr = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Malloc(size, align, allocator);
 #if DEBUG
 			if (safetyCheck)
-				DebugInsertMemorySpace((IntPtr)ptr, size);
+				DebugInsertMemorySpace(ptr, size);
 #endif
 
 			return new SafePtr(ptr, size);
@@ -194,7 +196,7 @@ namespace Sapientia.Extensions
 		{
 #if DEBUG
 			if (safetyCheck)
-				DebugRemoveMemorySpace((IntPtr)memory.ptr, out var size);
+				DebugRemoveMemorySpace(memory.ptr, out var size);
 #endif
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, allocator);
 		}

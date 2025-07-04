@@ -91,9 +91,7 @@ namespace Sapientia.Collections.FixedString
 	/// <summary>
 	/// Provides utility methods for UTF-8, UTF-16, UCS-4 (a.k.a. UTF-32), and WTF-8.
 	/// </summary>
-#if BURST
-	[Unity.Collections.BurstCompatible]
-#endif
+
 	public unsafe struct Unicode
 	{
 		/// <summary>
