@@ -22,7 +22,7 @@ namespace Sapientia
 			public static void Throw(string str)
 			{
 				ThrowNotBurst(str);
-				throw new AssertException("Internal collection exception");
+				throw new AssertException("Internal exception");
 			}
 
 			[BURST_DISCARD]
@@ -35,7 +35,7 @@ namespace Sapientia
 	{
 		[Conditional(DEBUG)]
 		[HIDE_CALLSTACK]
-		public static void ASSERT(bool condition, string str = null)
+		public static void ASSERT(bool condition, string str = null!)
 		{
 			if (condition)
 				return;
