@@ -94,6 +94,13 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetElement(Entity entity, out T value)
+		{
+			value = innerArchetype.ptr->TryGetElement<T>(worldState, entity, out var isExist);
+			return isExist;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
 			innerArchetype.ptr->Clear<T>(worldState);
