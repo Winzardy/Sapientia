@@ -7,7 +7,7 @@ using Sapientia.Extensions;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct SparseSet
+	public struct MemSparseSet
 	{
 		public readonly int expandStep;
 
@@ -55,11 +55,11 @@ namespace Sapientia.MemoryAllocator
 			get => _values.ElementSize;
 		}
 
-		public SparseSet(int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorldState, valueSize, capacity, sparseCapacity, expandStep) {}
+		public MemSparseSet(int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorldState, valueSize, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(WorldId worldId, int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorldState(), valueSize, capacity, sparseCapacity, expandStep) {}
+		public MemSparseSet(WorldId worldId, int valueSize, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorldState(), valueSize, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(WorldState worldState, int valueSize, int capacity, int sparseCapacity, int expandStep = 0)
+		public MemSparseSet(WorldState worldState, int valueSize, int capacity, int sparseCapacity, int expandStep = 0)
 		{
 			this.expandStep = expandStep == 0 ? capacity : expandStep;
 
@@ -278,13 +278,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator<T>(WorldState worldState) where T: unmanaged
+		public MemListEnumerator<T> GetEnumerator<T>(WorldState worldState) where T: unmanaged
 		{
-			return new ListEnumerator<T>(GetValuePtr<T>(worldState), Count);
+			return new MemListEnumerator<T>(GetValuePtr<T>(worldState), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerable<T> GetEnumerable<T>(WorldState worldState) where T: unmanaged
+		public MemListEnumerable<T> GetEnumerable<T>(WorldState worldState) where T: unmanaged
 		{
 			return new (GetEnumerator<T>(worldState));
 		}

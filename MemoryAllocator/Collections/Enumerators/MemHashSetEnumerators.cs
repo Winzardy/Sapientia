@@ -4,51 +4,51 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IHashSetEnumerable<T>
+	public interface IMemHashSetEnumerable<T>
 		where T: unmanaged, IEquatable<T>
 	{
 		public int LastIndex { get; }
-		public SafePtr<HashSet<T>.Slot> GetSlotPtr(WorldState worldState);
+		public SafePtr<MemHashSet<T>.Slot> GetSlotPtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerator<T> GetEnumerator(WorldState worldState)
+		public MemHashSetEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new HashSetEnumerator<T>(GetSlotPtr(worldState), LastIndex);
+			return new MemHashSetEnumerator<T>(GetSlotPtr(worldState), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerable<T> GetEnumerable(WorldState worldState)
+		public MemHashSetEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 	}
 
-	public readonly ref struct HashSetEnumerable<T>
+	public readonly ref struct MemHashSetEnumerable<T>
 		where T : unmanaged, IEquatable<T>
 	{
-		private readonly HashSetEnumerator<T> _enumerator;
+		private readonly MemHashSetEnumerator<T> _enumerator;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal HashSetEnumerable(HashSetEnumerator<T> enumerator)
+		internal MemHashSetEnumerable(MemHashSetEnumerator<T> enumerator)
 		{
 			_enumerator = enumerator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerator<T> GetEnumerator()
+		public MemHashSetEnumerator<T> GetEnumerator()
 		{
 			return _enumerator;
 		}
 	}
 
-	public ref struct HashSetEnumerator<T> where T: unmanaged, IEquatable<T>
+	public ref struct MemHashSetEnumerator<T> where T: unmanaged, IEquatable<T>
 	{
-		private readonly SafePtr<HashSet<T>.Slot> _slots;
+		private readonly SafePtr<MemHashSet<T>.Slot> _slots;
 		private readonly int _lastIndex;
 		private int _index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal HashSetEnumerator(SafePtr<HashSet<T>.Slot> slots, int lastIndex)
+		internal MemHashSetEnumerator(SafePtr<MemHashSet<T>.Slot> slots, int lastIndex)
 		{
 			_slots = slots;
 			_lastIndex = lastIndex;

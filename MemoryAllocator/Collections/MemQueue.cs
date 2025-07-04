@@ -3,8 +3,8 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(Queue<>.QueueProxy))]
-	public struct Queue<T> : ICircularBufferEnumerable<T> where T : unmanaged
+	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemQueue<>.QueueProxy))]
+	public struct MemQueue<T> : IMemCircularBufferEnumerable<T> where T : unmanaged
 	{
 		private const int _minimumGrow = 4;
 		private const int _growFactor = 200;
@@ -39,7 +39,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Queue(WorldState worldState, int capacity)
+		public MemQueue(WorldState worldState, int capacity)
 		{
 			this = default;
 			_array = new MemArray<T>(worldState, capacity);
@@ -134,22 +134,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(WorldState worldState)
+		public MemCircularBufferEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
+			return new MemCircularBufferEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerable<T> GetEnumerable(WorldState worldState)
+		public MemCircularBufferEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 
 		private class QueueProxy
 		{
-			private Queue<T> _queue;
+			private MemQueue<T> _queue;
 
-			public QueueProxy(Queue<T> queue)
+			public QueueProxy(MemQueue<T> queue)
 			{
 				_queue = queue;
 			}

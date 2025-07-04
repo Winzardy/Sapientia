@@ -22,7 +22,7 @@ namespace Sapientia.MemoryAllocator.State
 		private MemArray<ushort> _entityIdToGeneration;
 		private ProxyEvent<IEntityDestroySubscriberProxy> _entityDestroySubscribers;
 #if DEBUG
-		private SparseSet<Entity> _aliveEntities;
+		private MemSparseSet<Entity> _aliveEntities;
 #endif
 
 #if ENABLE_ENTITY_NAMES
@@ -67,7 +67,7 @@ namespace Sapientia.MemoryAllocator.State
 			_entityIdToGeneration = new MemArray<ushort>(worldState, EntitiesCapacity);
 			_entityDestroySubscribers = new ProxyEvent<IEntityDestroySubscriberProxy>(worldState, 256);
 #if DEBUG
-			_aliveEntities = new SparseSet<Entity>(worldState, EntitiesCapacity, EntitiesCapacity);
+			_aliveEntities = new MemSparseSet<Entity>(worldState, EntitiesCapacity, EntitiesCapacity);
 #endif
 #if ENABLE_ENTITY_NAMES
 			entityIdToName = new MemArray<FixedString64Bytes>(worldState, EntitiesCapacity);

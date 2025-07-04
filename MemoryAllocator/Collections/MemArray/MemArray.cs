@@ -238,13 +238,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator<T>(WorldState worldState) where T: unmanaged
+		public MemListEnumerator<T> GetEnumerator<T>(WorldState worldState) where T: unmanaged
 		{
-			return new ListEnumerator<T>(GetValuePtr<T>(worldState), Count);
+			return new MemListEnumerator<T>(GetValuePtr<T>(worldState), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerable<T> GetEnumerable<T>(WorldState worldState) where T: unmanaged
+		public MemListEnumerable<T> GetEnumerable<T>(WorldState worldState) where T: unmanaged
 		{
 			return new (GetEnumerator<T>(worldState));
 		}

@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface ICircularBufferEnumerable<T>
+	public interface IMemCircularBufferEnumerable<T>
 		where T: unmanaged
 	{
 		public int HeadIndex { get; }
@@ -14,37 +12,37 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr<T> GetValuePtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator(WorldState worldState)
+		public MemCircularBufferEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new CircularBufferEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
+			return new MemCircularBufferEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerable<T> GetEnumerable(WorldState worldState)
+		public MemCircularBufferEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 	}
 
-	public readonly ref struct CircularBufferEnumerable<T>
+	public readonly ref struct MemCircularBufferEnumerable<T>
 		where T: unmanaged
 	{
-		private readonly CircularBufferEnumerator<T> _enumerator;
+		private readonly MemCircularBufferEnumerator<T> _enumerator;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal CircularBufferEnumerable(CircularBufferEnumerator<T> enumerator)
+		internal MemCircularBufferEnumerable(MemCircularBufferEnumerator<T> enumerator)
 		{
 			_enumerator = enumerator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CircularBufferEnumerator<T> GetEnumerator()
+		public MemCircularBufferEnumerator<T> GetEnumerator()
 		{
 			return _enumerator;
 		}
 	}
 
-	public struct CircularBufferEnumerator<T>
+	public struct MemCircularBufferEnumerator<T>
 		where T: unmanaged
 	{
 		private readonly SafePtr<T> _valuePtr;
@@ -56,7 +54,7 @@ namespace Sapientia.MemoryAllocator
 		private int _currentCount;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal CircularBufferEnumerator(SafePtr<T> valuePtr, int headIndex, int count, int capacity)
+		internal MemCircularBufferEnumerator(SafePtr<T> valuePtr, int headIndex, int count, int capacity)
 		{
 			_valuePtr = valuePtr;
 			_headIndex = headIndex;

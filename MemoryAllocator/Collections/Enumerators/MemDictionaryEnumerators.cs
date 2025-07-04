@@ -1,60 +1,58 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe interface IDictionaryEnumerable<TKey, TValue>
+	public interface IMemDictionaryEnumerable<TKey, TValue>
 		where TKey: unmanaged, IEquatable<TKey>
 		where TValue: unmanaged
 	{
 		public int LastIndex { get; }
-		public SafePtr<Dictionary<TKey, TValue>.Entry> GetEntryPtr(WorldState worldState);
+		public SafePtr<MemDictionary<TKey, TValue>.Entry> GetEntryPtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
+		public MemDictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
 		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
+			return new MemDictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerable<TKey, TValue> GetEnumerable(WorldState worldState)
+		public MemDictionaryEnumerable<TKey, TValue> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 	}
 
-	public readonly ref struct DictionaryEnumerable<TKey, TValue>
+	public readonly ref struct MemDictionaryEnumerable<TKey, TValue>
 		where TKey: unmanaged, IEquatable<TKey>
 		where TValue: unmanaged
 	{
-		private readonly DictionaryEnumerator<TKey, TValue> _enumerator;
+		private readonly MemDictionaryEnumerator<TKey, TValue> _enumerator;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal DictionaryEnumerable(DictionaryEnumerator<TKey, TValue> enumerator)
+		internal MemDictionaryEnumerable(MemDictionaryEnumerator<TKey, TValue> enumerator)
 		{
 			_enumerator = enumerator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator()
+		public MemDictionaryEnumerator<TKey, TValue> GetEnumerator()
 		{
 			return _enumerator;
 		}
 	}
 
-	public struct DictionaryEnumerator<TKey, TValue>
+	public struct MemDictionaryEnumerator<TKey, TValue>
 		where TKey: unmanaged, IEquatable<TKey>
 		where TValue: unmanaged
 	{
-		private readonly SafePtr<Dictionary<TKey, TValue>.Entry> _entries;
+		private readonly SafePtr<MemDictionary<TKey, TValue>.Entry> _entries;
 		private readonly int _count;
 		private int _index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal DictionaryEnumerator(SafePtr<Dictionary<TKey, TValue>.Entry> entries, int count)
+		internal MemDictionaryEnumerator(SafePtr<MemDictionary<TKey, TValue>.Entry> entries, int count)
 		{
 			_entries = entries;
 			_count = count;
@@ -80,7 +78,7 @@ namespace Sapientia.MemoryAllocator
 			_index = -1;
 		}
 
-		public ref Dictionary<TKey, TValue>.Entry Current
+		public ref MemDictionary<TKey, TValue>.Entry Current
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ref (_entries + _index).Value();

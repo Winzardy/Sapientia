@@ -6,7 +6,7 @@ namespace Sapientia.MemoryAllocator
 {
 	public unsafe struct ProxyEvent<T> where T: unmanaged, IProxy
 	{
-		private HashSet<ProxyPtr<T>> _proxies;
+		private MemHashSet<ProxyPtr<T>> _proxies;
 
 		public bool IsCreated
 		{
@@ -17,7 +17,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ProxyEvent(WorldState worldState, int capacity = 8)
 		{
-			_proxies = new HashSet<ProxyPtr<T>>(worldState, capacity);
+			_proxies = new MemHashSet<ProxyPtr<T>>(worldState, capacity);
 		}
 
 		public bool Subscribe(WorldState worldState, in ProxyPtr<T> proxyPtr)
@@ -31,13 +31,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerator<ProxyPtr<T>> GetEnumerator(WorldState worldState)
+		public MemHashSetEnumerator<ProxyPtr<T>> GetEnumerator(WorldState worldState)
 		{
 			return _proxies.GetEnumerator(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerable<ProxyPtr<T>> GetEnumerable(WorldState worldState)
+		public MemHashSetEnumerable<ProxyPtr<T>> GetEnumerable(WorldState worldState)
 		{
 			return _proxies.GetEnumerable(worldState);
 		}

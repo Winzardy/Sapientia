@@ -15,11 +15,11 @@ namespace Sapientia.MemoryAllocator.State
 
 	public struct KillElement : IComponent
 	{
-		public List<Entity> children;
-		public List<Entity> parents;
+		public MemList<Entity> children;
+		public MemList<Entity> parents;
 
-		public List<Entity> killCallbackHolders;
-		public List<KillCallback> killCallbacks;
+		public MemList<Entity> killCallbackHolders;
+		public MemList<KillCallback> killCallbacks;
 	}
 
 	public struct KillRequest : IComponent {}

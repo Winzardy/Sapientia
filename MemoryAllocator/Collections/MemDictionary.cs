@@ -14,11 +14,8 @@ namespace Sapientia.MemoryAllocator
 		ThrowOnExisting,
 	}
 
-	[DebuggerTypeProxy(typeof(Dictionary<,>.EquatableDictionaryProxy))]
-#if UNITY_5_3_OR_NEWER
-	[Unity.Burst.BurstCompile]
-#endif
-	public struct Dictionary<TKey, TValue> : IDictionaryEnumerable<TKey, TValue>
+	[DebuggerTypeProxy(typeof(MemDictionary<,>.EquatableDictionaryProxy))]
+	public struct MemDictionary<TKey, TValue> : IMemDictionaryEnumerable<TKey, TValue>
 		where TKey : unmanaged, IEquatable<TKey>
 		where TValue : unmanaged
 	{
@@ -59,7 +56,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Dictionary(WorldState worldState, int capacity)
+		public MemDictionary(WorldState worldState, int capacity)
 		{
 			this = default;
 			Initialize(worldState, capacity);
@@ -95,7 +92,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ReplaceWith(WorldState worldState, in Dictionary<TKey, TValue> other)
+		public void ReplaceWith(WorldState worldState, in MemDictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr()) return;
 
@@ -104,7 +101,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void CopyFrom(WorldState worldState, in Dictionary<TKey, TValue> other)
+		public void CopyFrom(WorldState worldState, in MemDictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 				return;
@@ -117,7 +114,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			if (!GetMemPtr().IsValid())
-				this = new Dictionary<TKey, TValue>(worldState, other.Count);
+				this = new MemDictionary<TKey, TValue>(worldState, other.Count);
 
 			MemArrayExt.CopyExact(worldState, other.buckets, ref buckets);
 			MemArrayExt.CopyExact(worldState, other.entries, ref entries);
@@ -438,22 +435,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
+		public MemDictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
 		{
-			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
+			return new MemDictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DictionaryEnumerable<TKey, TValue> GetEnumerable(WorldState worldState)
+		public MemDictionaryEnumerable<TKey, TValue> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 
 		private class EquatableDictionaryProxy
 		{
-			private Dictionary<TKey, TValue> _dictionary;
+			private MemDictionary<TKey, TValue> _dictionary;
 
-			public EquatableDictionaryProxy(Dictionary<TKey, TValue> dictionary)
+			public EquatableDictionaryProxy(MemDictionary<TKey, TValue> dictionary)
 			{
 				_dictionary = dictionary;
 			}

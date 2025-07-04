@@ -4,8 +4,8 @@ namespace Sapientia.MemoryAllocator
 {
 	public struct WorldElementsService : IIndexedType
 	{
-		public List<ProxyPtr<IWorldElementProxy>> worldElements;
-		public List<ProxyPtr<IWorldSystemProxy>> worldSystems;
+		public MemList<ProxyPtr<IWorldElementProxy>> worldElements;
+		public MemList<ProxyPtr<IWorldSystemProxy>> worldSystems;
 
 		public WorldElementsService(WorldState worldState, int elementsCapacity = 64)
 		{

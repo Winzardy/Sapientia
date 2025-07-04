@@ -7,8 +7,8 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	[DebuggerTypeProxy(typeof(HashSet<>.HashSetProxy))]
-	public struct HashSet<T> : IHashSetEnumerable<T>
+	[DebuggerTypeProxy(typeof(MemHashSet<>.HashSetProxy))]
+	public struct MemHashSet<T> : IMemHashSetEnumerable<T>
 		where T : unmanaged, IEquatable<T>
 	{
 		public struct Slot
@@ -43,14 +43,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSet(WorldState worldState, int capacity = 8)
+		public MemHashSet(WorldState worldState, int capacity = 8)
 		{
 			this = default;
 			Initialize(worldState, capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSet(WorldState worldState, in HashSet<T> other)
+		public MemHashSet(WorldState worldState, in MemHashSet<T> other)
 		{
 			E.ASSERT(other.IsCreated);
 
@@ -60,7 +60,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSet(WorldState worldState, in ICollection<T> other) : this(worldState, other.Count)
+		public MemHashSet(WorldState worldState, in ICollection<T> other) : this(worldState, other.Count)
 		{
 			foreach (var value in other)
 			{
@@ -69,7 +69,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSet(WorldState worldState, in IEnumerable<T> other, int capacity) : this(worldState, capacity)
+		public MemHashSet(WorldState worldState, in IEnumerable<T> other, int capacity) : this(worldState, capacity)
 		{
 			foreach (var value in other)
 			{
@@ -115,7 +115,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ReplaceWith(WorldState worldState, ref HashSet<T> other)
+		public void ReplaceWith(WorldState worldState, ref MemHashSet<T> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
 			{
@@ -178,7 +178,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(WorldState worldState, ref HashSet<T> other)
+		public void Add(WorldState worldState, ref MemHashSet<T> other)
 		{
 			var slotsPtr = slots.GetValuePtr(worldState);
 			for (var i = 0; i < other.lastIndex; i++)
@@ -192,7 +192,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveExcept(WorldState worldState, ref HashSet<T> other)
+		public void RemoveExcept(WorldState worldState, ref MemHashSet<T> other)
 		{
 			var slotsPtr = slots.GetValuePtr(worldState);
 			for (var i = 0; i < lastIndex; i++)
@@ -212,7 +212,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Remove(WorldState worldState, ref HashSet<T> other)
+		public void Remove(WorldState worldState, ref MemHashSet<T> other)
 		{
 			E.ASSERT(IsCreated);
 
@@ -313,7 +313,7 @@ namespace Sapientia.MemoryAllocator
 			var newSlots = new MemArray<Slot>(worldState, newSize);
 			if (slots.IsCreated)
 			{
-				MemArrayExt.CopyNoChecks<HashSet<T>.Slot>(worldState, slots, 0, ref newSlots, 0, lastIndex);
+				MemArrayExt.CopyNoChecks<MemHashSet<T>.Slot>(worldState, slots, 0, ref newSlots, 0, lastIndex);
 			}
 
 			var newBuckets = new MemArray<int>(worldState, newSize);
@@ -399,7 +399,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void CopyFrom(WorldState worldState, in HashSet<T> other)
+		public void CopyFrom(WorldState worldState, in MemHashSet<T> other)
 		{
 			MemArrayExt.CopyExact(worldState, in other.buckets, ref buckets);
 
@@ -413,28 +413,28 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerator<T> GetEnumerator(WorldState worldState)
+		public MemHashSetEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new HashSetEnumerator<T>(GetSlotPtr(worldState), LastIndex);
+			return new MemHashSetEnumerator<T>(GetSlotPtr(worldState), LastIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HashSetEnumerable<T> GetEnumerable(WorldState worldState)
+		public MemHashSetEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 
 		private class HashSetProxy
 		{
-			private HashSet<T> _hashSet;
+			private MemHashSet<T> _hashSet;
 
-			public HashSetProxy(HashSet<T> hashSet)
+			public HashSetProxy(MemHashSet<T> hashSet)
 			{
 				_hashSet = hashSet;
 			}
 
 			public MemArray<int> Buckets => _hashSet.buckets;
-			public MemArray<HashSet<T>.Slot> Slots => _hashSet.slots;
+			public MemArray<MemHashSet<T>.Slot> Slots => _hashSet.slots;
 			public int Count => _hashSet.count;
 			public int FreeList => _hashSet.freeList;
 			public int LastIndex => _hashSet.lastIndex;

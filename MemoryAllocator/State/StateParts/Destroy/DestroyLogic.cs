@@ -76,9 +76,9 @@ namespace Sapientia.MemoryAllocator.State
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
 
 			if (!childElement.parents.IsCreated)
-				childElement.parents = new List<Entity>(worldState);
+				childElement.parents = new MemList<Entity>(worldState);
 			if (!childElement.children.IsCreated)
-				childElement.children = new List<Entity>(worldState);
+				childElement.children = new MemList<Entity>(worldState);
 
 			childElement.parents.Add(worldState, parent);
 			parentElement.children.Add(worldState, child);
@@ -90,14 +90,14 @@ namespace Sapientia.MemoryAllocator.State
 			AddKillParent(child, parent);
 		}
 
-		public void AddKillChildren(Entity parent, ListEnumerable<Entity> children)
+		public void AddKillChildren(Entity parent, MemListEnumerable<Entity> children)
 		{
 			E.ASSERT(IsAlive(parent));
 
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
 
 			if (!parentElement.children.IsCreated)
-				parentElement.children = new List<Entity>(worldState);
+				parentElement.children = new MemList<Entity>(worldState);
 			parentElement.children.AddRange(worldState, children);
 
 			foreach (var child in children)
@@ -105,7 +105,7 @@ namespace Sapientia.MemoryAllocator.State
 				E.ASSERT(IsAlive(child));
 				ref var childElement = ref killElementArchetype.GetElement(child);
 				if (!childElement.parents.IsCreated)
-					childElement.parents = new List<Entity>(worldState);
+					childElement.parents = new MemList<Entity>(worldState);
 				childElement.parents.Add(worldState, parent);
 			}
 		}
@@ -115,7 +115,7 @@ namespace Sapientia.MemoryAllocator.State
 			ref var holderElement = ref killElementArchetype.GetElement(holder);
 
 			if (!holderElement.killCallbacks.IsCreated)
-				holderElement.killCallbacks = new List<KillCallback>(worldState);
+				holderElement.killCallbacks = new MemList<KillCallback>(worldState);
 			holderElement.killCallbacks.Add(worldState, new KillCallback
 			{
 				callback = ProxyPtr<IKillSubscriberProxy>.Create(worldState, callback),
@@ -124,7 +124,7 @@ namespace Sapientia.MemoryAllocator.State
 
 			ref var targetElement = ref killElementArchetype.GetElement(target);
 			if (!targetElement.killCallbackHolders.IsCreated)
-				targetElement.killCallbackHolders = new List<Entity>(worldState);
+				targetElement.killCallbackHolders = new MemList<Entity>(worldState);
 			targetElement.killCallbackHolders.Add(worldState, holder);
 		}
 

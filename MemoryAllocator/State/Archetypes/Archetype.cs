@@ -78,7 +78,7 @@ namespace Sapientia.MemoryAllocator.State
 			public static readonly TValue DEFAULT = default;
 		}
 
-		internal SparseSet _elements;
+		internal MemSparseSet _elements;
 
 		private ProxyPtr<IElementDestroyHandlerProxy> _destroyHandlerProxy;
 
@@ -151,7 +151,7 @@ namespace Sapientia.MemoryAllocator.State
 			var archetypePtr = CachedPtr<Archetype>.Create(worldState);
 			ref var archetype = ref archetypePtr.GetValue(worldState);
 
-			archetype._elements = new SparseSet(worldState, TSize<ArchetypeElement<T>>.size, elementsCount, entitiesCapacity);
+			archetype._elements = new MemSparseSet(worldState, TSize<ArchetypeElement<T>>.size, elementsCount, entitiesCapacity);
 			archetype._destroyHandlerProxy = default;
 #if DEBUG
 			archetype.elementTypeName = typeof(T).Name;
@@ -182,7 +182,7 @@ namespace Sapientia.MemoryAllocator.State
 			var archetypePtr = CachedPtr<Archetype>.Create(worldState);
 			ref var archetype = ref archetypePtr.GetValue(worldState);
 
-			archetype._elements = new SparseSet(worldState, TSize<ArchetypeElement>.size, elementsCount, entitiesCapacity);
+			archetype._elements = new MemSparseSet(worldState, TSize<ArchetypeElement>.size, elementsCount, entitiesCapacity);
 			archetype._destroyHandlerProxy = default;
 
 			worldState.GetService<EntityStatePart>().AddSubscriber(worldState, (IndexedPtr)archetypePtr);

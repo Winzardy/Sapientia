@@ -3,44 +3,44 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IListEnumerable<T>
+	public interface IMemListEnumerable<T>
 		where T: unmanaged
 	{
 		public int Count { get; }
 		public SafePtr<T> GetValuePtr(WorldState worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator(WorldState worldState)
+		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new ListEnumerator<T>(GetValuePtr(worldState), 0, Count);
+			return new MemListEnumerator<T>(GetValuePtr(worldState), 0, Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerable<T> GetEnumerable(WorldState worldState)
+		public MemListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 	}
 
-	public readonly ref struct ListEnumerable<T>
+	public readonly ref struct MemListEnumerable<T>
 		where T : unmanaged
 	{
-		private readonly ListEnumerator<T> _enumerator;
+		private readonly MemListEnumerator<T> _enumerator;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal ListEnumerable(ListEnumerator<T> enumerator)
+		internal MemListEnumerable(MemListEnumerator<T> enumerator)
 		{
 			_enumerator = enumerator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator()
+		public MemListEnumerator<T> GetEnumerator()
 		{
 			return _enumerator;
 		}
 	}
 
-	public ref struct ListEnumerator<T> where T: unmanaged
+	public ref struct MemListEnumerator<T> where T: unmanaged
 	{
 		private readonly SafePtr<T> _valuePtr;
 		private readonly int _count;
@@ -54,12 +54,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator(SafePtr<T> valuePtr, int count) : this(valuePtr, 0, count)
+		public MemListEnumerator(SafePtr<T> valuePtr, int count) : this(valuePtr, 0, count)
 		{
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator(SafePtr<T> valuePtr, int startIndex, int count)
+		public MemListEnumerator(SafePtr<T> valuePtr, int startIndex, int count)
 		{
 			_valuePtr = valuePtr;
 			_index = startIndex - 1;

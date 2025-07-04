@@ -7,9 +7,9 @@ using Sapientia.Extensions;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct SparseSet<T> : IListEnumerable<T> where T : unmanaged
+	public struct MemSparseSet<T> : IMemListEnumerable<T> where T : unmanaged
 	{
-		private SparseSet _innerSet;
+		private MemSparseSet _innerSet;
 
 		public int Count
 		{
@@ -47,13 +47,13 @@ namespace Sapientia.MemoryAllocator
 			get => _innerSet.expandStep;
 		}
 
-		public SparseSet(int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorldState, capacity, sparseCapacity, expandStep) {}
+		public MemSparseSet(int capacity, int sparseCapacity, int expandStep = 0) : this(WorldManager.CurrentWorldState, capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(WorldId worldId, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorldState(), capacity, sparseCapacity, expandStep) {}
+		public MemSparseSet(WorldId worldId, int capacity, int sparseCapacity, int expandStep = 0) : this(worldId.GetWorldState(), capacity, sparseCapacity, expandStep) {}
 
-		public SparseSet(WorldState worldState, int capacity, int sparseCapacity, int expandStep = 0)
+		public MemSparseSet(WorldState worldState, int capacity, int sparseCapacity, int expandStep = 0)
 		{
-			_innerSet = new SparseSet(worldState, TSize<T>.size, capacity, sparseCapacity, expandStep);
+			_innerSet = new MemSparseSet(worldState, TSize<T>.size, capacity, sparseCapacity, expandStep);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -117,13 +117,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator(WorldState worldState)
+		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new ListEnumerator<T>(GetValuePtr(worldState), Count);
+			return new MemListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerable<T> GetEnumerable(WorldState worldState)
+		public MemListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}

@@ -4,8 +4,8 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(Stack<>.StackProxy))]
-	public unsafe struct Stack<T> : IListEnumerable<T> where T : unmanaged
+	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemStack<>.StackProxy))]
+	public unsafe struct MemStack<T> : IMemListEnumerable<T> where T : unmanaged
 	{
 		private const int _defaultCapacity = 4;
 
@@ -33,7 +33,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Stack(WorldState worldState, int capacity)
+		public MemStack(WorldState worldState, int capacity)
 		{
 			this = default;
 			_array = new MemArray<T>(worldState, capacity);
@@ -112,22 +112,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator(WorldState worldState)
+		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new ListEnumerator<T>(GetValuePtr(worldState), Count);
+			return new MemListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerable<T> GetEnumerable(WorldState worldState)
+		public MemListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 
 		private class StackProxy
 		{
-			private Stack<T> _stack;
+			private MemStack<T> _stack;
 
-			public StackProxy(Stack<T> stack)
+			public StackProxy(MemStack<T> stack)
 			{
 				_stack = stack;
 			}

@@ -7,8 +7,8 @@ using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	[DebuggerTypeProxy(typeof(List<>.ListProxy))]
-	public struct List<T> : IListEnumerable<T> where T : unmanaged
+	[DebuggerTypeProxy(typeof(MemList<>.ListProxy))]
+	public struct MemList<T> : IMemListEnumerable<T> where T : unmanaged
 	{
 		private MemArray<T> _arr;
 		private int _count;
@@ -30,13 +30,13 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public List(int capacity = 0) : this(WorldManager.CurrentWorldState, capacity)
+		public MemList(int capacity = 0) : this(WorldManager.CurrentWorldState, capacity)
 		{
 
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public List(WorldState worldState, int capacity = 0)
+		public MemList(WorldState worldState, int capacity = 0)
 		{
 			this = default;
 			EnsureCapacity(worldState, capacity);
@@ -46,19 +46,19 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public List(WorldState worldState, IEnumerable<T> enumerable, int capacity) : this(worldState, capacity)
+		public MemList(WorldState worldState, IEnumerable<T> enumerable, int capacity) : this(worldState, capacity)
 		{
 			AddRange(worldState, enumerable);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public List(WorldState worldState, ListEnumerable<T> enumerable, int capacity) : this(worldState, capacity)
+		public MemList(WorldState worldState, MemListEnumerable<T> enumerable, int capacity) : this(worldState, capacity)
 		{
 			AddRange(worldState, enumerable);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ReplaceWith(WorldState worldState, in List<T> other)
+		public void ReplaceWith(WorldState worldState, in MemList<T> other)
 		{
 			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
 			{
@@ -70,7 +70,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void CopyFrom(WorldState worldState, in List<T> other)
+		public void CopyFrom(WorldState worldState, in MemList<T> other)
 		{
 			if (other._arr.innerArray.ptr.memPtr == _arr.innerArray.ptr.memPtr)
 				return;
@@ -83,7 +83,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			if (!_arr.innerArray.ptr.memPtr.IsValid())
-				this = new List<T>(worldState, other.Capacity);
+				this = new MemList<T>(worldState, other.Capacity);
 
 			MemArrayExt.Copy(worldState, in other._arr.innerArray, ref _arr.innerArray);
 			_count = other._count;
@@ -272,7 +272,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsCreated)
 			{
-				this = new List<T>(worldState, newLength);
+				this = new MemList<T>(worldState, newLength);
 				return true;
 			}
 
@@ -294,7 +294,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddRange(WorldState worldState, ListEnumerable<T> collection)
+		public void AddRange(WorldState worldState, MemListEnumerable<T> collection)
 		{
 			foreach (var value in collection)
 			{
@@ -320,22 +320,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<T> GetEnumerator(WorldState worldState)
+		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new ListEnumerator<T>(GetValuePtr(worldState),0 , Count);
+			return new MemListEnumerator<T>(GetValuePtr(worldState),0 , Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerable<T> GetEnumerable(WorldState worldState)
+		public MemListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));
 		}
 
 		private class ListProxy
 		{
-			private List<T> _list;
+			private MemList<T> _list;
 
-			public ListProxy(List<T> list)
+			public ListProxy(MemList<T> list)
 			{
 				_list = list;
 			}

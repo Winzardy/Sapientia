@@ -125,18 +125,18 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerator<ArchetypeElement<T>> GetEnumerator()
+		public MemListEnumerator<ArchetypeElement<T>> GetEnumerator()
 		{
 			ref var elements = ref innerArchetype.Value()._elements;
 			var ptr = elements.GetValuePtr<ArchetypeElement<T>>(worldState);
 
-			return new ListEnumerator<ArchetypeElement<T>>(ptr, innerArchetype.ptr->Count);
+			return new MemListEnumerator<ArchetypeElement<T>>(ptr, innerArchetype.ptr->Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ListEnumerable<ArchetypeElement<T>> GetEnumerable()
+		public MemListEnumerable<ArchetypeElement<T>> GetEnumerable()
 		{
-			return new ListEnumerable<ArchetypeElement<T>>(GetEnumerator());
+			return new MemListEnumerable<ArchetypeElement<T>>(GetEnumerator());
 		}
 	}
 }

@@ -5,10 +5,10 @@ using Sapientia.Data;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct IndexAllocSparseSet<T> where T: unmanaged
+	public struct MemIndexAllocSparseSet<T> where T: unmanaged
 	{
-		private Stack<int> _ids;
-		private SparseSet<T> _sparseSet;
+		private MemStack<int> _ids;
+		private MemSparseSet<T> _sparseSet;
 		private int _nextIdToAllocate;
 
 		public int Count
@@ -29,10 +29,10 @@ namespace Sapientia.MemoryAllocator
 			get => _sparseSet.IsFull;
 		}
 
-		public IndexAllocSparseSet(WorldState worldState, int capacity, int sparseCapacity, int expandStep = 0)
+		public MemIndexAllocSparseSet(WorldState worldState, int capacity, int sparseCapacity, int expandStep = 0)
 		{
-			_ids = new Stack<int>(worldState, capacity);
-			_sparseSet = new SparseSet<T>(worldState, capacity, sparseCapacity, expandStep);
+			_ids = new MemStack<int>(worldState, capacity);
+			_sparseSet = new MemSparseSet<T>(worldState, capacity, sparseCapacity, expandStep);
 			_nextIdToAllocate = 0;
 		}
 
