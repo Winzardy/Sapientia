@@ -1,5 +1,5 @@
 using System;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
+using System.Runtime.CompilerServices;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -9,47 +9,47 @@ namespace Sapientia.MemoryAllocator
 		public readonly ushort id;
 		public ushort index;
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WorldId(ushort index, ushort id)
 		{
 			this.index = index;
 			this.id = id;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator WorldId((ushort index, ushort id) indexId)
 		{
 			return new WorldId(indexId.index, indexId.id);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(WorldId a, WorldId b)
 		{
 			return a.id == b.id;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(WorldId a, WorldId b)
 		{
 			return a.id != b.id;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString() => $"index: {index}, id: {id}";
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(WorldId other)
 		{
 			return id == other.id;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object obj)
 		{
 			return obj is WorldId other && Equals(other);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return id;

@@ -1,6 +1,6 @@
 using System;
+using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -14,51 +14,51 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => _array.IsCreated;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _array.IsCreated;
 		}
 
 		public readonly int Count
 		{
-			[INLINE(256)] get => _count;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _count;
 		}
 
 		public readonly int Capacity
 		{
-			[INLINE(256)] get => _array.Length;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _array.Length;
 		}
 
 		public bool IsFull
 		{
-			[INLINE(256)] get => _array.Length <= _count;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _array.Length <= _count;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Stack(WorldState worldState, int capacity)
 		{
 			this = default;
 			_array = new MemArray<T>(worldState, capacity);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetValuePtr(WorldState worldState)
 		{
 			return _array.GetValuePtr(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)
 		{
 			_array.Dispose(worldState);
 			this = default;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
 			_count = 0;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Contains<TU>(WorldState worldState, TU item) where TU : IEquatable<T>
 		{
 			var count = _count;
@@ -73,13 +73,13 @@ namespace Sapientia.MemoryAllocator
 			return false;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly T Peek(WorldState worldState)
 		{
 			return _array[worldState, _count - 1];
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Pop(WorldState worldState)
 		{
 			var item = _array[worldState, --_count];
@@ -87,7 +87,7 @@ namespace Sapientia.MemoryAllocator
 			return item;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Push(WorldState worldState, T item)
 		{
 			if (_count == _array.Length)
@@ -98,26 +98,26 @@ namespace Sapientia.MemoryAllocator
 			_array[worldState, _count++] = item;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void PushNoChecks(T item, T* ptr)
 		{
 			*ptr = item;
 			++_count;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int GetReservedSizeInBytes()
 		{
 			return _array.GetReservedSizeInBytes();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
 			return new ListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));

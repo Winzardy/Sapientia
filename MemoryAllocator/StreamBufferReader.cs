@@ -1,6 +1,6 @@
+using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator.Core
 {
@@ -10,7 +10,7 @@ namespace Sapientia.MemoryAllocator.Core
 		private readonly int arrSize;
 		private int position;
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StreamBufferReader(byte[] bytes)
 		{
 			this = default;
@@ -26,38 +26,38 @@ namespace Sapientia.MemoryAllocator.Core
 			position = 0;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
 			if (arr.IsValid)
 				MemoryExt.MemFree(arr);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReadBlittable<T>(ref T value, int size) where T : unmanaged
 		{
 			var ptr = GetPointerAndMove(size);
 			value = ptr.Value<T>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T ReadBlittable<T>(int size) where T : unmanaged
 		{
 			var ptr = GetPointerAndMove(size);
 			return ref ptr.Value<T>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T ReadBlittable<T>() where T : unmanaged
 		{
 			var ptr = GetPointerAndMove(TSize<T>.size);
 			return ref ptr.Value<T>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPointer() => arr + position;
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPointerAndMove(int size)
 		{
 			if (position + size > arrSize)
@@ -68,14 +68,14 @@ namespace Sapientia.MemoryAllocator.Core
 			return arr + pos;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Read(ref SafePtr value, int length)
 		{
 			var ptr = GetPointerAndMove(length);
 			MemoryExt.MemCopy(ptr, value, length);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Read<T>(ref SafePtr<T> value, int length) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
@@ -83,26 +83,26 @@ namespace Sapientia.MemoryAllocator.Core
 			MemoryExt.MemCopy(ptr, (SafePtr)value, size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Read<T>(ref T value) where T : unmanaged
 		{
 			ReadBlittable(ref value, TSize<T>.size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Read<T>() where T : unmanaged
 		{
 			return ref ReadBlittable<T>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Read(ref int value)
 		{
 			const int size = 4;
 			ReadBlittable(ref value, size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Read(ref long value)
 		{
 			const int size = 8;
@@ -116,7 +116,7 @@ namespace Sapientia.MemoryAllocator.Core
 		private int arrSize;
 		private int position;
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StreamBufferWriter(int capacity)
 		{
 			arr = default;
@@ -129,7 +129,7 @@ namespace Sapientia.MemoryAllocator.Core
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
 			if (arr.IsValid)
@@ -137,13 +137,13 @@ namespace Sapientia.MemoryAllocator.Core
 			this = default;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Reset()
 		{
 			position = 0;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public byte[] ToArray()
 		{
 			var bytes = new byte[position];
@@ -156,7 +156,7 @@ namespace Sapientia.MemoryAllocator.Core
 			return bytes;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void SetCapacity(int size)
 		{
 			if (size >= arrSize)
@@ -165,10 +165,10 @@ namespace Sapientia.MemoryAllocator.Core
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPointer() => arr + position;
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPointerAndMove(int size)
 		{
 			var pos = position;
@@ -178,21 +178,21 @@ namespace Sapientia.MemoryAllocator.Core
 			return arr + pos;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void WriteBlittable<T>(T value, int size) where T : unmanaged
 		{
 			var ptr = GetPointerAndMove(size);
 			ptr.Value<T>() = value;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Write(SafePtr arrBytes, int length)
 		{
 			var ptr = GetPointerAndMove(length);
 			MemoryExt.MemCopy(arrBytes, ptr, length);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Write<T>(SafePtr<T> arrBytes, int length) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
@@ -200,20 +200,20 @@ namespace Sapientia.MemoryAllocator.Core
 			MemoryExt.MemCopy((SafePtr)arrBytes, ptr, size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Write<T>(T value) where T : unmanaged
 		{
 			WriteBlittable(value, TSize<T>.size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Write(int value)
 		{
 			const int size = 4;
 			WriteBlittable(value, size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Write(long value)
 		{
 			const int size = 8;

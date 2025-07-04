@@ -1,10 +1,9 @@
+using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
-
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(BitArrayDebugView))]
 	public unsafe struct BitArray
 	{
@@ -15,13 +14,13 @@ namespace Sapientia.MemoryAllocator
 
 		public bool IsCreated => ptr.IsValid();
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<ulong> GetPtr(WorldState worldState)
 		{
 			return ptr.GetPtr(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public BitArray(WorldState worldState, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(length);
@@ -35,7 +34,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public BitArray(WorldState worldState, BitArray source)
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(source.length);
@@ -46,7 +45,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemCopy(source.ptr.GetPtr(worldState).Cast<byte>(), safePtr.Cast<byte>(), sizeInBytes);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Set(WorldState worldState, BitArray source)
 		{
 			var sizeInBytes = Bitwise.AlignULongBits(source.length);
@@ -55,7 +54,7 @@ namespace Sapientia.MemoryAllocator
 			MemoryExt.MemCopy(source.ptr.GetPtr(worldState).Cast<byte>(), ptr.GetPtr(worldState).Cast<byte>(), sizeInBytes);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsAll(WorldState worldState, BitArray other)
 		{
 			var len = Bitwise.GetMinLength(other.length, length);
@@ -70,7 +69,7 @@ namespace Sapientia.MemoryAllocator
 			return true;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Resize(WorldState worldState, int newLength, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			if (newLength > length)
@@ -93,7 +92,7 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="value">The value to set each bit to.</param>
 		/// <returns>The instance of the modified bitmap.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetAllBits(WorldState worldState, bool value)
 		{
 			var unsafePtr = ptr.GetPtr(worldState);
@@ -111,7 +110,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="worldator"></param>
 		/// <param name="index">The index of the bit.</param>
 		/// <returns>The value of the bit at the specified index.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsSet(WorldState worldState, int index)
 		{
 			E.RANGE(index, 0, length);
@@ -123,7 +122,7 @@ namespace Sapientia.MemoryAllocator
 		/// Gets the value of the bit at the specified index.
 		/// </summary>
 		/// <returns>The value of the bit at the specified index.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSet(SafePtr<ulong> unsafePtr, int index)
 		{
 			return (unsafePtr[index / _bitsInUlong] & (0x1ul << (index % _bitsInUlong))) > 0;
@@ -136,7 +135,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="index">The index of the bit to set.</param>
 		/// <param name="value">The value to set the bit to.</param>
 		/// <returns>The instance of the modified bitmap.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Set(WorldState worldState, int index, bool value)
 		{
 			E.RANGE(index, 0, length);
@@ -151,13 +150,13 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Add(SafePtr<ulong> unsafePtr, int index)
 		{
 			unsafePtr[index / _bitsInUlong] |= 0x1ul << (index % _bitsInUlong);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Remove(SafePtr<ulong> unsafePtr, int index)
 		{
 			unsafePtr[index / _bitsInUlong] &= ~(0x1ul << (index % _bitsInUlong));
@@ -169,7 +168,7 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="bitmap">The bitmap to union with this instance.</param>
 		/// <returns>A reference to this instance.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Union(WorldState worldState, BitArray bitmap)
 		{
 			Resize(worldState, bitmap.length > length ? bitmap.length : length);
@@ -190,7 +189,7 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="bitmap">The bitmap to intersect with this instance.</param>
 		/// <returns>A reference to this instance.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Intersect(WorldState worldState, BitArray bitmap)
 		{
 			E.RANGE(bitmap.length - 1, 0, length);
@@ -203,7 +202,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Remove(WorldState worldState, BitArray bitmap)
 		{
 			var unsafePtr = ptr.GetPtr(worldState);
@@ -218,7 +217,7 @@ namespace Sapientia.MemoryAllocator
 		/// Inverts all the bits in this bitmap.
 		/// </summary>
 		/// <returns>A reference to this instance.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Invert(WorldState worldState)
 		{
 			var unsafePtr = ptr.GetPtr(worldState);
@@ -236,7 +235,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="end">The index of the bit at the end of the range (inclusive).</param>
 		/// <param name="value">The value to set the bits to.</param>
 		/// <returns>A reference to this instance.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetRange(WorldState worldState, int start, int end, bool value)
 		{
 			if (start == end)
@@ -275,13 +274,13 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState)
 		{
 			SetAllBits(worldState, false);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)
 		{
 			worldState.MemFree(ptr.memPtr);

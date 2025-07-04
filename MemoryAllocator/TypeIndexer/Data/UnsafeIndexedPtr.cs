@@ -1,7 +1,7 @@
 using System;
+using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.TypeIndexer;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -12,37 +12,37 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => _ptr.IsValid;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _ptr.IsValid;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public UnsafeIndexedPtr(SafePtr ptr, TypeIndex typeIndex)
 		{
 			_ptr = ptr;
 			this.typeIndex = typeIndex;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UnsafeIndexedPtr Create<T>(SafePtr<T> ptr) where T : unmanaged
 		{
 			return new UnsafeIndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetValue<T>() where T : unmanaged
 		{
 			E.ASSERT(IsCreated);
 			return ref _ptr.Value<T>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPtr()
 		{
 			E.ASSERT(IsCreated);
 			return _ptr;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetPtr<T>() where T: unmanaged
 		{
 			E.ASSERT(IsCreated);

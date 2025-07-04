@@ -1,5 +1,5 @@
+using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -7,21 +7,21 @@ namespace Sapientia.MemoryAllocator
 	{
 		private const int _ulongSize = sizeof(ulong);
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int GetMinLength(int bitsCount1, int bitsCount2)
 		{
 			var length = GetLength(bitsCount1).Min(GetLength(bitsCount2));
 			return length;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int GetMaxLength(int bitsCount1, int bitsCount2)
 		{
 			var length = GetLength(bitsCount1).Max(GetLength(bitsCount2));
 			return length;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int GetLength(int bitsCount)
 		{
 			return AlignULongBits(bitsCount) / _ulongSize;
@@ -29,7 +29,7 @@ namespace Sapientia.MemoryAllocator
 			//return bitsCount / Bitwise.ULONG_SIZE;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int AlignULongBits(int bitsCount)
 		{
 			var delta = bitsCount % 64;
@@ -38,19 +38,19 @@ namespace Sapientia.MemoryAllocator
 			return bitsCount / 8;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static int AlignDown(int value, int alignPow2)
 		{
 			return value & ~(alignPow2 - 1);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static int AlignUp(int value, int alignPow2)
 		{
 			return AlignDown(value + alignPow2 - 1, alignPow2);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static int FromBool(bool value)
 		{
 			return value ? 1 : 0;
@@ -58,14 +58,14 @@ namespace Sapientia.MemoryAllocator
 
 		// 32-bit uint
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static uint ExtractBits(uint input, int pos, uint mask)
 		{
 			var tmp0 = input >> pos;
 			return tmp0 & mask;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static uint ReplaceBits(uint input, int pos, uint mask, uint value)
 		{
 			var tmp0 = (value & mask) << pos;
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator
 			return tmp0 | tmp1;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static uint SetBits(uint input, int pos, uint mask, bool value)
 		{
 			return ReplaceBits(input, pos, mask, (uint)-FromBool(value));
@@ -81,14 +81,14 @@ namespace Sapientia.MemoryAllocator
 
 		// 64-bit ulong
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ulong ExtractBits(ulong input, int pos, ulong mask)
 		{
 			var tmp0 = input >> pos;
 			return tmp0 & mask;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ulong ReplaceBits(ulong input, int pos, ulong mask, ulong value)
 		{
 			var tmp0 = (value & mask) << pos;
@@ -96,37 +96,37 @@ namespace Sapientia.MemoryAllocator
 			return tmp0 | tmp1;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ulong SetBits(ulong input, int pos, ulong mask, bool value)
 		{
 			return ReplaceBits(input, pos, mask, (ulong)-(long)FromBool(value));
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int LeadingZeroCount(byte value)
 		{
 			return ((uint)value).LeadingZeroCount() - 24;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int LeadingZeroCount(ushort value)
 		{
 			return ((uint)value).LeadingZeroCount() - 16;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int TrailingZeroCount(byte value)
 		{
 			return 8.Min(((uint)value).TrailingZeroCount());
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int TrailingZeroCount(ushort value)
 		{
 			return 16.Min(((uint)value).TrailingZeroCount());
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int FindUlong(ulong* ptr, int beginBit, int endBit, int numBits)
 		{
 			var bits = ptr;
@@ -181,7 +181,7 @@ namespace Sapientia.MemoryAllocator
 			return endBit;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int FindUint(ulong* ptr, int beginBit, int endBit, int numBits)
 		{
 			var bits = (uint*)ptr;
@@ -236,7 +236,7 @@ namespace Sapientia.MemoryAllocator
 			return endBit;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int FindUshort(ulong* ptr, int beginBit, int endBit, int numBits)
 		{
 			var bits = (ushort*)ptr;
@@ -291,7 +291,7 @@ namespace Sapientia.MemoryAllocator
 			return endBit;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int FindByte(ulong* ptr, int beginBit, int endBit, int numBits)
 		{
 			var bits = (byte*)ptr;
@@ -346,7 +346,7 @@ namespace Sapientia.MemoryAllocator
 			return endBit;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int FindUpto14Bits(ulong* ptr, int beginBit, int endBit, int numBits)
 		{
 			var bits = (byte*)ptr;
@@ -388,7 +388,7 @@ namespace Sapientia.MemoryAllocator
 			return endBit;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int FindUpto6Bits(ulong* ptr, int beginBit, int endBit, int numBits)
 		{
 			var bits = (byte*)ptr;
@@ -428,7 +428,7 @@ namespace Sapientia.MemoryAllocator
 			return endBit;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static int FindWithBeginEnd(ulong* ptr, int beginBit, int endBit, int numBits)
 		{
 			int idx;
@@ -504,7 +504,7 @@ namespace Sapientia.MemoryAllocator
 			return int.MaxValue;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static int Find(ulong* ptr, int pos, int count, int numBits)
 		{
 			var v = FindWithBeginEnd(ptr, pos, pos + count, numBits);
@@ -536,7 +536,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="ptr">An existing buffer.</param>
 		/// <param name="allocator">The allocator that was used to allocate the bytes. Needed to dispose this array.</param>
 		/// <param name="sizeInBytes">The number of bytes. The length will be `sizeInBytes * 8`.</param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemBitArray(MemPtr ptr, int sizeInBytes)
 		{
 			this.ptr = ptr;
@@ -549,7 +549,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits.</param>
 		/// <param name="worldator">The allocator to use.</param>
 		/// <param name="options">Whether newly allocated bytes should be zeroed out.</param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemBitArray(WorldState worldState, int numBits, ClearOptions options = ClearOptions.ClearMemory)
 		{
 			var sizeInBytes = Bitwise.AlignUp(numBits, 64) / 8;
@@ -562,7 +562,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Resize(WorldState worldState, int numBits)
 		{
 			if (numBits > length)
@@ -583,7 +583,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Releases all resources (memory and safety handles).
 		/// </summary>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)
 		{
 			worldState.MemFree(ptr);
@@ -593,7 +593,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Sets all the bits to 0.
 		/// </summary>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState)
 		{
 			var sizeInBytes = Bitwise.AlignUp(length, 64) / 8;
@@ -605,7 +605,7 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="pos">Index of the bit to set.</param>
 		/// <param name="value">True for 1, false for 0.</param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Set(WorldState worldState, int pos, bool value)
 		{
 			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
@@ -623,7 +623,7 @@ namespace Sapientia.MemoryAllocator
 			ptr[idx] = bits;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ulong CompareExchange(ref ulong target, ulong v, ulong cmp)
 		{
 			fixed (ulong* p = &target)
@@ -643,7 +643,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="value">True for 1, false for 0.</param>
 		/// <param name="numBits">Number of bits to set.</param>
 		/// <exception cref="System.ArgumentException">Thrown if pos is out of bounds or if numBits is less than 1.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBits(WorldState worldState, int pos, bool value, int numBits)
 		{
 			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
@@ -693,7 +693,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="value">Unsigned long from which to copy bits.</param>
 		/// <param name="numBits">Number of bits to set (must be between 1 and 64).</param>
 		/// <exception cref="System.ArgumentException">Thrown if pos is out of bounds or if numBits is not between 1 and 64.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBits(WorldState worldState, int pos, ulong value, int numBits = 1)
 		{
 			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
@@ -733,7 +733,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits to get (must be between 1 and 64).</param>
 		/// <exception cref="System.ArgumentException">Thrown if pos is out of bounds or if numBits is not between 1 and 64.</exception>
 		/// <returns>A ulong which has bits copied from this array.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ulong GetBits(WorldState worldState, int pos, int numBits = 1)
 		{
 			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
@@ -765,7 +765,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="pos">Index of the bit to test.</param>
 		/// <returns>True if the bit at the index is 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsSet(WorldState worldState, int pos)
 		{
 			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
@@ -775,7 +775,7 @@ namespace Sapientia.MemoryAllocator
 			return 0ul != (ptr[idx] & mask);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal void CopyUlong(WorldState worldState, int dstPos, ref MemBitArray srcBitArray, int srcPos,
 			int numBits)
 		{
@@ -795,7 +795,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="srcPos">Index of the first bit to copy.</param>
 		/// <param name="numBits">Number of bits to copy.</param>
 		/// <exception cref="System.ArgumentException">Thrown if either `dstPos + numBits` or `srcPos + numBits` exceed the length of this array.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Copy(WorldState worldState, int dstPos, int srcPos, int numBits)
 		{
 			if (dstPos == srcPos)
@@ -820,7 +820,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="srcPos">Index of the first bit to copy.</param>
 		/// <param name="numBits">The number of bits to copy.</param>
 		/// <exception cref="System.ArgumentException">Thrown if either `dstPos + numBits` or `srcBitArray + numBits` exceed the length of this array.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Copy(WorldState worldState, int dstPos, ref MemBitArray srcBitArray, int srcPos, int numBits)
 		{
 			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
@@ -901,7 +901,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="pos">Index of the bit at which to start searching.</param>
 		/// <param name="numBits">Number of contiguous 0 bits to look for.</param>
 		/// <returns>The index of the first occurrence in this array of `numBits` contiguous 0 bits. Range is pos up to (but not including) the length of this array. Returns -1 if no occurrence is found.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Find(WorldState worldState, int pos, int numBits)
 		{
 			var safePtr = worldState.GetSafePtr<ulong>(in this.ptr);
@@ -917,7 +917,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of contiguous 0 bits to look for.</param>
 		/// <param name="count">Number of indexes to consider as the return value.</param>
 		/// <returns>The index of the first occurrence in this array of `numBits` contiguous 0 bits. Range is pos up to (but not including) `pos + count`. Returns -1 if no occurrence is found.</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Find(WorldState worldState, int pos, int count, int numBits)
 		{
 			var safePtr = worldState.GetSafePtr<ulong>(in this.ptr);
@@ -931,7 +931,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits to test. Defaults to 1.</param>
 		/// <returns>Returns true if none of the bits in range `pos` up to (but not including) `pos + numBits` are 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds or `numBits` is less than 1.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestNone(WorldState worldState, int pos, int numBits = 1)
 		{
 			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
@@ -972,7 +972,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits to test. Defaults to 1.</param>
 		/// <returns>True if one or more of the bits in range `pos` up to (but not including) `pos + numBits` are 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds or `numBits` is less than 1.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestAny(WorldState worldState, int pos, int numBits = 1)
 		{
 			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
@@ -1013,7 +1013,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits to test. Defaults to 1.</param>
 		/// <returns>True if all of the bits in range `pos` up to (but not including) `pos + numBits` are 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds or `numBits` is less than 1.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestAll(WorldState worldState, int pos, int numBits = 1)
 		{
 			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
@@ -1054,7 +1054,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="numBits">Number of bits to test. Defaults to 1.</param>
 		/// <returns>The number of bits in a range of bits that are 1.</returns>
 		/// <exception cref="System.ArgumentException">Thrown if `pos` is out of bounds or `numBits` is less than 1.</exception>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int CountBits(WorldState worldState, int pos, int numBits = 1)
 		{
 			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
@@ -1084,7 +1084,7 @@ namespace Sapientia.MemoryAllocator
 			return count;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveExcept(WorldState worldState, MemBitArray bits)
 		{
 			var p = worldState.GetSafePtr<ulong>(ptr);

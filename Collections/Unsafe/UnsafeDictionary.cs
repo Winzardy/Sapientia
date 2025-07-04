@@ -39,32 +39,32 @@ namespace Sapientia.Collections
 
 		public bool IsCreated
 		{
-			[INLINE(256)] get => buckets.IsCreated;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => buckets.IsCreated;
 		}
 
 		public readonly int Count
 		{
-			[INLINE(256)] get => count - freeCount;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => count - freeCount;
 		}
 
 		public readonly int Capacity
 		{
-			[INLINE(256)] get => buckets.Length;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => buckets.Length;
 		}
 
 		public readonly int LastIndex
 		{
-			[INLINE(256)] get => count;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => count;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public UnsafeDictionary(int capacity)
 		{
 			this = default;
 			Initialize(capacity);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Initialize(int capacity)
 		{
 			var prime = capacity.GetPrime();
@@ -74,7 +74,7 @@ namespace Sapientia.Collections
 			entries = new UnsafeArray<Entry>(prime, true);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
 			buckets.Dispose();
@@ -82,13 +82,13 @@ namespace Sapientia.Collections
 			this = default;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly SafePtr<Entry> GetEntryPtr()
 		{
 			return entries.ptr;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReplaceWith(in UnsafeDictionary<TKey, TValue> other)
 		{
 			if (GetEntryPtr() == other.GetEntryPtr())
@@ -98,7 +98,7 @@ namespace Sapientia.Collections
 			this = other;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFrom(in UnsafeDictionary<TKey, TValue> other)
 		{
 			if (GetEntryPtr() == other.GetEntryPtr())
@@ -127,7 +127,7 @@ namespace Sapientia.Collections
 		/// <param name="key">The key whose value is to be gotten or set.</param>
 		public ref TValue this[in TKey key]
 		{
-			[INLINE(256)]
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
 			{
 				var entry = FindEntry(key);
@@ -140,7 +140,7 @@ namespace Sapientia.Collections
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref TValue GetValue( TKey key)
 		{
 			var entry = FindEntry(key);
@@ -152,7 +152,7 @@ namespace Sapientia.Collections
 			return ref UnsafeExt.DefaultRef<TValue>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref TValue GetValue(TKey key, out bool success)
 		{
 			var entry = FindEntry(key);
@@ -166,7 +166,7 @@ namespace Sapientia.Collections
 			return ref UnsafeExt.DefaultRef<TValue>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGetValue(TKey key, out TValue value)
 		{
 			var entry = FindEntry(key);
@@ -184,14 +184,14 @@ namespace Sapientia.Collections
 		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to add to the dictionary.</param>
 		/// <param name="value"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(TKey key, TValue value)
 		{
 			TryInsert(key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
 			var clearCount = count;
@@ -208,7 +208,7 @@ namespace Sapientia.Collections
 		/// <summary><para>Determines whether the dictionary contains an element with a specific key.</para></summary>
 		/// <param name="worldator"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsKey(TKey key)
 		{
 			return FindEntry(key) >= 0;
@@ -217,7 +217,7 @@ namespace Sapientia.Collections
 		/// <summary><para>Determines whether the dictionary contains an element with a specific value.</para></summary>
 		/// <param name="worldator"></param>
 		/// <param name="value">The value to locate in the dictionary.</param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsValue(TValue value)
 		{
 			var rawEntries = entries.ptr;
@@ -230,7 +230,7 @@ namespace Sapientia.Collections
 			return false;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private int FindEntry(in TKey key)
 		{
 			if (buckets.IsCreated)
@@ -312,13 +312,13 @@ namespace Sapientia.Collections
 			return true;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity()
 		{
 			IncreaseCapacity(count.ExpandPrime());
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity(int newSize)
 		{
 			var bucketsArray = new UnsafeArray<int>(newSize, false);
@@ -351,7 +351,7 @@ namespace Sapientia.Collections
 		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove(TKey key)
 		{
 			return Remove(key, out _);
@@ -361,7 +361,7 @@ namespace Sapientia.Collections
 		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove(TKey key, out TValue value)
 		{
 			value = default;
@@ -406,13 +406,13 @@ namespace Sapientia.Collections
 			return false;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryAdd(TKey key, TValue value)
 		{
 			return TryInsert(key, value, InsertionBehavior.None);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int EnsureCapacity(int capacity)
 		{
 			E.ASSERT(IsCreated);
@@ -434,25 +434,25 @@ namespace Sapientia.Collections
 			return prime;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Enumerator GetEnumerator()
 		{
 			return new Enumerator(GetEntryPtr(), LastIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator<SafePtr<Entry>> IEnumerable<SafePtr<Entry>>.GetEnumerator()
 		{
 			return GetEnumerator();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator<Entry> IEnumerable<Entry>.GetEnumerator()
 		{
 			return GetEnumerator();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();

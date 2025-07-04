@@ -1,9 +1,9 @@
 using System;
+using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.MemoryAllocator.Core;
 using Sapientia.ServiceManagement;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -19,41 +19,41 @@ namespace Sapientia.MemoryAllocator
 
 		public static WorldState CurrentWorldState
 		{
-			[INLINE(256)]
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _currentWorldState;
 		}
 
 		public static World CurrentWorld
 		{
-			[INLINE(256)]
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _currentWorld;
 		}
 
 		public static WorldId CurrentWorldId
 		{
-			[INLINE(256)]
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _currentWorldState.WorldId;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldScope GetWorldScope(this World world)
 		{
 			return world.worldState.GetWorldScope();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldScope GetWorldScope(this ref WorldState worldState)
 		{
 			return worldState.WorldId.GetWorldScope(out _);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldScope GetWorldScope(this ref WorldId worldId)
 		{
 			return worldId.GetWorldScope(out _);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldScope GetWorldScope(this ref WorldId worldId, out WorldState worldState)
 		{
 			var scope = new WorldScope(_currentWorldState.IsValid ? CurrentWorldId : default);
@@ -62,13 +62,13 @@ namespace Sapientia.MemoryAllocator
 			return scope;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetCurrentWorld(this ref WorldId worldId)
 		{
 			SetCurrentWorld(worldId.GetWorld(), worldId.GetWorldState());
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetCurrentWorld(WorldId worldId)
 		{
 			if (!worldId.IsValid())
@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator
 			SetCurrentWorld(worldId.GetWorld(), worldId.GetWorldState());
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetCurrentWorld(this World world)
 		{
 			var worldState = world?.worldState ?? default;
@@ -85,7 +85,7 @@ namespace Sapientia.MemoryAllocator
 			SetCurrentWorld(world, worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void SetCurrentWorld(World world, WorldState worldState)
 		{
 			_currentWorld = world;
@@ -172,7 +172,7 @@ namespace Sapientia.MemoryAllocator
 			_count--;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldState GetWorldState(WorldId worldId)
 		{
 			if (!worldId.IsValid())
@@ -180,7 +180,7 @@ namespace Sapientia.MemoryAllocator
 			return _worldsStates[worldId.index];
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldState GetWorldState(this ref WorldId worldId)
 		{
 			if (!worldId.IsValid())
@@ -188,7 +188,7 @@ namespace Sapientia.MemoryAllocator
 			return _worldsStates[worldId.index];
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static World GetWorld(WorldId worldId)
 		{
 			if (!worldId.IsValid())
@@ -196,7 +196,7 @@ namespace Sapientia.MemoryAllocator
 			return _worlds[worldId.index];
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static World GetWorld(this ref WorldId worldId)
 		{
 			if (!worldId.IsValid())
@@ -204,7 +204,7 @@ namespace Sapientia.MemoryAllocator
 			return _worlds[worldId.index];
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsValid(this ref WorldId worldId)
 		{
 			if (worldId.index < _count && _worldsStates[worldId.index].WorldId.id == worldId.id)

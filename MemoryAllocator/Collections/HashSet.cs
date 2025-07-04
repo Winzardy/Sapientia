@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -29,27 +29,27 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => buckets.IsCreated;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => buckets.IsCreated;
 		}
 
 		public int Count
 		{
-			[INLINE(256)] get => count;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => count;
 		}
 
 		public int LastIndex
 		{
-			[INLINE(256)] get => lastIndex;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => lastIndex;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public HashSet(WorldState worldState, int capacity = 8)
 		{
 			this = default;
 			Initialize(worldState, capacity);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public HashSet(WorldState worldState, in HashSet<T> other)
 		{
 			E.ASSERT(other.IsCreated);
@@ -59,7 +59,7 @@ namespace Sapientia.MemoryAllocator
 			slots = new MemArray<Slot>(worldState, other.slots);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public HashSet(WorldState worldState, in ICollection<T> other) : this(worldState, other.Count)
 		{
 			foreach (var value in other)
@@ -68,7 +68,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public HashSet(WorldState worldState, in IEnumerable<T> other, int capacity) : this(worldState, capacity)
 		{
 			foreach (var value in other)
@@ -83,7 +83,7 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		/// <param name="worldator"></param>
 		/// <param name="capacity"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Initialize(WorldState worldState, int capacity)
 		{
 			var size = capacity.GetPrime();
@@ -92,14 +92,14 @@ namespace Sapientia.MemoryAllocator
 			freeList = -1;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<Slot> GetSlotPtr(WorldState worldState)
 		{
 			E.ASSERT(IsCreated);
 			return slots.GetValuePtr(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)
 		{
 			buckets.Dispose(worldState);
@@ -107,14 +107,14 @@ namespace Sapientia.MemoryAllocator
 			this = default;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemPtr GetMemPtr()
 		{
 			E.ASSERT(IsCreated);
 			return buckets.innerArray.ptr.memPtr;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReplaceWith(WorldState worldState, ref HashSet<T> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
@@ -131,7 +131,7 @@ namespace Sapientia.MemoryAllocator
 		/// buckets and slots array. Follow this call by TrimExcess to release these.
 		/// </summary>
 		/// <param name="worldator"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState)
 		{
 			if (lastIndex > 0)
@@ -153,13 +153,13 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="worldator"></param>
 		/// <param name="item">item to check for containment</param>
 		/// <returns>true if item contained; false if not</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Contains(WorldState worldState, in T item)
 		{
 			return Contains(item, slots.GetValuePtr(worldState), buckets.GetValuePtr(worldState));
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private readonly bool Contains(in T item, SafePtr<Slot> slotsPtr, SafePtr<int> bucketsPtr)
 		{
 			E.ASSERT(IsCreated);
@@ -177,7 +177,7 @@ namespace Sapientia.MemoryAllocator
 			return false;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(WorldState worldState, ref HashSet<T> other)
 		{
 			var slotsPtr = slots.GetValuePtr(worldState);
@@ -191,7 +191,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RemoveExcept(WorldState worldState, ref HashSet<T> other)
 		{
 			var slotsPtr = slots.GetValuePtr(worldState);
@@ -211,7 +211,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Remove(WorldState worldState, ref HashSet<T> other)
 		{
 			E.ASSERT(IsCreated);
@@ -239,7 +239,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="worldator"></param>
 		/// <param name="item">item to remove</param>
 		/// <returns>true if removed; false if not (i.e. if the item wasn't in the HashSet)</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove(WorldState worldState, in T item)
 		{
 			if (!buckets.IsCreated)
@@ -293,7 +293,7 @@ namespace Sapientia.MemoryAllocator
 		/// AddIfNotPresent attempts to insert new elements in re-opened spots.
 		/// </summary>
 		/// <param name="worldator"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity(WorldState worldState)
 		{
 			var newSize = count.ExpandPrime();
@@ -307,7 +307,7 @@ namespace Sapientia.MemoryAllocator
 		/// *must* be a prime.  It is very likely that you want to call IncreaseCapacity()
 		/// instead of this method.
 		/// </summary>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void SetCapacity(WorldState worldState, int newSize)
 		{
 			var newSlots = new MemArray<Slot>(worldState, newSize);
@@ -339,7 +339,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="worldator"></param>
 		/// <param name="value"></param>
 		/// <returns>true if added, false if already present</returns>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Add(WorldState worldState, in T value)
 		{
 			if (!buckets.IsCreated)
@@ -392,13 +392,13 @@ namespace Sapientia.MemoryAllocator
 			return true;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly int GetHash()
 		{
 			return hash;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFrom(WorldState worldState, in HashSet<T> other)
 		{
 			MemArrayExt.CopyExact(worldState, in other.buckets, ref buckets);
@@ -412,13 +412,13 @@ namespace Sapientia.MemoryAllocator
 			slots = thisSlots;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public HashSetEnumerator<T> GetEnumerator(WorldState worldState)
 		{
 			return new HashSetEnumerator<T>(GetSlotPtr(worldState), LastIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public HashSetEnumerable<T> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));

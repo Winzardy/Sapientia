@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -40,32 +40,32 @@ namespace Sapientia.MemoryAllocator
 
 		public bool IsCreated
 		{
-			[INLINE(256)] get => buckets.IsCreated;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => buckets.IsCreated;
 		}
 
 		public readonly int Count
 		{
-			[INLINE(256)] get => count - freeCount;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => count - freeCount;
 		}
 
 		public readonly int Capacity
 		{
-			[INLINE(256)] get => buckets.Length;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => buckets.Length;
 		}
 
 		public readonly int LastIndex
 		{
-			[INLINE(256)] get => count;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => count;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Dictionary(WorldState worldState, int capacity)
 		{
 			this = default;
 			Initialize(worldState, capacity);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Initialize(WorldState worldState, int capacity)
 		{
 			var prime = capacity.GetPrime();
@@ -74,7 +74,7 @@ namespace Sapientia.MemoryAllocator
 			entries = new MemArray<Entry>(worldState, prime);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)
 		{
 			buckets.Dispose(worldState);
@@ -82,19 +82,19 @@ namespace Sapientia.MemoryAllocator
 			this = default;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<Entry> GetEntryPtr(WorldState worldState)
 		{
 			return entries.GetValuePtr(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly MemPtr GetMemPtr()
 		{
 			return buckets.innerArray.ptr.memPtr;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReplaceWith(WorldState worldState, in Dictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr()) return;
@@ -103,7 +103,7 @@ namespace Sapientia.MemoryAllocator
 			this = other;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFrom(WorldState worldState, in Dictionary<TKey, TValue> other)
 		{
 			if (GetMemPtr() == other.GetMemPtr())
@@ -131,7 +131,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="key">The key whose value is to be gotten or set.</param>
 		public ref TValue this[WorldState worldState, in TKey key]
 		{
-			[INLINE(256)]
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
 			{
 				var entry = FindEntry(worldState, key);
@@ -144,7 +144,7 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref TValue GetValue(WorldState worldState, TKey key)
 		{
 			var entry = FindEntry(worldState, key);
@@ -156,7 +156,7 @@ namespace Sapientia.MemoryAllocator
 			return ref UnsafeExt.DefaultRef<TValue>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref TValue GetValue(WorldState worldState, TKey key, out bool success)
 		{
 			var entry = FindEntry(worldState, key);
@@ -170,7 +170,7 @@ namespace Sapientia.MemoryAllocator
 			return ref UnsafeExt.DefaultRef<TValue>();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGetValue(WorldState worldState, TKey key, out TValue value)
 		{
 			var entry = FindEntry(worldState, key);
@@ -188,14 +188,14 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to add to the dictionary.</param>
 		/// <param name="value"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(WorldState worldState, TKey key, TValue value)
 		{
 			TryInsert(worldState, key, value, InsertionBehavior.ThrowOnExisting);
 		}
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState)
 		{
 			var clearCount = count;
@@ -212,7 +212,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary><para>Determines whether the dictionary contains an element with a specific key.</para></summary>
 		/// <param name="worldator"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsKey(WorldState worldState, TKey key)
 		{
 			return FindEntry(worldState, key) >= 0;
@@ -221,7 +221,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary><para>Determines whether the dictionary contains an element with a specific value.</para></summary>
 		/// <param name="worldator"></param>
 		/// <param name="value">The value to locate in the dictionary.</param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsValue(WorldState worldState, TValue value)
 		{
 			var rawEntries = entries.GetValuePtr(worldState);
@@ -234,7 +234,7 @@ namespace Sapientia.MemoryAllocator
 			return false;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int FindEntry(WorldState worldState, in TKey key)
 		{
 			if (buckets.IsCreated)
@@ -316,13 +316,13 @@ namespace Sapientia.MemoryAllocator
 			return true;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity(WorldState worldState)
 		{
 			IncreaseCapacity(worldState, count.ExpandPrime());
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity(WorldState worldState, int newSize)
 		{
 			var bucketsArray = new MemArray<int>(worldState, newSize, -1);
@@ -354,7 +354,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove(WorldState worldState, TKey key)
 		{
 			return Remove(worldState, key, out _);
@@ -364,7 +364,7 @@ namespace Sapientia.MemoryAllocator
 		/// <param name="worldator"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove(WorldState worldState, TKey key, out TValue value)
 		{
 			value = default;
@@ -409,13 +409,13 @@ namespace Sapientia.MemoryAllocator
 			return false;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryAdd(WorldState worldState, TKey key, TValue value)
 		{
 			return TryInsert(worldState, key, value, InsertionBehavior.None);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int EnsureCapacity(WorldState worldState, int capacity)
 		{
 			E.ASSERT(IsCreated);
@@ -437,13 +437,13 @@ namespace Sapientia.MemoryAllocator
 			return prime;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public DictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
 		{
 			return new DictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public DictionaryEnumerable<TKey, TValue> GetEnumerable(WorldState worldState)
 		{
 			return new (GetEnumerator(worldState));

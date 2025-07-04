@@ -1,7 +1,7 @@
 using System;
+using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.TypeIndexer;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -12,57 +12,57 @@ namespace Sapientia.MemoryAllocator
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => _ptr.memPtr.IsValid();
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _ptr.memPtr.IsValid();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr(MemPtr memPtr, TypeIndex typeIndex)
 		{
 			_ptr = new (memPtr);
 			this.typeIndex = typeIndex;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr(CachedPtr ptr, TypeIndex typeIndex)
 		{
 			_ptr = ptr;
 			this.typeIndex = typeIndex;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IndexedPtr(WorldState worldState, SafePtr cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
 		{
 			_ptr = new CachedPtr(worldState, cachedPtr, memPtr);
 			this.typeIndex = typeIndex;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(CachedPtr<T> ptr) where T : unmanaged
 		{
 			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(CachedPtr ptr) where T : unmanaged
 		{
 			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(WorldState worldState) where T : unmanaged
 		{
 			var memPtr = worldState.MemAlloc<T>(out var rawPtr);
 			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(WorldState worldState, in T value) where T : unmanaged
 		{
 			var memPtr = worldState.MemAlloc<T>(value, out var rawPtr);
 			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(in T value) where T : unmanaged
 		{
 			var worldState = WorldManager.CurrentWorldState;
@@ -70,49 +70,49 @@ namespace Sapientia.MemoryAllocator
 			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetValue<T>(WorldState worldState) where T : unmanaged
 		{
 			E.ASSERT(IsCreated);
 			return ref _ptr.Get<T>(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPtr(WorldState worldState)
 		{
 			E.ASSERT(IsCreated);
 			return _ptr.GetPtr(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetPtr<T>(WorldState worldState) where T: unmanaged
 		{
 			E.ASSERT(IsCreated);
 			return _ptr.GetPtr(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly MemPtr GetMemPtr()
 		{
 			E.ASSERT(IsCreated);
 			return _ptr.memPtr;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly CachedPtr GetCachedPtr()
 		{
 			E.ASSERT(IsCreated);
 			return _ptr;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly CachedPtr<T> GetCachedPtr<T>() where T : unmanaged
 		{
 			E.ASSERT(IsCreated);
 			return _ptr;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)
 		{
 			_ptr.Dispose(worldState);

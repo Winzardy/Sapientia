@@ -1,8 +1,8 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -17,21 +17,21 @@ namespace Sapientia.MemoryAllocator
 
 		public int Count
 		{
-			[INLINE(256)] get => Length;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => Length;
 		}
 
 		public readonly bool IsCreated
 		{
-			[INLINE(256)] get => ptr.IsValid();
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => ptr.IsValid();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemArray(int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory) : this(WorldManager.CurrentWorldState, elementSize, length, clearOptions)
 		{
 
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemArray(WorldState worldState, int elementSize, int length, ClearOptions clearOptions = ClearOptions.ClearMemory)
 		{
 			this = default;
@@ -47,12 +47,12 @@ namespace Sapientia.MemoryAllocator
 			}
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemArray(in MemArray arr) : this(WorldManager.CurrentWorldState, arr)
 		{
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemArray(WorldState worldState, in MemArray arr)
 		{
 			if (arr.Length == 0u)
@@ -70,7 +70,7 @@ namespace Sapientia.MemoryAllocator
 			MemArrayExt.CopyNoChecks(worldState, in arr, 0, ref this, 0, arr.Length);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ReplaceWith(WorldState worldState, in MemArray other)
 		{
 			if (other.ptr.memPtr == ptr.memPtr)
@@ -82,7 +82,7 @@ namespace Sapientia.MemoryAllocator
 			this = other;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFrom(WorldState worldState, in MemArray other)
 		{
 			if (other.ptr.memPtr == ptr.memPtr) return;
@@ -100,7 +100,7 @@ namespace Sapientia.MemoryAllocator
 			MemArrayExt.Copy(worldState, in other, ref this);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)
 		{
 			if (ptr.memPtr.IsValid())
@@ -111,25 +111,25 @@ namespace Sapientia.MemoryAllocator
 			this = default;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPtr(WorldState worldState)
 		{
 			return ptr.GetPtr(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemPtr GetWPtr(int index)
 		{
 			return ptr.memPtr.GetArrayElement(ElementSize, index);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetValue<T>(WorldState worldState, int index) where T: unmanaged
 		{
 			return ref (GetPtr(worldState).Cast<T>() + index).Value();
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetValuePtr<T>(WorldState worldState) where T: unmanaged
 		{
 			return GetPtr(worldState).Cast<T>();
@@ -140,25 +140,25 @@ namespace Sapientia.MemoryAllocator
 			return new Span<T>(GetValuePtr<T>(worldState).ptr, Length);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetValuePtr<T>(WorldState worldState, int index) where T: unmanaged
 		{
 			return GetPtr(worldState).Cast<T>() + index;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetValuePtr(WorldState worldState)
 		{
 			return GetPtr(worldState);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetValuePtr(WorldState worldState, int index)
 		{
 			return GetPtr(worldState) + (index * ElementSize);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Resize(WorldState worldState, int newLength, int elementSize, ClearOptions options = ClearOptions.ClearMemory)
 		{
 			if (!IsCreated)
@@ -187,7 +187,7 @@ namespace Sapientia.MemoryAllocator
 			return true;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Resize<T>(WorldState worldState, int newLength, ClearOptions options = ClearOptions.ClearMemory)
 			where T : unmanaged
 		{
@@ -195,26 +195,26 @@ namespace Sapientia.MemoryAllocator
 			return Resize(worldState, newLength, elementSize, options);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Fill<T>(WorldState worldState, in T value, int fromIndex, int count) where T: unmanaged
 		{
 			worldState.MemFill<T>(ptr.memPtr, value, fromIndex, count);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState)
 		{
 			Clear(worldState, 0, Length);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState, int index, int length)
 		{
 			var size = ElementSize;
 			worldState.MemClear(ptr.memPtr, index * size, length * size);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Contains<T, TU>(WorldState worldState, in TU obj) where T: unmanaged where TU : unmanaged, IEquatable<T>
 		{
 			E.ASSERT(IsCreated);
@@ -231,19 +231,19 @@ namespace Sapientia.MemoryAllocator
 			return false;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int GetReservedSizeInBytes()
 		{
 			return Length * ElementSize;
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListEnumerator<T> GetEnumerator<T>(WorldState worldState) where T: unmanaged
 		{
 			return new ListEnumerator<T>(GetValuePtr<T>(worldState), Count);
 		}
 
-		[INLINE(256)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ListEnumerable<T> GetEnumerable<T>(WorldState worldState) where T: unmanaged
 		{
 			return new (GetEnumerator<T>(worldState));
