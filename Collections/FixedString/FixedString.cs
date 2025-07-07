@@ -509,7 +509,13 @@ namespace Sapientia.Collections.FixedString
 				var sourceptr = new SafePtr<Char>(sourceptrRaw, source.Length);
 				var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 					sourceptr, source.Length);
-				if (error != CopyError.None)
+				if (error == CopyError.Truncation)
+				{
+#if UNITY_5_3_OR_NEWER
+					UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
+#endif
+				}
+				else if (error != CopyError.None)
 					return (int)error;
 				this.Length = utf8LengthInBytes;
 			}
@@ -1363,7 +1369,13 @@ namespace Sapientia.Collections.FixedString
 				var sourceptr = new SafePtr<Char>(sourceptrRaw, source.Length);
 				var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 					sourceptr, source.Length);
-				if (error != CopyError.None)
+				if (error == CopyError.Truncation)
+				{
+#if UNITY_5_3_OR_NEWER
+					UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
+#endif
+				}
+				else if (error != CopyError.None)
 					return (int)error;
 				this.Length = utf8LengthInBytes;
 			}
@@ -2242,7 +2254,13 @@ namespace Sapientia.Collections.FixedString
 				var sourceptr = new SafePtr<Char>(sourceptrRaw, source.Length);
 				var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 					sourceptr, source.Length);
-				if (error != CopyError.None)
+				if (error == CopyError.Truncation)
+				{
+#if UNITY_5_3_OR_NEWER
+					UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
+#endif
+				}
+				else if (error != CopyError.None)
 					return (int)error;
 				this.Length = utf8LengthInBytes;
 			}
@@ -3242,7 +3260,13 @@ namespace Sapientia.Collections.FixedString
 				var sourceptr = new SafePtr<Char>(sourceptrRaw, source.Length);
 				var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 					sourceptr, source.Length);
-				if (error != CopyError.None)
+				if (error == CopyError.Truncation)
+				{
+#if UNITY_5_3_OR_NEWER
+					UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
+#endif
+				}
+				else if (error != CopyError.None)
 					return (int)error;
 				this.Length = utf8LengthInBytes;
 			}
@@ -5385,7 +5409,13 @@ namespace Sapientia.Collections.FixedString
 					var sourceptr = new SafePtr<char>(sourceptrRaw, source.Length);
 					var error = UTF8Ext.Copy(GetSafePtr(), out utf8LengthInBytes, utf8MaxLengthInBytes,
 						sourceptr, source.Length);
-					if (error != CopyError.None)
+					if (error == CopyError.Truncation)
+					{
+#if UNITY_5_3_OR_NEWER
+						UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
+#endif
+					}
+					else if (error != CopyError.None)
 						return (int)error;
 					this.Length = utf8LengthInBytes;
 				}
