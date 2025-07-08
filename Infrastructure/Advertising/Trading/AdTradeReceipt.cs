@@ -45,7 +45,7 @@ namespace Trading.Advertising
 	public static class AdTradeReceiptUtility
 	{
 		public static string Combine(int group, AdPlacementType type, string id) =>
-			"[" + group + "]" + "_"
+			"[" + group + "] "
 			+ type + "_"
 			+ id;
 

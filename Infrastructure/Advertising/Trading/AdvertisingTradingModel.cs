@@ -1,6 +1,5 @@
 using System;
-using System.Linq;
-using Sapientia.Collections;
+using System.Collections.Generic;
 
 namespace Trading.Advertising
 {
@@ -14,11 +13,11 @@ namespace Trading.Advertising
 	[Serializable]
 	public class AdvertisingTradingModel : IAdvertisingTradingModel
 	{
-		public HashMap<int, int> groupToCount;
+		public Dictionary<int, int> groupToCount;
 
 		public AdvertisingTradingModel()
 		{
-			groupToCount = new HashMap<int, int>();
+			groupToCount = new Dictionary<int, int>();
 		}
 
 		public AdvertisingTradingModel(AdvertisingTradingModel source)
@@ -31,29 +30,24 @@ namespace Trading.Advertising
 			AddToken(receipt.group, 1);
 		}
 
-		public int GetTokenCount(int group) => groupToCount.Contains(group) ? groupToCount[group] : 0;
+		public int GetTokenCount(int group) => groupToCount.ContainsKey(group) ? groupToCount[group] : 0;
 
 		public void AddToken(int group, int count)
 		{
-			if (groupToCount.Contains(group))
-			{
-				groupToCount[group] += count;
-				TradingDebug.LogError($"{group}: +{count}");
+			if (groupToCount.TryAdd(group, count))
 				return;
-			}
 
-			TradingDebug.LogError($"New {group}: {count}");
-			groupToCount.Add(group, count);
+			groupToCount[group] += count;
 		}
 
 		public bool CanIssue(Tradeboard board, string _)
 		{
 			var cost = board.Get<RewardedAdTradeCost>();
-			if (!groupToCount.Contains(cost.group))
+
+			if (!groupToCount.TryGetValue(cost.group, out var count))
 				return false;
 
-			TradingDebug.LogError($"group:{cost.group} ,{groupToCount[cost.group]} : {cost.count}");
-			return groupToCount[cost.group] >= cost.count;
+			return count >= cost.count;
 		}
 
 		public bool Issue(Tradeboard board, string _)
