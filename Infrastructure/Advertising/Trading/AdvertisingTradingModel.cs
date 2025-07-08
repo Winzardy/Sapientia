@@ -1,51 +1,65 @@
 using System;
+using System.Linq;
+using Sapientia.Collections;
 
 namespace Trading.Advertising
 {
 	public interface IAdvertisingTradingModel : ITradeReceiptRegistry<AdTradeReceipt>
 	{
-		public int TokenCount { get; }
+		public int GetTokenCount(int group);
 
-		public void AddToken(int count);
+		public void AddToken(int group, int count);
 	}
 
 	[Serializable]
 	public class AdvertisingTradingModel : IAdvertisingTradingModel
 	{
-		public int tokenCount;
-
-		public int TokenCount => tokenCount;
+		public HashMap<int, int> groupToCount;
 
 		public AdvertisingTradingModel()
 		{
-			tokenCount = 0;
+			groupToCount = new HashMap<int, int>();
 		}
 
 		public AdvertisingTradingModel(AdvertisingTradingModel source)
 		{
-			tokenCount = source.tokenCount;
+			groupToCount = new(source.groupToCount);
 		}
 
-		public void Register(string _, in AdTradeReceipt __)
+		public void Register(string _, in AdTradeReceipt receipt)
 		{
-			AddToken(1);
+			AddToken(receipt.group, 1);
 		}
 
-		public void AddToken(int count)
+		public int GetTokenCount(int group) => groupToCount.Contains(group) ? groupToCount[group] : 0;
+
+		public void AddToken(int group, int count)
 		{
-			tokenCount += count;
+			if (groupToCount.Contains(group))
+			{
+				groupToCount[group] += count;
+				TradingDebug.LogError($"{group}: +{count}");
+				return;
+			}
+
+			TradingDebug.LogError($"New {group}: {count}");
+			groupToCount.Add(group, count);
 		}
 
 		public bool CanIssue(Tradeboard board, string _)
 		{
 			var cost = board.Get<RewardedAdTradeCost>();
-			return tokenCount >= cost.count;
+			if (!groupToCount.Contains(cost.group))
+				return false;
+
+			TradingDebug.LogError($"group:{cost.group} ,{groupToCount[cost.group]} : {cost.count}");
+			return groupToCount[cost.group] >= cost.count;
 		}
 
 		public bool Issue(Tradeboard board, string _)
 		{
 			var cost = board.Get<RewardedAdTradeCost>();
-			tokenCount -= cost.count;
+			groupToCount[cost.group] -= cost.count;
 			return true;
 		}
 	}

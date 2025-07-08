@@ -25,12 +25,12 @@ namespace Trading.InAppPurchasing
 
 		void ITradeReceipt.Register(ITradingModel model, string tradeId) => this.Register(model, tradeId);
 
-		public override string ToString() => $"IAP Receipt: {Key}";
+		public override string ToString() => Key;
 	}
 
 	public static class IAPTradeReceiptUtility
 	{
-		public static string Combine(IAPProductType type, string id) => type + "+" + id;
+		public static string Combine(IAPProductType type, string id) => type + "_" + id;
 
 		public static string ToReceiptId(this IAPProductEntry entry) => Combine(entry.Type, entry.Id);
 

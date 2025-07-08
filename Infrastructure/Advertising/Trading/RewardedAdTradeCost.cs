@@ -15,9 +15,11 @@ namespace Trading.Advertising
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
 		public ContentReference<RewardedAdPlacementEntry> placement;
+		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
+		public int group;
 		public int count = 1;
 
-		protected override string ReceiptId => placement.ToReceiptId();
+		protected override string ReceiptId => placement.ToReceiptId(group);
 
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
@@ -26,7 +28,7 @@ namespace Trading.Advertising
 			if (board.Contains<IAdvertisingTradingModel>())
 			{
 				var model = board.Get<IAdvertisingTradingModel>();
-				if (model.TokenCount >= count)
+				if (model.GetTokenCount(group) >= count)
 					return true;
 			}
 
@@ -48,8 +50,8 @@ namespace Trading.Advertising
 			if (board.Contains<IAdvertisingTradingModel>())
 			{
 				var model = board.Get<IAdvertisingTradingModel>();
-				if (model.TokenCount >= count)
-					return AdTradeReceipt.Empty(placement);
+				if (model.GetTokenCount(group) >= count)
+					return AdTradeReceipt.Empty(group, placement);
 			}
 
 			//TODO: может быть какую-то защиту от дурака, что нельзя посмотреть рекламу за секунду)
@@ -58,7 +60,7 @@ namespace Trading.Advertising
 			if (!success)
 				return null;
 
-			return new AdTradeReceipt(placement);
+			return new AdTradeReceipt(group, placement);
 		}
 
 		/// <summary>
@@ -72,7 +74,14 @@ namespace Trading.Advertising
 			return false;
 		}
 
+		public int GetAvailableCount(Tradeboard tradeboard)
+		{
+			return tradeboard.Get<IAdvertisingTradingModel>()
+			   .GetTokenCount(group);
+		}
+
 		private IBlackboardToken _token;
+
 		protected override void OnBeforePayCheck(Tradeboard board) => _token = board.Register(this);
 		protected override void OnAfterPayCheck(Tradeboard board) => _token.Release();
 		protected override void OnBeforePay(Tradeboard board) => _token = board.Register(this);
