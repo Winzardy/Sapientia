@@ -32,6 +32,8 @@ namespace Sapientia
 		}
 
 		public static implicit operator Pack<T>((T, int amount) tuple) => new(tuple.Item1, tuple.amount);
+		public static implicit operator T(Pack<T> pack) => pack.target;
+		public static implicit operator int(Pack<T> pack) => pack.count;
 		public static implicit operator bool(Pack<T> pack) => pack.count > 0 && pack.target != null;
 	}
 }

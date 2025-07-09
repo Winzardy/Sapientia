@@ -1,51 +1,59 @@
 using System;
+using System.Collections.Generic;
 
 namespace Trading.Advertising
 {
 	public interface IAdvertisingTradingModel : ITradeReceiptRegistry<AdTradeReceipt>
 	{
-		public int TokenCount { get; }
+		public int GetTokenCount(int group);
 
-		public void AddToken(int count);
+		public void AddToken(int group, int count);
 	}
 
 	[Serializable]
 	public class AdvertisingTradingModel : IAdvertisingTradingModel
 	{
-		public int tokenCount;
-
-		public int TokenCount => tokenCount;
+		public Dictionary<int, int> groupToCount;
 
 		public AdvertisingTradingModel()
 		{
-			tokenCount = 0;
+			groupToCount = new Dictionary<int, int>();
 		}
 
 		public AdvertisingTradingModel(AdvertisingTradingModel source)
 		{
-			tokenCount = source.tokenCount;
+			groupToCount = new(source.groupToCount);
 		}
 
-		public void Register(string _, in AdTradeReceipt __)
+		public void Register(string _, in AdTradeReceipt receipt)
 		{
-			AddToken(1);
+			AddToken(receipt.group, 1);
 		}
 
-		public void AddToken(int count)
+		public int GetTokenCount(int group) => groupToCount.ContainsKey(group) ? groupToCount[group] : 0;
+
+		public void AddToken(int group, int count)
 		{
-			tokenCount += count;
+			if (groupToCount.TryAdd(group, count))
+				return;
+
+			groupToCount[group] += count;
 		}
 
 		public bool CanIssue(Tradeboard board, string _)
 		{
 			var cost = board.Get<RewardedAdTradeCost>();
-			return tokenCount >= cost.count;
+
+			if (!groupToCount.TryGetValue(cost.group, out var count))
+				return false;
+
+			return count >= cost.count;
 		}
 
 		public bool Issue(Tradeboard board, string _)
 		{
 			var cost = board.Get<RewardedAdTradeCost>();
-			tokenCount -= cost.count;
+			groupToCount[cost.group] -= cost.count;
 			return true;
 		}
 	}

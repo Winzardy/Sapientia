@@ -1,4 +1,5 @@
 using System;
+using Content;
 
 namespace Trading.Advertising
 {
@@ -6,6 +7,9 @@ namespace Trading.Advertising
 	public partial class AdTokenTradeReward : TradeReward
 	{
 		public int count;
+
+		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
+		public int group;
 
 		protected override bool CanReceive(Tradeboard board, out TradeReceiveError? error)
 		{
@@ -16,7 +20,7 @@ namespace Trading.Advertising
 		protected override bool Receive(Tradeboard board)
 		{
 			var model = board.Get<IAdvertisingTradingModel>();
-			model.AddToken(count);
+			model.AddToken(group, count);
 			return true;
 		}
 	}

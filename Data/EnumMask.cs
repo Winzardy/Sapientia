@@ -4,7 +4,9 @@ using Sapientia.Extensions;
 namespace Sapientia.Data
 {
 #if UNITY_EDITOR
-	public interface IEnumMask {}
+	public interface IEnumMask
+	{
+	}
 #endif
 
 	[Serializable]
@@ -14,9 +16,15 @@ namespace Sapientia.Data
 #endif
 		where T : unmanaged, Enum
 	{
-		public static readonly EnumMask<T> All = new() { mask = ~0 };
+		public static readonly EnumMask<T> All = new() {mask = ~0};
 
 		public int mask;
+
+		public EnumMask(params T[] values) : this()
+		{
+			for (var i = 0; i < values.Length; i++)
+				Add(values[i]);
+		}
 
 		public static EnumMask<T> Create(T value)
 		{
@@ -78,12 +86,12 @@ namespace Sapientia.Data
 
 		public static EnumMask<T> operator |(EnumMask<T> a, EnumMask<T> b)
 		{
-			return new EnumMask<T> { mask = a.mask | b.mask };
+			return new EnumMask<T> {mask = a.mask | b.mask};
 		}
 
 		public static EnumMask<T> operator &(EnumMask<T> a, EnumMask<T> b)
 		{
-			return new EnumMask<T> { mask = a.mask & b.mask };
+			return new EnumMask<T> {mask = a.mask & b.mask};
 		}
 
 		public static implicit operator EnumMask<T>(T value)

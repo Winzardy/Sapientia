@@ -8,40 +8,51 @@ namespace Trading.Advertising
 	[Serializable]
 	public struct AdTradeReceipt : ITradeReceipt
 	{
+		internal const string AD_TOKEN_LABEL_CATALOG = "AdTokenGroup";
+
+		[ContextLabel(AD_TOKEN_LABEL_CATALOG)]
+		public int group;
+
 		public AdPlacementType type;
 		public string placement;
 
 #if NEWTONSOFT
 		[Newtonsoft.Json.JsonIgnore]
 #endif
-		public string Key => AdTradeReceiptUtility.Combine(type, placement);
+		public string Key => AdTradeReceiptUtility.Combine(group, type, placement);
 
-		public AdTradeReceipt(AdPlacementEntry entry)
+		public AdTradeReceipt(int group, AdPlacementEntry entry)
 		{
+			this.group = group;
+
 			type = entry.Type;
 			placement = entry.Id;
 		}
 
 		void ITradeReceipt.Register(ITradingModel model, string tradeId) => this.Register(model, tradeId);
 
-		public override string ToString() => $"Ad Receipt: {Key}";
+		public override string ToString() => Key;
 
-		public static AdTradeReceipt Empty(AdPlacementEntry entry) => new()
-			{
-				type = entry.Type
-			};
+		public static AdTradeReceipt Empty(int group, AdPlacementEntry entry) => new()
+		{
+			group = group,
+			type = entry.Type
+		};
 
 		bool ITradeReceipt.NeedPush() => !placement.IsNullOrEmpty();
 	}
 
 	public static class AdTradeReceiptUtility
 	{
-		public static string Combine(AdPlacementType type, string id) => type + "+" + id;
+		public static string Combine(int group, AdPlacementType type, string id) =>
+			"[" + group + "] "
+			+ type + "_"
+			+ id;
 
-		public static string ToReceiptId(this AdPlacementEntry entry) => Combine(entry.Type, entry.Id);
+		public static string ToReceiptId(this AdPlacementEntry entry, int group) => Combine(group, entry.Type, entry.Id);
 
-		public static string ToReceiptId<T>(this ContentReference<T> reference)
+		public static string ToReceiptId<T>(this ContentReference<T> reference, int group)
 			where T : AdPlacementEntry
-			=> ToReceiptId(reference.Read());
+			=> ToReceiptId(reference.Read(), group);
 	}
 }
