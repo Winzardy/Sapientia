@@ -30,5 +30,6 @@ namespace Trading
 	{
 		//TODO: добавить прогрессивную сделку, проблема что еще эту прогрессию где-то надо фиксировать
 		public ContentReference<TradeEntry> trade;
+		public bool checkPurchased;
 	}
 }

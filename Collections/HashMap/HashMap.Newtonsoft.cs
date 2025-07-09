@@ -42,7 +42,6 @@ namespace Sapientia.Collections
 	}
 
 	internal class HashMapConverter<TKey, TValue> : JsonConverter<HashMap<TKey, TValue>>
-		where TKey : notnull
 		where TValue : struct
 	{
 		public override void WriteJson(JsonWriter writer, HashMap<TKey, TValue>? value, JsonSerializer serializer)
@@ -62,7 +61,6 @@ namespace Sapientia.Collections
 			writer.WriteEndObject();
 		}
 
-
 		public override HashMap<TKey, TValue> ReadJson(JsonReader reader, Type objectType, HashMap<TKey, TValue>? existingValue,
 			bool hasExistingValue, JsonSerializer serializer)
 		{
@@ -71,7 +69,7 @@ namespace Sapientia.Collections
 
 			if (dict != null)
 				foreach (var kvp in dict)
-					map.Add(kvp.Key, kvp.Value);
+					map.SetOrAdd(kvp.Key, kvp.Value);
 
 			return map;
 		}

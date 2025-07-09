@@ -8,7 +8,6 @@ namespace Sapientia.Collections
 
 	[Serializable]
 	public sealed partial class HashMap<TKey, TValue>
-		where TKey : notnull
 		where TValue : struct
 	{
 		private TValue _defaultValue = default;
@@ -16,16 +15,12 @@ namespace Sapientia.Collections
 		internal Dictionary<TKey, int> _keyToIndex;
 		internal SimpleList<TValue> _values;
 
+		private (TKey key, bool has) _last;
+
 		public ref TValue this[in TKey key]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ref _values[_keyToIndex[key]];
-		}
-
-		public ref TValue this[int index]
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _values[index];
 		}
 
 		public int Count => _values.Count;
@@ -44,7 +39,14 @@ namespace Sapientia.Collections
 			_keyToIndex = new Dictionary<TKey, int>(source.Count);
 
 			foreach (var (key, index) in source._keyToIndex)
+			{
 				_keyToIndex[key] = index;
+
+				if (index != _values.Count - 1)
+					continue;
+
+				_last = (key, true);
+			}
 		}
 
 		public void Clear()
@@ -53,26 +55,59 @@ namespace Sapientia.Collections
 			_values.Clear();
 		}
 
-		public void Add(in TKey key, in TValue value)
+		public void SetOrAdd(in TKey key, in TValue value)
 		{
-			var index = _values.Add(in value);
-			_keyToIndex[key] = index;
+			if (_keyToIndex.TryGetValue(key, out var index))
+			{
+				_values[index] = value;
+			}
+			else
+			{
+				index = _values.Add(in value);
+				_last = (key, true);
+				_keyToIndex[key] = index;
+			}
 		}
 
 		public void Remove(in TKey key)
 		{
-			var index = _keyToIndex[key];
-			_values.RemoveAt(index);
+			if (!_keyToIndex.TryGetValue(key, out var index))
+				return;
+
+			var lastIndex = _keyToIndex[_last.key];
+
+			if (index != lastIndex)
+			{
+				_values[index] = _values[lastIndex];
+				_keyToIndex[_last.key] = index;
+			}
+
+			_last.has = false;
+			_values.RemoveAt(lastIndex);
 			_keyToIndex.Remove(key);
+
+			if (_values.Count <= 0)
+				return;
+
+			foreach (var (k, i) in _keyToIndex)
+			{
+				if (i != _values.Count - 1)
+					continue;
+
+				_last = (k, true);
+				break;
+			}
 		}
 
 		public ref TValue GetOrAdd(in TKey key, HashMapFactory<TValue>? factory = null)
 		{
 			if (!Contains(in key))
-				Add(in key, factory?.Invoke() ?? new TValue());
+				SetOrAdd(in key, factory?.Invoke() ?? new TValue());
 
 			return ref this[key];
 		}
+
+		public bool Contains(in TKey key) => _keyToIndex.ContainsKey(key);
 
 		public ref TValue GetOrDefault(in TKey key)
 		{
@@ -89,9 +124,6 @@ namespace Sapientia.Collections
 
 			return ref defaultValue;
 		}
-
-		public bool Contains(in TKey key) => _keyToIndex.ContainsKey(key);
-		public bool Contains(int index) => _values.ContainsIndexSafe(index);
 
 		public bool IsEmpty() => _values.Count == 0;
 	}

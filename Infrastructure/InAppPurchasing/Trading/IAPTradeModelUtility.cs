@@ -19,7 +19,7 @@ namespace Trading.InAppPurchasing
 			}
 
 			model.active ??= new HashMap<string, IAPTradeReceipt>();
-			model.active.Add(receipt.Id, in receipt);
+			model.active.SetOrAdd(receipt.Id, in receipt);
 
 			// IAPManager.Validate()
 			// Тут надо будет отправить чек на валидацию
@@ -58,7 +58,7 @@ namespace Trading.InAppPurchasing
 				return false;
 
 			model.issued ??= new HashMap<string, IAPTradeReceipt>();
-			model.issued.Add(targetId, in model.active[targetId]);
+			model.issued.SetOrAdd(targetId, in model.active[targetId]);
 			model.active.Remove(targetId);
 			return true;
 		}
