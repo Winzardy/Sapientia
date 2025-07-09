@@ -341,6 +341,7 @@ namespace Sapientia.Collections
 				yield return (value, index++);
 		}
 
+
 		public static IEnumerable<(T, int)> WithIndex<T>(this IEnumerable<T> enumerable)
 		{
 			if (enumerable == null)
