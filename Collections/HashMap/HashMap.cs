@@ -109,7 +109,7 @@ namespace Sapientia.Collections
 
 		public bool Contains(in TKey key) => _keyToIndex.ContainsKey(key);
 
-		public ref TValue GetOrDefault(in TKey key)
+		public ref readonly TValue GetOrDefault(in TKey key)
 		{
 			if (Contains(in key))
 				return ref this[in key];
@@ -117,7 +117,7 @@ namespace Sapientia.Collections
 			return ref _defaultValue;
 		}
 
-		public ref TValue GetOrDefault(in TKey key, ref TValue defaultValue)
+		public ref readonly TValue GetOrDefault(in TKey key, ref TValue defaultValue)
 		{
 			if (Contains(in key))
 				return ref this[key];
