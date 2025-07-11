@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Sapientia.Collections;
 using Sapientia.JsonConverters;
 #if !CLIENT
 using System.Collections.Concurrent;
 using System.Linq;
-using Newtonsoft.Json.Serialization;
 #endif
 
 namespace Sapientia.Extensions
@@ -31,8 +32,19 @@ namespace Sapientia.Extensions
 			Converters = new JsonConverter[]
 			{
 				new DictionaryConverter()
-			}
+			},
+			Error = (sender, args) =>
+			{
+				LogError($"[JsonSerializer] path: {args.ErrorContext.Path}, msg: {args.ErrorContext.Error.Message}");
+				args.ErrorContext.Handled = true;
+			},
+			MissingMemberHandling = MissingMemberHandling.Error,
+#if UNITY_EDITOR
+			TraceWriter = new ErrorTraceWriter(),
+#endif
 		};
+
+
 
 		private static readonly JsonSerializerSettings JSON_SETTINGS_NONE_TYPED = new(JSON_SETTINGS_DEFAULT)
 		{
@@ -260,6 +272,30 @@ namespace Sapientia.Extensions
 			catch (Exception e)
 			{
 				return default;
+			}
+		}
+
+		public static void LogError(string message)
+		{
+#if UNITY_EDITOR
+			UnityEngine.Debug.LogError(message);
+#else
+			Console.WriteLine(message);
+#endif
+		}
+	}
+
+	public class ErrorTraceWriter : ITraceWriter
+	{
+		public TraceLevel LevelFilter => TraceLevel.Verbose;
+
+		public void Trace(TraceLevel level, string message, Exception? ex)
+		{
+			// В частности эта проверка чтобы отловить сообщения вида "Unable to deserialize value to non-writable property"
+			// Но проверка только на "Unable to" т.к. может сущетсвуют какие-то другие, которые тоже нужно исправить
+			if (message.Contains("Unable to", StringComparison.OrdinalIgnoreCase))
+			{
+				NewtonsoftJsonUtility.LogError($"[{nameof(ErrorTraceWriter)}][{level}] {message} {ex}");
 			}
 		}
 	}
