@@ -50,7 +50,7 @@ namespace Content
 		public static implicit operator T(BaseContentEntry<T> entry) => entry.Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator bool(BaseContentEntry<T> entry) => !entry.IsEmpty();
+		public static implicit operator bool(BaseContentEntry<T> entry) => entry != null && !entry.IsEmpty();
 
 		#endregion
 	}
