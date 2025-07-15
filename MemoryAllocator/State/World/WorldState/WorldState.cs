@@ -54,12 +54,12 @@ namespace Sapientia.MemoryAllocator
 			_checkNullRef = true;
 		}
 
-		public void EnableInnerChecks()
+		private void EnableInnerChecks()
 		{
 			_checkNullRef = true;
 		}
 
-		public void DisableInnerChecks()
+		private void DisableInnerChecks()
 		{
 			_checkNullRef = false;
 		}
@@ -147,6 +147,28 @@ namespace Sapientia.MemoryAllocator
 		public override int GetHashCode()
 		{
 			return _worldStateData.GetHashCode();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public UpdateScope GetUpdateScope()
+		{
+			return new UpdateScope(ref this);
+		}
+
+		public readonly ref struct UpdateScope
+		{
+			private readonly SafePtr<WorldState> _worldState;
+
+			public UpdateScope(ref WorldState worldState)
+			{
+				_worldState = worldState.AsSafePtr();
+				_worldState.Value().DisableInnerChecks();
+			}
+
+			public void Dispose()
+			{
+				_worldState.Value().EnableInnerChecks();
+			}
 		}
 	}
 }
