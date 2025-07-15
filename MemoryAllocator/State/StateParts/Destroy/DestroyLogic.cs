@@ -5,7 +5,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public readonly unsafe ref struct DestroyLogic
+	public readonly unsafe struct DestroyLogic
 	{
 		public readonly WorldState worldState;
 
