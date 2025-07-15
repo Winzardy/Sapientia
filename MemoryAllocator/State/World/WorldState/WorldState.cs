@@ -9,41 +9,59 @@ namespace Sapientia.MemoryAllocator
 	public partial struct WorldState : IEquatable<WorldState>, IDisposable
 	{
 		private SentinelPtr<WorldStateData> _worldStateData;
+		private bool _checkNullRef;
 
 		public bool IsValid
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _worldStateData.IsValid && _worldStateData.Value().version > 0;
+			get => _worldStateData.IsValid && _worldStateData.Value(false).version > 0;
+		}
+
+		private ref WorldStateData WorldStateData
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ref _worldStateData.Value(_checkNullRef);
 		}
 
 		public ref WorldId WorldId
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _worldStateData.Value().worldId;
+			get => ref WorldStateData.worldId;
 		}
 
 		public ushort Version
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _worldStateData.Value().version;
+			get => WorldStateData.version;
 		}
 
 		public ref uint Tick
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _worldStateData.Value().tick;
+			get => ref WorldStateData.tick;
 		}
 
 		public ref float Time
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _worldStateData.Value().time;
+			get => ref WorldStateData.time;
 		}
 
 		public WorldState(WorldId worldId, int initialSize)
 		{
 			_worldStateData = MemoryExt.NullableMemAlloc<WorldStateData>();
 			_worldStateData.Value() = new WorldStateData(worldId, initialSize);
+			_checkNullRef = true;
+		}
+
+		public void EnableInnerChecks()
+		{
+			_checkNullRef = true;
+		}
+
+		public void DisableInnerChecks()
+		{
+			_checkNullRef = false;
 		}
 
 		public void Dispose()
@@ -51,7 +69,7 @@ namespace Sapientia.MemoryAllocator
 			if (!IsValid)
 				return;
 
-			_worldStateData.Value().Dispose();
+			WorldStateData.Dispose();
 			MemoryExt.MemFree(_worldStateData);
 
 			this = default;
@@ -60,19 +78,19 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private readonly ref Allocator GetAllocator()
 		{
-			return ref _worldStateData.Value().allocator;
+			return ref WorldStateData.allocator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private readonly ref ServiceRegistry GetServiceRegistry()
 		{
-			return ref _worldStateData.Value().serviceRegistry;
+			return ref WorldStateData.serviceRegistry;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private readonly ref UnsafeServiceRegistry GetLocalServiceRegistry()
 		{
-			return ref _worldStateData.Value().localServiceRegistry;
+			return ref WorldStateData.localServiceRegistry;
 		}
 
 		public static WorldState Deserialize(ref StreamBufferReader stream)
@@ -80,7 +98,7 @@ namespace Sapientia.MemoryAllocator
 			var worldState = new WorldState();
 
 			worldState._worldStateData = MemoryExt.NullableMemAlloc<WorldStateData>();
-			worldState._worldStateData.Value() = WorldStateData.Deserialize(ref stream);
+			worldState.WorldStateData = WorldStateData.Deserialize(ref stream);
 
 			return worldState;
 		}
@@ -89,14 +107,14 @@ namespace Sapientia.MemoryAllocator
 		{
 			E.ASSERT(IsValid);
 
-			_worldStateData.Value().SetupNewWorldId(newWorldId);
+			WorldStateData.SetupNewWorldId(newWorldId);
 		}
 
 		public void Reset()
 		{
 			E.ASSERT(IsValid);
 
-			_worldStateData.Value().Reset();
+			WorldStateData.Reset();
 			// Обновляем ссылку на стейт
 			_worldStateData.ResetDisposeSentinel();
 		}

@@ -219,6 +219,14 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly ref T Value(bool checkNullRef)
+		{
+			if (checkNullRef)
+				CheckNullRef();
+			return ref _ptr.Value();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetPtr()
 		{
 			CheckNullRef();

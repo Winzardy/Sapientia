@@ -6,7 +6,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial class World : IDisposable
+	public partial class World : IDisposable
 	{
 		public bool ScheduleLateUpdate { get; private set; }
 
@@ -34,6 +34,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			using var scope = worldState.GetWorldScope();
 
+			worldState.DisableInnerChecks();
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
 			foreach (var statePart in stateParts)
@@ -56,6 +57,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				element.LateInitialize(worldState, worldState, element.indexedPtr);
 			}
+			worldState.EnableInnerChecks();
 		}
 
 		public void Start()
@@ -63,6 +65,7 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(!IsStarted);
 
 			using var scope = worldState.GetWorldScope();
+			worldState.DisableInnerChecks();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
@@ -80,6 +83,7 @@ namespace Sapientia.MemoryAllocator
 
 			using var scope = worldState.GetWorldScope();
 
+			worldState.DisableInnerChecks();
 			worldState.Tick++;
 			worldState.Time += deltaTime;
 
@@ -90,6 +94,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			ScheduleLateUpdate = true;
+			worldState.EnableInnerChecks();
 		}
 
 		public void LateUpdate()
@@ -99,6 +104,7 @@ namespace Sapientia.MemoryAllocator
 			ScheduleLateUpdate = false;
 
 			using var scope = worldState.GetWorldScope();
+			worldState.DisableInnerChecks();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
@@ -107,11 +113,13 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			SendLateUpdateMessage();
+			worldState.EnableInnerChecks();
 		}
 
 		public void Dispose()
 		{
 			using var scope = worldState.GetWorldScope();
+			worldState.DisableInnerChecks();
 
 			LocalStatePartService.Dispose(worldState);
 			SendBeginDisposeMessage();
@@ -124,6 +132,7 @@ namespace Sapientia.MemoryAllocator
 
 			SendDisposedMessage();
 
+			worldState.EnableInnerChecks();
 			worldState.RemoveWorld();
 		}
 	}
