@@ -13,6 +13,7 @@ namespace Content
 
 		public Type ValueType => typeof(T);
 
+		/// <summary> Важно! Вернёт true, даже если value == null. Можно использовать extension IsEmpty. </summary>
 		public virtual bool IsValid() => true;
 		public virtual bool IsUnique() => false;
 		object IContentEntry.RawValue => Value;
@@ -50,7 +51,7 @@ namespace Content
 		public static implicit operator T(BaseContentEntry<T> entry) => entry.Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator bool(BaseContentEntry<T> entry) => entry != null && !entry.IsEmpty();
+		public static implicit operator bool(BaseContentEntry<T> entry) => !entry.IsEmpty();
 
 		#endregion
 	}

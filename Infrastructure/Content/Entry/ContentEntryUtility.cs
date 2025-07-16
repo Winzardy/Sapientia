@@ -25,7 +25,7 @@ namespace Content
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsEmpty<T>(this BaseContentEntry<T> entry) => !entry.IsValid() || entry.Value == null;
+		public static bool IsEmpty<T>(this BaseContentEntry<T> entry) => entry == null || !entry.IsValid() || entry.Value == null;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static ref readonly T Get<T>(this in SerializableGuid guid, ref int index)
