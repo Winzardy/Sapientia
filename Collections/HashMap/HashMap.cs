@@ -53,6 +53,8 @@ namespace Sapientia.Collections
 		{
 			_keyToIndex.Clear();
 			_values.Clear();
+
+			_last = default;
 		}
 
 		public void SetOrAdd(in TKey key, in TValue value)
