@@ -61,11 +61,11 @@ namespace Content
 #if UNITY_EDITOR
 			if (UnityEngine.Application.isPlaying)
 #endif
-				if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
+				if (reference.index >= 0
+				    && ContentManager.TryGetEntry<T>(reference.index, out var entryByIndex)
+				    && entryByIndex == reference.guid)
 				{
-					var entryByIndex = ContentManager.GetEntry<T>(reference.index);
-					if (entryByIndex.Guid == reference.guid)
-						return ref entryByIndex.Value;
+					return ref entryByIndex.Value;
 				}
 
 			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
@@ -86,11 +86,11 @@ namespace Content
 			if (reference.IsSingle)
 				return ref ContentManager.Get<T>();
 
-			if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
+			if (reference.index >= 0
+			    && ContentManager.TryGetEntry<T>(reference.index, out var entryByIndex)
+			    && entryByIndex == reference.guid)
 			{
-				var entryByIndex = ContentManager.GetEntry<T>(reference.index);
-				if (entryByIndex.Guid == reference.guid)
-					return ref entryByIndex.Value;
+				return ref entryByIndex.Value;
 			}
 
 			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
@@ -111,11 +111,11 @@ namespace Content
 			if (reference.IsSingle)
 				return ref ContentManager.Get<T>();
 
-			if (reference.index >= 0 && ContentManager.Contains<T>(reference.index))
+			if (reference.index >= 0
+			    && ContentManager.TryGetEntry<T>(reference.index, out var entryByIndex)
+			    && entryByIndex == reference.guid)
 			{
-				var entryByIndex = ContentManager.GetEntry<T>(reference.index);
-				if (entryByIndex.Guid == reference.guid)
-					return ref entryByIndex.Value;
+				return ref entryByIndex.Value;
 			}
 
 			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
