@@ -46,7 +46,8 @@ namespace Content.Management
 			{
 				if (entry.ValueType.IsValueType)
 				{
-					ContentDebug.LogError($"Type [{entry.ValueType.FullName}] is a struct. Cannot assign Id via interface. Use class instead.");
+					ContentDebug.LogError(
+						$"Type [{entry.ValueType.FullName}] is a struct. Cannot assign Id via interface. Use class instead.");
 				}
 				else
 				{
@@ -94,7 +95,40 @@ namespace Content.Management
 
 		public static UniqueContentEntry<T> GetEntry(in SerializableGuid guid) => _dictionary[in guid];
 		public static UniqueContentEntry<T> GetEntry(string id) => _dictionary[id];
-		public static UniqueContentEntry<T> GetEntry(in int index) => _dictionary[index];
+		public static UniqueContentEntry<T> GetEntry(int index) => _dictionary[index];
+
+		public static bool TryGetEntry(in SerializableGuid guid, out UniqueContentEntry<T> entry)
+		{
+			entry = null;
+
+			if (!_dictionary.Contains(in guid))
+				return false;
+
+			entry = _dictionary[in guid];
+			return true;
+		}
+
+		public static bool TryGetEntry(string id, out UniqueContentEntry<T> entry)
+		{
+			entry = null;
+
+			if (!_dictionary.Contains(id))
+				return false;
+
+			entry = _dictionary[id];
+			return true;
+		}
+
+		public static bool TryGetEntry(int index, out UniqueContentEntry<T> entry)
+		{
+			entry = null;
+
+			if (!_dictionary.Contains(index))
+				return false;
+
+			entry = _dictionary[index];
+			return true;
+		}
 
 		public static ref readonly T Get(in SerializableGuid guid) => ref _dictionary[in guid].Value;
 		public static ref readonly T Get(string id) => ref _dictionary[id].Value;

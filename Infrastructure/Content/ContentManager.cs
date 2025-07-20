@@ -55,6 +55,23 @@ namespace Content
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UniqueContentEntry<T> GetEntry<T>(int index) => _resolver.GetEntry<T>(index);
 
+		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(in SerializableGuid, out UniqueContentEntry{T})"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGetEntry<T>(in SerializableGuid guid, out UniqueContentEntry<T> entry) =>
+			_resolver.TryGetEntry(in guid, out entry);
+
+		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(string, out UniqueContentEntry{T})"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGetEntry<T>(string id, out UniqueContentEntry<T> entry) => _resolver.TryGetEntry(id, out entry);
+
+		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(int, out UniqueContentEntry{T})"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGetEntry<T>(int index, out UniqueContentEntry<T> entry) => _resolver.TryGetEntry(index, out entry);
+
+		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(out SingleContentEntry{T})"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGetEntry<T>(out SingleContentEntry<T> entry) => _resolver.TryGetEntry(out entry);
+
 		/// <inheritdoc cref="ContentResolver.GetEntry{T}()"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SingleContentEntry<T> GetEntry<T>() => _resolver.GetEntry<T>();

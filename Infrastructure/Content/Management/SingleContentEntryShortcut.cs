@@ -19,9 +19,19 @@ namespace Content.Management
 
 		internal static void Unregister() => _entry = null;
 
+		internal static bool Contains() => _entry != null;
+
 		internal static ref readonly T Get() => ref _entry.Value;
 		internal static SingleContentEntry<T> GetEntry() => _entry;
 
-		internal static bool Contains() => _entry != null;
+		internal static bool TryGetEntry(out SingleContentEntry<T> entry)
+		{
+			entry = null;
+			if (!Contains())
+				return false;
+
+			entry = GetEntry();
+			return true;
+		}
 	}
 }

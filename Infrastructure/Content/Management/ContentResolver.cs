@@ -203,6 +203,60 @@ namespace Content.Management
 		}
 
 		/// <summary>
+		/// Получает <b>уникальную запись</b> контента типа <typeparamref name="T"/> по <paramref name="guid"/>
+		/// </summary>
+		/// <typeparam name="T">Тип контента</typeparam>
+		/// <param name="guid">Уникальный идентификатор записи</param>
+		/// <param name="entry">Запись</param>
+		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <remarks>
+		/// ⚠️ Важно: нет поддержки полиморфизма
+		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal bool TryGetEntry<T>(in SerializableGuid guid, out UniqueContentEntry<T> entry)
+			=> ContentEntryMap<T>.TryGetEntry(in guid, out entry);
+
+		/// <summary>
+		/// Получает <b>уникальную запись</b> контента типа <typeparamref name="T"/> по строковому (<see cref="string"/>) <paramref name="id"/>
+		/// </summary>
+		/// <typeparam name="T">Тип контента</typeparam>
+		/// <param name="id">Строковый идентификатор записи</param>
+		/// <param name="entry">Запись</param>
+		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <remarks>
+		/// ⚠️ Важно: нет поддержки полиморфизма
+		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal bool TryGetEntry<T>(string id, out UniqueContentEntry<T> entry)
+			=> ContentEntryMap<T>.TryGetEntry(id, out entry);
+
+		/// <summary>
+		/// Получает <b>уникальную запись</b> контента типа <typeparamref name="T"/> по индексу (<see cref="int"/>) <paramref name="index"/>
+		/// </summary>
+		/// <typeparam name="T">Тип контента</typeparam>
+		/// <param name="index">Строковый идентификатор записи</param>
+		/// <param name="entry">Запись</param>
+		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <remarks>
+		/// ⚠️ Важно: нет поддержки полиморфизма
+		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal bool TryGetEntry<T>(int index, out UniqueContentEntry<T> entry)
+			=> ContentEntryMap<T>.TryGetEntry(index, out entry);
+
+		/// <summary>
+		/// Получает одиночную запись контента типа <typeparamref name="T"/>
+		/// </summary>
+		/// <typeparam name="T">Тип контента</typeparam>
+		/// <returns>Ссылка только для чтения на контент типа <typeparamref name="T"/></returns>
+		/// <remarks>
+		/// ⚠️ Важно: нет поддержки полиморфизма
+		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal bool TryGetEntry<T>(out SingleContentEntry<T> entry)
+			=> SingleContentEntryShortcut<T>.TryGetEntry(out entry);
+
+		/// <summary>
 		/// Получает уникальную запись контента типа <typeparamref name="T"/> по <paramref name="guid"/>
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
