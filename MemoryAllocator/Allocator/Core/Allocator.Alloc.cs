@@ -55,17 +55,17 @@ namespace Sapientia.MemoryAllocator
 				return MemPtr.CreateZeroSized();
 			}
 
-			var blockSize = Align(size + TSize<MemoryBlock>.size);
-			var blockRef = AllocateBlock(blockSize, out var blockPtr);
+			var requiredBlockSize = Align(size + TSize<MemoryBlock>.size);
+			var blockRef = AllocateBlock(requiredBlockSize, out var blockPtr);
 
-			E.ASSERT(blockPtr.ptr->blockSize >= TSize<MemoryBlock>.size + BLOCK_ALIGN);
-			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
+			E.ASSERT(blockPtr.ptr->blockSize >= TSize<MemoryBlock>.size + BLOCK_ALIGN, $"{nameof(MemAlloc)}. Выделенный размер блока меньше минимального.");
+			E.ASSERT(blockPtr.ptr->blockSize >= requiredBlockSize, $"{nameof(MemAlloc)}. Выделенный размер блока меньше запрашиваемого.");
 
 			var memPtr = new MemPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
 			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
 
-			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size);
-			E.ASSERT(GetSafePtr(memPtr).ptr - TSize<MemoryBlock>.size == blockPtr.ptr);
+			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size, $"{nameof(MemAlloc)}. Некорректный указатель на блок памяти.");
+			E.ASSERT(GetSafePtr(memPtr).ptr - TSize<MemoryBlock>.size == blockPtr.ptr, $"{nameof(MemAlloc)}. Некорректное MemPtr на блок памяти.");
 
 			return memPtr;
 		}
@@ -75,19 +75,19 @@ namespace Sapientia.MemoryAllocator
 			if (!worldPtr.IsValid() || worldPtr.IsZeroSized())
 				return MemAlloc(size, out valuePtr);
 
-			var blockSize = Align(size + TSize<MemoryBlock>.size);
+			var requiredBlockSize = Align(size + TSize<MemoryBlock>.size);
 			var blockRef = (MemoryBlockRef)worldPtr;
 
-			var newBlockRef = ReAllocateBlock(blockRef, blockSize, out var blockPtr);
+			var newBlockRef = ReAllocateBlock(blockRef, requiredBlockSize, out var blockPtr);
 
-			E.ASSERT(blockPtr.ptr->blockSize >= MIN_BLOCK_SIZE);
-			E.ASSERT(blockPtr.ptr->blockSize >= blockSize);
+			E.ASSERT(blockPtr.ptr->blockSize >= MIN_BLOCK_SIZE, $"{nameof(MemReAlloc)}. Выделенный размер блока меньше минимального.");
+			E.ASSERT(blockPtr.ptr->blockSize >= requiredBlockSize, $"{nameof(MemReAlloc)}. Выделенный размер блока меньше запрашиваемого.");
 
 			var newMemPtr = new MemPtr(newBlockRef.memoryZoneId, newBlockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
 			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
 
-			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size);
-			E.ASSERT(GetSafePtr(newMemPtr).ptr - TSize<MemoryBlock>.size == blockPtr.ptr);
+			E.ASSERT((valuePtr.ptr - (byte*)blockPtr.ptr) == TSize<MemoryBlock>.size, $"{nameof(MemReAlloc)}. Некорректный указатель на блок памяти.");
+			E.ASSERT(GetSafePtr(newMemPtr).ptr - TSize<MemoryBlock>.size == blockPtr.ptr, $"{nameof(MemReAlloc)}. Некорректное MemPtr на блок памяти.");
 
 			return newMemPtr;
 		}
