@@ -88,6 +88,12 @@ namespace Advertising
 		#endregion
 	}
 
+	public interface IExtendedAdEvents : IAdEvents
+	{
+		public event AdDisplayStarted AdDisplayStarted;
+		public event AdDisplayFinished AdDisplayFinished;
+	}
+
 	public enum AdPlacementType
 	{
 		Rewarded, //обычно это видео, но сейчас это могут быть еще и мини игры
@@ -140,4 +146,12 @@ namespace Advertising
 	public delegate void InterstitialDisplayFailed(AdPlacementEntry placement, string error, object rawData = null);
 
 	#endregion
+
+	#region Extended Delegates
+
+	public delegate void AdDisplayStarted(AdPlacementEntry placement);
+	public delegate void AdDisplayFinished(AdPlacementEntry placement, bool full );
+
+	#endregion
+
 }
