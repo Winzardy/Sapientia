@@ -48,14 +48,14 @@ namespace Sapientia.MemoryAllocator
 
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
-				element.Initialize(worldState, worldState, element.indexedPtr);
+				element.Initialize(worldState, worldState, element);
 			}
 
 			LocalStatePartService.Initialize(worldState);
 
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
-				element.LateInitialize(worldState, worldState, element.indexedPtr);
+				element.LateInitialize(worldState, worldState, element);
 			}
 		}
 
@@ -69,7 +69,7 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
-				element.Start(worldState, worldState, element.indexedPtr);
+				element.Start(worldState, worldState, element);
 			}
 			IsStarted = true;
 
@@ -89,7 +89,7 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
-				system.Update(worldState, worldState, system.indexedPtr, deltaTime);
+				system.Update(worldState, worldState, system, deltaTime);
 			}
 
 			ScheduleLateUpdate = true;
@@ -107,7 +107,7 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
-				system.LateUpdate(worldState, worldState, system.indexedPtr);
+				system.LateUpdate(worldState, worldState, system);
 			}
 
 			SendLateUpdateMessage();
@@ -124,7 +124,7 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
-				element.Dispose(worldState, worldState, element.indexedPtr);
+				element.Dispose(worldState, worldState, element);
 			}
 
 			SendDisposedMessage();

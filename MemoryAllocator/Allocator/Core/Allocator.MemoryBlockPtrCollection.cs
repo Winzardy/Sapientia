@@ -124,12 +124,12 @@ namespace Sapientia.MemoryAllocator
 			return blockPtr.ptr->blockSize;
 		}
 
-		private void CreateFreeBlock(SafePtr<MemoryZone> zone, SafePtr<MemoryBlock> blockPtr, MemoryBlockRef blockRef, int blockSize, int prevBlockOffset)
+		private void CreateFreeBlock(SafePtr<MemoryZone> zone, SafePtr<MemoryBlock> blockPtr, MemoryBlockRef blockRef, int requiredBlockSize, int prevBlockOffset)
 		{
-			E.ASSERT(blockPtr.ptr < zone.ptr->zoneEnd);
-			E.ASSERT(prevBlockOffset <= 0);
+			E.ASSERT(blockPtr.ptr >= zone.ptr->memory.ptr && blockPtr.ptr < zone.ptr->zoneEnd, $"{nameof(CreateFreeBlock)}. Указатель на блок находится вне выделенной области памяти.");
+			E.ASSERT(prevBlockOffset <= 0, $"{nameof(CreateFreeBlock)}. Смещение к предыдущему блоку не корректно.");
 
-			var sizeId = GetBlockSizeId(blockSize);
+			var sizeId = GetBlockSizeId(requiredBlockSize);
 
 			// Иногда возвращается блок больше 2^(sizeId + MIN_BLOCK_SIZE_LOG2)
 			// Это возникает если размер зоны не степень двойки
@@ -138,10 +138,10 @@ namespace Sapientia.MemoryAllocator
 
 			var sizeBlocksCollection = _freeBlockPools.ptr.Slice(sizeId);
 
-			E.ASSERT(sizeBlocksCollection.ptr->blockSize <= blockSize);
+			E.ASSERT(sizeBlocksCollection.ptr->blockSize <= requiredBlockSize, $"{nameof(CreateFreeBlock)}. Размер блоков коллекции меньше требуемого размера.");
 
 			// Создаём свободный блок из остатка памяти
-			blockPtr.ptr->blockSize = blockSize;
+			blockPtr.ptr->blockSize = requiredBlockSize;
 			blockPtr.ptr->prevBlockOffset = prevBlockOffset;
 			blockPtr.ptr->id = new BlockId(sizeId, sizeBlocksCollection.ptr->Count);
 
@@ -154,14 +154,13 @@ namespace Sapientia.MemoryAllocator
 				nextBlockPtr->prevBlockOffset = -blockPtr.ptr->blockSize;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void AddFreeBlock(SafePtr<MemoryBlock> blockPtr, MemoryBlockRef blockRef)
 		{
-			E.ASSERT(!blockPtr.ptr->id.IsFree);
+			E.ASSERT(!blockPtr.ptr->id.IsFree, $"{nameof(AddFreeBlock)}. Происходит попытка освободить уже свободный блок.");
 
 			var freeBlocksCollection = _freeBlockPools.ptr.Slice(blockPtr.ptr->id.sizeId);
 
-			E.ASSERT(blockPtr.ptr->blockSize >= freeBlocksCollection.ptr->blockSize);
+			E.ASSERT(blockPtr.ptr->blockSize >= freeBlocksCollection.ptr->blockSize, $"{nameof(AddFreeBlock)}. Размер блока больше, чем размер блоков коллекции.");
 
 			ref var freeBlocks = ref freeBlocksCollection.Value();
 			blockPtr.ptr->id.freeId = freeBlocks.Count;
@@ -169,19 +168,18 @@ namespace Sapientia.MemoryAllocator
 			freeBlocks.AddBlock(blockRef);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private MemoryBlockRef RemoveLastFreeBlock(int sizeId, out SafePtr<MemoryZone> zone, out SafePtr<MemoryBlock> blockPtr)
 		{
-			E.ASSERT(sizeId >= 0 && sizeId < _freeBlockPools.count);
-			E.ASSERT(_freeBlockPools[sizeId].Count > 0);
+			E.ASSERT(sizeId >= 0 && sizeId < _freeBlockPools.count, $"{nameof(RemoveLastFreeBlock)}. Размер блока находится вне допустимых границ.");
+			E.ASSERT(_freeBlockPools[sizeId].Count > 0, $"{nameof(RemoveLastFreeBlock)}. Попытка получить свободный блок из пустого пула.");
 
 			var blockRef = _freeBlockPools[sizeId].RemoveLastBlock();
 
 			zone = _zonesList.ptr.Slice(blockRef.memoryZoneId);
 			blockPtr = (zone.ptr->memory + blockRef.memoryZoneOffset).Cast<MemoryBlock>();
 
-			E.ASSERT(blockPtr.ptr->id.IsFree);
-			E.ASSERT(blockPtr.ptr < zone.ptr->zoneEnd);
+			E.ASSERT(blockPtr.ptr->id.IsFree, $"{nameof(RemoveLastFreeBlock)}. При попытке получить свободный блок из пула был получен занятый блок.");
+			E.ASSERT(blockPtr.ptr >= zone.ptr->memory.ptr && blockPtr.ptr < zone.ptr->zoneEnd, $"{nameof(RemoveLastFreeBlock)}. Указатель на блок находится вне выделенной области памяти.");
 
 			blockPtr.ptr->id.freeId = -1;
 #if DEBUG
@@ -190,11 +188,10 @@ namespace Sapientia.MemoryAllocator
 			return blockRef;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private MemoryBlockRef RemoveFreeBlock(ref BlockId blockId)
 		{
-			E.ASSERT(blockId.sizeId >= 0 && blockId.sizeId < _freeBlockPools.count);
-			E.ASSERT(blockId.IsFree);
+			E.ASSERT(blockId.sizeId >= 0 && blockId.sizeId < _freeBlockPools.count, $"{nameof(RemoveFreeBlock)}. Размер блока находится вне допустимых границ.");
+			E.ASSERT(blockId.IsFree, $"{nameof(RemoveFreeBlock)}. Свободный блок оказался занятым.");
 
 			ref var pool = ref _freeBlockPools[blockId.sizeId];
 			var blockRef = pool.RemoveAtSwapBackBlock(blockId.freeId);
@@ -213,14 +210,13 @@ namespace Sapientia.MemoryAllocator
 			return blockRef;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private MemoryBlockRef AllocateBlock(int requiredBlockSize, out SafePtr<MemoryBlock> blockPtr)
 		{
 			// `requiredSizeId` округлён вверх, т.к. хотим найти блок не меньше требуемого размера
 			// `requiredBlockSizeId` - это индекс блока размером <= `requiredBlockSize`
 			var requiredBlockSizeId = GetBlockSizeId(requiredBlockSize, out var requiredSizeId);
 
-			E.ASSERT(requiredSizeId >= 0 && requiredSizeId < _freeBlockPools.count);
+			E.ASSERT(requiredSizeId >= 0 && requiredSizeId < _freeBlockPools.count, $"{nameof(AllocateBlock)}. Размер блока находится вне допустимых границ.");
 
 			var blocksCollection = _freeBlockPools.ptr.Slice(requiredSizeId);
 
@@ -242,11 +238,11 @@ namespace Sapientia.MemoryAllocator
 
 			// Берём последний свободный блок
 			var blockRef = RemoveLastFreeBlock(requiredSizeId, out var zone, out blockPtr);
-			E.ASSERT(blockPtr.ptr->id.sizeId == requiredSizeId);
+			E.ASSERT(blockPtr.ptr->id.sizeId == requiredSizeId, $"{nameof(AllocateBlock)}. Был получен блок некорректного размера.");
 
 			// Если у блока осталось свободное место, то создаём новый свободный блок
 			var extraSize = blockPtr.ptr->blockSize - requiredBlockSize;
-			E.ASSERT(extraSize >= 0);
+			E.ASSERT(extraSize >= 0, $"{nameof(AllocateBlock)}. Размер блока < 0.");
 			if (extraSize >= MIN_BLOCK_SIZE)
 			{
 				var extraBlockPtr = ((SafePtr)blockPtr + requiredBlockSize).Cast<MemoryBlock>();
@@ -265,7 +261,6 @@ namespace Sapientia.MemoryAllocator
 			return blockRef;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private MemoryBlockRef ReAllocateBlock(MemoryBlockRef blockRef, int requiredBlockSize, out SafePtr<MemoryBlock> blockPtr)
 		{
 			var zone = _zonesList.ptr.Slice(blockRef.memoryZoneId);
@@ -275,7 +270,7 @@ namespace Sapientia.MemoryAllocator
 			if (blockPtr.ptr->blockSize >= requiredBlockSize)
 				return blockRef;
 
-			E.ASSERT(blockPtr.ptr->blockSize > 0);
+			E.ASSERT(blockPtr.ptr->blockSize > 0, $"{nameof(ReAllocateBlock)}. Размер блока <= 0");
 
 			// TODO: Добавить обработку предыдущего блока
 			var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
@@ -298,7 +293,8 @@ namespace Sapientia.MemoryAllocator
 
 						// Если следующий блок существует, то обновляем ссылку на предыдущий блок
 						nextBlockPtr = (MemoryBlock*)((byte*)nextBlockPtr + nextBlockPtr->blockSize);
-						E.ASSERT(!nextBlockPtr->id.IsFree);
+						// Если сработало, то вероятно где-то происходит некорректное освобождение блока
+						E.ASSERT(!nextBlockPtr->id.IsFree, $"{nameof(ReAllocateBlock)}. Следующий блок свободен, но этого быть не должно");
 
 						if (nextBlockPtr < zone.ptr->zoneEnd)
 							nextBlockPtr->prevBlockOffset = -blockPtr.ptr->blockSize;
@@ -332,25 +328,24 @@ namespace Sapientia.MemoryAllocator
 			return newBlockRef;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void FreeBlock(MemoryBlockRef blockRef)
 		{
 			ref var zone = ref _zonesList[blockRef.memoryZoneId];
 			var blockPtr = (zone.memory + blockRef.memoryZoneOffset).Cast<MemoryBlock>();
 
-			E.ASSERT(blockRef.memoryZoneId >= 0 && blockRef.memoryZoneId < _zonesList.count);
-			E.ASSERT(zone.size >= blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
-			E.ASSERT(!blockPtr.ptr->id.IsFree);
+			E.ASSERT(blockRef.memoryZoneId >= 0 && blockRef.memoryZoneId < _zonesList.count, $"{nameof(FreeBlock)}. Попытка вернуть блок в не существующую область памяти.");
+			E.ASSERT(blockRef.memoryZoneOffset > 0 && zone.size >= blockRef.memoryZoneOffset + blockPtr.ptr->blockSize, $"{nameof(FreeBlock)}. Блок выходит за пределы области памяти.");
+			E.ASSERT(!blockPtr.ptr->id.IsFree, $"{nameof(FreeBlock)}. Попытка освободить уже свободный блок.");
 
 			// Если предыдущий блок существует и свободен, то мерджим предыдущий блок
 			var prevBlockPtr = ((SafePtr)blockPtr + blockPtr.ptr->prevBlockOffset).Cast<MemoryBlock>();
 			if (prevBlockPtr != blockPtr && prevBlockPtr.ptr->id.IsFree)
 			{
-				E.ASSERT(prevBlockPtr.ptr >= zone.memory.ptr);
+				E.ASSERT(prevBlockPtr.ptr >= zone.memory.ptr && prevBlockPtr.ptr < zone.zoneEnd , $"{nameof(FreeBlock)}. Предыдущий блок выходит за пределы области памяти.");
 
-				E.ASSERT(prevBlockPtr.ptr->blockSize == -blockPtr.ptr->prevBlockOffset);
+				E.ASSERT(prevBlockPtr.ptr->blockSize == -blockPtr.ptr->prevBlockOffset, $"{nameof(FreeBlock)}. Указатель на предыдущий блок оказался не корректным.");
 				prevBlockPtr.ptr->blockSize += blockPtr.ptr->blockSize;
-				E.ASSERT((SafePtr)blockPtr + blockPtr.ptr->blockSize == (SafePtr)prevBlockPtr + prevBlockPtr.ptr->blockSize);
+				E.ASSERT((SafePtr)blockPtr + blockPtr.ptr->blockSize == (SafePtr)prevBlockPtr + prevBlockPtr.ptr->blockSize, $"{nameof(FreeBlock)}. Новый размер блока оказался не корректным.");
 
 				// Если следующий блок существует и он пустой, то мерджим следующий блок
 				var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
@@ -380,8 +375,6 @@ namespace Sapientia.MemoryAllocator
 				var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
 				if (nextBlockPtr < zone.zoneEnd && nextBlockPtr->id.IsFree)
 				{
-					E.ASSERT(zone.size > blockRef.memoryZoneOffset + blockPtr.ptr->blockSize);
-
 					blockPtr.ptr->blockSize += nextBlockPtr->blockSize;
 					// Обновляем sizeId прежде чем добавлять блок в список свободных
 					blockPtr.ptr->id.sizeId = GetBlockSizeId(blockPtr.ptr->blockSize);
