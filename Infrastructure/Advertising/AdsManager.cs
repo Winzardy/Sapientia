@@ -19,7 +19,7 @@ namespace Advertising
 			get => _instance != null;
 		}
 
-		public static IExtendedAdEvents Events => management.Events;
+		public static IAdEvents Events => management.Events;
 
 		public static bool CanShow<T>(string placement, out AdShowError? error)
 			where T : AdPlacementEntry

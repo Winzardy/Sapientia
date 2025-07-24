@@ -22,7 +22,7 @@ namespace Advertising
 		public bool track;
 	}
 
-	public interface IAdvertisingIntegration : IAdEvents
+	public interface IAdvertisingIntegration : IAdIntegrationEvents
 	{
 		string Name { get; }
 
@@ -60,7 +60,7 @@ namespace Advertising
 		Loaded
 	}
 
-	public interface IAdEvents
+	public interface IAdIntegrationEvents
 	{
 		#region Rewarded
 
@@ -88,7 +88,7 @@ namespace Advertising
 		#endregion
 	}
 
-	public interface IExtendedAdEvents : IAdEvents
+	public interface IAdEvents : IAdIntegrationEvents
 	{
 		public event AdDisplayStarted AdDisplayStarted;
 		public event AdDisplayFinished AdDisplayFinished;

@@ -11,7 +11,7 @@ namespace Advertising
 		private IAdvertisingIntegration _integration;
 		private readonly AdvertisingRelay _relay;
 
-		internal IExtendedAdEvents Events => _relay;
+		internal IAdEvents Events => _relay;
 		internal IAdvertisingIntegration Integration => _integration;
 
 		public AdManagement(IAdvertisingIntegration integration)
@@ -362,7 +362,7 @@ namespace Advertising
 		}
 	}
 
-	internal class AdvertisingRelay : Relay<IAdvertisingIntegration>, IExtendedAdEvents
+	internal class AdvertisingRelay : Relay<IAdvertisingIntegration>, IAdEvents
 	{
 		public event RewardedClicked RewardedClicked;
 		public event RewardedClosed RewardedClosed;
