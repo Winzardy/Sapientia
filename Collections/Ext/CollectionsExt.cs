@@ -26,16 +26,13 @@ namespace Sapientia.Collections
 			}
 		}
 
-		public static void SetCount<T>(this List<T> list, int targetCount, in T defaultValue = default)
+		public static void SetCount<T>(this List<T> list, int targetCount, in T defaultValue = default!)
 		{
 			if (list.Count > targetCount)
 				list.RemoveRange(targetCount, list.Count - targetCount);
 			else
 			{
-				for (var i = list.Count; i < targetCount; i++)
-				{
-					list.Add(defaultValue);
-				}
+				list.AddRangeRepeated(defaultValue, (targetCount - list.Count));
 			}
 		}
 
