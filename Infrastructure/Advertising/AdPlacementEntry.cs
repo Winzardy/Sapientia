@@ -39,6 +39,7 @@ namespace Advertising
 		/// Обычно имя совпадает с id, можно установить свое, но есть также Platform -> Name, что приоритетнее
 		/// </summary>
 		public bool useCustomName;
+
 		public string customName;
 
 		public Dictionary<PlatformEntry, string> platformToName;
@@ -48,7 +49,7 @@ namespace Advertising
 		/// </summary>
 		public bool integrationTrack;
 
-		//TODO: добавить "cap"
+		public UsageLimitEntry usageLimit;
 
 		public string GetName(in PlatformEntry platform)
 		{
@@ -69,6 +70,7 @@ namespace Advertising
 		/// <inheritdoc cref="id"/>
 		/// </summary>
 		public string Id => id;
+
 		void IExternallyIdentifiable.SetId(string id) => this.id = id;
 	}
 
