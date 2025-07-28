@@ -7,7 +7,8 @@ namespace Sapientia
 {
 	public static class ScheduleUtility
 	{
-		private const int KIND_LENGHT = (int) SchedulePointKind.Date;
+		private static readonly int KIND_LENGHT = Enum.GetValues(typeof(SchedulePointKind)).Length;
+		private const int WHILE_SAFEGUARD = 20;
 
 		/// <inheritdoc cref="SchedulePointKind"/>
 		public static SchedulePointKind GetKind(long raw)
@@ -21,16 +22,16 @@ namespace Sapientia
 			where T : struct, ISchedulePoint
 			=> GetKind(point.Code);
 
-		public static bool IsPassed(this ResetSchedule schedule, DateTime utcAt, DateTime utcNow)
+		public static bool IsPassed(this ScheduleEntry schedule, DateTime utcAt, DateTime utcNow)
 			=> IsPassed(schedule.points, utcAt, utcNow);
 
-		public static bool IsEmpty(this ResetSchedule schedule)
+		public static bool IsEmpty(this ScheduleEntry schedule)
 			=> schedule.points.IsNullOrEmpty();
 
 		public static bool IsPassed<T>(this T[] points, DateTime utcAt, DateTime utcNow)
 			where T : struct, ISchedulePoint
 		{
-			for (int i = 0; i < points.Length; i++)
+			for (var i = 0; i < points.Length; i++)
 			{
 				if (IsPassed(ref points[i], utcAt, utcNow))
 					return true;
@@ -71,10 +72,24 @@ namespace Sapientia
 		private static DateTime GetNextDateTime(long rawCode, DateTime utcAt)
 		{
 			SchedulePointDecode decode = rawCode;
+			var decodeMonthToDateMonth = decode.mh + 1;
+			var decodeDayToDateDay = decode.day + 1;
 			switch (decode.kind)
 			{
 				case SchedulePointKind.Interval:
 					return utcAt.AddSeconds(decode.sec);
+
+				case SchedulePointKind.Date:
+				{
+					return new DateTime(
+						(int) decode.yr,
+						decodeMonthToDateMonth,
+						(int) decodeDayToDateDay,
+						decode.hr,
+						decode.min,
+						(int) decode.sec,
+						DateTimeKind.Utc);
+				}
 
 				case SchedulePointKind.Daily:
 				{
@@ -89,82 +104,215 @@ namespace Sapientia
 					   .AddSeconds(decode.sec);
 				}
 
-				case SchedulePointKind.Weekly:
-				{
-					var daysSinceWeekStart = (utcAt.DayOfWeek.ToInt() + 6) % 7;
-					var weeklyStart = new DateTime(
-						utcAt.Year, utcAt.Month, utcAt.Day, 0, 0, 0, DateTimeKind.Utc
-					).AddDays(-daysSinceWeekStart);
-
-					var targetTime = weeklyStart
-					   .AddDays(decode.day)
-					   .AddHours(decode.hr)
-					   .AddMinutes(decode.min)
-					   .AddSeconds(decode.sec);
-
-					if (targetTime <= utcAt)
-						targetTime = targetTime.AddDays(7);
-
-					return targetTime;
-				}
-
 				case SchedulePointKind.Monthly:
 				{
 					var monthlyStart = new DateTime(utcAt.Year, utcAt.Month, 1,
 						0, 0, 0, kind: DateTimeKind.Utc);
 
-					if (utcAt.Day >= decode.day)
-						monthlyStart = monthlyStart.AddMonths(1);
-
+					var sign = decode.sign ? 1 : -1;
 					if (!decode.sign)
 						monthlyStart = monthlyStart
 						   .AddMonths(1)
 						   .AddDays(-1);
-					;
 
-					var sign = decode.sign ? 1 : -1;
-					return monthlyStart
+					var monthlyDate = monthlyStart
 					   .AddDays(sign * decode.day)
 					   .AddHours(decode.hr)
 					   .AddMinutes(decode.min)
 					   .AddSeconds(decode.sec);
+
+					if (monthlyDate < utcAt)
+						monthlyDate = monthlyDate.AddYears(1);
+
+					return monthlyDate;
 				}
 
 				case SchedulePointKind.Yearly:
 				{
-					var yearlyStart = new DateTime(utcAt.Year, 1, 1,
+					var yearlyDate = new DateTime(utcAt.Year, decodeMonthToDateMonth, 1,
 						0, 0, 0, kind: DateTimeKind.Utc);
-					if (utcAt.Month >= decode.mh)
-						yearlyStart = yearlyStart.AddYears(1);
+
+					var sign = decode.sign ? 1 : -1;
 
 					if (!decode.sign)
-						yearlyStart = yearlyStart
+						yearlyDate = yearlyDate
 						   .AddMonths(1)
 						   .AddDays(-1);
 
-					var sign = decode.sign ? 1 : -1;
-					return yearlyStart
-					   .AddMonths(decode.mh)
-					   .AddDays(sign * decode.day)
+					yearlyDate = yearlyDate.AddDays(sign * decode.day)
 					   .AddHours(decode.hr)
 					   .AddMinutes(decode.min)
 					   .AddSeconds(decode.sec);
+
+					if (yearlyDate < utcAt)
+						yearlyDate = yearlyDate.AddYears(1);
+
+					return yearlyDate;
 				}
 
-				case SchedulePointKind.Date:
+				case SchedulePointKind.Weekly:
 				{
-					return new DateTime(
-						(int) decode.yr,
-						(int) decode.mh + 1,
-						(int) decode.day + 1,
-						decode.hr,
-						decode.min,
-						(int) decode.sec,
-						DateTimeKind.Utc);
+					var daysSinceWeekStart = (utcAt.DayOfWeek.ToInt() + 6) % 7;
+					var weeklyStart = new DateTime(utcAt.Year, utcAt.Month, utcAt.Day,
+						0, 0, 0, DateTimeKind.Utc
+					).AddDays(-daysSinceWeekStart);
+
+					var weeklyDate = weeklyStart
+					   .AddDays(decode.day)
+					   .AddHours(decode.hr)
+					   .AddMinutes(decode.min)
+					   .AddSeconds(decode.sec);
+
+					if (weeklyDate <= utcAt)
+						weeklyDate = weeklyDate.AddDays(7);
+
+					return weeklyDate;
+				}
+
+				case SchedulePointKind.MonthlyOnWeekday:
+				{
+					return GetMonthlyOnWeekdayDate(in decode, utcAt);
+				}
+
+				case SchedulePointKind.YearlyOnWeekday:
+				{
+					return GetYearlyOnWeekdayDate(in decode, utcAt);
 				}
 
 				default:
 					return utcAt;
+			}
+		}
+
+		private static DateTime GetMonthlyOnWeekdayDate(in SchedulePointDecode decode, in DateTime utcAt)
+		{
+			var year = utcAt.Year;
+			var month = utcAt.Month;
+			var dayOfWeek = (int) decode.day + 1;
+			int weekIndex = decode.weekOfMonth;
+
+			DateTime date;
+			var t = WHILE_SAFEGUARD;
+			while (!TryGetDate(in decode, out date))
+			{
+				if (t-- <= 0)
+					return DateTime.MinValue;
+
+				AddMonth();
+			}
+
+			if (date <= utcAt)
+			{
+				AddMonth();
+
+				if (TryGetDate(in decode, out date))
+					return date;
+			}
+
+			return date;
+
+			bool TryGetDate(in SchedulePointDecode decode, out DateTime date)
+			{
+				date = DateTime.MinValue;
+				if (decode.sign)
+				{
+					var first = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+					var firstDay = (int) first.DayOfWeek;
+					var offset = (dayOfWeek - firstDay + 7) % 7 + weekIndex * 7;
+
+					var targetDay = offset + 1;
+					if (targetDay > DateTime.DaysInMonth(year, month))
+						return false;
+
+					date = new DateTime(year, month, targetDay, decode.hr, decode.min,
+						(int) decode.sec, DateTimeKind.Utc);
+					return true;
+				}
+				else
+				{
+					var daysInMonth = DateTime.DaysInMonth(year, month);
+					var last = new DateTime(year, month, daysInMonth, 0, 0, 0, DateTimeKind.Utc);
+					var lastDay = (int) last.DayOfWeek;
+					var offset = (lastDay - dayOfWeek + 7) % 7 + weekIndex * 7;
+
+					var targetDay = daysInMonth - offset;
+					if (targetDay <= 0)
+						return false;
+
+					date = new DateTime(year, month, targetDay, decode.hr, decode.min,
+						(int) decode.sec, DateTimeKind.Utc);
+					return true;
+				}
+			}
+
+			void AddMonth()
+			{
+				if (++month <= 12)
+					return;
+
+				month = 1;
+				year++;
+			}
+		}
+
+		private static DateTime GetYearlyOnWeekdayDate(in SchedulePointDecode decode, in DateTime utcAt)
+		{
+			var year = utcAt.Year;
+			var targetMonth = decode.mh + 1;
+			var dayOfWeek = (int) decode.day + 1;
+			int weekIndex = decode.weekOfMonth;
+
+			DateTime date;
+
+			var t = WHILE_SAFEGUARD;
+			while (!TryGetDate(in decode, out date))
+			{
+				if (t-- <= 0)
+					return DateTime.MinValue;
+
+				year++;
+			}
+
+			if (date <= utcAt)
+			{
+				year++;
+				if (TryGetDate(in decode, out date))
+					return date;
+			}
+
+			return date;
+
+			bool TryGetDate(in SchedulePointDecode decode, out DateTime date)
+			{
+				date = DateTime.MinValue;
+
+				if (decode.sign)
+				{
+					var first = new DateTime(year, targetMonth, 1, 0, 0, 0, DateTimeKind.Utc);
+					var firstDay = (int) first.DayOfWeek;
+					var offset = (dayOfWeek - firstDay + 7) % 7 + weekIndex * 7;
+
+					var targetDay = offset + 1;
+					if (targetDay > DateTime.DaysInMonth(year, targetMonth))
+						return false;
+
+					date = new DateTime(year, targetMonth, targetDay, decode.hr, decode.min, (int) decode.sec, DateTimeKind.Utc);
+					return true;
+				}
+				else
+				{
+					var daysInMonth = DateTime.DaysInMonth(year, targetMonth);
+					var last = new DateTime(year, targetMonth, daysInMonth, 0, 0, 0, DateTimeKind.Utc);
+					var lastDay = (int) last.DayOfWeek;
+					var offset = (lastDay - dayOfWeek + 7) % 7 + weekIndex * 7;
+
+					var targetDay = daysInMonth - offset;
+					if (targetDay <= 0)
+						return false;
+
+					date = new DateTime(year, targetMonth, targetDay, decode.hr, decode.min, (int) decode.sec, DateTimeKind.Utc);
+					return true;
+				}
 			}
 		}
 	}

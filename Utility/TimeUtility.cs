@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace Sapientia.Extensions
 {
@@ -21,6 +20,7 @@ namespace Sapientia.Extensions
 		public const string DAY_LABEL = "day";
 		public const string SHORT_DAY_LABEL = "d";
 		public const string MONTH_LABEL = "mh";
+		public const string WEEK_LABEL = "wk";
 		public const string YEAR_LABEL = "yr";
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

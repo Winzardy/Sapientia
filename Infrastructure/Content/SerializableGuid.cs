@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Sapientia.Extensions;
 
 namespace Content
 {
@@ -8,6 +9,8 @@ namespace Content
 	[StructLayout(LayoutKind.Explicit)]
 	public partial struct SerializableGuid : IEquatable<SerializableGuid>
 	{
+		private const string GUID_STRING_FORMAT = "N";
+
 		[FieldOffset(0)]
 		[NonSerialized]
 		public Guid guid;
@@ -34,9 +37,17 @@ namespace Content
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SerializableGuid(string guid) : this()
+		public SerializableGuid(string guid, string format = GUID_STRING_FORMAT) : this()
 		{
-			this.guid = new Guid(guid);
+			if (guid.IsNullOrEmpty())
+			{
+				this.guid = Guid.Empty;
+				return;
+			}
+
+			this.guid = !format.IsNullOrEmpty()
+				? Guid.ParseExact(guid, format)
+				: Guid.Parse(guid);
 		}
 
 		public bool Equals(SerializableGuid other) => guid.Equals(other.guid);
@@ -46,6 +57,9 @@ namespace Content
 		public override int GetHashCode() => guid.GetHashCode();
 
 		public static SerializableGuid New() => Guid.NewGuid();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool IsEmpty() => guid == Guid.Empty;
 
 		public static bool TryParse(string str, out SerializableGuid guid)
 		{
@@ -57,9 +71,10 @@ namespace Content
 			guid = g;
 			return true;
 		}
+
 		public static SerializableGuid Parse(string str) => Guid.Parse(str);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override string ToString() => guid.ToString("N");
+		public override string ToString() => guid.ToString(GUID_STRING_FORMAT);
 	}
 }

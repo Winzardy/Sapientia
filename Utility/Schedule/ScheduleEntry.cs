@@ -2,8 +2,11 @@ using System;
 
 namespace Sapientia
 {
+	/// <summary>
+	/// Временные точки, с помощью которых можно создать расписание для события. Например сброс счетчиков
+	/// </summary>
 	[Serializable]
-	public struct ResetSchedule
+	public struct ScheduleEntry
 	{
 		public SchedulePoint[] points;
 	}

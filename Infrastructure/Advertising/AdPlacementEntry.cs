@@ -51,6 +51,10 @@ namespace Advertising
 
 		public UsageLimitEntry usageLimit;
 
+		// TODO: добавить Dictionary<Condition, UsageLimitEntry>
+		// нужно для случаев если хотим переопределить лимит по условиям
+
+
 		public string GetName(in PlatformEntry platform)
 		{
 #if ENABLE_AD_EMPTY_CHECK

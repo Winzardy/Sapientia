@@ -14,7 +14,7 @@ namespace Content
 	{
 		public override void WriteJson(JsonWriter writer, SerializableGuid value, JsonSerializer serializer)
 		{
-			writer.WriteValue(value.guid == SerializableGuid.Empty ? null : value.ToString());
+			writer.WriteValue(value.IsEmpty() ? null : value.ToString());
 		}
 
 		public override SerializableGuid ReadJson(JsonReader reader,
@@ -22,7 +22,7 @@ namespace Content
 			JsonSerializer ____)
 		{
 			var str = reader.Value?.ToString();
-			return string.IsNullOrEmpty(str) ? SerializableGuid.Empty : new SerializableGuid(str);
+			return new SerializableGuid(str);
 		}
 	}
 
@@ -42,7 +42,8 @@ namespace Content
 		public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
 			=> destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
 
-		public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
+		public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value,
+			Type destinationType)
 		{
 			if (value is SerializableGuid sg && destinationType == typeof(string))
 				return sg.guid.ToString();

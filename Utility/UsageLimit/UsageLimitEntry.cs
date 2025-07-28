@@ -13,11 +13,11 @@ namespace Sapientia
 		/// <summary>
 		/// Сброс между использованиями
 		/// </summary>
-		public ResetSchedule reset;
+		public ScheduleEntry reset;
 
 		/// <summary>
 		/// Полный сброса лимита
 		/// </summary>
-		public ResetSchedule fullReset;
+		public ScheduleEntry fullReset;
 	}
 }
