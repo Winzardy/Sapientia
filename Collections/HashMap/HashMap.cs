@@ -17,7 +17,7 @@ namespace Sapientia.Collections
 
 		private (TKey key, bool has) _last;
 
-		public ref TValue this[in TKey key]
+		public ref TValue this[TKey key]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ref _values[_keyToIndex[key]];
@@ -57,7 +57,7 @@ namespace Sapientia.Collections
 			_last = default;
 		}
 
-		public void SetOrAdd(in TKey key, in TValue value)
+		public void SetOrAdd(TKey key, in TValue value)
 		{
 			if (_keyToIndex.TryGetValue(key, out var index))
 			{
@@ -71,7 +71,7 @@ namespace Sapientia.Collections
 			}
 		}
 
-		public void Remove(in TKey key)
+		public void Remove(TKey key)
 		{
 			if (!_keyToIndex.TryGetValue(key, out var index))
 				return;
@@ -101,27 +101,27 @@ namespace Sapientia.Collections
 			}
 		}
 
-		public ref TValue GetOrAdd(in TKey key, HashMapFactory<TValue>? factory = null)
+		public ref TValue GetOrAdd(TKey key, HashMapFactory<TValue>? factory = null)
 		{
-			if (!Contains(in key))
-				SetOrAdd(in key, factory?.Invoke() ?? new TValue());
+			if (!Contains(key))
+				SetOrAdd(key, factory?.Invoke() ?? new TValue());
 
 			return ref this[key];
 		}
 
-		public bool Contains(in TKey key) => _keyToIndex.ContainsKey(key);
+		public bool Contains(TKey key) => _keyToIndex.ContainsKey(key);
 
 		public ref readonly TValue GetOrDefault(in TKey key)
 		{
-			if (Contains(in key))
-				return ref this[in key];
+			if (Contains(key))
+				return ref this[key];
 
 			return ref _defaultValue;
 		}
 
 		public ref readonly TValue GetOrDefault(in TKey key, ref TValue defaultValue)
 		{
-			if (Contains(in key))
+			if (Contains(key))
 				return ref this[key];
 
 			return ref defaultValue;

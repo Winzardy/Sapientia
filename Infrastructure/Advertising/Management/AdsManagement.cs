@@ -2,26 +2,35 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
-using Sapientia;
 
 namespace Advertising
 {
 	public class AdManagement : IDisposable
 	{
+		private readonly IAdvertisingService _service;
 		private IAdvertisingIntegration _integration;
-		private readonly AdvertisingRelay _relay;
+
+		private readonly AdvertisingIntegrationRelay _relay;
 
 		internal IAdEvents Events => _relay;
 		internal IAdvertisingIntegration Integration => _integration;
 
-		public AdManagement(IAdvertisingIntegration integration)
+		public AdManagement(IAdvertisingIntegration integration, IAdvertisingService service)
 		{
-			_relay = new AdvertisingRelay();
+			_relay = new AdvertisingIntegrationRelay();
+			if (service != null)
+				_relay.AdDisplayFinished += OnAdFinished;
+
+			_service = service;
 			SetIntegration(integration);
 		}
 
 		public void Dispose()
-			=> _relay.Dispose();
+		{
+			if (_service != null)
+				_relay.AdDisplayFinished -= OnAdFinished;
+			_relay.Dispose();
+		}
 
 		#region Can Show
 
@@ -57,6 +66,12 @@ namespace Advertising
 
 		internal bool CanShow(AdPlacementEntry entry, out AdShowError? error)
 		{
+			if (!_service.CanShow(entry, out var backendError))
+			{
+				error = backendError;
+				return false;
+			}
+
 			switch (entry.Type)
 			{
 				case AdPlacementType.Rewarded:
@@ -235,14 +250,7 @@ namespace Advertising
 
 		internal bool Load(AdPlacementType type, string placement)
 		{
-			AdPlacementEntry entry = type switch
-			{
-				AdPlacementType.Rewarded => ContentManager.Get<RewardedAdPlacementEntry>(placement),
-				AdPlacementType.Interstitial => ContentManager.Get<InterstitialAdPlacementEntry>(placement),
-				_ => null
-			};
-
-			return Load(entry);
+			return Load(GetEntry(type, placement));
 		}
 
 		internal bool Load(AdPlacementEntry entry)
@@ -360,124 +368,45 @@ namespace Advertising
 
 			return prev;
 		}
-	}
 
-	internal class AdvertisingRelay : Relay<IAdvertisingIntegration>, IAdEvents
-	{
-		public event RewardedClicked RewardedClicked;
-		public event RewardedClosed RewardedClosed;
-		public event RewardedDisplayed RewardedDisplayed;
-		public event RewardedDisplayFailed RewardedDisplayFailed;
-		public event RewardedLoaded RewardedLoaded;
-		public event RewardedLoadFailed RewardedLoadFailed;
-		public event RewardedCompleted RewardedCompleted;
+		internal AdPlacementEntry GetEntry(AdPlacementType type, string placement)
+			=> type switch
+			{
+				AdPlacementType.Rewarded => ContentManager.Get<RewardedAdPlacementEntry>(placement),
+				AdPlacementType.Interstitial => ContentManager.Get<InterstitialAdPlacementEntry>(placement),
+				_ => null
+			};
 
-		public event InterstitialClicked InterstitialClicked;
-		public event InterstitialClosed InterstitialClosed;
-		public event InterstitialDisplayed InterstitialDisplayed;
-		public event InterstitialDisplayFailed InterstitialDisplayFailed;
-		public event InterstitialLoaded InterstitialLoaded;
-		public event InterstitialLoadFailed InterstitialLoadFailed;
-
-		public event AdDisplayStarted AdDisplayStarted;
-		public event AdDisplayFinished AdDisplayFinished;
-
-		protected override void OnBind(IAdvertisingIntegration integration)
+		internal bool TryGetEntry(AdPlacementType type, string placement, out AdPlacementEntry entry)
 		{
-			integration.RewardedClicked += OnRewardedClicked;
-			integration.RewardedClosed += OnRewardedClosed;
-			integration.RewardedDisplayed += OnRewardedDisplayed;
-			integration.RewardedDisplayFailed += OnRewardedDisplayFailed;
-			integration.RewardedLoaded += OnRewardedLoaded;
-			integration.RewardedLoadFailed += OnRewardedLoadFailed;
-			integration.RewardedCompleted += OnRewardedCompleted;
+			entry = null;
+			switch (type)
+			{
+				case AdPlacementType.Rewarded:
+					if (ContentManager.TryGetEntry<RewardedAdPlacementEntry>(placement, out var rEntry))
+					{
+						entry = rEntry;
+						return true;
+					}
 
-			integration.InterstitialClicked += OnInterstitialClicked;
-			integration.InterstitialClosed += OnInterstitialClosed;
-			integration.InterstitialDisplayed += OnInterstitialDisplayed;
-			integration.InterstitialDisplayFailed += OnInterstitialDisplayFailed;
-			integration.InterstitialLoaded += OnInterstitialLoaded;
-			integration.InterstitialLoadFailed += OnInterstitialLoadFailed;
+					break;
+				case AdPlacementType.Interstitial:
+					if (ContentManager.TryGetEntry<InterstitialAdPlacementEntry>(placement, out var iEntry))
+					{
+						entry = iEntry;
+						return true;
+					}
+
+					break;
+			}
+
+			return false;
 		}
 
-		protected override void OnClear(IAdvertisingIntegration integration)
+		private void OnAdFinished(AdPlacementEntry placement, bool full)
 		{
-			integration.RewardedClicked -= OnRewardedClicked;
-			integration.RewardedClosed -= OnRewardedClosed;
-			integration.RewardedDisplayed -= OnRewardedDisplayed;
-			integration.RewardedDisplayFailed -= OnRewardedDisplayFailed;
-			integration.RewardedLoaded -= OnRewardedLoaded;
-			integration.RewardedLoadFailed -= OnRewardedLoadFailed;
-			integration.RewardedCompleted -= OnRewardedCompleted;
-
-			integration.InterstitialClicked -= OnInterstitialClicked;
-			integration.InterstitialClosed -= OnInterstitialClosed;
-			integration.InterstitialDisplayed -= OnInterstitialDisplayed;
-			integration.InterstitialDisplayFailed -= OnInterstitialDisplayFailed;
-			integration.InterstitialLoaded -= OnInterstitialLoaded;
-			integration.InterstitialLoadFailed -= OnInterstitialLoadFailed;
-		}
-
-		private void OnRewardedClicked(AdPlacementEntry placement, object rawData)
-			=> RewardedClicked?.Invoke(placement, rawData);
-
-		private void OnRewardedClosed(AdPlacementEntry placement, bool full, object rawData)
-		{
-			RewardedClosed?.Invoke(placement, full, rawData);
-			OnAdFinished(placement); // ⏹
-		}
-
-		private void OnRewardedDisplayed(AdPlacementEntry placement, object rawData)
-		{
-			RewardedDisplayed?.Invoke(placement, rawData);
-			OnAdStarted(placement); // ▶
-		}
-
-		private void OnRewardedDisplayFailed(AdPlacementEntry placement, string error, object rawData)
-		{
-			RewardedDisplayFailed?.Invoke(placement, error, rawData);
-			OnAdFinished(placement); // ⏹
-		}
-
-		private void OnRewardedLoaded(object rawData) => RewardedLoaded?.Invoke(rawData);
-		private void OnRewardedLoadFailed(string error, object rawData) => RewardedLoadFailed?.Invoke(error, rawData);
-		private void OnRewardedCompleted(AdPlacementEntry placement, object rawData) => RewardedCompleted?.Invoke(placement, rawData);
-
-		private void OnInterstitialClicked(AdPlacementEntry placement, object rawData) => InterstitialClicked?.Invoke(placement, rawData);
-		private void OnInterstitialClosed(AdPlacementEntry placement, object rawData)
-		{
-			InterstitialClosed?.Invoke(placement, rawData);
-			OnAdFinished(placement); // ▶
-		}
-
-		private void OnInterstitialDisplayed(AdPlacementEntry placement, object rawData)
-		{
-			InterstitialDisplayed?.Invoke(placement, rawData);
-			OnAdStarted(placement); // ⏹
-		}
-
-		private void OnInterstitialDisplayFailed(AdPlacementEntry placement, string error, object rawData)
-		{
-			InterstitialDisplayFailed?.Invoke(placement, error, rawData);
-			OnAdFinished(placement); // ▶
-		}
-
-		private void OnInterstitialLoaded(object rawData) => InterstitialLoaded?.Invoke(rawData);
-		private void OnInterstitialLoadFailed(string error, object rawData) => InterstitialLoadFailed?.Invoke(error, rawData);
-
-		private void OnAdStarted(AdPlacementEntry placement) // ⏹
-		{
-			AdsDebug.Log($"[{placement.Type}] [ {placement.Id} ] display has begun");
-			AdDisplayStarted?.Invoke(placement);
-		}
-
-		private void OnAdFinished(AdPlacementEntry placement, bool full = true) // ▶
-		{
-			var postfix = string.Empty;
-			if (!full)
-				postfix = " (not full)";
-			AdsDebug.Log($"[{placement.Type}] [ {placement.Id} ] display has ended{postfix}");
-			AdDisplayFinished?.Invoke(placement, full);
+			if (full)
+				_service.RegisterShow(placement);
 		}
 	}
 }

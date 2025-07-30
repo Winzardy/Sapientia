@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using Sapientia.Pooling;
 
 namespace Sapientia.Extensions
 {
 	public static class TimeUtility
 	{
+		private const string SPACE = " ";
+		private const string SEPARATOR = " ";
+
 		public const int SECS_IN_ONE_DAY = 86400;
 		public const int SECS_IN_ONE_HOUR = 3600;
 		public const int SECS_IN_ONE_MINUTE = 60;
@@ -69,7 +73,6 @@ namespace Sapientia.Extensions
 			return ToLabel(TimeSpan.FromSeconds(secs), useSpace, useMs);
 		}
 
-
 		/// <summary>
 		/// {days} d {hours} h {minutes} m {seconds} s
 		/// </summary>
@@ -86,22 +89,27 @@ namespace Sapientia.Extensions
 			if (ts.TotalSeconds <= 0)
 				return ALREADY_PASSED;
 
-			var str = string.Empty;
+			using (StringBuilderPool.Get(out var sb))
+			{
+				var space = useSpace ? SPACE : string.Empty;
 
-			var space = useSpace ? " " : string.Empty;
+				if (useMs && ts.Milliseconds > 0)
+					sb.Append($"{ts.Milliseconds}{space}{MILLISECOND_LABEL}{SEPARATOR}");
+				else
+					ts = ts.Add(TimeSpan.FromSeconds(1));
 
-			if (useMs && ts.Milliseconds > 0)
-				str = $"{ts.Milliseconds}{space}{MILLISECOND_LABEL}";
-			if (ts.Seconds > 0)
-				str = $"{ts.Seconds}{space}{SECOND_LABEL} " + str;
-			if (ts.TotalSeconds >= 60)
-				str = $"{ts.Minutes}{space}{MINUTE_LABEL} " + str;
-			if (ts.TotalSeconds >= 3600)
-				str = $"{ts.Hours}{space}{HOUR_LABEL} " + str;
-			if (ts.TotalSeconds >= 86400)
-				str = $"{ts.Days}{space}{SHORT_DAY_LABEL} " + str;
+				if (ts.TotalSeconds > 0)
+					sb.Append($"{ts.Seconds}{space}{SECOND_LABEL}{SEPARATOR}");
+				if (ts.TotalSeconds >= SECS_IN_ONE_MINUTE)
+					sb.Append($"{ts.Minutes}{space}{MINUTE_LABEL}{SEPARATOR}");
+				if (ts.TotalSeconds >= SECS_IN_ONE_HOUR)
+					sb.Append($"{ts.Hours}{space}{HOUR_LABEL}{SEPARATOR}");
+				if (ts.TotalSeconds >= SECS_IN_ONE_DAY)
+					sb.Append($"{ts.Days}{space}{DAY_LABEL}");
 
-			return str.Trim();
+				return sb.ToString()
+				   .Trim();
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -110,6 +118,6 @@ namespace Sapientia.Extensions
 			return dt.Hour * 60 * 60 + dt.Minute * 60 + dt.Second;
 		}
 
-		public static DateTime ToDateTime(this long ticks) => new (ticks, DateTimeKind.Utc);
+		public static DateTime ToDateTime(this long ticks) => new(ticks, DateTimeKind.Utc);
 	}
 }

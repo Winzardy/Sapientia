@@ -13,6 +13,8 @@ namespace Advertising
 		NotLoaded,
 
 		NotImplementedPlacementType,
+
+		UsageLimit
 	}
 
 	public readonly struct AdShowError : IEquatable<AdShowError>

@@ -25,21 +25,21 @@ namespace Trading.Advertising
 		{
 			error = null;
 
-			if (board.Contains<IAdvertisingTradingModel>())
+			if (board.Contains<IAdvertisingBackend>())
 			{
-				var model = board.Get<IAdvertisingTradingModel>();
+				var model = board.Get<IAdvertisingBackend>();
 				if (model.GetTokenCount(group) >= count)
 					return true;
 			}
 
-			var success = AdManager.CanShow(placement, out var localError);
+			var success = AdManager.CanShow(placement, out var adError);
 
-			if (localError.HasValue)
+			if (adError.HasValue)
 			{
-				if (localError.Value.code == AdShowErrorCode.NotLoaded) // TODO: временный фикс, недоступности рекламы
+				if (adError.Value.code == AdShowErrorCode.NotLoaded) // TODO: временный фикс, недоступности рекламы
 					return true;
 
-				error = new TradePayError(ERROR_CATEGORY, (int) localError.Value.code, localError);
+				error = new TradePayError(ERROR_CATEGORY, (int) adError.Value.code, adError);
 			}
 
 			return success;
@@ -47,9 +47,9 @@ namespace Trading.Advertising
 
 		protected override async Task<AdTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
-			if (board.Contains<IAdvertisingTradingModel>())
+			if (board.Contains<IAdvertisingBackend>())
 			{
-				var model = board.Get<IAdvertisingTradingModel>();
+				var model = board.Get<IAdvertisingBackend>();
 				if (model.GetTokenCount(group) >= count)
 					return AdTradeReceipt.Empty(group, placement);
 			}
@@ -60,7 +60,8 @@ namespace Trading.Advertising
 			if (!success)
 				return null;
 
-			return new AdTradeReceipt(group, placement);
+			var dateTime = board.Get<IDateTimeProvider>().Now;
+			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
 
 		/// <summary>
@@ -76,7 +77,7 @@ namespace Trading.Advertising
 
 		public int GetAvailableCount(Tradeboard tradeboard)
 		{
-			return tradeboard.Get<IAdvertisingTradingModel>()
+			return tradeboard.Get<IAdvertisingBackend>()
 			   .GetTokenCount(group);
 		}
 

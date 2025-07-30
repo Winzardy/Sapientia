@@ -88,13 +88,19 @@ namespace Advertising
 
 		#endregion
 
+		public static AdPlacementEntry GetEntry(AdPlacementType type, string placement)
+			=> management.GetEntry(type, placement);
+		public static bool TryGetEntry(AdPlacementType type, string placement, out AdPlacementEntry entry)
+			=> management.TryGetEntry(type, placement, out entry);
+
+		public static bool TryGetEntry(AdPlacementKey key, out AdPlacementEntry entry)
+			=> management.TryGetEntry(key.type, key.placement, out entry);
 #if DebugLog
 		public static IAdvertisingIntegration Integration => management.Integration;
 
 		/// <returns>Предыдущую интеграцию</returns>
 		public static IAdvertisingIntegration SetIntegration(IAdvertisingIntegration integration) =>
 			management.SetIntegration(integration);
-
 #endif
 	}
 }

@@ -16,20 +16,25 @@ namespace Trading.Advertising
 		public AdPlacementType type;
 		public string placement;
 
+		/// <summary>
+		/// <see cref="DateTime.Ticks"/>
+		/// </summary>
+		public long timestamp;
+
 #if NEWTONSOFT
 		[Newtonsoft.Json.JsonIgnore]
 #endif
 		public string Key => AdTradeReceiptUtility.Combine(group, type, placement);
 
-		public AdTradeReceipt(int group, AdPlacementEntry entry)
+		/// <param name="timestamp"><see cref="DateTime.Ticks"/></param>
+		public AdTradeReceipt(int group, AdPlacementEntry entry, long timestamp)
 		{
 			this.group = group;
+			this.timestamp = timestamp;
 
 			type = entry.Type;
 			placement = entry.Id;
 		}
-
-		void ITradeReceipt.Register(ITradingModel model, string tradeId) => this.Register(model, tradeId);
 
 		public override string ToString() => Key;
 

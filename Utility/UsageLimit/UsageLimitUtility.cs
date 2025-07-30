@@ -7,34 +7,60 @@ namespace Sapientia
 	{
 		None,
 
-		LimitExceeded,
+		/// <summary>
+		/// Превышено количество использований и нет кулдауна
+		/// </summary>
+		PermanentlyExhausted,
+
+		/// <summary>
+		/// Превышено количество использований, но есть кулдаун
+		/// </summary>
+		TemporarilyExhausted,
+
 		Cooldown
 	}
 
 	public static class UsageLimitUtility
 	{
+		public static bool IsEmpty(this UsageLimitEntry entry) => entry.usageCount == 0;
+
 		public static bool CanApplyUsage(in UsageLimitEntry entry, in UsageLimitModel model, DateTime now,
-			out CanApplyUsageErrorCode errorCode)
+			out UsageLimitApplyError? errorCode)
 		{
-			errorCode = CanApplyUsageErrorCode.None;
+			errorCode = null;
 
-			var lastUsageDateTime = model.lastUsageTicks.ToDateTime();
-
-			if (entry.usageCount == 0) // unlimited
+			// Без ограничений
+			if (entry.usageCount == 0)
 				return true;
 
-			if (entry.IsResetState(lastUsageDateTime, now))
+			// Первое использование
+			if (model.usageCount == 0)
+				return true;
+
+			var firstUsageDateTime = model.firstUsageDate.ToDateTime();
+			if (entry.IsResetState(firstUsageDateTime, now))
 				return true;
 
 			if (model.usageCount >= entry.usageCount)
 			{
-				errorCode = CanApplyUsageErrorCode.LimitExceeded;
+				var remainingTime = entry.GetRemainingTime(now, firstUsageDateTime);
+				errorCode = new UsageLimitApplyError(in entry,
+					remainingTime > TimeSpan.Zero
+						? CanApplyUsageErrorCode.TemporarilyExhausted
+						: CanApplyUsageErrorCode.PermanentlyExhausted)
+				{
+					remainingTime = remainingTime
+				};
 				return false;
 			}
 
+			var lastUsageDateTime = model.lastUsageDate.ToDateTime();
 			if (!entry.reset.IsEmpty() && !entry.reset.IsPassed(lastUsageDateTime, now))
 			{
-				errorCode = CanApplyUsageErrorCode.Cooldown;
+				errorCode = new UsageLimitApplyError(in entry, CanApplyUsageErrorCode.Cooldown)
+				{
+					remainingTime = entry.GetRemainingTime(now, firstUsageDateTime, lastUsageDateTime)
+				};
 				return false;
 			}
 
@@ -42,10 +68,41 @@ namespace Sapientia
 		}
 
 		public static bool IsResetState(this in UsageLimitEntry entry, in UsageLimitModel model, DateTime now)
-			=> IsResetState(entry, model.lastUsageTicks.ToDateTime(), now);
+			=> IsResetState(entry, model.firstUsageDate.ToDateTime(), now);
 
 		public static bool IsResetState(this in UsageLimitEntry entry, DateTime at, DateTime now)
 			=> !entry.fullReset.IsEmpty() && entry.fullReset.IsPassed(at, now);
+
+		public static int GetRemainingUsages(this in UsageLimitEntry entry, in UsageLimitModel model)
+		{
+			if (entry.usageCount == 0)
+				return UsageLimitEntry.INFINITY_USAGES;
+
+			var remaining = entry.usageCount - model.usageCount;
+			return remaining.Max(0);
+		}
+
+		/// <returns>Если возвращает <c>null</c>, то нечего ждать</returns>
+		public static TimeSpan? GetRemainingTime(this in UsageLimitEntry entry, DateTime utcNow, DateTime firstUsageUtcAt,
+			DateTime? utcAt = null)
+		{
+			var fullResetDateTime = entry.fullReset.ToDateTime(firstUsageUtcAt);
+
+			if (utcAt.HasValue)
+			{
+				var usageResetDateTime = entry.reset.ToDateTime(utcAt.Value);
+
+				if (fullResetDateTime > usageResetDateTime)
+					return usageResetDateTime - utcNow;
+			}
+
+			var resetDateTime = fullResetDateTime - utcNow;
+
+			if (resetDateTime <= TimeSpan.Zero)
+				return null;
+
+			return resetDateTime;
+		}
 
 		public static void ApplyUsage(ref UsageLimitModel model, in UsageLimitEntry entry, DateTime now)
 		{
@@ -56,7 +113,10 @@ namespace Sapientia
 				ForceReset(ref model);
 
 			model.usageCount++;
-			model.lastUsageTicks = now.Ticks;
+			model.lastUsageDate = now.Ticks;
+
+			if (model.usageCount == 1)
+				model.firstUsageDate = now.Ticks;
 		}
 
 		/// <param name="now">Если передать текущее время, то он будет использоваться как последнее</param>
@@ -64,7 +124,7 @@ namespace Sapientia
 		{
 			model.usageCount = 0;
 			if (now.HasValue)
-				model.lastUsageTicks = now.Value.Ticks;
+				model.lastUsageDate = now.Value.Ticks;
 		}
 
 		/// <param name="now">Если передать текущее время, то он будет использоваться как последнее</param>
@@ -73,7 +133,21 @@ namespace Sapientia
 			model.usageCount++;
 
 			if (now.HasValue)
-				model.lastUsageTicks = now.Value.Ticks;
+				model.lastUsageDate = now.Value.Ticks;
+		}
+	}
+
+	public struct UsageLimitApplyError
+	{
+		public UsageLimitEntry entry;
+
+		public CanApplyUsageErrorCode code;
+		public TimeSpan? remainingTime;
+
+		public UsageLimitApplyError(in UsageLimitEntry entry, in CanApplyUsageErrorCode code) : this()
+		{
+			this.entry = entry;
+			this.code = code;
 		}
 	}
 }

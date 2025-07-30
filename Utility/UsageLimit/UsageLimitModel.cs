@@ -6,6 +6,13 @@ namespace Sapientia
 	public struct UsageLimitModel
 	{
 		public int usageCount;
-		public long lastUsageTicks;
+
+		/// <see cref="DateTime.Ticks"/>
+		public long lastUsageDate;
+
+		/// <see cref="DateTime.Ticks"/>
+		public long firstUsageDate;
+
+		public int fullUsageCount;
 	}
 }

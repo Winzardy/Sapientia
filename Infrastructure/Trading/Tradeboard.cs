@@ -45,4 +45,9 @@ namespace Trading
 			board.SetId(entry.Id);
 		}
 	}
+
+	public interface IDateTimeProvider
+	{
+		public DateTime Now { get; }
+	}
 }

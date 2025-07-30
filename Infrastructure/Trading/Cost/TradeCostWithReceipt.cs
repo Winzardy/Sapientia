@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace Trading
@@ -11,16 +12,45 @@ namespace Trading
 
 		protected sealed override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
+			var canIssue = false;
+
 			OnBeforePayCheck(board);
-			var canIssue = TradeReceiptRegistry<T>.CanIssue(board, ReceiptId, out error);
+			{
+				error = null;
+				if (!board.Contains<ITradingBackend>())
+				{
+					TradingDebug.LogError("Not found trading service...");
+				}
+				else
+				{
+					var backend = board.Get<ITradingBackend>();
+					var registry = backend.Get<T>();
+					canIssue = registry.CanIssue(board, ReceiptId);
+				}
+			}
+
 			OnAfterPayCheck(board);
+
 			return canIssue;
 		}
 
 		protected sealed override bool Pay(Tradeboard board)
 		{
+			var issue = false;
 			OnBeforePay(board);
-			var issue = TradeReceiptRegistry<T>.Issue(board, ReceiptId);
+			{
+				if (!board.Contains<ITradingBackend>())
+				{
+					TradingDebug.LogError("Not found trading service...");
+				}
+				else
+				{
+					var backend = board.Get<ITradingBackend>();
+					var registry = backend.Get<T>();
+					issue = registry.Issue(board, ReceiptId);
+				}
+			}
+
 			OnAfterPay(board);
 			return issue;
 		}
@@ -61,30 +91,36 @@ namespace Trading
 	{
 		public string Key { get; }
 
-		// Намеренный хак чтобы избежать каста
-		public void Register(ITradingModel model, string tradeId);
-
 		public bool NeedPush() => true;
 	}
 
 	public static class TradeReceiptUtility
 	{
-		public static void Register(this ITradeReceipt[] receipts, ITradingModel model, string tradeId)
-		{
-			if (tradeId.IsNullOrEmpty())
-				throw TradingDebug.NullException("Trade ID cannot be null or empty");
-
-			for (int i = 0; i < receipts.Length; i++)
-				receipts[i].Register(model, tradeId);
-		}
-
-		public static void Register<T>(this T receipt, ITradingModel model, string tradeId)
+		public static void Register<T>(this ITradingBackend backend, T[] receipts, string tradeId)
 			where T : struct, ITradeReceipt
 		{
 			if (tradeId.IsNullOrEmpty())
 				throw TradingDebug.NullException("Trade ID cannot be null or empty");
 
-			TradeReceiptRegistry<T>.Register(model, tradeId, in receipt);
+			if (receipts.IsNullOrEmpty())
+				return;
+
+			for (int i = 0; i < receipts.Length; i++)
+				backend.Register(receipts[i], tradeId);
+		}
+
+		public static void Register<T>(this ITradingBackend backend, in T receipt, string tradeId)
+			where T : struct, ITradeReceipt
+		{
+			if (tradeId.IsNullOrEmpty())
+				throw TradingDebug.NullException("Trade ID cannot be null or empty");
+
+			var registry = backend.Get<T>();
+
+			if (registry == null)
+				throw TradingDebug.Exception($"Not found receipt registry by type [ {typeof(T)} ]");
+
+			registry.Register(tradeId, in receipt);
 		}
 	}
 }

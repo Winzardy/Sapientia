@@ -5,6 +5,8 @@ namespace Sapientia
 	[Serializable]
 	public struct UsageLimitEntry
 	{
+		public const int INFINITY_USAGES = -1;
+
 		/// <summary>
 		/// Количество использований, если 0 - неограничено
 		/// </summary>
