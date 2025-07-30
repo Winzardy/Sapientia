@@ -20,6 +20,8 @@ namespace Sapientia.Pooling
 			return pooledObject;
 		}
 
+		public static void Release(Array<T> obj) => StaticObjectPool.Release(obj);
+
 		private class Policy : IObjectPoolPolicy<Array<T>>
 		{
 			public void OnRelease(Array<T> array) => array.Clear();
