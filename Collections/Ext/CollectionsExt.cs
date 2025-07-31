@@ -13,6 +13,16 @@ namespace Sapientia.Collections
 	/// </summary>
 	public static class CollectionsExt
 	{
+		public static int BinaryInsert<T>(this List<T> list, T value, IComparer<T>? comparer = null)
+		{
+			var index = list.BinarySearch(value, comparer);
+			if (index < 0)
+				index = ~index;
+			list.Insert(index, value);
+
+			return index;
+		}
+
 		public static void SetCount<T>(this List<T> list, int targetCount, in Func<T> defaultValueCreator)
 		{
 			if (list.Count > targetCount)
