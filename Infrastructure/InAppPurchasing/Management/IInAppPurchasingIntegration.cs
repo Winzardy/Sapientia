@@ -2,7 +2,7 @@ using System;
 
 namespace InAppPurchasing
 {
-	public interface IInAppPurchasingService : IInAppPurchasingEvents
+	public interface IInAppPurchasingIntegration : IInAppPurchasingEvents
 	{
 		public bool TryGetStatus(IAPProductEntry product, out ProductStatus status);
 

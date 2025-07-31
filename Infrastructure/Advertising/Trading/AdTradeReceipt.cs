@@ -36,7 +36,14 @@ namespace Trading.Advertising
 			placement = entry.Id;
 		}
 
-		public override string ToString() => Key;
+		public override string ToString()
+		{
+			return "Ad Trade Receipt:\n" +
+				$" Key: {Key}\n" +
+				$" Type: {type}\n" +
+				$" Placement Id: {placement}\n" +
+				$" Group: {group}\n";
+		}
 
 		public static AdTradeReceipt Empty(int group, AdPlacementEntry entry) => new()
 		{

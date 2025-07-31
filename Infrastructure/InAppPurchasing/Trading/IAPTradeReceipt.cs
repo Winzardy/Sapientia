@@ -23,7 +23,14 @@ namespace Trading.InAppPurchasing
 			this.receipt = receipt;
 		}
 
-		public override string ToString() => Key;
+		public override string ToString()
+		{
+			return "IAP Trade Receipt:\n" +
+				$" Key: {Key}\n" +
+				$" Transaction Id: {receipt.transactionId}\n" +
+				$" Billing: {receipt.billing}\n" +
+				$" - Product Id: {receipt.productId}\n";
+		}
 	}
 
 	public static class IAPTradeReceiptUtility

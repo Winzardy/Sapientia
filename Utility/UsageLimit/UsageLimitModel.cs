@@ -8,10 +8,10 @@ namespace Sapientia
 		public int usageCount;
 
 		/// <see cref="DateTime.Ticks"/>
-		public long lastUsageDate;
+		public long lastUsageTimestamp;
 
 		/// <see cref="DateTime.Ticks"/>
-		public long firstUsageDate;
+		public long firstUsageTimestamp;
 
 		public int fullUsageCount;
 	}

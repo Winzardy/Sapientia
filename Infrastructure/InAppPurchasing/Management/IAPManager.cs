@@ -1,3 +1,6 @@
+#if DebugLog
+#define FAKE
+#endif
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -102,17 +105,19 @@ namespace InAppPurchasing
 		public static ref readonly ProductInfo GetProductInfo<T>(T entry, bool forceUpdateCache = false)
 			where T : IAPProductEntry
 			=> ref management.GetProductInfo(entry, forceUpdateCache);
-#if DebugLog
-		public static IInAppPurchasingService Service => management.Service;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static PurchaseReceipt? GetReceipt(string transactionId) => management.GetPurchaseReceipt(transactionId);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool ContainsReceipt(string transactionId) => management.ContainsReceipt(transactionId);
+
+#if FAKE
+		public static IInAppPurchasingIntegration Integration => management.Integration;
 
 		/// <returns>Предыдущий сервис</returns>
-		public static IInAppPurchasingService SetService(IInAppPurchasingService service) =>
-			management.SetService(service);
+		public static IInAppPurchasingIntegration SetService(IInAppPurchasingIntegration integration) =>
+			management.SetIntegration(integration);
 #endif
-
-		public static bool Validate(PurchaseReceipt receipt)
-		{
-			return true; // TODO: надо сделать!
-		}
 	}
 }

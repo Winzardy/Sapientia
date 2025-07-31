@@ -83,7 +83,6 @@ namespace Sapientia.Extensions
 			return ToLabel(timeSpan, useSpace);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToLabel(this TimeSpan ts, bool useSpace = true, bool useMs = true)
 		{
 			if (ts.TotalSeconds <= 0)

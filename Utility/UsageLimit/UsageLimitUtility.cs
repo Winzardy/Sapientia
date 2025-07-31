@@ -37,7 +37,7 @@ namespace Sapientia
 			if (model.usageCount == 0)
 				return true;
 
-			var firstUsageDateTime = model.firstUsageDate.ToDateTime();
+			var firstUsageDateTime = model.firstUsageTimestamp.ToDateTime();
 			if (entry.IsResetState(firstUsageDateTime, now))
 				return true;
 
@@ -54,7 +54,7 @@ namespace Sapientia
 				return false;
 			}
 
-			var lastUsageDateTime = model.lastUsageDate.ToDateTime();
+			var lastUsageDateTime = model.lastUsageTimestamp.ToDateTime();
 			if (!entry.reset.IsEmpty() && !entry.reset.IsPassed(lastUsageDateTime, now))
 			{
 				errorCode = new UsageLimitApplyError(in entry, CanApplyUsageErrorCode.Cooldown)
@@ -68,7 +68,7 @@ namespace Sapientia
 		}
 
 		public static bool IsResetState(this in UsageLimitEntry entry, in UsageLimitModel model, DateTime now)
-			=> IsResetState(entry, model.firstUsageDate.ToDateTime(), now);
+			=> IsResetState(entry, model.firstUsageTimestamp.ToDateTime(), now);
 
 		public static bool IsResetState(this in UsageLimitEntry entry, DateTime at, DateTime now)
 			=> !entry.fullReset.IsEmpty() && entry.fullReset.IsPassed(at, now);
@@ -113,10 +113,12 @@ namespace Sapientia
 				ForceReset(ref model);
 
 			model.usageCount++;
-			model.lastUsageDate = now.Ticks;
+			model.lastUsageTimestamp = now.Ticks;
 
 			if (model.usageCount == 1)
-				model.firstUsageDate = now.Ticks;
+				model.firstUsageTimestamp = now.Ticks;
+			if (model.usageCount >= entry.usageCount)
+				model.fullUsageCount++;
 		}
 
 		/// <param name="now">Если передать текущее время, то он будет использоваться как последнее</param>
@@ -124,7 +126,7 @@ namespace Sapientia
 		{
 			model.usageCount = 0;
 			if (now.HasValue)
-				model.lastUsageDate = now.Value.Ticks;
+				model.lastUsageTimestamp = now.Value.Ticks;
 		}
 
 		/// <param name="now">Если передать текущее время, то он будет использоваться как последнее</param>
@@ -133,7 +135,7 @@ namespace Sapientia
 			model.usageCount++;
 
 			if (now.HasValue)
-				model.lastUsageDate = now.Value.Ticks;
+				model.lastUsageTimestamp = now.Value.Ticks;
 		}
 	}
 

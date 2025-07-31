@@ -58,13 +58,13 @@ namespace Advertising
 		public string GetName(in PlatformEntry platform)
 		{
 #if ENABLE_AD_EMPTY_CHECK
-			if (this.id.IsNullOrEmpty())
+			if (id.IsNullOrEmpty())
 				throw new Exception("AdPlacementEntry name is empty!");
 #endif
 			if (platform && platformToName.TryGetValue(platform, out var name))
 				return name;
 
-			return useCustomName ? customName : this.id;
+			return useCustomName ? customName : id;
 		}
 
 		public static implicit operator AdPlacementType(AdPlacementEntry entry) => entry.Type;

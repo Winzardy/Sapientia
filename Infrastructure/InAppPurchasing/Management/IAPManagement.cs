@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
-using Sapientia;
 
 namespace InAppPurchasing
 {
@@ -27,21 +26,23 @@ namespace InAppPurchasing
 
 	public class IAPManagement : IDisposable
 	{
-		private IInAppPurchasingService _service;
+		private IInAppPurchasingIntegration _integration;
 
 		private readonly ProductInfo _emptyProductInfo = default;
 		private readonly SubscriptionInfo _emptySubscriptionInfo = default;
 
 		private readonly InAppPurchasingRelay _relay;
+		private IInAppPurchasingService _service;
 
 		internal IInAppPurchasingEvents Events => _relay;
-		internal IInAppPurchasingService Service => _service;
+		internal IInAppPurchasingIntegration Integration => _integration;
 
-		public IAPManagement(IInAppPurchasingService service)
+		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingService service)
 		{
 			_relay = new InAppPurchasingRelay();
 
-			SetService(service);
+			_service = service;
+			SetIntegration(integration);
 		}
 
 		public void Dispose() => _relay.Dispose();
@@ -58,7 +59,7 @@ namespace InAppPurchasing
 
 		internal ref readonly ProductInfo GetProductInfo<T>(T entry, bool forceUpdateCache = false)
 			where T : IAPProductEntry =>
-			ref _service.GetProductInfo(entry, forceUpdateCache);
+			ref _integration.GetProductInfo(entry, forceUpdateCache);
 
 		#region Can Purchase
 
@@ -99,11 +100,11 @@ namespace InAppPurchasing
 			switch (entry.Type)
 			{
 				case IAPProductType.Consumable:
-					return _service.CanPurchaseConsumable(entry, out error);
+					return _integration.CanPurchaseConsumable(entry, out error);
 				case IAPProductType.NonConsumable:
-					return _service.CanPurchaseNonConsumable(entry, out error);
+					return _integration.CanPurchaseNonConsumable(entry, out error);
 				case IAPProductType.Subscription:
-					return _service.CanPurchaseSubscription(entry, out error);
+					return _integration.CanPurchaseSubscription(entry, out error);
 			}
 
 			error = new IAPPurchaseError(IAPPurchaseErrorCode.ProductTypeNotImplemented);
@@ -140,9 +141,9 @@ namespace InAppPurchasing
 		{
 			return entry.Type switch
 			{
-				IAPProductType.Consumable => _service.RequestPurchaseConsumable(entry),
-				IAPProductType.NonConsumable => _service.RequestPurchaseNonConsumable(entry),
-				IAPProductType.Subscription => _service.RequestPurchaseSubscription(entry),
+				IAPProductType.Consumable => _integration.RequestPurchaseConsumable(entry),
+				IAPProductType.NonConsumable => _integration.RequestPurchaseNonConsumable(entry),
+				IAPProductType.Subscription => _integration.RequestPurchaseSubscription(entry),
 				_ => false
 			};
 		}
@@ -181,7 +182,7 @@ namespace InAppPurchasing
 			using (cancellationToken.Register(Cancel))
 			{
 				// Это на случай если сервис поменяют, так как такой функционал есть
-				var service = _service;
+				var service = _integration;
 
 				try
 				{
@@ -262,7 +263,7 @@ namespace InAppPurchasing
 
 		internal ProductStatus GetStatus(IAPProductEntry product)
 		{
-			if (_service.TryGetStatus(product, out var status))
+			if (_integration.TryGetStatus(product, out var status))
 				return status;
 
 			return ProductStatus.Available;
@@ -272,8 +273,8 @@ namespace InAppPurchasing
 
 		#region Restore
 
-		internal bool IsRestoreTransactionsSupported() => _service.IsRestoreTransactionsSupported;
-		internal void RestoreTransactions() => _service.RestoreTransactions();
+		internal bool IsRestoreTransactionsSupported() => _integration.IsRestoreTransactionsSupported;
+		internal void RestoreTransactions() => _integration.RestoreTransactions();
 
 		#endregion
 
@@ -290,26 +291,36 @@ namespace InAppPurchasing
 
 		internal ref readonly SubscriptionInfo GetSubscriptionInfo(IAPSubscriptionProductEntry entry, bool forceUpdateCache = false)
 		{
-			return ref _service.GetSubscriptionInfo(entry, forceUpdateCache);
+			return ref _integration.GetSubscriptionInfo(entry, forceUpdateCache);
 		}
 
 		#endregion
 
-		internal IInAppPurchasingService SetService(IInAppPurchasingService service)
+		internal PurchaseReceipt? GetPurchaseReceipt(string transactionId)
 		{
-			var prev = _service;
+			return _service.GetReceipt(transactionId);
+		}
+
+		internal bool ContainsReceipt(string transactionId)
+		{
+			return _service.Contains(transactionId);
+		}
+
+		internal IInAppPurchasingIntegration SetIntegration(IInAppPurchasingIntegration integration)
+		{
+			var prev = _integration;
 #if DebugLog
-			if (_service?.GetType() == service.GetType())
+			if (_integration?.GetType() == integration.GetType())
 			{
-				IAPDebug.LogWarning($"Same service: {_service.Name}");
+				IAPDebug.LogWarning($"Same integration: {_integration.Name}");
 				return prev;
 			}
 #endif
-			_service = service;
+			_integration = integration;
 
-			_relay.Bind(_service);
+			_relay.Bind(_integration);
 
-			IAPDebug.Log($"Target service: {_service.Name}");
+			IAPDebug.Log($"Target integration: {_integration.Name}");
 
 			return prev;
 		}
@@ -331,44 +342,5 @@ namespace InAppPurchasing
 		}
 
 		public static PurchaseResult Failed = new(false);
-	}
-
-	internal class InAppPurchasingRelay : Relay<IInAppPurchasingService>, IInAppPurchasingEvents
-	{
-		public event PurchaseCompleted PurchaseCompleted;
-		public event PurchaseFailed PurchaseFailed;
-		public event PurchaseRequested PurchaseRequested;
-		public event PurchaseCanceled PurchaseCanceled;
-		public event PromotionalPurchaseIntercepted PromotionalPurchaseIntercepted;
-
-		protected override void OnBind(IInAppPurchasingService service)
-		{
-			service.PurchaseCompleted += OnPurchaseCompleted;
-			service.PurchaseFailed += OnPurchaseFailed;
-			service.PurchaseRequested += OnPurchaseRequested;
-			service.PurchaseCanceled += OnPurchaseCanceled;
-			service.PromotionalPurchaseIntercepted += OnPromotionalPurchaseIntercepted;
-		}
-
-		protected override void OnClear(IInAppPurchasingService service)
-		{
-			service.PurchaseCompleted -= OnPurchaseCompleted;
-			service.PurchaseFailed -= OnPurchaseFailed;
-			service.PurchaseRequested -= OnPurchaseRequested;
-			service.PurchaseCanceled -= OnPurchaseCanceled;
-			service.PromotionalPurchaseIntercepted -= OnPromotionalPurchaseIntercepted;
-		}
-
-		private void OnPurchaseCompleted(in PurchaseReceipt receipt, object rawData) => PurchaseCompleted?.Invoke(in receipt, rawData);
-
-		private void OnPurchaseFailed(IAPProductEntry product, string error, object rawData) =>
-			PurchaseFailed?.Invoke(product, error, rawData);
-
-		private void OnPurchaseRequested(IAPProductEntry product) => PurchaseRequested?.Invoke(product);
-
-		private void OnPurchaseCanceled(IAPProductEntry product, object rawData) => PurchaseCanceled?.Invoke(product, rawData);
-
-		private void OnPromotionalPurchaseIntercepted(IAPProductEntry product, object rawData) =>
-			PromotionalPurchaseIntercepted?.Invoke(product, rawData);
 	}
 }
