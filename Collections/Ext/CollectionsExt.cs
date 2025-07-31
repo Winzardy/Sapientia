@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sapientia.Extensions;
+using Sapientia.Pooling;
 #if UNITY_5_3_OR_NEWER
 using Random = UnityEngine.Random;
 #endif
@@ -318,6 +319,16 @@ namespace Sapientia.Collections
 				yield return (list[i], i);
 		}
 
+		public static T[] ToArray<T>(this ICollection<T>? collection)
+		{
+			if (collection?.IsNullOrEmpty() ?? true)
+				return Array.Empty<T>();
+
+			var array = new T[collection.Count];
+			collection.CopyTo(array, 0);
+			return array;
+		}
+
 		public static IEnumerable<(T, int)> WithIndexSafe<T>(this IList<T> list)
 		{
 			if (list == null)
@@ -337,7 +348,6 @@ namespace Sapientia.Collections
 			foreach (var value in enumerable)
 				yield return (value, index++);
 		}
-
 
 		public static IEnumerable<(T, int)> WithIndex<T>(this IEnumerable<T> enumerable)
 		{

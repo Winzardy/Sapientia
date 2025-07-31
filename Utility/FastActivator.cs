@@ -154,7 +154,7 @@ namespace Sapientia.Reflection
 						param.ParameterType
 					)).ToArray();
 
-				var newExp = Expression.New(ctor, args);
+				var newExp = Expression.New(ctor);
 				Expression body = type.IsValueType
 					? Expression.Convert(newExp, typeof(object))
 					: newExp;

@@ -30,7 +30,7 @@ namespace Trading.InAppPurchasing
 			if (model.active.IsNullOrEmpty())
 				return false;
 
-			foreach (var (_, receipt) in model.active)
+			foreach (ref var receipt in model.active)
 			{
 				if (receipt.Key == key)
 					return true;

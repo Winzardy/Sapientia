@@ -6,7 +6,14 @@ namespace Advertising
 	public interface IAdvertisingService
 	{
 		public bool CanShow(AdPlacementKey key, out AdShowError? error);
-		public void RegisterShow(AdPlacementKey key);
+		public AdvertisingRegisterResult RegisterShow(AdPlacementKey key);
+	}
+
+	public enum AdvertisingRegisterResult
+	{
+		Done,
+		Pending, // Interop
+		// Failed
 	}
 
 	public interface IAdvertisingServiceFactory

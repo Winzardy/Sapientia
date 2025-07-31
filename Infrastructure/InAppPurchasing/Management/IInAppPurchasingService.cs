@@ -6,10 +6,17 @@ namespace InAppPurchasing
 	public interface IInAppPurchasingService
 	{
 		public bool Contains(string transactionId);
-		public void Register(string transactionId, PurchaseReceipt receipt);
+		public InAppPurchasingRegisterResult Register(string transactionId, PurchaseReceipt receipt);
 		PurchaseReceipt? GetReceipt(string transactionId);
 
-		public string[] GetAll(string transactionId);
+		public string[] GetAllTransactions();
+	}
+
+	public enum InAppPurchasingRegisterResult
+	{
+		Done,
+		Pending, // Interop
+		// Failed
 	}
 
 	public interface IInAppPurchasingServiceFactory
