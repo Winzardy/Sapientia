@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Sapientia.Pooling;
 
 namespace Sapientia.Extensions
@@ -29,6 +30,9 @@ namespace Sapientia.Extensions
 		{
 			return string.IsNullOrWhiteSpace(str);
 		}
+
+		public static StringBuilder Prepend(this StringBuilder builder, string value)
+			=> builder.Insert(0, value);
 
 		public static string GetCompositeString<T>(this IEnumerable<T> collection, bool verticalOrHorizontal = true, Func<T, string> getter = null,
 			bool numerate = true,

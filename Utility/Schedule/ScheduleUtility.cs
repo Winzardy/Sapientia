@@ -60,7 +60,10 @@ namespace Sapientia
 			=> IsPassed(point.Code, utcAt, utcNow);
 
 		public static bool IsPassed(long rawCode, DateTime utcAt, DateTime utcNow)
-			=> utcNow > ToDateTime(rawCode, utcAt);
+		{
+			var dateTime = ToDateTime(rawCode, utcAt);
+			return utcNow > dateTime && utcAt < dateTime;
+		}
 
 		/// <returns>Ближайшую дату</returns>
 		public static DateTime ToDateTime(this ScheduleEntry entry, DateTime utcAt)

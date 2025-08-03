@@ -1,3 +1,5 @@
+using System;
+
 namespace InAppPurchasing
 {
 	/// <summary>
@@ -5,11 +7,13 @@ namespace InAppPurchasing
 	/// </summary>
 	public interface IInAppPurchasingService
 	{
+		public void Initialize();
 		public bool Contains(string transactionId);
 		public InAppPurchasingRegisterResult Register(string transactionId, PurchaseReceipt receipt);
 		PurchaseReceipt? GetReceipt(string transactionId);
 
 		public string[] GetAllTransactions();
+		DateTime GetUtcNow();
 	}
 
 	public enum InAppPurchasingRegisterResult

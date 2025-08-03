@@ -18,7 +18,7 @@ namespace Trading.InAppPurchasing
 #endif
 		public string Id => receipt.transactionId;
 
-		public IAPTradeReceipt(in PurchaseReceipt receipt)
+		public IAPTradeReceipt(PurchaseReceipt receipt)
 		{
 			this.receipt = receipt;
 		}

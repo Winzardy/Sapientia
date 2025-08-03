@@ -38,6 +38,11 @@ namespace InAppPurchasing
 		public static bool CanPurchase(IAPProductType type, string product, out IAPPurchaseError? error)
 			=> management.CanPurchase(type, product, out error);
 
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IAPProductEntry GetEntry(IAPProductType type, string product)
+			=> management.GetEntry(type, product);
+
 		#region Purchase
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -98,13 +98,13 @@ namespace Sapientia.Extensions
 					ts = ts.Add(TimeSpan.FromSeconds(1));
 
 				if (ts.TotalSeconds > 0)
-					sb.Append($"{ts.Seconds}{space}{SECOND_LABEL}{SEPARATOR}");
+					sb.Prepend($"{ts.Seconds}{space}{SECOND_LABEL}{SEPARATOR}");
 				if (ts.TotalSeconds >= SECS_IN_ONE_MINUTE)
-					sb.Append($"{ts.Minutes}{space}{MINUTE_LABEL}{SEPARATOR}");
+					sb.Prepend($"{ts.Minutes}{space}{MINUTE_LABEL}{SEPARATOR}");
 				if (ts.TotalSeconds >= SECS_IN_ONE_HOUR)
-					sb.Append($"{ts.Hours}{space}{HOUR_LABEL}{SEPARATOR}");
+					sb.Prepend($"{ts.Hours}{space}{HOUR_LABEL}{SEPARATOR}");
 				if (ts.TotalSeconds >= SECS_IN_ONE_DAY)
-					sb.Append($"{ts.Days}{space}{DAY_LABEL}");
+					sb.Prepend($"{ts.Days}{space}{DAY_LABEL}{SEPARATOR}");
 
 				return sb.ToString()
 				   .Trim();

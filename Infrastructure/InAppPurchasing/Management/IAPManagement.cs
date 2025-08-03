@@ -7,21 +7,24 @@ namespace InAppPurchasing
 {
 	public enum ProductStatus
 	{
-		None,
+		/// <summary>
+		/// Не определенный статус продукта
+		/// </summary>
+		Undefined,
 
 		Available,
+		NotAvailable,
 
-		Pending,
+		AlreadyProcessing,
 		Deferred,
 
 		/// <summary>
-		/// Non-Consumable и Subscription
+		/// Только Non-Consumable и Subscription
 		/// </summary>
 		Purchased,
 
 		NotInitialized,
-		NotFound,
-		NotAvailable
+		Unknown,
 	}
 
 	public class IAPManagement : IDisposable
@@ -60,6 +63,15 @@ namespace InAppPurchasing
 		internal ref readonly ProductInfo GetProductInfo<T>(T entry, bool forceUpdateCache = false)
 			where T : IAPProductEntry =>
 			ref _integration.GetProductInfo(entry, forceUpdateCache);
+
+		internal IAPProductEntry GetEntry(IAPProductType type, string product)
+			=> type switch
+			{
+				IAPProductType.Consumable => ContentManager.Get<IAPConsumableProductEntry>(product),
+				IAPProductType.NonConsumable => ContentManager.Get<IAPNonConsumableProductEntry>(product),
+				IAPProductType.Subscription => ContentManager.Get<IAPSubscriptionProductEntry>(product),
+				_ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+			};
 
 		#region Can Purchase
 
@@ -242,7 +254,7 @@ namespace InAppPurchasing
 			where T : IAPProductEntry
 		{
 			if (!ContentManager.Contains<T>(product))
-				return ProductStatus.NotFound;
+				return ProductStatus.Unknown;
 
 			var entry = ContentManager.Get<T>(product);
 			return GetStatus(entry);
@@ -258,7 +270,7 @@ namespace InAppPurchasing
 				_ => null
 			};
 
-			return entry == null ? ProductStatus.NotFound : GetStatus(entry);
+			return entry == null ? ProductStatus.Unknown : GetStatus(entry);
 		}
 
 		internal ProductStatus GetStatus(IAPProductEntry product)

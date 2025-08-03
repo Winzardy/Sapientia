@@ -21,24 +21,35 @@ namespace Trading.InAppPurchasing
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
-			var success = IAPManager.CanPurchase(product, out var localError);
 
-			if (localError != null)
-				error = new TradePayError(ERROR_CATEGORY, (int) localError.Value.code, localError);
+			if (board.Contains<PurchaseReceipt>())
+				return true;
+
+			var success = IAPManager.CanPurchase(product, out var iapError);
+
+			if (iapError != null)
+				error = new TradePayError(ERROR_CATEGORY, (int) iapError.Value.code, iapError);
 
 			return success;
 		}
 
 		protected override async Task<IAPTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
-			var result = await IAPManager.PurchaseAsync(product, cancellationToken);
+			PurchaseReceipt? receipt = board.Contains<PurchaseReceipt>()
+				? board.Get<PurchaseReceipt>()
+				: null;
 
-			if (!result.success)
-				return null;
+			if (!receipt.HasValue)
+			{
+				var result = await IAPManager.PurchaseAsync(product, cancellationToken);
 
-			return new IAPTradeReceipt(in result.receipt);
+				if (!result.success)
+					return null;
+
+				receipt = result.receipt;
+			}
+
+			return new IAPTradeReceipt(receipt.Value);
 		}
 	}
-
-
 }

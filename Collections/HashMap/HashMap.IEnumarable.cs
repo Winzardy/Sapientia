@@ -9,13 +9,13 @@ namespace Sapientia.Collections
 
 		IEnumerator IEnumerable.GetEnumerator() => GetPairEnumerator();
 
-		public Enumerator GetEnumerator() => new (this);
-
 		public IEnumerator<KeyValuePair<TKey, TValue>> GetPairEnumerator()
 		{
 			foreach (var (key, index) in _keyToIndex)
 				yield return new KeyValuePair<TKey, TValue>(key, _values[index]);
 		}
+
+		public Enumerator GetEnumerator() => new(this);
 
 		public ref struct Enumerator
 		{

@@ -1,6 +1,7 @@
 using System;
 using Content;
 using Sapientia;
+using Sapientia.Collections;
 
 namespace Trading
 {
@@ -20,6 +21,8 @@ namespace Trading
 		{
 			_id = id;
 		}
+
+		public RefEnumerator<TraderOfferEntry> GetEnumerator() => new(offers);
 	}
 
 	/// <remarks>

@@ -4,7 +4,7 @@ namespace InAppPurchasing
 {
 	public interface IInAppPurchasingIntegration : IInAppPurchasingEvents
 	{
-		public bool TryGetStatus(IAPProductEntry product, out ProductStatus status);
+		public bool TryGetStatus(IAPProductEntry product,out ProductStatus status);
 
 		public bool IsRestoreTransactionsSupported { get; }
 
@@ -90,9 +90,17 @@ namespace InAppPurchasing
 	public interface IInAppPurchasingEvents
 	{
 		public event PurchaseCompleted PurchaseCompleted;
+
+		/// <summary>
+		/// Восстановленная покупка, то что не завершилось в момент покупки, например Deferred (отложенная) покупка или Restore
+		/// </summary>
+		public event PurchaseCompleted RecoveredPurchaseCompleted;
+
 		public event PurchaseFailed PurchaseFailed;
 		public event PurchaseRequested PurchaseRequested;
 		public event PurchaseCanceled PurchaseCanceled;
+
+		public event PurchaseDeferred PurchaseDeferred;
 
 		/// <summary>
 		/// Перехватить Promotional покупку (такое пока только в <see href="https://docs.unity3d.com/Packages/com.unity.purchasing@4.12/api/UnityEngine.Purchasing.IAppleConfiguration.html" langword="external">Apple</see>)
@@ -117,6 +125,9 @@ namespace InAppPurchasing
 
 	public delegate void PurchaseCanceled(IAPProductEntry product, object rawData = null);
 
+	/// <summary>
+	/// Сообщает о том, что покупка была отложена, не покупка!
+	/// </summary>
 	public delegate void PurchaseDeferred(IAPProductEntry product, object rawData = null);
 
 	public delegate void PromotionalPurchaseIntercepted(IAPProductEntry product, object rawData = null);
