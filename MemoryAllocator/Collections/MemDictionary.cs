@@ -56,7 +56,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemDictionary(WorldState worldState, int capacity)
+		public MemDictionary(WorldState worldState, in MemDictionary<TKey, TValue> other)
+		{
+			E.ASSERT(other.IsCreated);
+
+			this = other;
+			buckets = new MemArray<int>(worldState, other.buckets);
+			entries = new MemArray<Entry>(worldState, other.entries);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public MemDictionary(WorldState worldState, int capacity = 8)
 		{
 			this = default;
 			Initialize(worldState, capacity);
@@ -165,6 +175,19 @@ namespace Sapientia.MemoryAllocator
 
 			success = false;
 			return ref UnsafeExt.DefaultRef<TValue>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref TValue GetOrCreateValue(WorldState worldState, TKey key, TValue defaultValue = default)
+		{
+			var entry = FindEntry(worldState, key);
+			if (entry >= 0)
+			{
+				return ref entries[worldState, entry].value;
+			}
+
+			Add(worldState, key, defaultValue);
+			return ref GetValue(worldState, key);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
