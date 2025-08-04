@@ -8,6 +8,26 @@ namespace Sapientia.Collections
 	/// </summary>
 	public static class DictionaryExt
 	{
+		public static TValue GetOrCreateValue<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, Func<TValue> createValueFunction)
+		{
+			if (!dict.TryGetValue(key, out var value))
+			{
+				value = createValueFunction.Invoke();
+				dict[key] = value;
+			}
+			return value;
+		}
+
+		public static TValue GetOrCreateValue<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key) where TValue : new()
+		{
+			if (!dict.TryGetValue(key, out var value))
+			{
+				value = new TValue();
+				dict[key] = value;
+			}
+			return value;
+		}
+
 		public static bool IsDictionaryEqual<TKey, TValue>(this Dictionary<TKey, TValue> a, Dictionary<TKey, TValue> b)
 		{
 			if (a.Equals(b))
