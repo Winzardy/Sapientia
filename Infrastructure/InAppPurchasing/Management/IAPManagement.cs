@@ -227,8 +227,11 @@ namespace InAppPurchasing
 					service.PurchaseCanceled -= OnCanceled;
 				}
 
-				void OnCompleted(in PurchaseReceipt receipt, object rawData)
+				void OnCompleted(in PurchaseReceipt receipt, bool processing, object rawData)
 				{
+					if (!processing || receipt.ToEntry() != entry)
+						return;
+
 					tcs.TrySetResult(new PurchaseResult(true)
 					{
 						receipt = receipt,
@@ -236,11 +239,21 @@ namespace InAppPurchasing
 					});
 				}
 
-				void OnFailed(IAPProductEntry product, string error, object rawData) =>
+				void OnFailed(IAPProductEntry product, string error, object rawData)
+				{
+					if (product != entry)
+						return;
+
 					tcs.TrySetResult(PurchaseResult.Failed);
+				}
 
 				void OnCanceled(IAPProductEntry product, object rawData)
-					=> tcs.TrySetResult(PurchaseResult.Failed);
+				{
+					if (product != entry)
+						return;
+
+					tcs.TrySetResult(PurchaseResult.Failed);
+				}
 			}
 
 			void Cancel() => tcs.TrySetCanceled(cancellationToken);

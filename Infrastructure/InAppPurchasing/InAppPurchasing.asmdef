@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Content",
-        "Sapientia"
+        "Sapientia",
+        "Messaging"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

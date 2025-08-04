@@ -9,7 +9,7 @@ namespace InAppPurchasing
 	{
 		public void Initialize();
 		public bool Contains(string transactionId);
-		public InAppPurchasingRegisterResult Register(string transactionId, PurchaseReceipt receipt);
+		public InAppPurchasingRegisterResult Register(in PurchaseReceipt receipt);
 		PurchaseReceipt? GetReceipt(string transactionId);
 
 		public string[] GetAllTransactions();

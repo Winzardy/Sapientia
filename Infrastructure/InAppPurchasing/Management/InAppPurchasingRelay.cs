@@ -5,7 +5,6 @@ namespace InAppPurchasing
 	internal class InAppPurchasingRelay : Relay<IInAppPurchasingIntegration>, IInAppPurchasingEvents
 	{
 		public event PurchaseCompleted PurchaseCompleted;
-		public event PurchaseCompleted RecoveredPurchaseCompleted;
 		public event PurchaseFailed PurchaseFailed;
 		public event PurchaseRequested PurchaseRequested;
 		public event PurchaseCanceled PurchaseCanceled;
@@ -15,7 +14,6 @@ namespace InAppPurchasing
 		protected override void OnBind(IInAppPurchasingIntegration integration)
 		{
 			integration.PurchaseCompleted += OnPurchaseCompleted;
-			integration.RecoveredPurchaseCompleted += OnRecoveredPurchaseCompleted;
 			integration.PurchaseDeferred += OnPurchaseDeferred;
 
 			integration.PurchaseFailed += OnPurchaseFailed;
@@ -28,7 +26,6 @@ namespace InAppPurchasing
 		protected override void OnClear(IInAppPurchasingIntegration integration)
 		{
 			integration.PurchaseCompleted -= OnPurchaseCompleted;
-			integration.RecoveredPurchaseCompleted -= OnRecoveredPurchaseCompleted;
 			integration.PurchaseDeferred -= OnPurchaseDeferred;
 
 			integration.PurchaseFailed -= OnPurchaseFailed;
@@ -38,21 +35,15 @@ namespace InAppPurchasing
 			integration.PromotionalPurchaseIntercepted -= OnPromotionalPurchaseIntercepted;
 		}
 
-		private void OnPurchaseCompleted(in PurchaseReceipt receipt, object rawData)
+		private void OnPurchaseCompleted(in PurchaseReceipt receipt, bool isProcessing, object rawData)
 		{
-			IAPDebug.Log($"[{receipt.productType}] [ {receipt.productId} ] purchased");
-			PurchaseCompleted?.Invoke(in receipt, rawData);
-		}
-
-		private void OnRecoveredPurchaseCompleted(in PurchaseReceipt receipt, object rawData)
-		{
-			IAPDebug.Log($"[{receipt.productType}] [ {receipt.productId} ] recovered purchase");
-			RecoveredPurchaseCompleted?.Invoke(in receipt, rawData);
+			IAPDebug.Log($"[{receipt.productType}] [ {receipt.productId} ] purchased (processing: {isProcessing})");
+			PurchaseCompleted?.Invoke(in receipt, isProcessing, rawData);
 		}
 
 		private void OnPurchaseDeferred(IAPProductEntry product, object rawData)
 		{
-			IAPDebug.Log($"[{product.Type}] [ {product.Id} ]  purchase defereed");
+			IAPDebug.Log($"[{product.Type}] [ {product.Id} ] purchase deferred");
 			PurchaseDeferred?.Invoke(product, rawData);
 		}
 

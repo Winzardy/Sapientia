@@ -4,7 +4,7 @@ namespace InAppPurchasing
 {
 	public interface IInAppPurchasingIntegration : IInAppPurchasingEvents
 	{
-		public bool TryGetStatus(IAPProductEntry product,out ProductStatus status);
+		public bool TryGetStatus(IAPProductEntry product, out ProductStatus status);
 
 		public bool IsRestoreTransactionsSupported { get; }
 
@@ -91,11 +91,6 @@ namespace InAppPurchasing
 	{
 		public event PurchaseCompleted PurchaseCompleted;
 
-		/// <summary>
-		/// Восстановленная покупка, то что не завершилось в момент покупки, например Deferred (отложенная) покупка или Restore
-		/// </summary>
-		public event PurchaseCompleted RecoveredPurchaseCompleted;
-
 		public event PurchaseFailed PurchaseFailed;
 		public event PurchaseRequested PurchaseRequested;
 		public event PurchaseCanceled PurchaseCanceled;
@@ -117,7 +112,11 @@ namespace InAppPurchasing
 
 	#region Delegates
 
-	public delegate void PurchaseCompleted(in PurchaseReceipt receipt, object rawData = null);
+	/// <param name="live">
+	/// <c>true</c>, если покупка завершилась в момент запроса (live);
+	/// <c>false</c>, если она была восстановлена или отложена (например, Restore или Deferred).
+	/// </param>
+	public delegate void PurchaseCompleted(in PurchaseReceipt receipt, bool live, object rawData = null);
 
 	public delegate void PurchaseFailed(IAPProductEntry product, string error, object rawData = null);
 
