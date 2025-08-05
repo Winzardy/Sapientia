@@ -1,3 +1,6 @@
+#if DebugLog
+#define DEBUG
+#endif
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,22 +33,25 @@ namespace InAppPurchasing
 	public class IAPManagement : IDisposable
 	{
 		private IInAppPurchasingIntegration _integration;
+		private readonly IInAppPurchasingService _service;
+		private readonly IInAppPurchasingGrantCenter _grantCenter;
 
 		private readonly ProductInfo _emptyProductInfo = default;
 		private readonly SubscriptionInfo _emptySubscriptionInfo = default;
 
 		private readonly InAppPurchasingRelay _relay;
-		private IInAppPurchasingService _service;
 
 		internal IInAppPurchasingEvents Events => _relay;
 		internal IInAppPurchasingIntegration Integration => _integration;
 
-		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingService service)
+		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingService service,
+			IInAppPurchasingGrantCenter grantCenter)
 		{
 			_relay = new InAppPurchasingRelay();
 
-			_service = service;
 			SetIntegration(integration);
+			_service = service;
+			_grantCenter = grantCenter;
 		}
 
 		public void Dispose() => _relay.Dispose();
@@ -334,7 +340,7 @@ namespace InAppPurchasing
 		internal IInAppPurchasingIntegration SetIntegration(IInAppPurchasingIntegration integration)
 		{
 			var prev = _integration;
-#if DebugLog
+#if DEBUG
 			if (_integration?.GetType() == integration.GetType())
 			{
 				IAPDebug.LogWarning($"Same integration: {_integration.Name}");
@@ -349,6 +355,10 @@ namespace InAppPurchasing
 
 			return prev;
 		}
+
+#if DEBUG
+		internal IInAppPurchasingGrantCenter GrantCenter => _grantCenter;
+#endif
 	}
 
 	public struct PurchaseResult

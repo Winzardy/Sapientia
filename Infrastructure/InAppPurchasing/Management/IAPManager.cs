@@ -1,5 +1,5 @@
 #if DebugLog
-#define FAKE
+#define DEBUG
 #endif
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -37,7 +37,6 @@ namespace InAppPurchasing
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool CanPurchase(IAPProductType type, string product, out IAPPurchaseError? error)
 			=> management.CanPurchase(type, product, out error);
-
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IAPProductEntry GetEntry(IAPProductType type, string product)
@@ -117,12 +116,14 @@ namespace InAppPurchasing
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool ContainsReceipt(string transactionId) => management.ContainsReceipt(transactionId);
 
-#if FAKE
+#if DEBUG
 		public static IInAppPurchasingIntegration Integration => management.Integration;
 
 		/// <returns>Предыдущий сервис</returns>
 		public static IInAppPurchasingIntegration SetService(IInAppPurchasingIntegration integration) =>
 			management.SetIntegration(integration);
+
+		public static IInAppPurchasingGrantCenter GrantCenter => management.GrantCenter;
 #endif
 	}
 }

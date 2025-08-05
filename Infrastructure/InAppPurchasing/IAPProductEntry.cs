@@ -61,7 +61,7 @@ namespace InAppPurchasing
 
 	public static class IAPProductEntryExtensions
 	{
-		public static string GetId(this IAPProductEntry product, in IAPBillingEntry billing)
+		public static string GetBillingId(this IAPProductEntry product, in IAPBillingEntry billing)
 		{
 #if ENABLE_IAP_EMPTY_CHECK
 			if (product.id.IsNullOrEmpty())
