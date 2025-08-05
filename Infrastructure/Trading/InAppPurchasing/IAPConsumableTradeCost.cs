@@ -8,7 +8,7 @@ namespace Trading.InAppPurchasing
 {
 	[Serializable]
 	[TradeAccess(TradeAccessType.High)]
-	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>
+	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>,IAPTradeCost
 	{
 		private const string ERROR_CATEGORY = "InAppPurchasing";
 
@@ -17,6 +17,8 @@ namespace Trading.InAppPurchasing
 		public override int Priority => TradeCostPriority.HIGH;
 
 		protected override string ReceiptId => product.ToReceiptId();
+
+		public IAPProductEntry GetProductEntry() => product.Read();
 
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
