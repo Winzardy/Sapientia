@@ -93,14 +93,8 @@ namespace Sapientia.Reflection
 							key = Enum.Parse(keyType, step.key, ignoreCase: true);
 						else if (keyType == typeof(int))
 							key = int.Parse(step.key);
-						else if (keyType == typeof(string))
-							key = step.key;
 						else
-						{
-							exception = new NotSupportedException(
-								$"Unsupported dictionary key type: {keyType.Name} in [ {step.name} ], path: {Path}");
-							return default;
-						}
+							key = step.key;
 
 						if (!dictionary.Contains(key))
 						{
