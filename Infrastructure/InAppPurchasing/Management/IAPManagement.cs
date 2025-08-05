@@ -34,7 +34,6 @@ namespace InAppPurchasing
 	{
 		private IInAppPurchasingIntegration _integration;
 		private readonly IInAppPurchasingService _service;
-		private readonly IInAppPurchasingGrantCenter _grantCenter;
 
 		private readonly ProductInfo _emptyProductInfo = default;
 		private readonly SubscriptionInfo _emptySubscriptionInfo = default;
@@ -44,14 +43,23 @@ namespace InAppPurchasing
 		internal IInAppPurchasingEvents Events => _relay;
 		internal IInAppPurchasingIntegration Integration => _integration;
 
+#if DEBUG
+		internal IInAppPurchasingGrantCenter GrantCenter { get; }
+#endif
 		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingService service,
-			IInAppPurchasingGrantCenter grantCenter)
+#if DEBUG
+			IInAppPurchasingGrantCenter grantCenter
+#endif
+		)
 		{
 			_relay = new InAppPurchasingRelay();
 
 			SetIntegration(integration);
 			_service = service;
-			_grantCenter = grantCenter;
+
+#if DEBUG
+			GrantCenter = grantCenter;
+#endif
 		}
 
 		public void Dispose() => _relay.Dispose();
@@ -355,10 +363,6 @@ namespace InAppPurchasing
 
 			return prev;
 		}
-
-#if DEBUG
-		internal IInAppPurchasingGrantCenter GrantCenter => _grantCenter;
-#endif
 	}
 
 	public struct PurchaseResult
