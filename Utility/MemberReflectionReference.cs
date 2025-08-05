@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using Sapientia.Extensions;
 
 namespace Sapientia.Reflection
 {
@@ -52,7 +54,7 @@ namespace Sapientia.Reflection
 
 				if (obj == null)
 				{
-					exception = new NullReferenceException($"Object became null at step [ {i+1} ]" +
+					exception = new NullReferenceException($"Object became null at step [ {i + 1} ]" +
 						$" with name [ {step.name} ], path: {Path}");
 					return default;
 				}
@@ -76,6 +78,43 @@ namespace Sapientia.Reflection
 					{
 						exception = new ArgumentException(
 							$"Step '{step.name}' is marked as array element, but resolved object is not IList (actual: {obj?.GetType().Name ?? "null"}), path: {Path}");
+						return default;
+					}
+				}
+				else if (step.IsDictionaryElement)
+				{
+					obj = obj.GetValueByReflectionSafe(step.name);
+
+					if (obj is IDictionary dictionary)
+					{
+						var keyType = obj.GetType().GetGenericArguments()[0];
+						object key;
+						if (keyType.IsEnum)
+							key = Enum.Parse(keyType, step.key, ignoreCase: true);
+						else if (keyType == typeof(int))
+							key = int.Parse(step.key);
+						else if (keyType == typeof(string))
+							key = step.key;
+						else
+						{
+							exception = new NotSupportedException(
+								$"Unsupported dictionary key type: {keyType.Name} in [ {step.name} ], path: {Path}");
+							return default;
+						}
+
+						if (!dictionary.Contains(key))
+						{
+							exception = new KeyNotFoundException(
+								$"Key [ {step.key} ] by type [ {keyType.Name} ] not found in dictionary [ {step.name} ], path: {Path}");
+							return default;
+						}
+
+						obj = dictionary[key];
+					}
+					else
+					{
+						exception = new ArgumentException(
+							$"Step '{step.name}' is marked as dictionary element, but resolved object is not IDictionary (actual: {obj?.GetType().Name ?? "null"}), path: {Path}");
 						return default;
 					}
 				}
@@ -111,13 +150,14 @@ namespace Sapientia.Reflection
 		public override string ToString() => string.Join(".", steps ?? Array.Empty<MemberReferencePathStep>());
 
 		public string ToString(bool type) =>
-			string.Join(".", steps ?? Array.Empty<MemberReferencePathStep>()) + (type ? $" ({typeof(T).Name})" : "");
+			string.Join(".", steps) + (type ? $" ({typeof(T).Name})" : "");
 	}
 
 	[Serializable]
 	public struct MemberReferencePathStep
 	{
 		public string name;
+		public string key;
 
 		/// <summary>
 		/// Индекс в массиве, если > 0, значит объект массив (чтобы получить индекс -1)
@@ -127,16 +167,21 @@ namespace Sapientia.Reflection
 		public bool IsArrayElement => index > 0;
 		public int ArrayElementIndex => index - 1;
 
-		public MemberReferencePathStep(string name, int index = -1)
+		public bool IsDictionaryElement => !key.IsNullOrEmpty();
+
+		public MemberReferencePathStep(string name, int index = -1, string key = null)
 		{
 			this.name = name;
 			this.index = index >= 0 ? index + 1 : 0;
+			this.key = key;
 		}
 
 		public static implicit operator MemberReferencePathStep(string name) => new(name);
 		public static implicit operator MemberReferencePathStep((string name, int index) tuple) => new(tuple.name, tuple.index);
+		public static implicit operator MemberReferencePathStep((string name, string key) tuple) => new(tuple.name, key: tuple.key);
 
-		public override string ToString() => IsArrayElement ? $"{name}[{ArrayElementIndex}]" : name;
+		public override string ToString() =>
+			IsArrayElement ? $"{name}[{ArrayElementIndex}]" : IsDictionaryElement ? $"{name}" + "{" + key + "}" : name;
 	}
 
 	public interface IMemberReflectionReference
