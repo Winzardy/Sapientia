@@ -46,9 +46,9 @@ namespace InAppPurchasing
 #if DEBUG
 		internal IInAppPurchasingGrantCenter GrantCenter { get; }
 #endif
-		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingService service,
+		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingService service
 #if DEBUG
-			IInAppPurchasingGrantCenter grantCenter
+			, IInAppPurchasingGrantCenter grantCenter
 #endif
 		)
 		{
