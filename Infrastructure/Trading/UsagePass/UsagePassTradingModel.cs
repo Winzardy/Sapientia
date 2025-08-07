@@ -2,32 +2,32 @@ using System;
 using Sapientia;
 using Sapientia.Collections;
 
-namespace Trading.UsageLimit
+namespace Trading.UsagePass
 {
-	public interface IUsageLimitBackend : ITradeReceiptRegistry<UsageLimitTradeReceipt>
+	public interface IUsagePassBackend : ITradeReceiptRegistry<UsagePassTradeReceipt>
 	{
 		public ref readonly UsageLimitModel GetModel(string key);
 	}
 
 	[Serializable]
-	public class UsageLimitTradingModel : IUsageLimitBackend
+	public class UsagePassTradingModel : IUsagePassBackend
 	{
 		public HashMap<string, UsageLimitModel> keyToModel;
-		public HashMap<string, UsageLimitTradeReceipt> keyToReceipt;
+		public HashMap<string, UsagePassTradeReceipt> keyToReceipt;
 
-		public UsageLimitTradingModel()
+		public UsagePassTradingModel()
 		{
 			keyToModel = new HashMap<string, UsageLimitModel>();
-			keyToReceipt = new HashMap<string, UsageLimitTradeReceipt>();
+			keyToReceipt = new HashMap<string, UsagePassTradeReceipt>();
 		}
 
-		public UsageLimitTradingModel(UsageLimitTradingModel source)
+		public UsagePassTradingModel(UsagePassTradingModel source)
 		{
 			keyToModel = new(source.keyToModel);
 			keyToReceipt = new(source.keyToReceipt);
 		}
 
-		public void Register(string tradeId, in UsageLimitTradeReceipt receipt)
+		public void Register(string tradeId, in UsagePassTradeReceipt receipt)
 		{
 			var key = receipt.GetKey(tradeId);
 			keyToReceipt.SetOrAdd(key, in receipt);
@@ -43,14 +43,14 @@ namespace Trading.UsageLimit
 
 		public bool Issue(Tradeboard board, string key)
 		{
-			var cost = board.Get<UsageLimitTradeCost>();
+			var cost = board.Get<UsagePassTradeCost>();
 			ref var model = ref keyToModel.GetOrAdd(key);
 			ref readonly var receipt = ref keyToReceipt.GetOrDefault(key);
 			var dateTime = new DateTime(receipt.timestamp);
 			if (board.IsRestored())
-				model.TryApplyUsage(in cost.usageLimit, dateTime, out _);
+				model.TryApplyUsage(in cost.limit, dateTime, out _);
 			else
-				model.ApplyUsage(in cost.usageLimit, dateTime);
+				model.ApplyUsage(in cost.limit, dateTime);
 			keyToReceipt.Remove(key);
 			return true;
 		}

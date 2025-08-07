@@ -3,25 +3,25 @@ using System.Threading;
 using System.Threading.Tasks;
 using Sapientia;
 
-namespace Trading.UsageLimit
+namespace Trading.UsagePass
 {
 	[Serializable]
-	public partial class UsageLimitTradeCost : TradeCostWithReceipt<UsageLimitTradeReceipt>
+	public partial class UsagePassTradeCost : TradeCostWithReceipt<UsagePassTradeReceipt>
 	{
-		public const string ERROR_CATEGORY = "UsageLimit";
+		public const string ERROR_CATEGORY = "UsagePass";
 
-		public UsageLimitEntry usageLimit;
+		public UsageLimitEntry limit;
 
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
 
-			var backend = board.Get<IUsageLimitBackend>();
+			var backend = board.Get<IUsagePassBackend>();
 			var key = GetReceiptKey(board.Id);
 			ref readonly var model = ref backend.GetModel(key);
 			var now = board.Get<IDateTimeProvider>().Now;
 
-			if (!usageLimit.CanApplyUsage(in model, now, out var limitApplyError))
+			if (!limit.CanApplyUsage(in model, now, out var limitApplyError))
 			{
 				if (board.IsRestored())
 					return true;
@@ -33,14 +33,14 @@ namespace Trading.UsageLimit
 			return true;
 		}
 
-		protected override Task<UsageLimitTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
+		protected override Task<UsagePassTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
 			var dateTime = board.Get<IDateTimeProvider>().Now;
-			UsageLimitTradeReceipt? receipt = new UsageLimitTradeReceipt(dateTime.Ticks);
+			UsagePassTradeReceipt? receipt = new UsagePassTradeReceipt(dateTime.Ticks);
 			return Task.FromResult(receipt);
 		}
 
-		protected override string GetReceiptKey(string tradeId) => UsageLimitTradeReceiptUtility.ToRecipeKey(tradeId);
+		protected override string GetReceiptKey(string tradeId) => UsagePassTradeReceiptUtility.ToRecipeKey(tradeId);
 
 		protected override bool CanRefund(Tradeboard board, out TradeCostRefundError? error)
 		{

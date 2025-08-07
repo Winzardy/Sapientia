@@ -1,15 +1,15 @@
 #if CLIENT
 using Sirenix.OdinInspector;
 
-namespace Trading.UsageLimit
+namespace Trading.UsagePass
 {
 	[TypeRegistryItem(
-		"\u2009Usage Limit", //В начале делаем отступ из-за отрисовки...
+		"\u2009Usage Pass", //В начале делаем отступ из-за отрисовки...
 		"",
-		SdfIconType.ShieldLockFill,
+		SdfIconType.ShieldLock,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B, darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B, lightIconColorA: A)]
-	public partial class UsageLimitTradeCost
+	public partial class UsagePassTradeCost
 	{
 	}
 }
