@@ -266,7 +266,7 @@ namespace InAppPurchasing
 					if (product != entry)
 						return;
 
-					tcs.TrySetResult(PurchaseResult.Failed);
+					tcs.TrySetResult(PurchaseResult.Canceled);
 				}
 			}
 
@@ -369,7 +369,7 @@ namespace InAppPurchasing
 	{
 		public bool success;
 
-		public string error;
+		public PurchaseErrorCode errorCode;
 
 		public PurchaseReceipt receipt;
 
@@ -380,6 +380,22 @@ namespace InAppPurchasing
 			this.success = success;
 		}
 
-		public static PurchaseResult Failed = new(false);
+		public static PurchaseResult Failed = new(false)
+		{
+			errorCode = PurchaseErrorCode.Failed
+		};
+
+		public static PurchaseResult Canceled = new(false)
+		{
+			errorCode = PurchaseErrorCode.Canceled
+		};
+	}
+
+	public enum PurchaseErrorCode
+	{
+		None,
+
+		Failed,
+		Canceled
 	}
 }

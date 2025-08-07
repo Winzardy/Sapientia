@@ -46,6 +46,9 @@ namespace Trading.InAppPurchasing
 			{
 				var result = await IAPManager.PurchaseAsync(product, cancellationToken);
 
+				if (result.errorCode == PurchaseErrorCode.Canceled)
+					throw new OperationCanceledException(cancellationToken);
+
 				if (!result.success)
 					return null;
 

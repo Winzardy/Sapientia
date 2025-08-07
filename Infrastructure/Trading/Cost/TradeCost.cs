@@ -27,6 +27,10 @@ namespace Trading
 
 	public readonly struct TradePayError
 	{
+		public const string CANCELLED_CATEGORY = "Cancelled";
+		public const string NOT_IMPLEMENTED_CATEGORY = "NotImplemented";
+		public const int CANCELLED_CODE = -1;
+
 		public readonly string category;
 		public readonly int code;
 		public readonly object rawData;
@@ -42,8 +46,11 @@ namespace Trading
 		{
 		}
 
-		public static TradePayError NotImplemented = new("NotImplemented");
+		public static TradePayError NotImplemented = new(NOT_IMPLEMENTED_CATEGORY);
+		public static TradePayError Cancelled = new(CANCELLED_CATEGORY, CANCELLED_CODE);
 		public static TradePayError? NotError => null;
+
+		public bool IsCancelled() => category == CANCELLED_CATEGORY && code == CANCELLED_CODE;
 
 		public override string ToString() => $"TradePayError: category: {category}, code: {code}, rawData: {rawData}";
 	}
