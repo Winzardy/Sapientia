@@ -2,9 +2,23 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public unsafe interface IKillSubscriber : IInterfaceProxyType
+	public interface IKillSubscriber : IInterfaceProxyType
 	{
 		public void EntityKilled(WorldState worldState, in Entity entity);
+	}
+
+	public struct AliveDuration : IComponent
+	{
+		public float currentDuration;
+		public OptionalValue<float> destroyDuration;
+	}
+
+	public struct AliveTimeDebt : IComponent
+	{
+		/// <summary>
+		/// Время, которое нужно отнять от длительности жизни
+		/// </summary>
+		public OneShotValue<float> timeDebt;
 	}
 
 	public struct KillCallback
@@ -22,7 +36,10 @@ namespace Sapientia.MemoryAllocator.State
 		public MemList<KillCallback> killCallbacks;
 	}
 
-	public struct KillRequest : IComponent {}
+	public struct KillRequest : IComponent
+	{
+		public bool dontDestroy;
+	}
 
 	public struct DelayKillRequest : IComponent
 	{
@@ -30,17 +47,6 @@ namespace Sapientia.MemoryAllocator.State
 	}
 
 	public struct DestroyRequest : IComponent {}
-
-	public struct DestroyStatePart : IWorldStatePart
-	{
-		public void Initialize(WorldState worldState, IndexedPtr self)
-		{
-			Archetype.RegisterArchetype<KillElement>(worldState, 2048).SetDestroyHandler<KillElementDestroyHandler>(worldState);
-			Archetype.RegisterArchetype<KillRequest>(worldState, 256);
-			Archetype.RegisterArchetype<DelayKillRequest>(worldState, 64);
-			Archetype.RegisterArchetype<DestroyRequest>(worldState, 256);
-		}
-	}
 
 	public unsafe struct KillElementDestroyHandler : IElementDestroyHandler<KillElement>
 	{

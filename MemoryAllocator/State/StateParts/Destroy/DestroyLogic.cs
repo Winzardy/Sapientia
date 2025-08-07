@@ -5,7 +5,12 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public readonly unsafe struct DestroyLogic
+	public interface IDestroyLogicContainer
+	{
+		public DestroyLogic DestroyLogic { get; }
+	}
+
+	public readonly unsafe struct DestroyLogic : IDestroyLogicContainer
 	{
 		public readonly WorldState worldState;
 
@@ -15,6 +20,9 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
 		public readonly ArchetypeContext<DelayKillRequest> delayKillRequestArchetype;
 
+		public readonly ArchetypeContext<AliveDuration> aliveDurationContext;
+		public readonly ArchetypeContext<AliveTimeDebt> aliveTimeDebtContext;
+
 		public DestroyLogic(WorldState worldState)
 		{
 			this.worldState = worldState;
@@ -23,6 +31,41 @@ namespace Sapientia.MemoryAllocator.State
 			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(worldState);
 			killRequestArchetype = new ArchetypeContext<KillRequest>(worldState);
 			delayKillRequestArchetype = new ArchetypeContext<DelayKillRequest>(worldState);
+
+			aliveDurationContext = new ArchetypeContext<AliveDuration>(worldState);
+			aliveTimeDebtContext = new ArchetypeContext<AliveTimeDebt>(worldState);
+		}
+
+		DestroyLogic IDestroyLogicContainer.DestroyLogic => this;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref AliveDuration GetAliveDuration(Entity entity)
+		{
+			return ref aliveDurationContext.GetElement(entity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref AliveDuration TryGetAliveDuration(Entity entity, out bool isExist)
+		{
+			return ref aliveDurationContext.TryGetElement(entity, out isExist);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public float GetTimeDebt(Entity entity)
+		{
+			return aliveTimeDebtContext.ReadElement(entity).timeDebt.GetValue(worldState.Tick);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetTimeDebt(Entity entity, out float timeDebt)
+		{
+			return aliveTimeDebtContext.ReadElement(entity).timeDebt.TryGetValue(worldState.Tick, out timeDebt);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetTimeDebt(Entity entity, float timeDebt)
+		{
+			aliveTimeDebtContext.GetElement(entity).timeDebt = new OneShotValue<float>(worldState.Tick, timeDebt);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

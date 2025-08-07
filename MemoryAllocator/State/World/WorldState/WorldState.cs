@@ -6,7 +6,12 @@ using Sapientia.MemoryAllocator.Core;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial struct WorldState : IEquatable<WorldState>, IDisposable
+	public interface IWorldStateContainer
+	{
+		public WorldState GetWorldState();
+	}
+
+	public partial struct WorldState : IEquatable<WorldState>, IDisposable, IWorldStateContainer
 	{
 		private SentinelPtr<WorldStateData> _worldStateData;
 		private bool _checkNullRef;
@@ -52,6 +57,11 @@ namespace Sapientia.MemoryAllocator
 			_worldStateData = MemoryExt.NullableMemAlloc<WorldStateData>();
 			_worldStateData.Value() = new WorldStateData(worldId, initialSize);
 			_checkNullRef = true;
+		}
+
+		public WorldState GetWorldState()
+		{
+			return this;
 		}
 
 		private void EnableInnerChecks()

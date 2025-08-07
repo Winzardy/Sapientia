@@ -13,19 +13,31 @@ namespace Submodules.Sapientia.Data
 #endif
 		where TEnum : unmanaged, Enum
 	{
+#if UNITY_EDITOR
 		/// <summary>
 		/// Поле предназначено для правильной сериализации на случай, если список статов будет изменён.
 		/// </summary>
-#if UNITY_EDITOR
 		[UnityEngine.HideInInspector]
 		public string statTypeName;
 #endif
 
-		#if UNITY_EDITOR
-		[Sirenix.OdinInspector.HideLabel]
+#if UNITY_EDITOR
 		[Sirenix.OdinInspector.EnumPaging]
-		#endif
+		[Sirenix.OdinInspector.HideLabel]
+#endif
 		public TEnum value;
+
+		public EnumSerializableContainer<TEnum1> Convert<TEnum1>()
+			where TEnum1 : unmanaged, Enum
+		{
+			return new EnumSerializableContainer<TEnum1>()
+			{
+#if UNITY_EDITOR
+				statTypeName = statTypeName,
+#endif
+				value = value.ToEnum<TEnum, TEnum1>(),
+			};
+		}
 
 		public static implicit operator TEnum(EnumSerializableContainer<TEnum> container)
 		{
@@ -38,12 +50,12 @@ namespace Submodules.Sapientia.Data
 		}
 
 #if UNITY_EDITOR
-		void UnityEngine.ISerializationCallbackReceiver.OnBeforeSerialize()
+		public void OnBeforeSerialize()
 		{
 			statTypeName = value.ToString();
 		}
 
-		void UnityEngine.ISerializationCallbackReceiver.OnAfterDeserialize()
+		public void OnAfterDeserialize()
 		{
 			if (statTypeName.IsNullOrEmpty() || !Enum.TryParse<TEnum>(statTypeName, out var enumValue))
 			{
