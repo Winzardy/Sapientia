@@ -258,11 +258,11 @@ namespace Sapientia.Collections
 			return true;
 		}
 
-		public static bool Contains<T>(this T[] array, T item)
+		public static bool ContainsElement<T>(this T[] array, T element)
 		{
 			for (int i = 0; i < array.Length; i++)
 			{
-				if (array[i]!.Equals(item))
+				if (array[i]!.Equals(element))
 					return true;
 			}
 

@@ -1,4 +1,3 @@
-
 using Sapientia.Pooling;
 
 namespace Trading
@@ -45,22 +44,10 @@ namespace Trading
 		public TradePayError? payError;
 		public TradeReceiveError? receiveError;
 
-		public object rawData;
-
 		public TradeExecuteError(TradePayError? payError, TradeReceiveError? receiveError)
 		{
 			this.payError = payError;
 			this.receiveError = receiveError;
-
-			rawData = null;
-		}
-
-		public TradeExecuteError(object rawData)
-		{
-			payError = null;
-			receiveError = null;
-
-			this.rawData = rawData;
 		}
 
 		public static TradeExecuteError NotImplemented = new(TradePayError.NotImplemented, TradeReceiveError.NotImplemented);
@@ -76,20 +63,14 @@ namespace Trading
 				{
 					sb.Append(payError);
 
-					if (rawData != null || receiveError.HasValue)
+					if (receiveError.HasValue)
 						sb.Append(separator);
 				}
 
 				if (receiveError.HasValue)
 				{
 					sb.Append(payError);
-
-					if (rawData != null)
-						sb.Append(separator);
 				}
-
-				if (rawData != null)
-					sb.Append(rawData);
 
 				return sb.ToString();
 			}
