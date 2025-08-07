@@ -43,7 +43,7 @@ namespace Trading
 		}
 
 		public static TradePayError NotImplemented = new("NotImplemented");
-		public static TradePayError? NotError = null;
+		public static TradePayError NotError = new TradePayError("Not Error");
 
 		public override string ToString() => $"TradePayError: category: {category}, code: {code}, rawData: {rawData}";
 	}
