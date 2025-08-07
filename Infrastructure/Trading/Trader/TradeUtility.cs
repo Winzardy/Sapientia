@@ -51,7 +51,7 @@ namespace Trading
 		}
 
 		public static TradeExecuteError NotImplemented = new(TradePayError.NotImplemented, TradeReceiveError.NotImplemented);
-		public static TradeExecuteError NotError = new TradeExecuteError(null, null);
+		public static TradeExecuteError? NotError => null;
 
 		public override string ToString() => ToString(", ");
 

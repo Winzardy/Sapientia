@@ -42,7 +42,7 @@ namespace Trading
 		}
 
 		public static TradeReceiveError NotImplemented = new("NotImplemented");
-		public static TradeReceiveError NotError = new ("NotError");
+		public static TradeReceiveError? NotError => null;
 
 		public override string ToString() => $"TradeReceiveError: category: {category}, code: {code}, rawData: {rawData}";
 	}
