@@ -13,7 +13,6 @@ namespace Trading
 		internal bool CanExecute(Tradeboard board, out TradeReceiveError? error) => CanReceive(board, out error);
 		internal bool Execute(Tradeboard board) => Receive(board);
 
-
 		/// <summary>
 		/// Доступно ли для получения? пример: нет места в инвентаре
 		/// </summary>
@@ -43,5 +42,8 @@ namespace Trading
 		}
 
 		public static TradeReceiveError NotImplemented = new("NotImplemented");
+		public static TradeReceiveError? NotError = null;
+
+		public override string ToString() => $"TradeReceiveError: category: {category}, code: {code}, rawData: {rawData}";
 	}
 }

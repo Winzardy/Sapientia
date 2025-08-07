@@ -94,7 +94,7 @@ namespace Sapientia.Extensions
 
 				if (useMs && ts.Milliseconds > 0)
 					sb.Append($"{ts.Milliseconds}{space}{MILLISECOND_LABEL}{SEPARATOR}");
-				else
+				else if(ts.Milliseconds > 0)
 					ts = ts.Add(TimeSpan.FromSeconds(1));
 
 				if (ts.TotalSeconds > 0)

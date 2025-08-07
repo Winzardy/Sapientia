@@ -17,10 +17,7 @@ namespace Trading
 
 		public string Id => _id;
 
-		void IExternallyIdentifiable.SetId(string id)
-		{
-			_id = id;
-		}
+		void IExternallyIdentifiable.SetId(string id) => _id = id;
 
 		public RefEnumerator<TraderOfferEntry> GetEnumerator() => new(offers);
 	}
@@ -31,8 +28,9 @@ namespace Trading
 	[Serializable]
 	public partial struct TraderOfferEntry
 	{
-		//TODO: добавить прогрессивную сделку, проблема что еще эту прогрессию где-то надо фиксировать
 		public ContentReference<TradeEntry> trade;
+
+		[Obsolete("Временное решение, пока нет Condition")]
 		public bool checkPurchased;
 	}
 }

@@ -8,7 +8,7 @@ namespace Trading.InAppPurchasing
 {
 	[Serializable]
 	[TradeAccess(TradeAccessType.High)]
-	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>,IAPTradeCost
+	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>, IAPTradeCost
 	{
 		private const string ERROR_CATEGORY = "InAppPurchasing";
 
@@ -16,16 +16,17 @@ namespace Trading.InAppPurchasing
 
 		public override int Priority => TradeCostPriority.HIGH;
 
-		protected override string ReceiptId => product.ToReceiptId();
-
-		public IAPProductEntry GetProductEntry() => product.Read();
-
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
 
 			if (board.Contains<PurchaseReceipt>())
+			{
+				var receipt = board.Get<PurchaseReceipt>();
+				if (!board.Contains<bool>(TradeboardUtility.RESTORE_BOOL_KEY))
+					board.Register(receipt.isRestored, TradeboardUtility.RESTORE_BOOL_KEY);
 				return true;
+			}
 
 			var success = IAPManager.CanPurchase(product, out var iapError);
 
@@ -53,5 +54,9 @@ namespace Trading.InAppPurchasing
 
 			return new IAPTradeReceipt(receipt.Value);
 		}
+
+		public IAPProductEntry GetProductEntry() => product.Read();
+
+		protected override string GetReceiptKey(string _) => product.ToReceiptKey();
 	}
 }

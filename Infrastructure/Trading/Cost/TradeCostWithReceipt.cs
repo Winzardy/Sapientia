@@ -8,8 +8,6 @@ namespace Trading
 	public abstract class TradeCostWithReceipt<T> : TradeCost, ITradeCostWithReceipt
 		where T : struct, ITradeReceipt
 	{
-		protected abstract string ReceiptId { get; }
-
 		protected sealed override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
 			var canIssue = false;
@@ -24,11 +22,10 @@ namespace Trading
 				else
 				{
 					var backend = board.Get<ITradingBackend>();
-					var registry = backend.Get<T>();
-					canIssue = registry.CanIssue(board, ReceiptId);
+					var registry = backend.GetRegistry<T>();
+					canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
 				}
 			}
-
 			OnAfterPayCheck(board);
 
 			return canIssue;
@@ -46,14 +43,15 @@ namespace Trading
 				else
 				{
 					var backend = board.Get<ITradingBackend>();
-					var registry = backend.Get<T>();
-					issue = registry.Issue(board, ReceiptId);
+					var registry = backend.GetRegistry<T>();
+					issue = registry.Issue(board, GetReceiptKey(board.Id));
 				}
 			}
-
 			OnAfterPay(board);
 			return issue;
 		}
+
+		protected abstract string GetReceiptKey(string id);
 
 		protected abstract bool CanFetch(Tradeboard board, out TradePayError? error);
 
@@ -89,7 +87,7 @@ namespace Trading
 
 	public interface ITradeReceipt
 	{
-		public string Key { get; }
+		public string GetKey(string tradeId);
 
 		public bool NeedPush() => true;
 	}
@@ -115,7 +113,7 @@ namespace Trading
 			if (tradeId.IsNullOrEmpty())
 				throw TradingDebug.NullException("Trade ID cannot be null or empty");
 
-			var registry = backend.Get<T>();
+			var registry = backend.GetRegistry<T>();
 
 			if (registry == null)
 				throw TradingDebug.Exception($"Not found receipt registry by type [ {typeof(T)} ]");

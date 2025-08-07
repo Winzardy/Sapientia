@@ -19,16 +19,14 @@ namespace Trading.Advertising
 		public int group;
 		public int count = 1;
 
-		protected override string ReceiptId => placement.ToReceiptId(group);
-
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
 
 			if (board.Contains<IAdvertisingBackend>())
 			{
-				var model = board.Get<IAdvertisingBackend>();
-				if (model.GetTokenCount(group) >= count)
+				var backend = board.Get<IAdvertisingBackend>();
+				if (backend.GetTokenCount(group) >= count)
 					return true;
 			}
 
@@ -63,6 +61,8 @@ namespace Trading.Advertising
 			var dateTime = board.Get<IDateTimeProvider>().Now;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
+
+		protected override string GetReceiptKey(string _) => placement.ToReceiptKey(group);
 
 		/// <summary>
 		/// <para>Никто не в силах вернуть потраченное время от рекламы T_T...</para>

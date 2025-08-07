@@ -258,6 +258,17 @@ namespace Sapientia.Collections
 			return true;
 		}
 
+		public static bool Contains<T>(this T[] array, T item)
+		{
+			for (int i = 0; i < array.Length; i++)
+			{
+				if (array[i]!.Equals(item))
+					return true;
+			}
+
+			return false;
+		}
+
 		public static bool ContainsIndex<T>(this T[] array, int index)
 		{
 			return index >= 0 && index < array.Length;

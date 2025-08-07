@@ -1,16 +1,19 @@
+
+using Sapientia.Pooling;
+
 namespace Trading
 {
 	public static partial class TradeUtility
 	{
-		internal static bool CanExecute(this TradeEntry trade, Tradeboard board, out TradeExecuteError? error)
+		public static bool CanExecute(this TradeEntry trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
 			var result = true;
 			error = null;
 
-			if (!trade.cost.CanExecute(board, out var payError))
+			if (!trade.cost.CanExecute(tradeboard, out var payError))
 				result = false;
 
-			if (!trade.reward.CanExecute(board, out var receiveError))
+			if (!trade.reward.CanExecute(tradeboard, out var receiveError))
 				result = false;
 
 			if (!result)
@@ -19,19 +22,19 @@ namespace Trading
 			return result;
 		}
 
-		internal static bool Execute(this TradeEntry trade, Tradeboard board)
+		public static bool Execute(this TradeEntry trade, Tradeboard tradeboard)
 		{
 			// Сначала платим
-			var success = trade.cost.Execute(board);
+			var success = trade.cost.Execute(tradeboard);
 			if (!success)
 				return false;
 
 			// Потом получаем
-			success = trade.reward.Execute(board);
+			success = trade.reward.Execute(tradeboard);
 
 			// Если что-то пошло не по плану возвращаем
 			if (!success)
-				trade.cost.ExecuteRefund(board);
+				trade.cost.ExecuteRefund(tradeboard);
 
 			return success;
 		}
@@ -42,12 +45,54 @@ namespace Trading
 		public TradePayError? payError;
 		public TradeReceiveError? receiveError;
 
+		public object rawData;
+
 		public TradeExecuteError(TradePayError? payError, TradeReceiveError? receiveError)
 		{
 			this.payError = payError;
 			this.receiveError = receiveError;
+
+			rawData = null;
+		}
+
+		public TradeExecuteError(object rawData)
+		{
+			payError = null;
+			receiveError = null;
+
+			this.rawData = rawData;
 		}
 
 		public static TradeExecuteError NotImplemented = new(TradePayError.NotImplemented, TradeReceiveError.NotImplemented);
+		public static TradeExecuteError? NotError = null;
+
+		public override string ToString() => ToString(", ");
+
+		public string ToString(string separator)
+		{
+			using (StringBuilderPool.Get(out var sb))
+			{
+				if (payError.HasValue)
+				{
+					sb.Append(payError);
+
+					if (rawData != null || receiveError.HasValue)
+						sb.Append(separator);
+				}
+
+				if (receiveError.HasValue)
+				{
+					sb.Append(payError);
+
+					if (rawData != null)
+						sb.Append(separator);
+				}
+
+				if (rawData != null)
+					sb.Append(rawData);
+
+				return sb.ToString();
+			}
+		}
 	}
 }

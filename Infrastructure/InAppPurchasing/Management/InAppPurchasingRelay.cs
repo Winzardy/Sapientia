@@ -35,10 +35,10 @@ namespace InAppPurchasing
 			integration.PromotionalPurchaseIntercepted -= OnPromotionalPurchaseIntercepted;
 		}
 
-		private void OnPurchaseCompleted(in PurchaseReceipt receipt, bool isProcessing, object rawData)
+		private void OnPurchaseCompleted(in PurchaseReceipt receipt, bool live, object rawData)
 		{
-			IAPDebug.Log($"[{receipt.productType}] [ {receipt.productId} ] purchased (processing: {isProcessing})");
-			PurchaseCompleted?.Invoke(in receipt, isProcessing, rawData);
+			IAPDebug.Log($"[{receipt.productType}] [ {receipt.productId} ] purchased (live: {live})");
+			PurchaseCompleted?.Invoke(in receipt, live, rawData);
 		}
 
 		private void OnPurchaseDeferred(IAPProductEntry product, object rawData)

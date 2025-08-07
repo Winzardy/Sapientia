@@ -36,14 +36,36 @@ namespace Trading.InAppPurchasing
 		{
 			var tradeId = board.Id;
 			ref var tradeModel = ref tradeToModel.GetOrAdd(tradeId);
-			return tradeModel.CanIssue(key);
+			var canIssue = tradeModel.CanIssue(board, key, out var tradeReceipt);
+
+			if (tradeReceipt.HasValue)
+			{
+				if (!board.Contains<bool>(TradeboardUtility.RESTORE_BOOL_KEY))
+				{
+					var isRestored = tradeReceipt.Value.receipt.isRestored;
+					board.Register(isRestored, TradeboardUtility.RESTORE_BOOL_KEY);
+				}
+			}
+
+			return canIssue;
 		}
 
 		public bool Issue(Tradeboard board, string key)
 		{
 			var tradeId = board.Id;
 			ref var tradeModel = ref tradeToModel.GetOrAdd(tradeId);
-			return tradeModel.Issue(key);
+			var issue = tradeModel.Issue(board, key, out var tradeReceipt);
+
+			if (tradeReceipt.HasValue)
+			{
+				if (!board.Contains<bool>(TradeboardUtility.RESTORE_BOOL_KEY))
+				{
+					var isRestored = tradeReceipt.Value.receipt.isRestored;
+					board.Register(isRestored, TradeboardUtility.RESTORE_BOOL_KEY);
+				}
+			}
+
+			return issue;
 		}
 	}
 

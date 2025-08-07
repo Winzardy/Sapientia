@@ -21,11 +21,6 @@ namespace Trading.Advertising
 		/// </summary>
 		public long timestamp;
 
-#if NEWTONSOFT
-		[Newtonsoft.Json.JsonIgnore]
-#endif
-		public string Key => AdTradeReceiptUtility.Combine(group, type, placement);
-
 		/// <param name="timestamp"><see cref="DateTime.Ticks"/></param>
 		public AdTradeReceipt(int group, AdPlacementEntry entry, long timestamp)
 		{
@@ -39,7 +34,7 @@ namespace Trading.Advertising
 		public override string ToString()
 		{
 			return "Ad Trade Receipt:\n" +
-				$" Key: {Key}\n" +
+				$" Key: {GetKey(null)}\n" +
 				$" Type: {type}\n" +
 				$" Placement Id: {placement}\n" +
 				$" Group: {group}\n";
@@ -52,6 +47,8 @@ namespace Trading.Advertising
 		};
 
 		bool ITradeReceipt.NeedPush() => !placement.IsNullOrEmpty();
+
+		public string GetKey(string _) => AdTradeReceiptUtility.Combine(group, type, placement);
 	}
 
 	public static class AdTradeReceiptUtility
@@ -61,10 +58,10 @@ namespace Trading.Advertising
 			+ type + "_"
 			+ id;
 
-		public static string ToReceiptId(this AdPlacementEntry entry, int group) => Combine(group, entry.Type, entry.Id);
+		public static string ToReceiptKey(this AdPlacementEntry entry, int group) => Combine(group, entry.Type, entry.Id);
 
-		public static string ToReceiptId<T>(this ContentReference<T> reference, int group)
+		public static string ToReceiptKey<T>(this ContentReference<T> reference, int group)
 			where T : AdPlacementEntry
-			=> ToReceiptId(reference.Read(), group);
+			=> ToReceiptKey(reference.Read(), group);
 	}
 }

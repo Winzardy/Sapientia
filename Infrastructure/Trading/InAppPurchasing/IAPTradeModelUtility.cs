@@ -25,29 +25,34 @@ namespace Trading.InAppPurchasing
 			// Тут надо будет отправить чек на валидацию
 		}
 
-		public static bool CanIssue(this ref IAPTradeModel model, string key)
+		public static bool CanIssue(this ref IAPTradeModel model, Tradeboard board, string key, out IAPTradeReceipt? tradeReceipt)
 		{
+			tradeReceipt = null;
 			if (model.active.IsNullOrEmpty())
 				return false;
 
 			foreach (ref var receipt in model.active)
 			{
-				if (receipt.Key == key)
+				if (receipt.GetKey(board.Id) == key)
+				{
+					tradeReceipt = receipt;
 					return true;
+				}
 			}
 
 			return false;
 		}
 
-		public static bool Issue(this ref IAPTradeModel model, string key)
+		public static bool Issue(this ref IAPTradeModel model, Tradeboard board, string key, out IAPTradeReceipt? tradeReceipt)
 		{
+			tradeReceipt = null;
 			if (model.active.IsNullOrEmpty())
 				return false;
 
 			string targetId = null;
 			foreach (var id in model.active.Keys)
 			{
-				if (model.active[id].Key != key)
+				if (model.active[id].GetKey(board.Id) != key)
 					continue;
 
 				targetId = id;
@@ -58,7 +63,9 @@ namespace Trading.InAppPurchasing
 				return false;
 
 			model.issued ??= new HashMap<string, IAPTradeReceipt>();
-			model.issued.SetOrAdd(targetId, in model.active[targetId]);
+			ref readonly var activeTradeReceipt = ref model.active[targetId];
+			tradeReceipt = activeTradeReceipt;
+			model.issued.SetOrAdd(targetId, in activeTradeReceipt);
 			model.active.Remove(targetId);
 			return true;
 		}

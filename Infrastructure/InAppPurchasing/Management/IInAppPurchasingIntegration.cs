@@ -143,9 +143,6 @@ namespace InAppPurchasing
 		public string transactionId;
 		public string receipt;
 
-		/// <summary>
-		/// Only Apple App Store
-		/// </summary>
 		public bool isRestored;
 	}
 }

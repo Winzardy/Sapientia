@@ -2,7 +2,7 @@ namespace Trading
 {
 	public interface ITradingBackend
 	{
-		public ITradeReceiptRegistry<T> Get<T>() where T : struct, ITradeReceipt;
+		public ITradeReceiptRegistry<T> GetRegistry<T>() where T : struct, ITradeReceipt;
 	}
 
 	public interface ITradeRegistry
