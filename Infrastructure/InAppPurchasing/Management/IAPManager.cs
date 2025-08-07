@@ -1,5 +1,5 @@
 #if DebugLog
-#define DEBUG
+#define IAP_DEBUG
 #endif
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -115,7 +115,7 @@ namespace InAppPurchasing
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool ContainsReceipt(string transactionId) => management.ContainsReceipt(transactionId);
 
-#if DEBUG
+#if IAP_DEBUG
 		public static IInAppPurchasingIntegration Integration => management.Integration;
 
 		/// <returns>Предыдущий сервис</returns>

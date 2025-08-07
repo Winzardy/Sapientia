@@ -1,5 +1,5 @@
 #if DebugLog
-#define DEBUG
+#define IAP_DEBUG
 #endif
 using System;
 using System.Threading;
@@ -43,11 +43,11 @@ namespace InAppPurchasing
 		internal IInAppPurchasingEvents Events => _relay;
 		internal IInAppPurchasingIntegration Integration => _integration;
 
-#if DEBUG
+#if IAP_DEBUG
 		internal IInAppPurchasingGrantCenter GrantCenter { get; }
 #endif
 		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingService service
-#if DEBUG
+#if IAP_DEBUG
 			, IInAppPurchasingGrantCenter grantCenter
 #endif
 		)
@@ -57,7 +57,7 @@ namespace InAppPurchasing
 			SetIntegration(integration);
 			_service = service;
 
-#if DEBUG
+#if IAP_DEBUG
 			GrantCenter = grantCenter;
 #endif
 		}
@@ -348,7 +348,7 @@ namespace InAppPurchasing
 		internal IInAppPurchasingIntegration SetIntegration(IInAppPurchasingIntegration integration)
 		{
 			var prev = _integration;
-#if DEBUG
+#if IAP_DEBUG
 			if (_integration?.GetType() == integration.GetType())
 			{
 				IAPDebug.LogWarning($"Same integration: {_integration.Name}");
