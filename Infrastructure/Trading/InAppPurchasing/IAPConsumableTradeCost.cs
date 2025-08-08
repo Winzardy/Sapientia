@@ -23,8 +23,7 @@ namespace Trading.InAppPurchasing
 			if (board.Contains<PurchaseReceipt>())
 			{
 				var receipt = board.Get<PurchaseReceipt>();
-				if (!board.Contains<bool>(TradeboardUtility.RESTORE_BOOL_KEY))
-					board.Register(receipt.isRestored, TradeboardUtility.RESTORE_BOOL_KEY);
+				board.SetRestoreState(receipt.isRestored);
 				return true;
 			}
 

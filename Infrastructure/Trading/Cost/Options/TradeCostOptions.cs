@@ -1,12 +1,8 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Sapientia;
 using Sapientia.Collections;
 
 namespace Trading
 {
-	[Serializable]
 	public sealed partial class TradeCostOptions : TradeCost, IOptions<TradeCost>
 	{
 		internal int selectedIndex;
@@ -24,9 +20,11 @@ namespace Trading
 
 		public ref readonly TradeCost this[int index] => ref options[index];
 
-		protected override bool CanPay(Tradeboard board, out TradePayError? error) => options[selectedIndex].CanExecute(board, out error);
+		protected override bool CanPay(Tradeboard board, out TradePayError? error) => options[selectedIndex]
+		   .CanExecute(board, out error);
 
-		protected override bool Pay(Tradeboard board) => options[selectedIndex].Execute(board);
+		protected override bool Pay(Tradeboard board) => options[selectedIndex]
+		   .Execute(board);
 
 		public bool TrySelect(int index)
 		{

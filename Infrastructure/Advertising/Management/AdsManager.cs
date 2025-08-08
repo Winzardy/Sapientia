@@ -49,14 +49,14 @@ namespace Advertising
 
 		#region Show Async
 
-		public static Task<bool> ShowAsync<T>(string placement, CancellationToken cancellationToken, bool autoLoad = true)
+		public static Task<AdShowResult> ShowAsync<T>(string placement, CancellationToken cancellationToken, bool autoLoad = true)
 			where T : AdPlacementEntry
 			=> management.ShowAsync<T>(placement, autoLoad, cancellationToken);
 
-		public static Task<bool> ShowAsync(AdPlacementEntry entry, CancellationToken cancellationToken, bool autoLoad = true)
+		public static Task<AdShowResult> ShowAsync(AdPlacementEntry entry, CancellationToken cancellationToken, bool autoLoad = true)
 			=> management.ShowAsync(entry, autoLoad, cancellationToken);
 
-		public static Task<bool> ShowAsync(AdPlacementType type, string placement, CancellationToken cancellationToken,
+		public static Task<AdShowResult> ShowAsync(AdPlacementType type, string placement, CancellationToken cancellationToken,
 			bool autoLoad = true)
 			=> management.ShowAsync(type, placement, autoLoad, cancellationToken);
 
@@ -102,5 +102,12 @@ namespace Advertising
 		public static IAdvertisingIntegration SetIntegration(IAdvertisingIntegration integration) =>
 			management.SetIntegration(integration);
 #endif
+	}
+
+	public enum AdShowResult
+	{
+		Success,
+		Failed,
+		Canceled
 	}
 }

@@ -35,19 +35,13 @@ namespace Trading.UsagePass
 
 		public bool CanIssue(Tradeboard board, string key) => keyToReceipt.Contains(key);
 
-		// var cost = board.Get<UsageLimitTradeCost>();
-		// ref readonly var model = ref GetModel(key);
-		// ref readonly var receipt = ref keyToReceipt.GetOrDefault(key);
-		// var dateTime = new DateTime(receipt.timestamp);
-		// return cost.entry.CanApplyUsage(in model, dateTime, out _);
-
 		public bool Issue(Tradeboard board, string key)
 		{
 			var cost = board.Get<UsagePassTradeCost>();
 			ref var model = ref keyToModel.GetOrAdd(key);
 			ref readonly var receipt = ref keyToReceipt.GetOrDefault(key);
 			var dateTime = new DateTime(receipt.timestamp);
-			if (board.IsRestored())
+			if (board.IsRestoreState)
 				model.TryApplyUsage(in cost.limit, dateTime, out _);
 			else
 				model.ApplyUsage(in cost.limit, dateTime);

@@ -23,7 +23,7 @@ namespace Trading.UsagePass
 
 			if (!limit.CanApplyUsage(in model, now, out var limitApplyError))
 			{
-				if (board.IsRestored())
+				if (board.IsRestoreState)
 					return true;
 
 				error = new TradePayError(ERROR_CATEGORY, 0, limitApplyError);

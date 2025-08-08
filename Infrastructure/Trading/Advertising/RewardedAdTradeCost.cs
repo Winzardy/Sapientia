@@ -10,13 +10,16 @@ namespace Trading.Advertising
 	[Serializable]
 	public partial class RewardedAdTradeCost : TradeCostWithReceipt<AdTradeReceipt>
 	{
+		private const bool USE_AUTO_LOAD = true;
 		private const string ERROR_CATEGORY = "Advertising";
 
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
 		public ContentReference<RewardedAdPlacementEntry> placement;
+
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
+
 		public int count = 1;
 
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
@@ -34,7 +37,7 @@ namespace Trading.Advertising
 
 			if (adError.HasValue)
 			{
-				if (adError.Value.code == AdShowErrorCode.NotLoaded) // TODO: временный фикс, недоступности рекламы
+				if (adError.Value.code == AdShowErrorCode.NotLoaded && USE_AUTO_LOAD)
 					return true;
 
 				error = new TradePayError(ERROR_CATEGORY, (int) adError.Value.code, adError);
@@ -53,9 +56,12 @@ namespace Trading.Advertising
 			}
 
 			//TODO: может быть какую-то защиту от дурака, что нельзя посмотреть рекламу за секунду)
-			var success = await AdManager.ShowAsync(placement, cancellationToken);
+			var result = await AdManager.ShowAsync(placement, cancellationToken, USE_AUTO_LOAD);
 
-			if (!success)
+			if (result == AdShowResult.Canceled)
+				throw new OperationCanceledException(cancellationToken);
+
+			if (result != AdShowResult.Success)
 				return null;
 
 			var dateTime = board.Get<IDateTimeProvider>().Now;

@@ -40,11 +40,8 @@ namespace Trading.InAppPurchasing
 
 			if (tradeReceipt.HasValue)
 			{
-				if (!board.Contains<bool>(TradeboardUtility.RESTORE_BOOL_KEY))
-				{
-					var isRestored = tradeReceipt.Value.receipt.isRestored;
-					board.Register(isRestored, TradeboardUtility.RESTORE_BOOL_KEY);
-				}
+				var isRestored = tradeReceipt.Value.receipt.isRestored;
+				board.SetRestoreState(isRestored);
 			}
 
 			return canIssue;
@@ -58,11 +55,8 @@ namespace Trading.InAppPurchasing
 
 			if (tradeReceipt.HasValue)
 			{
-				if (!board.Contains<bool>(TradeboardUtility.RESTORE_BOOL_KEY))
-				{
-					var isRestored = tradeReceipt.Value.receipt.isRestored;
-					board.Register(isRestored, TradeboardUtility.RESTORE_BOOL_KEY);
-				}
+				var isRestored = tradeReceipt.Value.receipt.isRestored;
+				board.SetRestoreState(isRestored);
 			}
 
 			return issue;

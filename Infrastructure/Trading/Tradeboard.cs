@@ -21,6 +21,8 @@ namespace Trading
 
 		internal void SetId(string id) => Id = id;
 
+		public bool IsRestoreState { get; private set; }
+
 		public Tradeboard()
 		{
 		}
@@ -29,15 +31,14 @@ namespace Trading
 		{
 		}
 
+		public void SetRestoreState(bool value) => IsRestoreState = value;
+
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
 	}
 
 	public static class TradeboardUtility
 	{
-		// Мягкая проверка и списывание лимиты, решение для кейсов когда восстанавливаем покупку
-		public const string RESTORE_BOOL_KEY = "restore";
-
 		public static void Bind(this Tradeboard board, in ContentReference<TradeCost> reference)
 		{
 			board.SetId(reference.guid);
@@ -48,9 +49,7 @@ namespace Trading
 			board.SetId(entry.Id);
 		}
 
-		public static bool IsRestored(this Tradeboard board)
-			=> board.Contains<bool>(RESTORE_BOOL_KEY)
-				&& board.Get<bool>(RESTORE_BOOL_KEY);
+
 	}
 
 	public interface IDateTimeProvider

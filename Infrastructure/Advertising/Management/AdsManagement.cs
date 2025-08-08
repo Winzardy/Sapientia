@@ -137,17 +137,17 @@ namespace Advertising
 
 		#region Show Async
 
-		internal Task<bool> ShowAsync<T>(string placement, bool autoLoad, CancellationToken cancellationToken)
+		internal Task<AdShowResult> ShowAsync<T>(string placement, bool autoLoad, CancellationToken cancellationToken)
 			where T : AdPlacementEntry
 		{
 			if (!ContentManager.Contains<T>(placement))
-				return Task.FromResult(false);
+				return Task.FromResult(AdShowResult.Failed);
 
 			var entry = ContentManager.Get<T>(placement);
 			return ShowAsync(entry, autoLoad, cancellationToken);
 		}
 
-		internal Task<bool> ShowAsync(AdPlacementType type, string placement, bool autoLoad, CancellationToken cancellationToken)
+		internal Task<AdShowResult> ShowAsync(AdPlacementType type, string placement, bool autoLoad, CancellationToken cancellationToken)
 		{
 			AdPlacementEntry entry = type switch
 			{
@@ -156,12 +156,12 @@ namespace Advertising
 				_ => null
 			};
 
-			return entry ? ShowAsync(entry, autoLoad, cancellationToken) : Task.FromResult(false);
+			return entry ? ShowAsync(entry, autoLoad, cancellationToken) : Task.FromResult(AdShowResult.Failed);
 		}
 
-		internal async Task<bool> ShowAsync(AdPlacementEntry entry, bool autoLoad, CancellationToken cancellationToken)
+		internal async Task<AdShowResult> ShowAsync(AdPlacementEntry entry, bool autoLoad, CancellationToken cancellationToken)
 		{
-			var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+			var tcs = new TaskCompletionSource<AdShowResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
 			// ReSharper disable once UseAwaitUsing
 			using (cancellationToken.Register(Cancel))
@@ -202,7 +202,7 @@ namespace Advertising
 					};
 
 					if (!success)
-						return false;
+						return AdShowResult.Failed;
 
 					return await tcs.Task; //.ConfigureAwait(false); можно вне Unity)
 				}
@@ -222,13 +222,14 @@ namespace Advertising
 					}
 				}
 
-				void OnDisplayFailed(AdPlacementEntry _, string __, object ___) => tcs.TrySetResult(false);
+				void OnDisplayFailed(AdPlacementEntry _, string __, object ___) => tcs.TrySetResult(AdShowResult.Failed);
 
-				void OnRewardedClosed(AdPlacementEntry _, bool full, object __) => tcs.TrySetResult(full);
-				void OnRewardedLoadFailed(string _, object __) => tcs.TrySetResult(false);
+				void OnRewardedClosed(AdPlacementEntry _, bool full, object __)
+					=> tcs.TrySetResult(full ? AdShowResult.Success : AdShowResult.Canceled);
+				void OnRewardedLoadFailed(string _, object __) => tcs.TrySetResult(AdShowResult.Failed);
 
-				void OnInterstitialClosed(AdPlacementEntry _, object __) => tcs.TrySetResult(true);
-				void OnInterstitialLoadFailed(string _, object __) => tcs.TrySetResult(false);
+				void OnInterstitialClosed(AdPlacementEntry _, object __) => tcs.TrySetResult(AdShowResult.Success);
+				void OnInterstitialLoadFailed(string _, object __) => tcs.TrySetResult(AdShowResult.Failed);
 			}
 
 			void Cancel() => tcs.TrySetCanceled(cancellationToken);
