@@ -2,8 +2,6 @@ namespace Content
 {
 	public static partial class ContentConstants
 	{
-
-
 		public const string DEFAULT_SINGLE_ID = "Single";
 		public const int INVALID_INDEX = -1;
 
