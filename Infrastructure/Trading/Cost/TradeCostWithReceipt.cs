@@ -12,21 +12,17 @@ namespace Trading
 		{
 			var canIssue = false;
 
-			OnBeforePayCheck(board);
+			error = null;
+			if (!board.Contains<ITradingBackend>())
 			{
-				error = null;
-				if (!board.Contains<ITradingBackend>())
-				{
-					TradingDebug.LogError("Not found trading service...");
-				}
-				else
-				{
-					var backend = board.Get<ITradingBackend>();
-					var registry = backend.GetRegistry<T>();
-					canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
-				}
+				TradingDebug.LogError("Not found trading service...");
 			}
-			OnAfterPayCheck(board);
+			else
+			{
+				var backend = board.Get<ITradingBackend>();
+				var registry = backend.GetRegistry<T>();
+				canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
+			}
 
 			return canIssue;
 		}
@@ -34,47 +30,54 @@ namespace Trading
 		protected sealed override bool Pay(Tradeboard board)
 		{
 			var issue = false;
-			OnBeforePay(board);
+			if (!board.Contains<ITradingBackend>())
 			{
-				if (!board.Contains<ITradingBackend>())
-				{
-					TradingDebug.LogError("Not found trading service...");
-				}
-				else
-				{
-					var backend = board.Get<ITradingBackend>();
-					var registry = backend.GetRegistry<T>();
-					issue = registry.Issue(board, GetReceiptKey(board.Id));
-				}
+				TradingDebug.LogError("Not found trading service...");
 			}
-			OnAfterPay(board);
+			else
+			{
+				var backend = board.Get<ITradingBackend>();
+				var registry = backend.GetRegistry<T>();
+				issue = registry.Issue(board, GetReceiptKey(board.Id));
+			}
 			return issue;
 		}
 
-		protected abstract string GetReceiptKey(string id);
+		protected abstract string GetReceiptKey(string tradeId);
 
 		protected abstract bool CanFetch(Tradeboard board, out TradePayError? error);
 
 		protected abstract Task<T?> FetchAsync(Tradeboard board, CancellationToken cancellationToken);
 
-		bool ITradeCostWithReceipt.CanFetch(Tradeboard board, out TradePayError? error) => CanFetch(board, out error);
+		bool ITradeCostWithReceipt.CanFetch(Tradeboard board, out TradePayError? error)
+		{
+			OnBeforeFetchCheck(board);
+			var result = CanFetch(board, out error);
+			OnAfterFetchCheck(board);
+			return result;
+		}
 
 		async Task<ITradeReceipt> ITradeCostWithReceipt.FetchAsync(Tradeboard board, CancellationToken cancellationToken)
-			=> await FetchAsync(board, cancellationToken);
+		{
+			OnBeforeFetch(board);
+			var result = await FetchAsync(board, cancellationToken);
+			OnAfterFetch(board);
+			return result;
+		}
 
-		protected virtual void OnBeforePayCheck(Tradeboard board)
+		protected virtual void OnBeforeFetchCheck(Tradeboard board)
 		{
 		}
 
-		protected virtual void OnBeforePay(Tradeboard board)
+		protected virtual void OnAfterFetchCheck(Tradeboard board)
 		{
 		}
 
-		protected virtual void OnAfterPayCheck(Tradeboard board)
+		protected virtual void OnBeforeFetch(Tradeboard board)
 		{
 		}
 
-		protected virtual void OnAfterPay(Tradeboard board)
+		protected virtual void OnAfterFetch(Tradeboard board)
 		{
 		}
 	}

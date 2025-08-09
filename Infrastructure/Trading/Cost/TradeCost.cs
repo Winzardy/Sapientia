@@ -10,8 +10,21 @@ namespace Trading
 		/// </summary>
 		public virtual int Priority => TradeCostPriority.NORMAL;
 
-		internal bool CanExecute(Tradeboard board, out TradePayError? error) => CanPay(board, out error);
-		internal bool Execute(Tradeboard board) => Pay(board);
+		internal bool CanExecute(Tradeboard board, out TradePayError? error)
+		{
+			OnBeforePayCheck(board);
+			var result = CanPay(board, out error);
+			OnAfterPayCheck(board);
+			return result;
+		}
+
+		internal bool Execute(Tradeboard board)
+		{
+			OnBeforePay(board);
+			var result = Pay(board);
+			OnAfterPay(board);
+			return result;
+		}
 
 		/// <summary>
 		/// Доступно ли для продажи? пример: есть ли у игрока 100 монет?
@@ -23,6 +36,22 @@ namespace Trading
 		/// </summary>
 		/// <returns>Успешность</returns>
 		protected abstract bool Pay(Tradeboard board);
+
+		protected virtual void OnBeforePayCheck(Tradeboard board)
+		{
+		}
+
+		protected virtual void OnAfterPayCheck(Tradeboard board)
+		{
+		}
+
+		protected virtual void OnBeforePay(Tradeboard board)
+		{
+		}
+
+		protected virtual void OnAfterPay(Tradeboard board)
+		{
+		}
 	}
 
 	public readonly struct TradePayError

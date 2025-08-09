@@ -17,8 +17,8 @@ namespace Trading.UsagePass
 			error = null;
 
 			var backend = board.Get<IUsagePassBackend>();
-			var key = GetReceiptKey(board.Id);
-			ref readonly var model = ref backend.GetModel(key);
+			var recipeKey = GetReceiptKey(board.Id);
+			ref readonly var model = ref backend.GetModel(recipeKey);
 			var now = board.Get<IDateTimeProvider>().Now;
 
 			if (!limit.CanApplyUsage(in model, now, out var limitApplyError))

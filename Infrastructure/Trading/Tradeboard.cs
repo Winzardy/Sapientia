@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using Content;
 using Sapientia;
+using Sapientia.Collections;
+using Sapientia.Pooling;
 
 namespace Trading
 {
@@ -21,7 +24,9 @@ namespace Trading
 
 		internal void SetId(string id) => Id = id;
 
-		public bool IsRestoreState { get; private set; }
+		public bool IsRestoreState => !_restoreSources.IsNullOrEmpty();
+
+		private HashSet<string> _restoreSources;
 
 		public Tradeboard()
 		{
@@ -31,7 +36,20 @@ namespace Trading
 		{
 		}
 
-		public void SetRestoreState(bool value) => IsRestoreState = value;
+		protected override void OnRelease()
+		{
+			_restoreSources?.ReleaseToStaticPool();
+			_restoreSources = null;
+		}
+
+		public void AddRestoreSource(string source)
+		{
+			_restoreSources ??= HashSetPool<string>.Get();
+			_restoreSources.Add(source);
+		}
+
+		public void RemoveRestoreSource(string source) =>
+			_restoreSources?.Remove(source);
 
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
@@ -48,8 +66,6 @@ namespace Trading
 		{
 			board.SetId(entry.Id);
 		}
-
-
 	}
 
 	public interface IDateTimeProvider

@@ -21,11 +21,7 @@ namespace Trading.InAppPurchasing
 			error = null;
 
 			if (board.Contains<PurchaseReceipt>())
-			{
-				var receipt = board.Get<PurchaseReceipt>();
-				board.SetRestoreState(receipt.isRestored);
 				return true;
-			}
 
 			var success = IAPManager.CanPurchase(product, out var iapError);
 
@@ -60,5 +56,45 @@ namespace Trading.InAppPurchasing
 		public IAPProductEntry GetProductEntry() => product.Read();
 
 		protected override string GetReceiptKey(string _) => product.ToReceiptKey();
+
+		#region Restore
+
+		protected override void OnBeforeFetchCheck(Tradeboard board) => TryEnableRestoreState(board);
+
+		protected override void OnAfterFetchCheck(Tradeboard board) => TryDisableRestoreState(board);
+
+		protected override void OnBeforeFetch(Tradeboard board) => TryEnableRestoreState(board);
+		protected override void OnAfterFetch(Tradeboard board) => TryDisableRestoreState(board);
+
+		protected override void OnBeforePayCheck(Tradeboard board) => TryEnableRestoreState(board);
+
+		protected override void OnAfterPayCheck(Tradeboard board) => TryDisableRestoreState(board);
+
+		protected override void OnBeforePay(Tradeboard board) => TryEnableRestoreState(board);
+		protected override void OnAfterPay(Tradeboard board) => TryDisableRestoreState(board);
+
+		private void TryEnableRestoreState(Tradeboard board)
+		{
+			if (!board.Contains<PurchaseReceipt>())
+				return;
+
+			var receipt = board.Get<PurchaseReceipt>();
+
+			if (!receipt.isRestored)
+				return;
+
+			board.AddRestoreSource(receipt.transactionId);
+		}
+
+		private void TryDisableRestoreState(Tradeboard board)
+		{
+			if (!board.Contains<PurchaseReceipt>())
+				return;
+
+			var receipt = board.Get<PurchaseReceipt>();
+			board.RemoveRestoreSource(receipt.transactionId);
+		}
+
+		#endregion
 	}
 }
