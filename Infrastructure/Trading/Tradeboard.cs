@@ -24,7 +24,7 @@ namespace Trading
 
 		internal void SetId(string id) => Id = id;
 
-		public bool IsRestoreState => !_restoreSources.IsNullOrEmpty();
+		public bool IsRestoreState => _restoreSources.Any();
 
 		private HashSet<string> _restoreSources;
 
@@ -59,12 +59,17 @@ namespace Trading
 	{
 		public static void Bind(this Tradeboard board, in ContentReference<TradeCost> reference)
 		{
-			board.SetId(reference.guid);
+			Bind(board, reference.guid);
 		}
 
 		public static void Bind(this Tradeboard board, in TradeEntry entry)
 		{
-			board.SetId(entry.Id);
+			Bind(board, entry.Id);
+		}
+
+		public static void Bind(this Tradeboard board, string tradeId)
+		{
+			board.SetId(tradeId);
 		}
 	}
 
