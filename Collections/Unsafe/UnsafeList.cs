@@ -67,6 +67,15 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange(in UnsafeList<T> items)
+		{
+			EnsureCapacity(count + items.count);
+
+			items.GetSpan().CopyTo(ptr.GetSpan(count, items.count));
+			count += items.count;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveAt(int index)
 		{
 			var result = ptr[index];
