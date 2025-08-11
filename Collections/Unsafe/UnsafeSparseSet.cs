@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -75,6 +76,12 @@ namespace Sapientia.Collections
 		public readonly SafePtr<T> GetValuePtr()
 		{
 			return _values.ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly Span<T> GetValuesSpan()
+		{
+			return _values.ptr.GetSpan(_count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
