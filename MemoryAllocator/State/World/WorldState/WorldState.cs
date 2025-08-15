@@ -8,7 +8,7 @@ namespace Sapientia.MemoryAllocator
 {
 	public interface IWorldStateContainer
 	{
-		public WorldState GetWorldState();
+		public WorldState WorldState { get; }
 	}
 
 	public partial struct WorldState : IEquatable<WorldState>, IDisposable, IWorldStateContainer
@@ -59,10 +59,7 @@ namespace Sapientia.MemoryAllocator
 			_checkNullRef = true;
 		}
 
-		public WorldState GetWorldState()
-		{
-			return this;
-		}
+		WorldState IWorldStateContainer.WorldState => this;
 
 		private void EnableInnerChecks()
 		{
