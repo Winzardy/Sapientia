@@ -69,7 +69,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void AddKillParent(Entity child, Entity parent)
 		{
 			E.ASSERT(IsAlive(child));
-			E.ASSERT(!destroyRequestArchetype.HasElement(parent));
+			E.ASSERT(!destroyRequestArchetype.HasElement(parent), $"{nameof(AddKillParent)}: Родитель уже убит [{nameof(parent)}: {parent.Name}; {nameof(child)}: {child.Name}]");
 			E.ASSERT(entityStatePart.ptr->IsEntityExist(worldState, parent));
 
 			ref var childElement = ref killElementArchetype.GetElement(child);
