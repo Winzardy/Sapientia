@@ -7,11 +7,11 @@ namespace Sapientia.Extensions
 {
 	public class CompositeDisposable : IDisposable
 	{
-		private HashSet<IDisposable> _disposables;
+		private HashSet<IDisposable>? _disposables;
 
 		public virtual void Dispose()
 		{
-			if (_disposables.IsNullOrEmpty())
+			if (_disposables?.IsNullOrEmpty() ?? true)
 				return;
 
 			foreach (var disposable in _disposables)
@@ -28,8 +28,19 @@ namespace Sapientia.Extensions
 
 		protected void RemoveDisposable(IDisposable disposable)
 		{
-			_disposables.Remove(disposable);
+			_disposables?.Remove(disposable);
 		}
+
+		protected void DisposeAndSetNullSafe<T>(ref T obj) where T : class, IDisposable
+		{
+			if (obj == null!)
+				return;
+
+			DisposeAndSetNull(ref obj);
+		}
+
+		protected void DisposeAndSetNull<T>(ref T obj) where T : class, IDisposable
+			=> DisposeUtility.DisposeAndSetNull(ref obj);
 
 		/// <summary>
 		/// Создать (через конструктор) и добавить в disposable список
@@ -125,5 +136,14 @@ namespace Sapientia.Extensions
 		protected T TryCreate<T>(ref T field, bool addToAutoDispose = false)
 			where T : IDisposable, new()
 			=> field ?? Create(out field, addToAutoDispose);
+	}
+
+	public static class DisposeUtility
+	{
+		public static void DisposeAndSetNull<T>(ref T obj) where T : class, IDisposable
+		{
+			obj.Dispose();
+			obj = null!;
+		}
 	}
 }

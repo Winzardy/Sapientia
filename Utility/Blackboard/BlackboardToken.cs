@@ -1,9 +1,10 @@
 using System;
 using System.Runtime.CompilerServices;
+using Sapientia.Pooling;
 
 namespace Sapientia
 {
-	public interface IBlackboardToken : IDisposable
+	internal interface IBlackboardToken : IDisposable
 	{
 		public Type ValueType { get; }
 
@@ -12,33 +13,31 @@ namespace Sapientia
 		/// </param>
 		public void Release(bool unregister = true);
 
+		internal int Generation { get; }
 		internal IBlackboardToken Clone(Blackboard blackboard);
 	}
 
-	internal class BlackboardToken<T> : IBlackboardToken
+	internal class BlackboardToken<T> : IBlackboardToken, IPoolable
 	{
-		private bool _binded;
-
+		private int _generation;
 		private RegisteredTokenHash _hash;
 
 		public Type ValueType => typeof(T);
 
+		int IBlackboardToken.Generation => _generation;
+
 		internal void Bind(in RegisteredTokenHash hash)
 		{
 			_hash = hash;
-			_binded = true;
 		}
 
-		public void Dispose()
-		{
-			Release(true);
-		}
+		public void Dispose() => Release(true);
 
 		/// <inheritdoc/>
 		public void Release(bool unregister)
 		{
-			if (!_binded)
-				return;
+			if (_hash == default)
+				throw new InvalidOperationException("Token already released");
 
 			if (unregister)
 				_hash.blackboard.Unregister(this);
@@ -46,21 +45,23 @@ namespace Sapientia
 			Blackboard<T>.Unregister(this);
 		}
 
-		internal void Clear()
+		internal ref readonly RegisteredTokenHash Hash => ref _hash;
+		internal Blackboard Blackboard => _hash.blackboard;
+		internal string? Key => _hash.key;
+
+		void IPoolable.Release()
 		{
 			_hash = default;
-			_binded = false;
+			_generation++;
 		}
-
-		public static implicit operator RegisteredTokenHash(BlackboardToken<T> token) => token._hash;
-		public static implicit operator Blackboard(BlackboardToken<T> token) => token._hash.blackboard;
-		public static implicit operator string?(BlackboardToken<T> token) => token._hash.key;
 
 		IBlackboardToken IBlackboardToken.Clone(Blackboard blackboard)
 		{
 			ref readonly var value = ref Blackboard<T>.Get(_hash.blackboard);
 			return Blackboard<T>.Register(in value, blackboard, _hash.key);
 		}
+
+		public static implicit operator BlackboardToken(BlackboardToken<T> token) => new(token, token._generation);
 	}
 
 	/// <summary>

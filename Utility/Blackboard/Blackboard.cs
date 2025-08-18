@@ -42,7 +42,7 @@ namespace Sapientia
 
 		public ref readonly T Get<T>(string? key = null) => ref Blackboard<T>.Get(this, key);
 
-		public IBlackboardToken Register<T>(in T value, string? key = null)
+		public BlackboardToken Register<T>(in T value, string? key = null)
 		{
 			_tokens ??= ConcurrentHashSetPool<IBlackboardToken>.Get();
 			var token = Blackboard<T>.Register(in value, this, key);
@@ -76,7 +76,7 @@ namespace Sapientia
 				foreach (var token in _tokens)
 					token.Release(false);
 
-				StaticObjectPoolUtility.ReleaseSafe(ref _tokens);
+				StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _tokens);
 			}
 
 			OnRelease();
@@ -94,8 +94,6 @@ namespace Sapientia
 	internal static class Blackboard<T>
 	{
 		private static ConcurrentDictionary<RegisteredTokenHash, Entry>? _boardToValue;
-
-		private static readonly ObjectPool<BlackboardToken<T>> _tokenPool = new(new TokenPoolPolicy());
 
 		internal static bool Contains(Blackboard blackboard, string? key = null)
 		{
@@ -120,7 +118,7 @@ namespace Sapientia
 			return ref entry.value;
 		}
 
-		internal static IBlackboardToken Register(in T value, Blackboard blackboard, string? key = null)
+		internal static BlackboardToken<T> Register(in T value, Blackboard blackboard, string? key = null)
 		{
 			_boardToValue ??= ConcurrentDictionaryPool<RegisteredTokenHash, Entry>.Get();
 			var hash = ToHash(blackboard, key);
@@ -131,26 +129,26 @@ namespace Sapientia
 				throw blackboard.GetException(msg);
 			}
 
-			var token = _tokenPool.Get();
+			var token = Pool<BlackboardToken<T>>.Get();
 			token.Bind(in hash);
 			return token;
 		}
 
 		internal static void Unregister(BlackboardToken<T> token)
 		{
-			if (_boardToValue == null || !_boardToValue.TryRemove(token, out _))
+			if (_boardToValue == null || !_boardToValue.TryRemove(token.Hash, out _))
 			{
-				Blackboard blackboard = token;
-				string? key = token;
+				var blackboard = token.Blackboard;
+				var key = token.Key;
 				var msg = $"{blackboard.GetName()}: {typeof(T)} not registered" +
 					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
 				throw blackboard.GetException(msg);
 			}
 
-			_tokenPool.Release(token);
+			Pool<BlackboardToken<T>>.Release(token);
 
 			if (_boardToValue.IsEmpty)
-				StaticObjectPoolUtility.Release(ref _boardToValue);
+				StaticObjectPoolUtility.ReleaseAndSetNull(ref _boardToValue);
 		}
 
 		private static RegisteredTokenHash ToHash(Blackboard blackboard, string? key) => new(blackboard, key);
@@ -162,23 +160,28 @@ namespace Sapientia
 
 			public static implicit operator Entry(in T value) => new(value);
 		}
+	}
 
-		private class TokenPoolPolicy : IObjectPoolPolicy<BlackboardToken<T>>
+	public readonly struct BlackboardToken : IDisposable
+	{
+		private readonly IBlackboardToken _token;
+		private readonly int _generation;
+
+		internal BlackboardToken(IBlackboardToken token, int generation)
 		{
-			public BlackboardToken<T> Create() => new();
+			_token = token;
+			_generation = generation;
+		}
 
-			public void OnGet(BlackboardToken<T> token)
-			{
-			}
+		public void Dispose() => Release();
 
-			public void OnRelease(BlackboardToken<T> token)
-			{
-				token.Clear();
-			}
+		public void Release()
+		{
+			if (_token.Generation != _generation)
+				throw new InvalidOperationException(
+					$"[{nameof(BlackboardToken)}] Invalid token (token gen:{_token.Generation} != gen: {_generation})");
 
-			public void OnDispose(BlackboardToken<T> token)
-			{
-			}
+			_token.Release();
 		}
 	}
 }
