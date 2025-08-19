@@ -13,16 +13,18 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly ushort generation;
 		public WorldId worldId;
 
-#if ENABLE_ENTITY_NAMES
 		public string Name
 		{
 			get
 			{
+#if ENABLE_ENTITY_NAMES
 				var worldState = worldId.GetWorldState();
 				return worldState.GetService<EntityStatePart>().GetEntityName(worldState, this);
+#else
+				return "[ENABLE_ENTITY_NAMES] is Disabled";
+#endif
 			}
 		}
-#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WorldState GetWorldState()
