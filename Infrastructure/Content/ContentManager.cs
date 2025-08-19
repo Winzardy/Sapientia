@@ -11,13 +11,13 @@ namespace Content
 	{
 #if UNITY_EDITOR
 		public static IContentEditorResolver editorResolver;
-		private static IContentEditorResolver _resolver
+		private static IContentEditorResolver resolver
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _instance ?? editorResolver;
 		}
 #else
-		private static ContentResolver _resolver
+		private static ContentResolver resolver
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _instance;
@@ -25,96 +25,96 @@ namespace Content
 #endif
 		/// <inheritdoc cref="ContentResolver.Any{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Any<T>() => _resolver.Any<T>();
+		public static bool Any<T>() => resolver.Any<T>();
 
 		/// <inheritdoc cref="ContentResolver.Contains{T}()"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Contains<T>(in SerializableGuid guid) => _resolver.Contains<T>(in guid);
+		public static bool Contains<T>(in SerializableGuid guid) => resolver.Contains<T>(in guid);
 
 		/// <inheritdoc cref="ContentResolver.Contains{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Contains<T>(string id) => _resolver.Contains<T>(id);
+		public static bool Contains<T>(string id) => resolver.Contains<T>(id);
 
 		/// <inheritdoc cref="ContentResolver.Contains{T}(int)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Contains<T>(int index) => _resolver.Contains<T>(index);
+		public static bool Contains<T>(int index) => resolver.Contains<T>(index);
 
 		/// <inheritdoc cref="ContentResolver.Contains{T}()"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Contains<T>() => _resolver.Contains<T>();
+		public static bool Contains<T>() => resolver.Contains<T>();
 
 		/// <inheritdoc cref="ContentResolver.GetEntry{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UniqueContentEntry<T> GetEntry<T>(in SerializableGuid guid) => _resolver.GetEntry<T>(in guid);
+		public static UniqueContentEntry<T> GetEntry<T>(in SerializableGuid guid) => resolver.GetEntry<T>(in guid);
 
 		/// <inheritdoc cref="ContentResolver.GetEntry{T}(string)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UniqueContentEntry<T> GetEntry<T>(string id) => _resolver.GetEntry<T>(id);
+		public static UniqueContentEntry<T> GetEntry<T>(string id) => resolver.GetEntry<T>(id);
 
 		/// <inheritdoc cref="ContentResolver.GetEntry{T}(int)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UniqueContentEntry<T> GetEntry<T>(int index) => _resolver.GetEntry<T>(index);
+		public static UniqueContentEntry<T> GetEntry<T>(int index) => resolver.GetEntry<T>(index);
 
 		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(in SerializableGuid, out UniqueContentEntry{T})"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGetEntry<T>(in SerializableGuid guid, out UniqueContentEntry<T> entry) =>
-			_resolver.TryGetEntry(in guid, out entry);
+			resolver.TryGetEntry(in guid, out entry);
 
 		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(string, out UniqueContentEntry{T})"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryGetEntry<T>(string id, out UniqueContentEntry<T> entry) => _resolver.TryGetEntry(id, out entry);
+		public static bool TryGetEntry<T>(string id, out UniqueContentEntry<T> entry) => resolver.TryGetEntry(id, out entry);
 
 		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(int, out UniqueContentEntry{T})"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryGetEntry<T>(int index, out UniqueContentEntry<T> entry) => _resolver.TryGetEntry(index, out entry);
+		public static bool TryGetEntry<T>(int index, out UniqueContentEntry<T> entry) => resolver.TryGetEntry(index, out entry);
 
 		/// <inheritdoc cref="ContentResolver.TryGetEntry{T}(out SingleContentEntry{T})"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryGetEntry<T>(out SingleContentEntry<T> entry) => _resolver.TryGetEntry(out entry);
+		public static bool TryGetEntry<T>(out SingleContentEntry<T> entry) => resolver.TryGetEntry(out entry);
 
 		/// <inheritdoc cref="ContentResolver.GetEntry{T}()"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SingleContentEntry<T> GetEntry<T>() => _resolver.GetEntry<T>();
+		public static SingleContentEntry<T> GetEntry<T>() => resolver.GetEntry<T>();
 
 		/// <inheritdoc cref="ContentResolver.Get{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref readonly T Get<T>(in SerializableGuid guid) => ref _resolver.Get<T>(in guid);
+		public static ref readonly T Get<T>(in SerializableGuid guid) => ref resolver.Get<T>(in guid);
 
 		/// <inheritdoc cref="ContentResolver.Get{T}(string)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref readonly T Get<T>(string id) => ref _resolver.Get<T>(id);
+		public static ref readonly T Get<T>(string id) => ref resolver.Get<T>(id);
 
 		/// <inheritdoc cref="ContentResolver.Get{T}(int)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref readonly T Get<T>(int index) => ref _resolver.Get<T>(index);
+		public static ref readonly T Get<T>(int index) => ref resolver.Get<T>(index);
 
 		/// <inheritdoc cref="ContentResolver.Get{T}()"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref readonly T Get<T>() => ref _resolver.Get<T>();
+		public static ref readonly T Get<T>() => ref resolver.Get<T>();
 
 		/// <inheritdoc cref="ContentResolver.Get{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Get<T>(in SerializableGuid guid, out T value) => value = _resolver.Get<T>(in guid);
+		public static void Get<T>(in SerializableGuid guid, out T value) => value = resolver.Get<T>(in guid);
 
 		/// <inheritdoc cref="ContentResolver.Get{T}(string)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Get<T>(string id, out T value) => value = _resolver.Get<T>(id);
+		public static void Get<T>(string id, out T value) => value = resolver.Get<T>(id);
 
 		/// <inheritdoc cref="ContentResolver.Get{T}(int)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Get<T>(int index, out T value) => value = _resolver.Get<T>(index);
+		public static void Get<T>(int index, out T value) => value = resolver.Get<T>(index);
 
 		/// <inheritdoc cref="ContentResolver.Get{T}()"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Get<T>(out T value) => value = _resolver.Get<T>();
+		public static void Get<T>(out T value) => value = resolver.Get<T>();
 
 		/// <inheritdoc cref="ContentResolver.GetAll{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<IContentEntry<T>> GetAll<T>() => _resolver.GetAll<T>();
+		public static IEnumerable<IContentEntry<T>> GetAll<T>() => resolver.GetAll<T>();
 
 		/// <inheritdoc cref="ContentResolver.ToId{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToId<T>(in SerializableGuid guid) => _resolver != null ? _resolver.ToId<T>(in guid) : guid.ToString();
+		public static string ToId<T>(in SerializableGuid guid) => resolver != null ? resolver.ToId<T>(in guid) : guid.ToString();
 
 		/// <inheritdoc cref="ContentResolver.ToGuid{T}(string)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,7 +123,7 @@ namespace Content
 #if UNITY_EDITOR
 			try
 			{
-				return ref _resolver.ToGuid<T>(id);
+				return ref resolver.ToGuid<T>(id);
 			}
 			catch (System.Exception e)
 			{
@@ -132,13 +132,13 @@ namespace Content
 
 			return ref SerializableGuid.Empty;
 #endif
-			return ref _resolver.ToGuid<T>(id);
+			return ref resolver.ToGuid<T>(id);
 		}
 
 		/// <inheritdoc cref="ContentResolver.ToLabel{T}(in SerializableGuid, bool)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToLabel<T>(in SerializableGuid guid, bool verbose = false)
-			=> _resolver.ToLabel<T>(in guid, verbose);
+			=> resolver.ToLabel<T>(in guid, verbose);
 
 		#region Registation
 
