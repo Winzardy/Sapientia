@@ -49,6 +49,16 @@ namespace Submodules.Sapientia.Data
 			return new EnumSerializableContainer<TEnum>{ value = value };
 		}
 
+		public EnumSerializableContainer<TEnum1> ConvertTo<TEnum1>()
+			where TEnum1 : unmanaged, Enum
+		{
+			return new EnumSerializableContainer<TEnum1>()
+			{
+				value = value.ToEnum<TEnum, TEnum1>(),
+				statTypeName = statTypeName,
+			};
+		}
+
 #if UNITY_EDITOR
 		public void OnBeforeSerialize()
 		{
@@ -67,5 +77,20 @@ namespace Submodules.Sapientia.Data
 			}
 		}
 #endif
+	}
+
+	public static class EnumSerializableContainerExt
+	{
+		public static EnumSerializableContainer<TEnum1>[] ConvertTo<TEnum, TEnum1>(this EnumSerializableContainer<TEnum>[] values)
+			where TEnum : unmanaged, Enum
+			where TEnum1 : unmanaged, Enum
+		{
+			var result = new EnumSerializableContainer<TEnum1>[values.Length];
+			for (var i = 0; i < values.Length; i++)
+			{
+				result[i] = values[i].ConvertTo<TEnum1>();
+			}
+			return result;
+		}
 	}
 }
