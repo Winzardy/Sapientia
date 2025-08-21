@@ -9,6 +9,8 @@ namespace Sapientia.Extensions
 		private const string SPACE = " ";
 		private const string SEPARATOR = " ";
 
+		public const int MS_IN_ONE_SECOND = 1000;
+
 		public const int SECS_IN_ONE_DAY = 86400;
 		public const int SECS_IN_ONE_HOUR = 3600;
 		public const int SECS_IN_ONE_MINUTE = 60;
@@ -28,10 +30,13 @@ namespace Sapientia.Extensions
 		public const string YEAR_LABEL = "yr";
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static float ToSec(this int ms) => ms / 1000f;
+		public static float ToSec(this int ms) => ms / (float) MS_IN_ONE_SECOND;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int ToMS(this float seconds) => (int) (seconds * 1000);
+		public static int ToMilliseconds(this float seconds) => (int) (seconds * MS_IN_ONE_SECOND);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int ToMilliseconds(this int seconds) => seconds * MS_IN_ONE_SECOND;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long ToTicks(this int ms) => TimeSpan.TicksPerMillisecond * ms;
@@ -53,24 +58,24 @@ namespace Sapientia.Extensions
 		/// {days} d {hours} h {minutes} m {seconds} s
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToLabelFromInt(this int secs, bool useSpace = true, bool useMs = false)
+		public static string ToLabel(this int seconds, bool useSpace = true, bool useMs = false)
 		{
-			if (secs < 1)
-				secs = 1;
+			if (seconds < 1)
+				seconds = 1;
 
-			return ToLabel(TimeSpan.FromSeconds(secs), useSpace, useMs);
+			return ToLabel(TimeSpan.FromSeconds(seconds), useSpace, useMs);
 		}
 
 		/// <summary>
 		/// {days} d {hours} h {minutes} m {seconds} s
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToLabelFromLong(this long secs, bool useSpace = true, bool useMs = false)
+		public static string ToLabel(this long seconds, bool useSpace = true, bool useMs = false)
 		{
-			if (secs < 1)
-				secs = 1;
+			if (seconds < 1)
+				seconds = 1;
 
-			return ToLabel(TimeSpan.FromSeconds(secs), useSpace, useMs);
+			return ToLabel(TimeSpan.FromSeconds(seconds), useSpace, useMs);
 		}
 
 		/// <summary>
@@ -94,7 +99,7 @@ namespace Sapientia.Extensions
 
 				if (useMs && ts.Milliseconds > 0)
 					sb.Append($"{ts.Milliseconds}{space}{MILLISECOND_LABEL}{SEPARATOR}");
-				else if(ts.Milliseconds > 0)
+				else if (ts.Milliseconds > 0)
 					ts = ts.Add(TimeSpan.FromSeconds(1));
 
 				if (ts.TotalSeconds > 0)

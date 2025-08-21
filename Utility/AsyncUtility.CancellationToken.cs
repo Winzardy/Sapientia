@@ -16,7 +16,6 @@ namespace Sapientia.Utility
 				cts.Cancel();
 
 			cts.Dispose();
-
 			cts = null;
 		}
 

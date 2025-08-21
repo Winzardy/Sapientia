@@ -48,7 +48,7 @@ namespace Trading.UsagePass
 			return true;
 		}
 
-		private IBlackboardToken _token;
+		private BlackboardToken _token;
 
 		protected override void OnBeforePayCheck(Tradeboard board) => _token = board.Register(this);
 		protected override void OnAfterPayCheck(Tradeboard board) => _token.Release();
