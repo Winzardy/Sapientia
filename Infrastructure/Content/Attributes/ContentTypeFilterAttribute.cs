@@ -14,9 +14,16 @@ namespace Content
 		/// <inheritdoc cref="Sirenix.OdinInspector.TypeFilterAttribute.DrawValueNormally"/>
 		public bool DrawValueNormally;
 
+		public string Expression { get; }
+
 		public ContentTypeFilterAttribute(params Type[] types)
 		{
 			Types = types;
+		}
+
+		public ContentTypeFilterAttribute(string expression)
+		{
+			Expression = expression;
 		}
 	}
 }
