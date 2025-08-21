@@ -23,7 +23,7 @@ namespace Sapientia.Pooling
 		private readonly ConcurrentQueue<T> _queue;
 		private readonly IObjectPoolPolicy<T> _policy;
 
-		private readonly int _maxCapacity;
+		private int _maxCapacity;
 
 		private T? _single;
 		private int _count;
@@ -45,7 +45,8 @@ namespace Sapientia.Pooling
 		{
 			_policy = policy ?? throw new ArgumentNullException(nameof(policy));
 			_queue = new ConcurrentQueue<T>();
-			_maxCapacity = maximumRetained - 1; // -1 to account for _single
+
+			SetCapacity(maximumRetained);
 		}
 
 		public void Dispose() => Clear();
@@ -101,6 +102,9 @@ namespace Sapientia.Pooling
 				_policy.OnDispose(obj);
 			}
 		}
+
+		protected internal void SetCapacity(int capacity)
+			=> _maxCapacity = capacity - 1; // -1 to account for _single
 	}
 
 	public static class ObjectPoolExtensions
