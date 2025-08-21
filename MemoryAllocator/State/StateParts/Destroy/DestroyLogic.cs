@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.TypeIndexer;
@@ -69,8 +68,13 @@ namespace Sapientia.MemoryAllocator.State
 		public void AddKillParent(Entity child, Entity parent)
 		{
 			E.ASSERT(IsAlive(child));
-			E.ASSERT(!destroyRequestArchetype.HasElement(parent));
 			E.ASSERT(entityStatePart.ptr->IsEntityExist(worldState, parent));
+
+			if (destroyRequestArchetype.HasElement(parent))
+			{
+				RequestKill(child);
+				return;
+			}
 
 			ref var childElement = ref killElementArchetype.GetElement(child);
 			ref var parentElement = ref killElementArchetype.GetElement(parent);
