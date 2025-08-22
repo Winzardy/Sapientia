@@ -27,18 +27,6 @@ namespace Submodules.Sapientia.Data
 #endif
 		public TEnum value;
 
-		public EnumSerializableContainer<TEnum1> Convert<TEnum1>()
-			where TEnum1 : unmanaged, Enum
-		{
-			return new EnumSerializableContainer<TEnum1>()
-			{
-#if UNITY_EDITOR
-				statTypeName = statTypeName,
-#endif
-				value = value.ToEnum<TEnum, TEnum1>(),
-			};
-		}
-
 		public static implicit operator TEnum(EnumSerializableContainer<TEnum> container)
 		{
 			return container.value;
@@ -54,8 +42,10 @@ namespace Submodules.Sapientia.Data
 		{
 			return new EnumSerializableContainer<TEnum1>()
 			{
-				value = value.ToEnum<TEnum, TEnum1>(),
+#if UNITY_EDITOR
 				statTypeName = statTypeName,
+#endif
+				value = value.ToEnum<TEnum, TEnum1>(),
 			};
 		}
 
