@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Content
 {
 	public partial class SingleContentEntry<T> : BaseContentEntry<T>, ISingleContentEntry<T>
@@ -11,7 +13,11 @@ namespace Content
 		protected override void OnRegister() => ContentManager.Register(this);
 		protected override void OnUnregister() => ContentManager.Unregister<T>();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator T(SingleContentEntry<T> entry) => entry.Value;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator ContentReference(SingleContentEntry<T> _) => new(in IContentReference.SINGLE_GUID);
 	}
 
 	public interface ISingleContentEntry<T> : IContentEntry<T>, ISingleContentEntry

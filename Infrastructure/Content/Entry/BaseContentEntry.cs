@@ -15,6 +15,7 @@ namespace Content
 
 		/// <summary> Важно! Вернёт true, даже если value == null. Можно использовать extension IsEmpty. </summary>
 		public virtual bool IsValid() => true;
+
 		public virtual bool IsUnique() => false;
 		object IContentEntry.RawValue => Value;
 

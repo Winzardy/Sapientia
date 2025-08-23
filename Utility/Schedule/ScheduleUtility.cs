@@ -139,7 +139,7 @@ namespace Sapientia
 					   .AddSeconds(decode.sec);
 
 					if (monthlyDate < utcAt)
-						monthlyDate = monthlyDate.AddYears(1);
+						monthlyDate = monthlyDate.AddMonths(1);
 
 					return monthlyDate;
 				}

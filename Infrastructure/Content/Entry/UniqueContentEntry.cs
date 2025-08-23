@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
 namespace Content
@@ -39,9 +40,11 @@ namespace Content
 
 		protected override void OnUnregister() => ContentManager.Unregister(this);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator SerializableGuid(UniqueContentEntry<T> entry) => entry.Guid;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ContentReference(UniqueContentEntry<T> entry) => new(in entry.Guid, entry.Index);
-		public static implicit operator ContentReference<T>(UniqueContentEntry<T> entry) => new(in entry.Guid, entry.Index);
 
 		public override string ToString() => $"Entry Type: [ {typeof(T).Name} ] Guid: [ {guid} ]";
 

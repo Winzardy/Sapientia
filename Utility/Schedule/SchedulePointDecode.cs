@@ -147,12 +147,13 @@ namespace Sapientia
 						day = date.Day - 1,
 						hr = hr,
 						min = min,
-						sec = sec
+						sec = sec,
+						sign = sign
 					};
 				}
 
 				default:
-					throw new NotImplementedException($"Unknown SchedulePointType (int: {kind})");
+					throw new NotImplementedException($"Unknown SchedulePointType (int: {kind}, code:{code})");
 			}
 
 			(byte hr, byte min, byte sec) Split(long seconds)
@@ -223,12 +224,12 @@ namespace Sapientia
 						(int) decode.yr,
 						decode.mh + 1,
 						(int) decode.day + 1, 0, 0, 0, DateTimeKind.Utc);
-					var day = (date - DateTime.UnixEpoch).Days;
-					return
-						(day * DATE_OFFSET +
-							Combine(decode.hr, decode.min, decode.sec)
-						)
+					var day = (date - DateTime.UnixEpoch).Days.Abs();
+
+					var code = (day * DATE_OFFSET +
+							Combine(decode.hr, decode.min, decode.sec))
 						* ISchedulePoint.TYPE_OFFSET + kindInt;
+					return sign * code;
 				}
 
 				default:

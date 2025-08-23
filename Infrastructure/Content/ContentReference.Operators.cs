@@ -20,6 +20,7 @@ namespace Content
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator T(in ContentReference<T> reference) => reference.Read();
+
 		#region Guid
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
