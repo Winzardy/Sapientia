@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Content
 {
@@ -26,5 +27,27 @@ namespace Content
 		public ContentEntry(in T value) : base(in value, SerializableGuid.New())
 		{
 		}
+	}
+
+	/// <inheritdoc cref="ContentEntry{T}"/>
+	/// <typeparam name="TFilter">Тип по которому ограничивает запись (ограничение в основном редакторское)</typeparam>
+	[Serializable]
+	public partial struct ContentEntry<T, TFilter>
+		where T : class
+		where TFilter : class, T
+	{
+		public ContentEntry<T> entry;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator T(ContentEntry<T, TFilter> entry) => entry.entry;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator ContentReference<T>(ContentEntry<T, TFilter> entry) => entry.entry;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator ContentEntry<T>(ContentEntry<T, TFilter> entry) => entry.entry;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator bool(ContentEntry<T, TFilter> entry) => entry.entry;
 	}
 }
