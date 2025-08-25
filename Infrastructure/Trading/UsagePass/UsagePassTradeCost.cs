@@ -12,6 +12,14 @@ namespace Trading.UsagePass
 
 		public UsageLimitEntry limit;
 
+		// TODO: -> IResetableTradeCost
+		public void ForceReset(Tradeboard board)
+		{
+			var backend = board.Get<IUsagePassBackend>();
+			var recipeKey = GetReceiptKey(board.Id);
+			backend.ForceReset(recipeKey);
+		}
+
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;

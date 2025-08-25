@@ -143,7 +143,7 @@ namespace Sapientia
 		}
 
 		/// <param name="now">Если передать текущее время, то он будет использоваться как последнее</param>
-		public static void ForceReset(ref UsageLimitModel model, DateTime? now = null)
+		public static void ForceReset(this ref UsageLimitModel model, DateTime? now = null)
 		{
 			model.usageCount = 0;
 			if (now.HasValue)
@@ -151,7 +151,7 @@ namespace Sapientia
 		}
 
 		/// <param name="now">Если передать текущее время, то он будет использоваться как последнее</param>
-		public static void ForceApplyUsage(ref UsageLimitModel model, DateTime? now = null)
+		public static void ForceApplyUsage(this ref UsageLimitModel model, DateTime? now = null)
 		{
 			model.usageCount++;
 

@@ -7,6 +7,9 @@ namespace Trading.UsagePass
 	public interface IUsagePassBackend : ITradeReceiptRegistry<UsagePassTradeReceipt>
 	{
 		public ref readonly UsageLimitModel GetModel(string key);
+
+
+		public void ForceReset(string key);
 	}
 
 	[Serializable]
@@ -50,5 +53,12 @@ namespace Trading.UsagePass
 		}
 
 		public ref readonly UsageLimitModel GetModel(string key) => ref keyToModel.GetOrAdd(key);
+		public void ForceReset(string key)
+		{
+			if(!keyToModel.Contains(key))
+				return;
+			ref var model = ref keyToModel[key];
+			model.ForceReset();
+		}
 	}
 }
