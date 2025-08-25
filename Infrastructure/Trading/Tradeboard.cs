@@ -17,6 +17,8 @@ namespace Trading
 	/// <seealso cref="Blackboard"/>
 	public sealed class Tradeboard : Blackboard
 	{
+		private const string RESTORE_KEY = "restoring";
+
 		/// <summary>
 		/// Trade Id
 		/// </summary>
@@ -28,6 +30,8 @@ namespace Trading
 
 		private HashSet<string> _restoreSources;
 
+		private BlackboardToken? _registerRestoreToken;
+
 		public Tradeboard()
 		{
 		}
@@ -38,18 +42,29 @@ namespace Trading
 
 		protected override void OnRelease()
 		{
-			_restoreSources?.ReleaseToStaticPool();
-			_restoreSources = null;
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _restoreSources);
+			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
 		}
 
 		public void AddRestoreSource(string source)
 		{
 			_restoreSources ??= HashSetPool<string>.Get();
-			_restoreSources.Add(source);
+			if (_restoreSources.Add(source))
+			{
+				if (!_registerRestoreToken.HasValue)
+					_registerRestoreToken = Register(true, RESTORE_KEY);
+			}
 		}
 
-		public void RemoveRestoreSource(string source) =>
+		public void RemoveRestoreSource(string source)
+		{
 			_restoreSources?.Remove(source);
+
+			if (_restoreSources != null && _restoreSources.IsEmpty())
+				BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
+		}
+
+
 
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);

@@ -89,6 +89,8 @@ namespace Sapientia
 		internal Exception GetException(object msg) => GetArgumentException(msg);
 
 		public sealed override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
+
+		public static implicit operator bool(Blackboard? bb) => bb != null;
 	}
 
 	internal static class Blackboard<T>
@@ -167,6 +169,8 @@ namespace Sapientia
 		private readonly IBlackboardToken _token;
 		private readonly int _generation;
 
+		public bool IsValid => _token != null && _token.Generation == _generation;
+
 		internal BlackboardToken(IBlackboardToken token, int generation)
 		{
 			_token = token;
@@ -182,6 +186,20 @@ namespace Sapientia
 					$"[{nameof(BlackboardToken)}] Invalid token (token gen:{_token.Generation} != gen: {_generation})");
 
 			_token.Release();
+		}
+
+		public void ReleaseSafe()
+		{
+			if (!IsValid)
+				return;
+
+			Release();
+		}
+
+		public static void ReleaseAndSetNull(ref BlackboardToken? token)
+		{
+			token?.Release();
+			token = null;
 		}
 	}
 }

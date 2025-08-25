@@ -18,7 +18,17 @@ namespace Sapientia.Pooling
 			_disposed = false;
 		}
 
-		public void Dispose()
+		public void Dispose() => Release();
+
+		public void ReleaseSafe()
+		{
+			if (_disposed)
+				return;
+
+			Dispose();
+		}
+
+		public void Release()
 		{
 			if (_disposed)
 				throw new ObjectDisposedException(nameof(PooledObject<T>));
@@ -29,5 +39,14 @@ namespace Sapientia.Pooling
 		}
 
 		public static implicit operator T(PooledObject<T> pooledObject) => pooledObject.Obj;
+	}
+
+	public static class PooledObjectUtility
+	{
+		public static void ReleaseAndSetNull<T>(ref PooledObject<T>? obj)
+		{
+			obj?.ReleaseSafe();
+			obj = null;
+		}
 	}
 }

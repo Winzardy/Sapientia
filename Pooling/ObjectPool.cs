@@ -51,7 +51,7 @@ namespace Sapientia.Pooling
 
 		public void Dispose() => Clear();
 
-		public T Get()
+		public virtual T Get()
 		{
 			var item = _single;
 			if (item == null || Interlocked.CompareExchange(ref _single, null, item) != item)
