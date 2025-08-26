@@ -7,7 +7,6 @@ namespace InAppPurchasing
 		public readonly string priceLabel;
 
 		// Структуру можно дополнять, не является финальной
-
 		public ProductInfo(string id, IAPProductType type, string priceLabel)
 		{
 			this.id = id;
