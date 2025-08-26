@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Trading
 {
 	public interface IResettableCost
