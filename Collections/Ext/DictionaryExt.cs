@@ -15,6 +15,7 @@ namespace Sapientia.Collections
 				value = createValueFunction.Invoke();
 				dict[key] = value;
 			}
+
 			return value;
 		}
 
@@ -25,6 +26,7 @@ namespace Sapientia.Collections
 				value = new TValue();
 				dict[key] = value;
 			}
+
 			return value;
 		}
 
@@ -66,6 +68,14 @@ namespace Sapientia.Collections
 			foreach (var (key, pair) in source)
 				dictionary.Add(key, pair.Clone());
 			return dictionary;
+		}
+
+		public static TValue GetValueOrDefaultSafe<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue @default = default)
+		{
+			if (key == null)
+				return @default;
+
+			return dictionary.GetValueOrDefault(key, @default);
 		}
 	}
 }

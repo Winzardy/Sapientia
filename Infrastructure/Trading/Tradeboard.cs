@@ -64,17 +64,23 @@ namespace Trading
 				BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
 		}
 
-
-
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
 	}
 
 	public static class TradeboardUtility
 	{
+		public static string GetTradeId(this in ContentReference<TradeCost> reference) => reference.guid;
+		public static string GetTradeId(this ContentEntry<TradeCost> reference) => reference.Guid;
+
 		public static void Bind(this Tradeboard board, in ContentReference<TradeCost> reference)
 		{
-			Bind(board, reference.guid);
+			Bind(board, reference.GetTradeId());
+		}
+
+		public static void Bind(this Tradeboard board, in ContentEntry<TradeCost> reference)
+		{
+			Bind(board, reference.GetTradeId());
 		}
 
 		public static void Bind(this Tradeboard board, in TradeEntry entry)

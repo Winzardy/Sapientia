@@ -2,18 +2,18 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Sapientia;
+using UnityEngine;
 
 namespace Trading.UsagePass
 {
 	[Serializable]
-	public partial class UsagePassTradeCost : TradeCostWithReceipt<UsagePassTradeReceipt>
+	public partial class UsagePassTradeCost : TradeCostWithReceipt<UsagePassTradeReceipt>, IResettableCost
 	{
 		public const string ERROR_CATEGORY = "UsagePass";
 
 		public UsageLimitEntry limit;
 
-		// TODO: -> IResetableTradeCost
-		public void ForceReset(Tradeboard board)
+		public void Reset(Tradeboard board)
 		{
 			var backend = board.Get<IUsagePassBackend>();
 			var recipeKey = GetReceiptKey(board.Id);
