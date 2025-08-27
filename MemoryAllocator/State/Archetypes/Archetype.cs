@@ -408,7 +408,8 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				if (_destroyHandlerProxy.IsCreated)
 				{
-					_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, _elements.GetValuePtrByDenseId(worldState, entity.id).ptr, 1);
+					var safePtr = _elements.GetValuePtrByDenseId(worldState, denseId);
+					_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, safePtr.ptr, 1);
 				}
 				_elements.RemoveSwapBackByDenseId(worldState, denseId);
 			}
