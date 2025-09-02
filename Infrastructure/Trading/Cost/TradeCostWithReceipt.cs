@@ -13,13 +13,13 @@ namespace Trading
 			var canIssue = false;
 
 			error = null;
-			if (!board.Contains<ITradingBackend>())
+			if (!board.Contains<ITradingNode>())
 			{
 				TradingDebug.LogError("Not found trading service...");
 			}
 			else
 			{
-				var backend = board.Get<ITradingBackend>();
+				var backend = board.Get<ITradingNode>();
 				var registry = backend.GetRegistry<T>();
 				canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
 			}
@@ -30,13 +30,13 @@ namespace Trading
 		protected sealed override bool Pay(Tradeboard board)
 		{
 			var issue = false;
-			if (!board.Contains<ITradingBackend>())
+			if (!board.Contains<ITradingNode>())
 			{
 				TradingDebug.LogError("Not found trading service...");
 			}
 			else
 			{
-				var backend = board.Get<ITradingBackend>();
+				var backend = board.Get<ITradingNode>();
 				var registry = backend.GetRegistry<T>();
 				issue = registry.Issue(board, GetReceiptKey(board.Id));
 			}
@@ -97,7 +97,7 @@ namespace Trading
 
 	public static class TradeReceiptUtility
 	{
-		public static void Register<T>(this ITradingBackend backend, T[] receipts, string tradeId)
+		public static void Register<T>(this ITradingNode node, T[] receipts, string tradeId)
 			where T : struct, ITradeReceipt
 		{
 			if (tradeId.IsNullOrEmpty())
@@ -107,16 +107,16 @@ namespace Trading
 				return;
 
 			for (int i = 0; i < receipts.Length; i++)
-				backend.Register(receipts[i], tradeId);
+				node.Register(receipts[i], tradeId);
 		}
 
-		public static void Register<T>(this ITradingBackend backend, in T receipt, string tradeId)
+		public static void Register<T>(this ITradingNode node, in T receipt, string tradeId)
 			where T : struct, ITradeReceipt
 		{
 			if (tradeId.IsNullOrEmpty())
 				throw TradingDebug.NullException("Trade ID cannot be null or empty");
 
-			var registry = backend.GetRegistry<T>();
+			var registry = node.GetRegistry<T>();
 
 			if (registry == null)
 				throw TradingDebug.Exception($"Not found receipt registry by type [ {typeof(T)} ]");

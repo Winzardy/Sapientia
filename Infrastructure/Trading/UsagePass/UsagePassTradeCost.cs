@@ -12,9 +12,11 @@ namespace Trading.UsagePass
 
 		public UsageLimitEntry limit;
 
+		public bool useSimulateTime;
+
 		public void Reset(Tradeboard board)
 		{
-			var backend = board.Get<IUsagePassBackend>();
+			var backend = board.Get<IUsagePassNode>();
 			var recipeKey = GetReceiptKey(board.Id);
 			backend.ForceReset(recipeKey);
 		}
@@ -23,12 +25,13 @@ namespace Trading.UsagePass
 		{
 			error = null;
 
-			var backend = board.Get<IUsagePassBackend>();
+			var backend = board.Get<IUsagePassNode>();
 			var recipeKey = GetReceiptKey(board.Id);
 			ref readonly var model = ref backend.GetModel(recipeKey);
-			var now = board.Get<IDateTimeProvider>().Now;
+			var dateTime = board.Get<ITradingNode>()
+			   .GetTime(useSimulateTime);
 
-			if (!limit.CanApplyUsage(in model, now, out var limitApplyError))
+			if (!limit.CanApplyUsage(in model, dateTime, out var limitApplyError))
 			{
 				if (board.IsRestoreState)
 					return true;
@@ -42,7 +45,8 @@ namespace Trading.UsagePass
 
 		protected override Task<UsagePassTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
-			var dateTime = board.Get<IDateTimeProvider>().Now;
+			var dateTime = board.Get<ITradingNode>()
+			   .GetTime(useSimulateTime);
 			UsagePassTradeReceipt? receipt = new UsagePassTradeReceipt(dateTime.Ticks);
 			return Task.FromResult(receipt);
 		}

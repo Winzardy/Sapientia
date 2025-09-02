@@ -24,7 +24,7 @@ namespace Sapientia
 	{
 		public static bool IsEmpty(this UsageLimitEntry entry) => entry.usageCount == 0;
 
-		public static bool CanApplyUsage(this in UsageLimitEntry entry, in UsageLimitModel model, DateTime now,
+		public static bool CanApplyUsage(this in UsageLimitEntry entry, in UsageLimitData model, DateTime now,
 			out UsageLimitApplyError? errorCode)
 		{
 			errorCode = null;
@@ -67,13 +67,13 @@ namespace Sapientia
 			return true;
 		}
 
-		public static bool IsResetState(this in UsageLimitEntry entry, in UsageLimitModel model, DateTime now)
+		public static bool IsResetState(this in UsageLimitEntry entry, in UsageLimitData model, DateTime now)
 			=> IsResetState(entry, model.firstUsageTimestamp.ToDateTime(), now);
 
 		public static bool IsResetState(this in UsageLimitEntry entry, DateTime at, DateTime now)
 			=> !entry.fullReset.IsEmpty() && entry.fullReset.IsPassed(at, now);
 
-		public static int GetRemainingUsages(this in UsageLimitEntry entry, in UsageLimitModel model)
+		public static int GetRemainingUsages(this in UsageLimitEntry entry, in UsageLimitData model)
 		{
 			if (entry.usageCount == 0)
 				return UsageLimitEntry.INFINITY_USAGES;
@@ -104,7 +104,7 @@ namespace Sapientia
 			return resetDateTime;
 		}
 
-		public static void ApplyUsage(this ref UsageLimitModel model, in UsageLimitEntry entry, DateTime now)
+		public static void ApplyUsage(this ref UsageLimitData model, in UsageLimitEntry entry, DateTime now)
 		{
 			if (!CanApplyUsage(in entry, in model, now, out var error))
 				throw new InvalidOperationException($"Cannot apply usage by error: {error}");
@@ -121,7 +121,7 @@ namespace Sapientia
 				model.fullUsageCount++;
 		}
 
-		public static bool TryApplyUsage(this ref UsageLimitModel model, in UsageLimitEntry entry, DateTime now,
+		public static bool TryApplyUsage(this ref UsageLimitData model, in UsageLimitEntry entry, DateTime now,
 			out UsageLimitApplyError? error)
 		{
 			error = null;
@@ -143,7 +143,7 @@ namespace Sapientia
 		}
 
 		/// <param name="now">Если передать текущее время, то он будет использоваться как последнее</param>
-		public static void ForceReset(this ref UsageLimitModel model, DateTime? now = null)
+		public static void ForceReset(this ref UsageLimitData model, DateTime? now = null)
 		{
 			model.usageCount = 0;
 			if (now.HasValue)
@@ -151,7 +151,7 @@ namespace Sapientia
 		}
 
 		/// <param name="now">Если передать текущее время, то он будет использоваться как последнее</param>
-		public static void ForceApplyUsage(this ref UsageLimitModel model, DateTime? now = null)
+		public static void ForceApplyUsage(this ref UsageLimitData model, DateTime? now = null)
 		{
 			model.usageCount++;
 

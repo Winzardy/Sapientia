@@ -93,9 +93,4 @@ namespace Trading
 			board.SetId(tradeId);
 		}
 	}
-
-	public interface IDateTimeProvider
-	{
-		public DateTime Now { get; }
-	}
 }

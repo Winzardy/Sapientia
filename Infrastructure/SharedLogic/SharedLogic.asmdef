@@ -1,0 +1,9 @@
+{
+  "name": "SharedLogic",
+  "references": [
+    "UniTask",
+    "Sapientia",
+    "UnityEditor.UI",
+    "UnityEngine.UI"
+  ]
+}
