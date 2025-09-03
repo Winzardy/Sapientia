@@ -52,6 +52,14 @@ namespace Sapientia.Data
 			return (value.mask & mask) != 0;
 		}
 
+		public void Set(T value, bool add)
+		{
+			if (add)
+				Add(value);
+			else
+				Remove(value);
+		}
+
 		public void Add(T value)
 		{
 			Add(value.ToByte());

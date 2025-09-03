@@ -18,7 +18,7 @@ namespace Submodules.Sapientia.Data
 		/// Поле предназначено для правильной сериализации на случай, если список статов будет изменён.
 		/// </summary>
 		[UnityEngine.HideInInspector]
-		public string statTypeName;
+		public string enumValueName;
 #endif
 
 #if UNITY_EDITOR
@@ -43,7 +43,7 @@ namespace Submodules.Sapientia.Data
 			return new EnumSerializableContainer<TEnum1>()
 			{
 #if UNITY_EDITOR
-				statTypeName = statTypeName,
+				enumValueName = enumValueName,
 #endif
 				value = value.ToEnum<TEnum, TEnum1>(),
 			};
@@ -52,14 +52,14 @@ namespace Submodules.Sapientia.Data
 #if UNITY_EDITOR
 		public void OnBeforeSerialize()
 		{
-			statTypeName = value.ToString();
+			enumValueName = value.ToString();
 		}
 
 		public void OnAfterDeserialize()
 		{
-			if (statTypeName.IsNullOrEmpty() || !Enum.TryParse<TEnum>(statTypeName, out var enumValue))
+			if (enumValueName.IsNullOrEmpty() || !Enum.TryParse<TEnum>(enumValueName, out var enumValue))
 			{
-				statTypeName = value.ToString();
+				enumValueName = value.ToString();
 			}
 			else if (!value.Equals(enumValue))
 			{
