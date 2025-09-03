@@ -36,10 +36,13 @@ namespace Sapientia.MemoryAllocator.State
 		public MemList<KillCallback> killCallbacks;
 	}
 
-	public struct KillRequest : IComponent
+	public struct DestroyElement : IComponent
 	{
-		public bool dontDestroy;
+		public MemList<Entity> children;
+		public MemList<Entity> parents;
 	}
+
+	public struct KillRequest : IComponent {}
 
 	public struct DelayKillRequest : IComponent
 	{

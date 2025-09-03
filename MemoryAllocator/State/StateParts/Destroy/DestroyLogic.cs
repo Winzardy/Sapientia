@@ -14,6 +14,7 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly WorldState worldState;
 
 		public readonly SafePtr<EntityStatePart> entityStatePart;
+		public readonly ArchetypeContext<DestroyElement> destroyElementArchetype;
 		public readonly ArchetypeContext<KillElement> killElementArchetype;
 		public readonly ArchetypeContext<DestroyRequest> destroyRequestArchetype;
 		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
@@ -26,6 +27,7 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			this.worldState = worldState;
 			entityStatePart = worldState.GetServicePtr<EntityStatePart>();
+			destroyElementArchetype = new ArchetypeContext<DestroyElement>(worldState);
 			killElementArchetype = new ArchetypeContext<KillElement>(worldState);
 			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(worldState);
 			killRequestArchetype = new ArchetypeContext<KillRequest>(worldState);
@@ -106,6 +108,55 @@ namespace Sapientia.MemoryAllocator.State
 		public bool HasDestroyOrKillRequest(Entity entity)
 		{
 			return killRequestArchetype.HasElement(entity) || destroyRequestArchetype.HasElement(entity);
+		}
+
+		public void AddDestroyParent(Entity child, Entity parent)
+		{
+			E.ASSERT(IsAlive(child));
+			E.ASSERT(entityStatePart.ptr->IsEntityExist(worldState, parent));
+
+			if (destroyRequestArchetype.HasElement(parent))
+			{
+				RequestKill(child);
+				return;
+			}
+
+			ref var childElement = ref destroyElementArchetype.GetElement(child);
+			ref var parentElement = ref destroyElementArchetype.GetElement(parent);
+
+			if (!childElement.parents.IsCreated)
+				childElement.parents = new MemList<Entity>(worldState);
+			if (!childElement.children.IsCreated)
+				childElement.children = new MemList<Entity>(worldState);
+
+			childElement.parents.Add(worldState, parent);
+			parentElement.children.Add(worldState, child);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddDestroyChild(Entity parent, Entity child)
+		{
+			AddKillParent(child, parent);
+		}
+
+		public void AddDestroyChildren(Entity parent, MemListEnumerable<Entity> children)
+		{
+			E.ASSERT(IsAlive(parent));
+
+			ref var parentElement = ref destroyElementArchetype.GetElement(parent);
+
+			if (!parentElement.children.IsCreated)
+				parentElement.children = new MemList<Entity>(worldState);
+			parentElement.children.AddRange(worldState, children);
+
+			foreach (var child in children)
+			{
+				E.ASSERT(IsAlive(child));
+				ref var childElement = ref destroyElementArchetype.GetElement(child);
+				if (!childElement.parents.IsCreated)
+					childElement.parents = new MemList<Entity>(worldState);
+				childElement.parents.Add(worldState, parent);
+			}
 		}
 
 		public void AddKillParent(Entity child, Entity parent)
