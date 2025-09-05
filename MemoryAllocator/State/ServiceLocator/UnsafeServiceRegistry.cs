@@ -36,6 +36,16 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGetPtr<T>(out SafePtr<T> value) where T : unmanaged, IIndexedType
+		{
+			var context = ServiceRegistryContext.Create<T>();
+			var result = _typeToPtr.TryGetValue(context, out var ptr);
+			value = ptr;
+
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetPtr<T>() where T : unmanaged, IIndexedType
 		{
 			var context = ServiceRegistryContext.Create<T>();
@@ -56,8 +66,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(ServiceRegistryContext context) where T : unmanaged
+		public SafePtr<T> GetOrCreatePtr<T>(ServiceRegistryContext context, out bool isCreated) where T : unmanaged
 		{
+			isCreated = false;
 			var value = _typeToPtr.GetValue(context, out var success);
 			if (success)
 				return value;
@@ -65,7 +76,14 @@ namespace Sapientia.MemoryAllocator
 			value = MemoryExt.MemAlloc<T>();
 			_typeToPtr.Add(context, value);
 
+			isCreated = true;
 			return value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> GetOrCreatePtr<T>(ServiceRegistryContext context) where T : unmanaged
+		{
+			return GetOrCreatePtr<T>(context, out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,10 +94,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(out ServiceRegistryContext context) where T : unmanaged, IIndexedType
+		public SafePtr<T> GetOrCreatePtr<T>(out bool isCreated) where T : unmanaged, IIndexedType
 		{
-			context = ServiceRegistryContext.Create<T>();
-			return GetOrCreatePtr<T>(context);
+			var context = ServiceRegistryContext.Create<T>();
+			return GetOrCreatePtr<T>(context, out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

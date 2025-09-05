@@ -1,3 +1,4 @@
+using System;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
@@ -9,6 +10,7 @@ namespace Sapientia.MemoryAllocator.State
 		private readonly WorldState _worldState;
 		private readonly SafePtr<EntityStatePart> _entitiesStatePart;
 		private readonly ComponentSetContext<DestroyRequest> _destroyRequestArchetype;
+		private readonly ComponentSetContext<DestroyElement> _destroyElementsArchetype;
 		private readonly ComponentSetContext<KillRequest> _killRequestArchetype;
 		private readonly ComponentSetContext<DelayKillRequest> _delayKillRequestArchetype;
 		private readonly ComponentSetContext<KillElement> _killElementsArchetype;
@@ -18,6 +20,7 @@ namespace Sapientia.MemoryAllocator.State
 			_worldState = worldState;
 			_entitiesStatePart = _worldState.GetServicePtr<EntityStatePart>();
 			_destroyRequestArchetype = new (_worldState);
+			_destroyElementsArchetype = new (_worldState);
 			_killRequestArchetype = new (_worldState);
 			_delayKillRequestArchetype = new (_worldState);
 			_killElementsArchetype = new (_worldState);
@@ -39,7 +42,21 @@ namespace Sapientia.MemoryAllocator.State
 				return;
 
 			var destroyRequests = _destroyRequestArchetype.GetRawElements();
-			var elementsToDestroy = stackalloc Entity[count];
+			var destroyRequestTempRaw = stackalloc ComponentSetElement<DestroyRequest>[count];
+			var destroyRequestsTemp = new SafePtr<ComponentSetElement<DestroyRequest>>(destroyRequestTempRaw, count);
+
+			MemoryExt.MemCopy<ComponentSetElement<DestroyRequest>>(destroyRequests, destroyRequestsTemp, count);
+
+			for (var i = 0; i < count; i++)
+			{
+				var entity = destroyRequestsTemp[i].entity;
+
+				DestroyChild(entity);
+				DestroyParent(entity);
+			}
+
+			destroyRequests = _destroyRequestArchetype.GetRawElements();
+			var elementsToDestroy = stackalloc Entity[_destroyRequestArchetype.Count];
 
 			for (var i = 0; i < count; i++)
 			{
@@ -67,27 +84,25 @@ namespace Sapientia.MemoryAllocator.State
 			}
 
 			var killRequestsCount = _killRequestArchetype.Count;
-			if (killRequestsCount > 0)
+			if (killRequestsCount < 1)
+				return;
+
+			var killRequestsTemp = (Span<ComponentSetElement<KillRequest>>)stackalloc ComponentSetElement<KillRequest>[killRequestsCount];
+			var killRequests = _killRequestArchetype.GetSpan();
+
+			killRequests.CopyTo(killRequestsTemp);
+			_killRequestArchetype.Clear();
+
+			for (var i = 0; i < killRequestsCount; i++)
 			{
-				var killRequestsTempRaw = stackalloc ComponentSetElement<KillRequest>[killRequestsCount];
-				var killRequestsTemp = new SafePtr<ComponentSetElement<KillRequest>>(killRequestsTempRaw, killRequestsCount);
+				var entity = killRequestsTemp[i].entity;
 
-				var killRequests = _killRequestArchetype.GetRawElements();
-				MemoryExt.MemCopy<ComponentSetElement<KillRequest>>(killRequests, killRequestsTemp, killRequestsCount);
+				ExecuteKillCallback(entity);
+				KillChild(entity);
+				KillParent(entity);
 
-				_killRequestArchetype.Clear();
-
-				for (var i = 0; i < killRequestsCount; i++)
-				{
-					var entity = killRequestsTemp[i].entity;
-
-					ExecuteKillCallback(entity);
-					KillChild(entity);
-					KillParent(entity);
-
-					_delayKillRequestArchetype.RemoveSwapBackElement(entity);
-					_destroyRequestArchetype.GetElement(entity);
-				}
+				_delayKillRequestArchetype.RemoveSwapBackElement(entity);
+				_destroyRequestArchetype.GetElement(entity);
 			}
 		}
 
@@ -97,15 +112,15 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		private void ExecuteKillCallback(in Entity entity)
 		{
-			ref var destroyElement = ref _killElementsArchetype.TryGetElement(entity, out var isExist);
+			ref var killElement = ref _killElementsArchetype.TryGetElement(entity, out var isExist);
 			if (!isExist)
 				return;
 
-			if (destroyElement.killCallbacks.IsCreated)
+			if (killElement.killCallbacks.IsCreated)
 			{
-				for (var i = 0; i < destroyElement.killCallbacks.Count; i++)
+				for (var i = 0; i < killElement.killCallbacks.Count; i++)
 				{
-					ref var killCallback = ref destroyElement.killCallbacks[_worldState, i];
+					ref var killCallback = ref killElement.killCallbacks[_worldState, i];
 
 					if (killCallback.callback.IsCreated)
 					{
@@ -125,14 +140,14 @@ namespace Sapientia.MemoryAllocator.State
 							targetElement.killCallbackHolders.RemoveAtSwapBack(_worldState, i);
 					}
 				}
-				destroyElement.killCallbacks.Clear();
+				killElement.killCallbacks.Clear();
 			}
 
-			if (destroyElement.killCallbackHolders.IsCreated)
+			if (killElement.killCallbackHolders.IsCreated)
 			{
-				for (var i = 0; i < destroyElement.killCallbackHolders.Count; i++)
+				for (var i = 0; i < killElement.killCallbackHolders.Count; i++)
 				{
-					var holder = destroyElement.killCallbackHolders[_worldState, i];
+					var holder = killElement.killCallbackHolders[_worldState, i];
 					if (!_killElementsArchetype.HasElement(holder) || !_entitiesStatePart.ptr->IsEntityExist(_worldState, holder))
 						continue;
 					ref var holderElement = ref _killElementsArchetype.GetElement(holder);
@@ -146,7 +161,7 @@ namespace Sapientia.MemoryAllocator.State
 						}
 					}
 				}
-				destroyElement.parents.Clear();
+				killElement.parents.Clear();
 			}
 		}
 
@@ -156,16 +171,16 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		private void KillChild(in Entity entity)
 		{
-			ref var destroyElement = ref _killElementsArchetype.TryGetElement(entity, out var isExist);
+			ref var killElement = ref _killElementsArchetype.TryGetElement(entity, out var isExist);
 			if (!isExist)
 				return;
 
-			if (!destroyElement.parents.IsCreated)
+			if (!killElement.parents.IsCreated)
 				return;
 
-			for (var i = 0; i < destroyElement.parents.Count; i++)
+			for (var i = 0; i < killElement.parents.Count; i++)
 			{
-				var parent = destroyElement.parents[_worldState, i];
+				var parent = killElement.parents[_worldState, i];
 				ref var parentElement = ref _killElementsArchetype.TryGetElement(parent, out var isParentExist);
 				if (!isParentExist || !_entitiesStatePart.ptr->IsEntityExist(_worldState, parent))
 					continue;
@@ -179,7 +194,7 @@ namespace Sapientia.MemoryAllocator.State
 					}
 				}
 			}
-			destroyElement.parents.Clear();
+			killElement.parents.Clear();
 		}
 
 		/// <summary>
@@ -206,6 +221,66 @@ namespace Sapientia.MemoryAllocator.State
 					continue;
 
 				KillParent(child);
+			}
+			destroyElement.children.Clear();
+		}
+
+		/// <summary>
+		/// Уничтожает entity-ребёнка.
+		/// Т.е. удаляет из всех родителей информацию о передаваемой entity.
+		/// </summary>
+		private void DestroyChild(in Entity entity)
+		{
+			ref var destroyElement = ref _destroyElementsArchetype.TryGetElement(entity, out var isExist);
+			if (!isExist)
+				return;
+
+			if (!destroyElement.parents.IsCreated)
+				return;
+
+			for (var i = 0; i < destroyElement.parents.Count; i++)
+			{
+				var parent = destroyElement.parents[_worldState, i];
+				ref var parentElement = ref _destroyElementsArchetype.TryGetElement(parent, out var isParentExist);
+				if (!isParentExist || !_entitiesStatePart.ptr->IsEntityExist(_worldState, parent))
+					continue;
+
+				for (var j = 0; j < parentElement.children.Count; j++)
+				{
+					if (parentElement.children[_worldState, j].id == entity.id)
+					{
+						parentElement.children.RemoveAtSwapBack(_worldState, j);
+						break;
+					}
+				}
+			}
+			destroyElement.parents.Clear();
+		}
+
+		/// <summary>
+		/// Уничтожает entity-родителя.
+		/// Т.е. уничтожает всех детей, которые зависят от переданной entity.
+		/// </summary>
+		private void DestroyParent(in Entity entity)
+		{
+			ref var destroyElement = ref _destroyElementsArchetype.TryGetElement(entity, out var isExist);
+			if (!isExist)
+				return;
+
+			if (!destroyElement.children.IsCreated)
+				return;
+			for (var i = 0; i < destroyElement.children.Count; i++)
+			{
+				var child = destroyElement.children[_worldState, i];
+
+				if (!_entitiesStatePart.ptr->IsEntityExist(_worldState, child))
+					continue;
+
+				_destroyRequestArchetype.GetElement(child, out var isChildExist);
+				if (isChildExist)
+					continue;
+
+				DestroyParent(child);
 			}
 			destroyElement.children.Clear();
 		}

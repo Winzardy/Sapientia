@@ -4,12 +4,12 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		private CachedPtr<ComponentSet> _archetypePtr;
 
-		public ref ComponentSet GetArchetype(WorldState worldState)
+		public ref ComponentSet GetComponentSet(WorldState worldState)
 		{
 			return ref _archetypePtr.GetValue(worldState);
 		}
 
-		public ComponentSetContext<T> GetArchetypeContext(WorldState worldState)
+		public ComponentSetContext<T> GetComponentSetContext(WorldState worldState)
 		{
 			return new ComponentSetContext<T>(worldState, _archetypePtr.GetPtr(worldState));
 		}

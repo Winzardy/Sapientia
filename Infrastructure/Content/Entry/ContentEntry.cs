@@ -49,5 +49,10 @@ namespace Content
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator bool(ContentEntry<T, TFilter> entry) => entry.entry;
+
+		public ContentReference<T> ToReference()
+		{
+			return entry.ToReference();
+		}
 	}
 }
