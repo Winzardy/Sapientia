@@ -27,7 +27,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Has<T>(this Entity entity, WorldState worldState) where T: unmanaged, IComponent
 		{
-			return worldState.GetArchetype<T>().HasElement(entity);
+			return worldState.GetComponentSet<T>().HasElement(entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,7 +39,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryRead<T>(this ref Entity entity, WorldState worldState, out T result) where T: unmanaged, IComponent
 		{
-			return worldState.GetArchetype<T>().TryReadElement<T>(worldState, entity, out result);
+			return worldState.GetComponentSet<T>().TryReadElement<T>(worldState, entity, out result);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,13 +51,13 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this Entity entity, WorldState worldState) where T: unmanaged, IComponent
 		{
-			return ref worldState.GetArchetype<T>().ReadElement<T>(worldState, entity);
+			return ref worldState.GetComponentSet<T>().ReadElement<T>(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this Entity entity, WorldState worldState, out bool isExist) where T: unmanaged, IComponent
 		{
-			return ref worldState.GetArchetype<T>().ReadElement<T>(worldState, entity, out isExist);
+			return ref worldState.GetComponentSet<T>().ReadElement<T>(worldState, entity, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,7 +69,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T Get<T>(this Entity entity, WorldState worldState) where T: unmanaged, IComponent
 		{
-			return ref worldState.GetArchetype<T>().GetElement<T>(worldState, entity);
+			return ref worldState.GetComponentSet<T>().GetElement<T>(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,7 +81,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T Get<T>(this Entity entity, WorldState worldState, out bool isCreated) where T: unmanaged, IComponent
 		{
-			return ref worldState.GetArchetype<T>().GetElement<T>(worldState, entity, out isCreated);
+			return ref worldState.GetComponentSet<T>().GetElement<T>(worldState, entity, out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,13 +93,13 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void Remove<T>(this ref Entity entity, WorldState worldState) where T: unmanaged, IComponent
 		{
-			worldState.GetArchetype<T>().RemoveSwapBackElement(worldState, entity);
+			worldState.GetComponentSet<T>().RemoveSwapBackElement(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ArchetypeContext<T> GetArchetype<T>(this ref Entity entity) where T: unmanaged, IComponent
+		public static ComponentSetContext<T> GetArchetype<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
-			return new ArchetypeContext<T>(entity.worldId.GetWorldState());
+			return new ComponentSetContext<T>(entity.worldId.GetWorldState());
 		}
 	}
 }

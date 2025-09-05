@@ -8,10 +8,10 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		private readonly WorldState _worldState;
 		private readonly SafePtr<EntityStatePart> _entitiesStatePart;
-		private readonly ArchetypeContext<DestroyRequest> _destroyRequestArchetype;
-		private readonly ArchetypeContext<KillRequest> _killRequestArchetype;
-		private readonly ArchetypeContext<DelayKillRequest> _delayKillRequestArchetype;
-		private readonly ArchetypeContext<KillElement> _killElementsArchetype;
+		private readonly ComponentSetContext<DestroyRequest> _destroyRequestArchetype;
+		private readonly ComponentSetContext<KillRequest> _killRequestArchetype;
+		private readonly ComponentSetContext<DelayKillRequest> _delayKillRequestArchetype;
+		private readonly ComponentSetContext<KillElement> _killElementsArchetype;
 
 		public DestroyUpdater(WorldState worldState)
 		{
@@ -69,11 +69,11 @@ namespace Sapientia.MemoryAllocator.State
 			var killRequestsCount = _killRequestArchetype.Count;
 			if (killRequestsCount > 0)
 			{
-				var killRequestsTempRaw = stackalloc ArchetypeElement<KillRequest>[killRequestsCount];
-				var killRequestsTemp = new SafePtr<ArchetypeElement<KillRequest>>(killRequestsTempRaw, killRequestsCount);
+				var killRequestsTempRaw = stackalloc ComponentSetElement<KillRequest>[killRequestsCount];
+				var killRequestsTemp = new SafePtr<ComponentSetElement<KillRequest>>(killRequestsTempRaw, killRequestsCount);
 
 				var killRequests = _killRequestArchetype.GetRawElements();
-				MemoryExt.MemCopy<ArchetypeElement<KillRequest>>(killRequests, killRequestsTemp, killRequestsCount);
+				MemoryExt.MemCopy<ComponentSetElement<KillRequest>>(killRequests, killRequestsTemp, killRequestsCount);
 
 				_killRequestArchetype.Clear();
 

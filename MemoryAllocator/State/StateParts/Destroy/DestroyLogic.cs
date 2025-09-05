@@ -9,19 +9,19 @@ namespace Sapientia.MemoryAllocator.State
 		public readonly WorldState worldState;
 
 		public readonly SafePtr<EntityStatePart> entityStatePart;
-		public readonly ArchetypeContext<KillElement> killElementArchetype;
-		public readonly ArchetypeContext<DestroyRequest> destroyRequestArchetype;
-		public readonly ArchetypeContext<KillRequest> killRequestArchetype;
-		public readonly ArchetypeContext<DelayKillRequest> delayKillRequestArchetype;
+		public readonly ComponentSetContext<KillElement> killElementArchetype;
+		public readonly ComponentSetContext<DestroyRequest> destroyRequestArchetype;
+		public readonly ComponentSetContext<KillRequest> killRequestArchetype;
+		public readonly ComponentSetContext<DelayKillRequest> delayKillRequestArchetype;
 
 		public DestroyLogic(WorldState worldState)
 		{
 			this.worldState = worldState;
 			entityStatePart = worldState.GetServicePtr<EntityStatePart>();
-			killElementArchetype = new ArchetypeContext<KillElement>(worldState);
-			destroyRequestArchetype = new ArchetypeContext<DestroyRequest>(worldState);
-			killRequestArchetype = new ArchetypeContext<KillRequest>(worldState);
-			delayKillRequestArchetype = new ArchetypeContext<DelayKillRequest>(worldState);
+			killElementArchetype = new ComponentSetContext<KillElement>(worldState);
+			destroyRequestArchetype = new ComponentSetContext<DestroyRequest>(worldState);
+			killRequestArchetype = new ComponentSetContext<KillRequest>(worldState);
+			delayKillRequestArchetype = new ComponentSetContext<DelayKillRequest>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

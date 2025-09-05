@@ -35,16 +35,16 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public void Initialize(WorldState worldState, IndexedPtr self)
 		{
-			Archetype.RegisterArchetype<KillElement>(worldState, 2048).SetDestroyHandler<KillElementDestroyHandler>(worldState);
-			Archetype.RegisterArchetype<KillRequest>(worldState, 256);
-			Archetype.RegisterArchetype<DelayKillRequest>(worldState, 64);
-			Archetype.RegisterArchetype<DestroyRequest>(worldState, 256);
+			ComponentSet.RegisterArchetype<KillElement>(worldState, 2048).SetDestroyHandler<KillElementDestroyHandler>(worldState);
+			ComponentSet.RegisterArchetype<KillRequest>(worldState, 256);
+			ComponentSet.RegisterArchetype<DelayKillRequest>(worldState, 64);
+			ComponentSet.RegisterArchetype<DestroyRequest>(worldState, 256);
 		}
 	}
 
 	public unsafe struct KillElementDestroyHandler : IElementDestroyHandler<KillElement>
 	{
-		public void EntityPtrArrayDestroyed(WorldState worldState, ArchetypeElement<KillElement>** elementsPtr, int count)
+		public void EntityPtrArrayDestroyed(WorldState worldState, ComponentSetElement<KillElement>** elementsPtr, int count)
 		{
 			for (var i = 0; i < count; i++)
 			{
@@ -63,7 +63,7 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		public void EntityArrayDestroyed(WorldState worldState, ArchetypeElement<KillElement>* elementsPtr, int count)
+		public void EntityArrayDestroyed(WorldState worldState, ComponentSetElement<KillElement>* elementsPtr, int count)
 		{
 			for (var i = 0; i < count; i++)
 			{
