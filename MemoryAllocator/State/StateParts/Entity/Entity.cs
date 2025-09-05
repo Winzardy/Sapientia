@@ -148,7 +148,11 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
+#if ENABLE_ENTITY_NAMES
+			return $"Entity Id: {id} Gen: {generation} Name: {Name}";
+#else
 			return $"Entity Id: {id} Gen: {generation}";
+#endif
 		}
 	}
 }
