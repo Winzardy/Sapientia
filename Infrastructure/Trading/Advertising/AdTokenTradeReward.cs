@@ -14,13 +14,13 @@ namespace Trading.Advertising
 		protected override bool CanReceive(Tradeboard board, out TradeReceiveError? error)
 		{
 			error = null;
-			return board.Contains<IAdvertisingBackend>();
+			return board.Contains<IAdvertisingNode>();
 		}
 
 		protected override bool Receive(Tradeboard board)
 		{
-			var model = board.Get<IAdvertisingBackend>();
-			model.AddToken(group, count);
+			var node = board.Get<IAdvertisingNode>();
+			node.AddToken(group, count);
 			return true;
 		}
 	}

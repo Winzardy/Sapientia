@@ -1,11 +1,9 @@
 {
-    "name": "InAppPurchasing",
+    "name": "SharedLogic",
     "rootNamespace": "",
     "references": [
-        "Content",
-        "Sapientia",
-        "Messaging",
-        "Simulation"
+        "UniTask",
+        "Sapientia"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
