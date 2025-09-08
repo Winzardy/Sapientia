@@ -1,4 +1,4 @@
-namespace Submodules
+namespace Sapientia
 {
 	public static class NullableUtility
 	{

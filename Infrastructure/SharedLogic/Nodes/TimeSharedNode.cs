@@ -27,6 +27,11 @@ namespace SharedLogic
 			_dateTimeOffset = TimeSpan.Zero;
 		}
 
+		internal void SetTimestamp(long timestamp)
+		{
+			_dateTime = new DateTime(timestamp);
+		}
+
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);

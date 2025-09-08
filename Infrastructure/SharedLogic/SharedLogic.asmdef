@@ -1,9 +1,17 @@
 {
-  "name": "SharedLogic",
-  "references": [
-    "UniTask",
-    "Sapientia",
-    "UnityEditor.UI",
-    "UnityEngine.UI"
-  ]
+    "name": "SharedLogic",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Sapientia"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
