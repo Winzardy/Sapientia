@@ -125,7 +125,7 @@ namespace Content.Management
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="guid">Уникальный идентификатор записи</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Запись (только для чтения) на найденный контент типа <typeparamref name="T"/></returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -146,7 +146,7 @@ namespace Content.Management
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="id">Строковый идентификатор записи</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Запись (только для чтения) на найденный контент типа <typeparamref name="T"/></returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -167,7 +167,7 @@ namespace Content.Management
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="index">Строковый идентификатор записи</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Запись (только для чтения) на найденный контент типа <typeparamref name="T"/></returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -188,7 +188,7 @@ namespace Content.Management
 		/// Получает одиночную запись контента типа <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
-		/// <returns>Ссылка только для чтения на контент типа <typeparamref name="T"/></returns>
+		/// <returns>Запись (только для чтения) на найденный контент типа <typeparamref name="T"/></returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -208,7 +208,7 @@ namespace Content.Management
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="guid">Уникальный идентификатор записи</param>
 		/// <param name="entry">Запись</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Успешность нахождения записи</returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -222,7 +222,7 @@ namespace Content.Management
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="id">Строковый идентификатор записи</param>
 		/// <param name="entry">Запись</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Успешность нахождения записи</returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -236,7 +236,7 @@ namespace Content.Management
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="index">Строковый идентификатор записи</param>
 		/// <param name="entry">Запись</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Успешность нахождения записи</returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -248,7 +248,7 @@ namespace Content.Management
 		/// Получает одиночную запись контента типа <typeparamref name="T"/>
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
-		/// <returns>Ссылка только для чтения на контент типа <typeparamref name="T"/></returns>
+		/// <returns>Успешность нахождения записи</returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -261,7 +261,7 @@ namespace Content.Management
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="guid">Уникальный идентификатор записи</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Запись (только для чтения) на найденный контент типа <typeparamref name="T"/></returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -282,7 +282,7 @@ namespace Content.Management
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="id">Строковый идентификатор записи</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Запись (только для чтения) на найденный контент типа <typeparamref name="T"/></returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -303,7 +303,7 @@ namespace Content.Management
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <param name="index">Строковый идентификатор записи</param>
-		/// <returns>Ссылка только для чтения на найденный контент типа <typeparamref name="T"/></returns>
+		/// <returns>Запись (только для чтения) на найденный контент типа <typeparamref name="T"/></returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -324,7 +324,7 @@ namespace Content.Management
 		/// Получает контента типа <typeparamref name="T"/> из одиночной записи
 		/// </summary>
 		/// <typeparam name="T">Тип контента</typeparam>
-		/// <returns>Ссылка только для чтения на контент типа <typeparamref name="T"/></returns>
+		/// <returns>Запись (только для чтения) на найденный контент типа <typeparamref name="T"/></returns>
 		/// <remarks>
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
@@ -347,7 +347,7 @@ namespace Content.Management
 		/// ⚠️ Важно: нет поддержки полиморфизма
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal IEnumerable<IContentEntry<T>> GetAll<T>()
+		internal IEnumerable<IContentEntry<T>> GetAllEntries<T>()
 		{
 			if (Contains<T>())
 				yield return SingleContentEntryShortcut<T>.GetEntry();
@@ -357,6 +357,21 @@ namespace Content.Management
 
 			foreach (var entry in ContentEntryMap<T>.GetAll())
 				yield return entry;
+		}
+
+		/// <summary>
+		/// Возвращает все значения контента типа <typeparamref name="T"/> (как одиночные, так и уникальные)
+		/// </summary>
+		/// <typeparam name="T">Тип контента</typeparam>
+		/// <returns>Перечисление всех значений типа <typeparamref name="T"/></returns>
+		/// <remarks>
+		/// ⚠️ Важно: нет поддержки полиморфизма
+		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal IEnumerable<ContentReference<T>> GetAll<T>()
+		{
+			foreach (var entry in GetAllEntries<T>())
+				yield return entry.ToReference();
 		}
 
 		/// <summary>

@@ -1,15 +1,19 @@
 namespace SharedLogic
 {
-	public class SharedModel<TData>
+	public abstract class SharedModel<TData>
 	{
-		public void Save()
+		public void Load(in TData data)
 		{
-
+			OnLoad(in data);
 		}
 
-		public void Load()
-		{
+		protected abstract void OnLoad(in TData data);
 
+		public void Save(ref TData data)
+		{
+			OnSave(ref data);
 		}
+
+		protected abstract void OnSave(ref TData data);
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia;
+using Sapientia.Collections;
 
 namespace Content
 {
@@ -43,7 +44,7 @@ namespace Content
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Contains<T>() => resolver.Contains<T>();
 
-		/// <inheritdoc cref="ContentResolver.GetEntry{T}(in SerializableGuid)"/>
+		/// <inheritdoc cref="ContentResolver.GetEnry{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UniqueContentEntry<T> GetEntry<T>(in SerializableGuid guid) => resolver.GetEntry<T>(in guid);
 
@@ -149,7 +150,11 @@ namespace Content
 
 		/// <inheritdoc cref="ContentResolver.GetAll{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IEnumerable<IContentEntry<T>> GetAll<T>() => resolver.GetAll<T>();
+		public static IEnumerable<ContentReference<T>> GetAll<T>() => resolver.GetAll<T>();
+
+		/// <inheritdoc cref="ContentResolver.GetAll{T}"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<IContentEntry<T>> GetAllEntries<T>() => resolver.GetAllEntries<T>();
 
 		/// <inheritdoc cref="ContentResolver.ToId{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

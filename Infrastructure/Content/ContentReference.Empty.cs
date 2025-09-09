@@ -2,12 +2,14 @@
 {
 	public partial struct ContentReference<T>
 	{
-		public readonly bool Contains() => !IsEmpty() &&
+		public readonly bool IsValid() => Has();
+
+		public readonly bool IsEmpty() => guid == SerializableGuid.Empty;
+
+		private readonly bool Has() => !IsEmpty() &&
 			guid == IContentReference.SINGLE_GUID
 				? ContentManager.Contains<T>()
 				: ContentManager.Contains<T>(in guid);
-
-		public readonly bool IsEmpty() => guid == SerializableGuid.Empty;
 	}
 
 	public partial struct ContentReference
