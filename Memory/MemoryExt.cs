@@ -91,7 +91,7 @@ namespace Submodules.Sapientia.Memory
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(destination.ptr, sourcePtr, TSize<T>.size, length);
 #else
-			var span = new Span<T>(destination.ptr, count);
+			var span = new Span<T>(destination.ptr, length);
 			span.Fill(source);
 #endif
 		}
@@ -104,7 +104,7 @@ namespace Submodules.Sapientia.Memory
 #if UNITY_5_3_OR_NEWER
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCpyReplicate(destination.ptr, source.ptr, TSize<T>.size, length);
 #else
-			var span = new Span<T>(destination.ptr, count);
+			var span = new Span<T>(destination.ptr, length);
 			span.Fill(*source.ptr);
 #endif
 		}
