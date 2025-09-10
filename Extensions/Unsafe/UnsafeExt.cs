@@ -22,7 +22,8 @@ namespace Sapientia.Extensions
 	public struct TDefaultValue<T> where T : unmanaged
 	{
 #if UNITY_5_3_OR_NEWER
-		public static readonly SharedStatic<T> value = SharedStatic<T>.GetOrCreate<T>();
+		private struct TDefaultValueContext {}
+		public static readonly SharedStatic<T> value = SharedStatic<T>.GetOrCreate<T, TDefaultValueContext>();
 #else
 		public static T value = default(T);
 #endif

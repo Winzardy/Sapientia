@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
+using Submodules.Sapientia.Data;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.Collections
 {
@@ -48,29 +50,16 @@ namespace Sapientia.Collections
 			get => _values.IsCreated;
 		}
 
-		public UnsafeSparseSet(int capacity, int sparseCapacity, int expandStep = 0)
+		public UnsafeSparseSet(Id<MemoryManager> memoryId, int capacity, int sparseCapacity, int expandStep = 0)
 		{
 			this.expandStep = expandStep == 0 ? capacity : expandStep;
 
 			_count = 0;
 
-			_values = new(capacity, true);
-			_dense = new(capacity, true);
-			_sparse = new(sparseCapacity, true);
+			_values = new(memoryId, capacity, ClearOptions.ClearMemory);
+			_dense = new(memoryId, capacity, ClearOptions.ClearMemory);
+			_sparse = new(memoryId, sparseCapacity, ClearOptions.ClearMemory);
 		}
-
-#if UNITY_5_3_OR_NEWER
-		public UnsafeSparseSet(int capacity, int sparseCapacity, Unity.Collections.Allocator allocator, int expandStep = 0)
-		{
-			this.expandStep = expandStep == 0 ? capacity : expandStep;
-
-			_count = 0;
-
-			_values = new(capacity, allocator, true);
-			_dense = new(capacity, allocator, true);
-			_sparse = new(sparseCapacity, allocator, true);
-		}
-#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly SafePtr<T> GetValuePtr()

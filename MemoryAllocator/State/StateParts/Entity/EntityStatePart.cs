@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Sapientia.Collections.FixedString;
 using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator.State
 {

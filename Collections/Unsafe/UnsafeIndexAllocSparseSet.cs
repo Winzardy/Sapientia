@@ -1,6 +1,9 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
+using Submodules.Sapientia.Data;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.Collections
 {
@@ -41,10 +44,14 @@ namespace Sapientia.Collections
 			get => _sparseSet.IsCreated;
 		}
 
-		public UnsafeIndexAllocSparseSet(int capacity, int expandStep = 0)
+		public UnsafeIndexAllocSparseSet(int capacity, int expandStep = 0) : this(default, capacity, expandStep)
 		{
-			_ids = new UnsafeList<int>(capacity);
-			_sparseSet = new UnsafeSparseSet<T>(capacity, capacity, expandStep);
+		}
+
+		public UnsafeIndexAllocSparseSet(Id<MemoryManager> memoryId, int capacity, int expandStep = 0)
+		{
+			_ids = new UnsafeList<int>(memoryId, capacity);
+			_sparseSet = new UnsafeSparseSet<T>(memoryId, capacity, capacity, expandStep);
 			_nextIdToAllocate = 0;
 		}
 
@@ -52,6 +59,12 @@ namespace Sapientia.Collections
 		public readonly SafePtr<T> GetValuePtr()
 		{
 			return _sparseSet.GetValuePtr();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly Span<T> GetValuesSpan()
+		{
+			return _sparseSet.GetValuesSpan();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

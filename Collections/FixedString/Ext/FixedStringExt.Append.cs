@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.Collections.FixedString
 {

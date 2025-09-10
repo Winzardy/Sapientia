@@ -4,6 +4,7 @@ using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {

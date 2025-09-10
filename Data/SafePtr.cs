@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -123,6 +124,13 @@ namespace Sapientia.Data
 #else
 			return true;
 #endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional(E.DEBUG)]
+		public void AssertValidLength(int length)
+		{
+			E.ASSERT(IsValidLength(length));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -259,7 +267,7 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsLengthInRange(int length)
+		public bool IsValidLength(int length)
 		{
 #if DEBUG
 			var newPtr = ptr + length;
@@ -267,6 +275,13 @@ namespace Sapientia.Data
 #else
 			return true;
 #endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional(E.DEBUG)]
+		public void AssertValidLength(int length)
+		{
+			E.ASSERT(IsValidLength(length));
 		}
 
 		public ref T this[int index]

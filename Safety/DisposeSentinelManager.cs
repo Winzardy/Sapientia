@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
+using Submodules.Sapientia.Memory;
 
 namespace Submodules.Sapientia.Safety
 {
@@ -29,7 +30,7 @@ namespace Submodules.Sapientia.Safety
 			static DisposeSentinelTypeId()
 			{
 #if UNITY_5_3_OR_NEWER
-				_typeId = Unity.Burst.SharedStatic<int>.GetOrCreate<T>();
+				_typeId = Unity.Burst.SharedStatic<int>.GetOrCreate<T, DisposeSentinelManager>();
 #endif
 				TypeId = -1;
 			}
@@ -50,7 +51,7 @@ namespace Submodules.Sapientia.Safety
 			ref var result = ref _disposeSentinelAllocators;
 #endif
 			if (!result.IsCreated)
-				result = new UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>(64);
+				result = new UnsafeIndexAllocSparseSet<DisposeSentinelAllocator>(MemoryManager.NoTrackMemoryId, 64);
 
 			return ref result;
 		}

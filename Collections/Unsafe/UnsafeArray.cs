@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Data;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.Collections
 {
@@ -22,9 +24,8 @@ namespace Sapientia.Collections
 	{
 		public SafePtr<T> ptr;
 		public int length;
-#if UNITY_5_3_OR_NEWER
-		private Unity.Collections.Allocator _allocator;
-#endif
+
+		public readonly Id<MemoryManager> memoryId;
 
 		public int Length
 		{
@@ -34,23 +35,16 @@ namespace Sapientia.Collections
 
 		public bool IsCreated => ptr != default;
 
-		public UnsafeArray(int length = 8, bool clearMemory = true)
+		public UnsafeArray(int length = 8, ClearOptions clearMemory = ClearOptions.ClearMemory) : this(default, length, clearMemory)
 		{
-			this.ptr = MemoryExt.MakeArray<T>(length, clearMemory, false);
-			this.length = length;
-#if UNITY_5_3_OR_NEWER
-			_allocator = Unity.Collections.Allocator.None;
-#endif
 		}
 
-#if UNITY_5_3_OR_NEWER
-		public UnsafeArray(int length, Unity.Collections.Allocator allocator, bool clearMemory = true)
+		public UnsafeArray(Id<MemoryManager> memoryId, int length = 8, ClearOptions clearMemory = ClearOptions.ClearMemory)
 		{
-			this.ptr = MemoryExt.MakeArray<T>(length, allocator, clearMemory, false);
+			this.ptr = memoryId.GetManager().MakeArray<T>(length, clearMemory);
 			this.length = length;
-			_allocator = allocator;
+			this.memoryId = memoryId;
 		}
-#endif
 
 		public ref T Last
 		{
@@ -97,13 +91,7 @@ namespace Sapientia.Collections
 				return;
 			}
 
-#if UNITY_5_3_OR_NEWER
-			var newArray = _allocator == Unity.Collections.Allocator.None ?
-				new UnsafeArray<T>(newLength, false) :
-				new UnsafeArray<T>(newLength, _allocator, false);
-#else
-			var newArray = new UnsafeArray<T>(newLength, false);
-#endif
+			var newArray = new UnsafeArray<T>(memoryId, newLength, ClearOptions.UninitializedMemory);
 			switch (settings)
 			{
 				case ResizeSettings.CopyOldValues:
@@ -136,14 +124,7 @@ namespace Sapientia.Collections
 			if (!IsCreated)
 				return;
 
-#if UNITY_5_3_OR_NEWER
-			if (_allocator != Unity.Collections.Allocator.None)
-				MemoryExt.MemFree(ptr, _allocator, false);
-			else
-#endif
-			{
-				MemoryExt.MemFree(ptr, false);
-			}
+			memoryId.GetManager().MemFree(ptr);
 			this = default;
 		}
 
