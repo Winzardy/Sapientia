@@ -27,9 +27,26 @@ namespace Submodules.Sapientia.Memory
 	{
 		internal static readonly Id<MemoryManager> InnerMemoryId = -(int)MemoryType.Inner;
 
+		/// <summary>
+		/// Используется в случаях, где нужно параллельно обращаться к памяти из разных потоков.
+		/// Сейчас полноценный трекинг не поддерживается в параллельной обработке.
+		/// Использует Allocator.Temp в Unity.
+		/// </summary>
 		public static readonly Id<MemoryManager> NoTrackTempMemoryId = -(int)MemoryType.NoTrackTemp;
+		/// <summary>
+		/// Используется в случаях, где нужно параллельно обращаться к памяти из разных потоков.
+		/// Сейчас полноценный трекинг не поддерживается в параллельной обработке.
+		/// Использует Allocator.Persistent в Unity.
+		/// </summary>
 		public static readonly Id<MemoryManager> NoTrackMemoryId = -(int)MemoryType.NoTrack;
+		/// <summary>
+		/// Использует Allocator.Temp в Unity.
+		/// </summary>
 		public static readonly Id<MemoryManager> TempMemoryId = -(int)MemoryType.Temp;
+		/// <summary>
+		/// Использует Allocator.Persistent в Unity.
+		/// Используется по умолчанию везде, где не требуется что-то специфичное.
+		/// </summary>
 		public static readonly Id<MemoryManager> DefaultMemoryId = -(int)MemoryType.Default;
 
 		/// <summary>
