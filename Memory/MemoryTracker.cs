@@ -89,8 +89,9 @@ namespace Submodules.Sapientia.Memory
 			var low = intPtr;
 			var hi = intPtr + size - 1;
 
-			var isInBound = IsInBound(low, out var lowIndex) & IsInBound(hi, out var hiIndex);
-			E.ASSERT(isInBound);
+			var isLowInBound = IsInBound(low, out var lowIndex);
+			var isHiInBound = IsInBound(hi, out var hiIndex);
+			E.ASSERT(isLowInBound && isHiInBound);
 			E.ASSERT((lowIndex + 1) == hiIndex); // Индексы должны идти друг за другом
 
 			_memorySpaces.RemoveAt(hiIndex);
@@ -103,8 +104,9 @@ namespace Submodules.Sapientia.Memory
 			var low = intPtr;
 			var hi = intPtr + size - 1;
 
-			var isInBound = IsInBound(low, out var lowIndex) & IsInBound(hi, out var hiIndex);
-			E.ASSERT(isInBound);
+			var isLowInBound = IsInBound(low, out var lowIndex);
+			var isHiInBound = IsInBound(hi, out var hiIndex);
+			E.ASSERT(!isLowInBound && !isHiInBound);
 			E.ASSERT(lowIndex == hiIndex); // Оба индекса должны указывать на одну и ту же область
 
 			// Сначала добавляем верхний предел, т.к. при добавлении нижнего `hiIndex` станет не валидным
