@@ -130,6 +130,17 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<T> AsSpan<T>(this ref T value) where T : struct
+		{
+#if UNITY_5_3_OR_NEWER
+			var ptr = UnsafeUtility.AddressOf(ref value);
+#else
+			var ptr = Unsafe.AsPointer(ref value);
+#endif
+			return new Span<T>(ptr, 1);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<TSpan> AsSpan<T, TSpan>(this ref T value, int spanLength) where T : struct where TSpan : struct
 		{
 #if UNITY_5_3_OR_NEWER

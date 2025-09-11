@@ -73,11 +73,6 @@ namespace Sapientia.MemoryAllocator.State
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct ComponentSet : IEntityDestroySubscriber, IIndexedType
 	{
-		public static class DefaultValue<TValue>
-		{
-			public static readonly TValue DEFAULT = default;
-		}
-
 		internal MemSparseSet _elements;
 
 		private ProxyPtr<IElementDestroyHandlerProxy> _destroyHandlerProxy;
@@ -230,7 +225,7 @@ namespace Sapientia.MemoryAllocator.State
 		public ref readonly T ReadElement<T>(WorldState worldState, Entity entity) where T : unmanaged
 		{
 			if (!_elements.Has(worldState, entity.id))
-				return ref DefaultValue<T>.DEFAULT;
+				return ref TReadonlyDefaultValue<T>.value;
 			return ref _elements.Get<ComponentSetElement<T>>(worldState, entity.id).value;
 		}
 
@@ -239,7 +234,7 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			isExist = _elements.Has(worldState, entity.id);
 			if (!isExist)
-				return ref DefaultValue<T>.DEFAULT;
+				return ref TReadonlyDefaultValue<T>.value;
 			return ref _elements.Get<ComponentSetElement<T>>(worldState, entity.id).value;
 		}
 
