@@ -9,11 +9,11 @@ namespace SharedLogic
 
 		protected abstract void OnLoad(in TData data);
 
-		public void Save(ref TData data)
+		public void Save(out TData data)
 		{
-			OnSave(ref data);
+			OnSave(out data);
 		}
 
-		protected abstract void OnSave(ref TData data);
+		protected abstract void OnSave(out TData data);
 	}
 }

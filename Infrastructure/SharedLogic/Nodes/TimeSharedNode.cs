@@ -38,7 +38,7 @@ namespace SharedLogic
 			_dateTime = new DateTime(data.timestamp);
 		}
 
-		protected override void OnSave(ref SaveData data)
+		protected override void OnSave(out SaveData data)
 		{
 			data.timestampOffset = _dateTimeOffset.Ticks;
 			data.timestamp = _dateTime.Ticks;

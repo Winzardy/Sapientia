@@ -1,6 +1,7 @@
 using System;
 using Sapientia;
 using Sapientia.Extensions;
+using SharedLogic.Internal;
 
 namespace SharedLogic
 {

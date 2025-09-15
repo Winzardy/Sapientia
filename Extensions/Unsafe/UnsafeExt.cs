@@ -11,7 +11,7 @@ namespace Sapientia.Extensions
 	public struct TSize<T> where T : struct
 	{
 		public static readonly int size = UnsafeExt.SizeOf<T>();
-		public static readonly uint uSize = (uint)UnsafeExt.SizeOf<T>();
+		public static readonly uint uSize = (uint) UnsafeExt.SizeOf<T>();
 	}
 
 	public struct TAlign<T> where T : struct
@@ -50,7 +50,7 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T DefaultRef<T>() where T: unmanaged
+		public static ref T DefaultRef<T>() where T : unmanaged
 		{
 #if UNITY_5_3_OR_NEWER
 			return ref TDefaultValue<T>.value.Data;
@@ -166,31 +166,65 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static long Offset<T>(this ref T from, byte* to) where T: unmanaged
+		public static long Offset<T>(this ref T from, byte* to) where T : unmanaged
 		{
-			return to - (byte*)from.AsPointer();
+			return to - (byte*) from.AsPointer();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static long Offset<T, T1>(this ref T from, ref T1 to)
-			where T: unmanaged
-			where T1: unmanaged
+			where T : unmanaged
+			where T1 : unmanaged
 		{
-			return (byte*)to.AsPointer() - (byte*)from.AsPointer();
+			return (byte*) to.AsPointer() - (byte*) from.AsPointer();
 		}
 
 		public static unsafe uint Hash(void* ptr, int bytes)
 		{
 			// djb2 - Dan Bernstein hash function
 			// http://web.archive.org/web/20190508211657/http://www.cse.yorku.ca/~oz/hash.html
-			var str = (byte*)ptr;
+			var str = (byte*) ptr;
 			var hash = 5381ul;
 			while (bytes > 0)
 			{
 				ulong c = str[--bytes];
 				hash = ((hash << 5) + hash) + c;
 			}
-			return (uint)hash;
+
+			return (uint) hash;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool Has<T>(this T value, T flag)
+			where T : struct, Enum
+		{
+			if (Unsafe.SizeOf<T>() == 8)
+			{
+				var v = Unsafe.As<T, ulong>(ref value);
+				var f = Unsafe.As<T, ulong>(ref flag);
+				return (v & f) == f;
+			}
+
+			if (Unsafe.SizeOf<T>() == 4)
+			{
+				var v = Unsafe.As<T, uint>(ref value);
+				var f = Unsafe.As<T, uint>(ref flag);
+				return (v & f) == f;
+			}
+
+			if (Unsafe.SizeOf<T>() == 2)
+			{
+				var v = Unsafe.As<T, ushort>(ref value);
+				var f = Unsafe.As<T, ushort>(ref flag);
+				return (v & f) == f;
+			}
+
+			else
+			{
+				var v = Unsafe.As<T, byte>(ref value);
+				var f = Unsafe.As<T, byte>(ref flag);
+				return (v & f) == f;
+			}
 		}
 	}
 

@@ -33,23 +33,12 @@ namespace SharedLogic
 		}
 	}
 
-	public abstract class SharedNode<TData> : SharedNode, IPersistentNode
+	public abstract class SharedNode<TData> : SharedNode, IPersistentNode<TData>
 	{
-		private TData _data;
-
-		void IPersistentNode.Load(ISharedDataReader reader)
-		{
-			_data = reader.Read<TData>(Id);
-			OnLoad(in _data);
-		}
-
-		void IPersistentNode.Save(ISharedDataWriter writer)
-		{
-			OnSave(ref _data);
-			writer.Write(Id, in _data);
-		}
+		void IPersistentNode<TData>.Load(in TData data) => OnLoad(in data);
+		void IPersistentNode<TData>.Save(out TData data) => OnSave(out data);
 
 		protected abstract void OnLoad(in TData data);
-		protected abstract void OnSave(ref TData data);
+		protected abstract void OnSave(out TData data);
 	}
 }
