@@ -16,6 +16,8 @@ namespace Sapientia.Data
 #endif
 		where T : unmanaged, Enum
 	{
+		public const int BitsCount = 32;
+
 		public static readonly EnumMask<T> All = new() {mask = ~0};
 
 		public int mask;
@@ -50,11 +52,13 @@ namespace Sapientia.Data
 
 		public readonly bool Has(int value)
 		{
+			E.ASSERT(value is < BitsCount and >= 0);
 			return (mask & (1 << value)) != 0;
 		}
 
 		public readonly bool HasOnly(int value)
 		{
+			E.ASSERT(value is < BitsCount and >= 0);
 			var valueMask = 1 << value;
 			return ((mask & (1 << value)) != 0) && ((mask & ~valueMask) == 0);
 		}
@@ -71,6 +75,7 @@ namespace Sapientia.Data
 
 		public void Add(int value)
 		{
+			E.ASSERT(value is < BitsCount and >= 0);
 			mask |= (1 << value);
 		}
 
@@ -81,6 +86,7 @@ namespace Sapientia.Data
 
 		public void Remove(int value)
 		{
+			E.ASSERT(value is < BitsCount and >= 0);
 			mask &= ~(1 << value);
 		}
 
