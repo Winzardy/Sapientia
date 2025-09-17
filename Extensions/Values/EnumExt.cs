@@ -67,6 +67,12 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe uint ToUInt<T>(this T value) where T : unmanaged, Enum
+		{
+			return *(uint*)(&value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe byte ToByte<T>(this T value) where T : unmanaged, Enum
 		{
 			return *(byte*)(&value);

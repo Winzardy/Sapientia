@@ -120,6 +120,22 @@ namespace Sapientia.Data
 				mask = mask,
 			};
 		}
+
+		public static implicit operator UndefinedEnumMask(EnumMask<T> value)
+		{
+			return new UndefinedEnumMask()
+			{
+				mask = value.mask,
+			};
+		}
+
+		public static implicit operator EnumMask<T>(UndefinedEnumMask value)
+		{
+			return new EnumMask<T>()
+			{
+				mask = value.mask,
+			};
+		}
 	}
 
 	public class EnumMask

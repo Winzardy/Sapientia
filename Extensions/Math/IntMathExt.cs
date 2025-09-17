@@ -9,6 +9,7 @@ namespace Sapientia.Extensions
 	/// </summary>
 	public static partial class IntMathExt
 	{
+		public const int BitsCount = 32;
 		public const int FIRST_TO_LAST_SHIFT = 32 - 1;
 
 		public static int DivRem(this int value, int divider, out int remainder)
@@ -222,6 +223,15 @@ namespace Sapientia.Extensions
 			u.longValue = 0x4330000000000000L + bits;
 			u.doubleValue -= 4503599627370496.0;
 			return (int)(u.longValue >> 52) - offset;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int TruncateBits(this int value, int n)
+		{
+			E.ASSERT(n is > 0 and <= BitsCount);
+
+			var mask = (1 << n) - 1;
+			return value & mask;
 		}
 
 		/// <summary>Returns number of 1-bits in the binary representation of a uint value. Also known as the Hamming weight, popcnt on x86, and vcnt on ARM.</summary>
