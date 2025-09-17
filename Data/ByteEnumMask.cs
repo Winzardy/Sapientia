@@ -30,15 +30,15 @@ namespace Sapientia.Data
 
 		public readonly bool Has(T value)
 		{
-			return Has(value.ToInt());
+			return Has(value.ToByte());
 		}
 
 		public readonly bool HasOnly(T value)
 		{
-			return HasOnly(value.ToInt());
+			return HasOnly(value.ToByte());
 		}
 
-		public readonly bool Has(int value)
+		public readonly bool Has(byte value)
 		{
 			E.ASSERT(value is < BitsCount and >= 0);
 			return (mask & (1 << value)) != 0;
