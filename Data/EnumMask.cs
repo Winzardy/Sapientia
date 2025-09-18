@@ -112,6 +112,16 @@ namespace Sapientia.Data
 			return value.mask.As<int, uint>();
 		}
 
+		public static implicit operator short(EnumMask<T> value)
+		{
+			return unchecked((short)value.mask);
+		}
+
+		public static implicit operator ushort(EnumMask<T> value)
+		{
+			return unchecked((ushort)value.mask);
+		}
+
 		public static implicit operator EnumMask<T>(uint value)
 		{
 			var mask = value.As<uint, int>();
