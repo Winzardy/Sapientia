@@ -1,0 +1,44 @@
+﻿using System;
+using Sapientia;
+
+namespace SharedLogic
+{
+	public abstract class SharedNode : IInitializableNode, IDisposable
+	{
+		protected ISharedRoot _root;
+
+		public virtual string Id => GetType().Name;
+
+		internal ILogger Logger => _root.Logger;
+
+		void IInitializableNode.Initialize(ISharedRoot root)
+		{
+			_root = root;
+
+			OnInitialize(root);
+		}
+
+		public void Dispose()
+		{
+			OnDisposed();
+			_root = null;
+		}
+
+		protected virtual void OnInitialize(ISharedRoot root)
+		{
+		}
+
+		protected virtual void OnDisposed()
+		{
+		}
+	}
+
+	public abstract class SharedNode<TData> : SharedNode, IPersistentNode<TData>
+	{
+		void IPersistentNode<TData>.Load(in TData data) => OnLoad(in data);
+		void IPersistentNode<TData>.Save(out TData data) => OnSave(out data);
+
+		protected abstract void OnLoad(in TData data);
+		protected abstract void OnSave(out TData data);
+	}
+}

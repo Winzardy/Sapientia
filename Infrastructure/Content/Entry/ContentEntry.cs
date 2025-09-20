@@ -7,7 +7,11 @@ namespace Content
 	/// Запись контента, которая оборачивает данные в контейнер с Guid, что делает его уникальным
 	/// <br/>
 	/// <para>Unity: Применяется в качестве вложенного элемента в других ContentEntry (например, ScriptableContentEntry)</para>
-	/// <para>Вне Unity: Основной контейнер данных</para>
+	/// <para>Вне Unity: Работает как ссылка,
+	/// аналогичная <see cref="ContentReference{T}"/>. <br/>
+	/// При обращении к свойству <see cref="ContentEntry{T}.Value"/> фактически выполняется
+	/// <c>ContentManager.Get&lt;T&gt;(guid)</c> <br/> (#define !CLIENT)
+	/// </para>
 	/// </summary>
 	/// <typeparam name="T">Тип данных</typeparam>
 	/// <remarks>
@@ -21,7 +25,7 @@ namespace Content
 #if !CLIENT
 		[NonSerialized]
 		private int _index = ContentConstants.INVALID_INDEX;
-		public ref readonly T Value => ref guid.Get<T>(ref _index);
+		public override ref readonly T Value => ref ContentUtility.GetContentValue<T>(in guid, ref _index);
 #endif
 
 		public ContentEntry(in T value) : base(in value, SerializableGuid.New())

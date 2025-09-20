@@ -8,7 +8,7 @@ namespace Content
 #if !CLIENT
 		// ReSharper disable once InconsistentNaming
 		protected T value;
-		public ref readonly T Value => ref value;
+		public virtual ref readonly T Value => ref value;
 #endif
 
 		public Type ValueType => typeof(T);

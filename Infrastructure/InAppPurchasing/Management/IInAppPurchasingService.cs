@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace InAppPurchasing
 {
@@ -12,7 +13,7 @@ namespace InAppPurchasing
 		public InAppPurchasingRegisterResult Register(in PurchaseReceipt receipt);
 		PurchaseReceipt? GetReceipt(string transactionId);
 
-		public string[] GetAllTransactions();
+		public IEnumerable<string> GetAllTransactions();
 		DateTime GetUtcNow();
 	}
 

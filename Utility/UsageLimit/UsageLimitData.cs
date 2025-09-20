@@ -3,7 +3,7 @@ using System;
 namespace Sapientia
 {
 	[Serializable]
-	public struct UsageLimitModel
+	public struct UsageLimitData
 	{
 		public int usageCount;
 

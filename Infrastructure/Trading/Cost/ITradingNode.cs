@@ -1,6 +1,8 @@
+using Sapientia;
+
 namespace Trading
 {
-	public interface ITradingBackend
+	public interface ITradingNode : IDateTimeProvider
 	{
 		public ITradeReceiptRegistry<T> GetRegistry<T>() where T : struct, ITradeReceipt;
 	}

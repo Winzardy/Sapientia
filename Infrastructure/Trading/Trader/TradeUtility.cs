@@ -4,7 +4,7 @@ namespace Trading
 {
 	public static partial class TradeUtility
 	{
-		public static bool CanExecute(this TradeEntry trade, Tradeboard tradeboard, out TradeExecuteError? error)
+		internal static bool CanExecute(this TradeEntry trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
 			var result = true;
 			error = null;
@@ -21,7 +21,7 @@ namespace Trading
 			return result;
 		}
 
-		public static bool Execute(this TradeEntry trade, Tradeboard tradeboard)
+		internal static bool Execute(this TradeEntry trade, Tradeboard tradeboard)
 		{
 			// Сначала платим
 			var success = trade.cost.Execute(tradeboard);

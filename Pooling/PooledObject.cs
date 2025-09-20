@@ -38,6 +38,12 @@ namespace Sapientia.Pooling
 			_pool.Release(_obj);
 		}
 
+		public static void Release(ref PooledObject<T> p)
+		{
+			p.Release();
+			p = default;
+		}
+
 		public static implicit operator T(PooledObject<T> pooledObject) => pooledObject.Obj;
 	}
 

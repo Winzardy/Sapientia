@@ -4,23 +4,23 @@ using Sapientia.Collections;
 
 namespace Trading.UsagePass
 {
-	public interface IUsagePassBackend : ITradeReceiptRegistry<UsagePassTradeReceipt>
+	public interface IUsagePassNode : ITradeReceiptRegistry<UsagePassTradeReceipt>
 	{
-		public ref readonly UsageLimitModel GetModel(string key);
+		public ref readonly UsageLimitData GetModel(string key);
 
 
 		public void ForceReset(string key);
 	}
 
 	[Serializable]
-	public class UsagePassTradingModel : IUsagePassBackend
+	public class UsagePassTradingModel : IUsagePassNode
 	{
-		public HashMap<string, UsageLimitModel> keyToModel;
+		public HashMap<string, UsageLimitData> keyToModel;
 		public HashMap<string, UsagePassTradeReceipt> keyToReceipt;
 
 		public UsagePassTradingModel()
 		{
-			keyToModel = new HashMap<string, UsageLimitModel>();
+			keyToModel = new HashMap<string, UsageLimitData>();
 			keyToReceipt = new HashMap<string, UsagePassTradeReceipt>();
 		}
 
@@ -52,7 +52,7 @@ namespace Trading.UsagePass
 			return true;
 		}
 
-		public ref readonly UsageLimitModel GetModel(string key) => ref keyToModel.GetOrAdd(key);
+		public ref readonly UsageLimitData GetModel(string key) => ref keyToModel.GetOrAdd(key);
 		public void ForceReset(string key)
 		{
 			if(!keyToModel.Contains(key))

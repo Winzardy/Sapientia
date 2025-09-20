@@ -13,11 +13,18 @@ namespace Content
 #endif
 	{
 		public Type Type { get; }
+		public string TypeName { get; }
 		public bool Foldout { get; }
 
 		public ContentReferenceAttribute(Type type, bool foldout = true)
 		{
 			Type = type;
+			Foldout = foldout;
+		}
+
+		public ContentReferenceAttribute(string typeName, bool foldout = true)
+		{
+			TypeName = typeName;
 			Foldout = foldout;
 		}
 	}

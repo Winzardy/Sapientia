@@ -71,9 +71,15 @@ namespace Trading
 	public static class TradeboardUtility
 	{
 		public static string GetTradeId(this in ContentReference<TradeCost> reference) => reference.guid;
+		public static string GetTradeId(this in ContentReference<TradeReward> reference) => reference.guid;
 		public static string GetTradeId(this ContentEntry<TradeCost> reference) => reference.Guid;
 
 		public static void Bind(this Tradeboard board, in ContentReference<TradeCost> reference)
+		{
+			Bind(board, reference.GetTradeId());
+		}
+
+		public static void Bind(this Tradeboard board, in ContentReference<TradeReward> reference)
 		{
 			Bind(board, reference.GetTradeId());
 		}
@@ -92,10 +98,5 @@ namespace Trading
 		{
 			board.SetId(tradeId);
 		}
-	}
-
-	public interface IDateTimeProvider
-	{
-		public DateTime Now { get; }
 	}
 }
