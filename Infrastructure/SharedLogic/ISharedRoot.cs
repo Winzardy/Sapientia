@@ -1,11 +1,13 @@
 #nullable enable
 using System;
+using JetBrains.Annotations;
 using Sapientia;
 
 namespace SharedLogic
 {
 	public interface ISharedRoot : IDisposable
 	{
+		[CanBeNull]
 		ILogger Logger { get; }
 		public T GetNode<T>() where T : class, ISharedNode;
 

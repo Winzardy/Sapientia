@@ -11,6 +11,9 @@ namespace Trading
 		public static bool Pay(TradeCost cost, Tradeboard board)
 			=> cost.Execute(board);
 
+		public static bool CanReceive(TradeReward reward, Tradeboard board, out TradeReceiveError? error)
+			=> reward.CanExecute(board, out error);
+
 		public static bool Receive(TradeReward reward, Tradeboard board)
 			=> reward.Execute(board);
 

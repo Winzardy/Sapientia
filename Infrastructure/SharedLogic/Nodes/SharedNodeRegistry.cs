@@ -95,9 +95,6 @@ namespace SharedLogic
 			if (_indexToNode == null)
 				return;
 
-			if (!_indexToNode.ContainsKey(index))
-				return;
-
 			if (!_indexToNode.TryRemove(index, out _))
 				return;
 

@@ -50,21 +50,21 @@ namespace Sapientia
 			return token;
 		}
 
-		internal void Unregister(IBlackboardToken token)
-		{
-			if (_tokens == null || !_tokens.Remove(token))
-			{
-				var msg = $"{Name}: ${token.ValueType} not registered";
-				throw GetArgumentException(msg);
-			}
-		}
-
 		protected virtual void OnRelease()
 		{
 		}
 
 		protected virtual void OnDispose()
 		{
+		}
+
+		internal void ReleaseToken(IBlackboardToken token)
+		{
+			if (_tokens != null && _tokens.Remove(token))
+				return;
+
+			var msg = $"{Name}: ${token.ValueType} not registered";
+			throw GetArgumentException(msg);
 		}
 
 		void IPoolable.Release() => ReleaseInternal();
@@ -95,12 +95,12 @@ namespace Sapientia
 
 	internal static class Blackboard<T>
 	{
-		private static ConcurrentDictionary<RegisteredTokenHash, Entry>? _boardToValue;
+		private static ConcurrentDictionary<RegisteredTokenHash, Entry>? _boardToEntry;
 
 		internal static bool Contains(Blackboard blackboard, string? key = null)
 		{
 			var hash = ToHash(blackboard, key);
-			return _boardToValue != null && _boardToValue.ContainsKey(hash);
+			return _boardToEntry != null && _boardToEntry.ContainsKey(hash);
 		}
 
 		internal static ref readonly T Get(Blackboard blackboard, string? key = null)
@@ -110,7 +110,7 @@ namespace Sapientia
 			// return ref entry.value;
 
 			var hash = ToHash(blackboard, key);
-			if (_boardToValue == null || !_boardToValue.TryGetValue(hash, out var entry))
+			if (_boardToEntry == null || !_boardToEntry.TryGetValue(hash, out var entry))
 			{
 				var msg = $"{blackboard.GetName()}: ${typeof(T)} not found" +
 					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
@@ -122,10 +122,16 @@ namespace Sapientia
 
 		internal static BlackboardToken<T> Register(in T value, Blackboard blackboard, string? key = null)
 		{
-			_boardToValue ??= ConcurrentDictionaryPool<RegisteredTokenHash, Entry>.Get();
+			_boardToEntry ??= ConcurrentDictionaryPool<RegisteredTokenHash, Entry>.Get();
 			var hash = ToHash(blackboard, key);
-			if (!_boardToValue.TryAdd(hash, value))
+			var newEntry = Pool<Entry>.Get();
 			{
+				newEntry.value = value;
+			}
+			if (!_boardToEntry.TryAdd(hash, newEntry))
+			{
+				Pool<Entry>.Release(newEntry);
+
 				var msg = $"{blackboard.GetName()}: {typeof(T)} already registered" +
 					(!key.IsNullOrEmpty() ? $" with key [ {key} ]" : "");
 				throw blackboard.GetException(msg);
@@ -138,7 +144,7 @@ namespace Sapientia
 
 		internal static void Unregister(BlackboardToken<T> token)
 		{
-			if (_boardToValue == null || !_boardToValue.TryRemove(token.Hash, out _))
+			if (_boardToEntry == null || !_boardToEntry.TryRemove(token.Hash, out var entry))
 			{
 				var blackboard = token.Blackboard;
 				var key = token.Key;
@@ -147,20 +153,21 @@ namespace Sapientia
 				throw blackboard.GetException(msg);
 			}
 
+			Pool<Entry>.Release(entry);
 			Pool<BlackboardToken<T>>.Release(token);
 
-			if (_boardToValue.IsEmpty)
-				StaticObjectPoolUtility.ReleaseAndSetNull(ref _boardToValue);
+			if (_boardToEntry.IsEmpty)
+				StaticObjectPoolUtility.ReleaseAndSetNull(ref _boardToEntry);
 		}
 
 		private static RegisteredTokenHash ToHash(Blackboard blackboard, string? key) => new(blackboard, key);
 
-		internal class Entry
+		internal class Entry : IPoolable
 		{
-			internal readonly T value;
-			private Entry(in T value) => this.value = value;
+			internal T value;
 
-			public static implicit operator Entry(in T value) => new(value);
+			void IPoolable.Release()
+				=> value = default;
 		}
 	}
 

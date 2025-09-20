@@ -1,35 +1,42 @@
 using System;
+using Sapientia;
 
 namespace SharedLogic
 {
+	/// <summary>
+	/// Системная команда, которая отправляется перед каждой командой, чтобы двигать время
+	/// </summary>
 	[Serializable]
 	public struct TimedCommand : ICommand
 	{
-		private readonly long _timestamp;
+		public long timestamp;
 
 		public TimedCommand(long timestamp)
 		{
-			_timestamp = timestamp;
+			this.timestamp = timestamp;
 		}
 
 		public bool Validate(ISharedRoot root, out Exception exception)
 		{
 			var node = root.GetNode<TimeSharedNode>();
 
-			exception = null;
-			if (_timestamp < node.ServerTime.Ticks)
+			if (node.CanSetTimestamp(timestamp, out var error))
 			{
-				exception = new Exception("Invalid timestamp");
+				if (error.TryGetValue(out var errorValue))
+					exception = new Exception(errorValue.ToString());
+				else
+					exception = this.GetDefaultException();
 				return false;
 			}
 
+			exception = null;
 			return true;
 		}
 
 		public void Execute(ISharedRoot root)
 		{
 			root.GetNode<TimeSharedNode>()
-			   .SetTimestamp(_timestamp);
+			   .SetTimestamp(timestamp);
 		}
 	}
 }

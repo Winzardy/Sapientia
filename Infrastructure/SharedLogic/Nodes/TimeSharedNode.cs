@@ -8,6 +8,7 @@ namespace SharedLogic
 		private TimeSpan _dateTimeOffset;
 		private DateTime _dateTime;
 
+		// Для дебага
 		public DateTime SharedTime => ServerTime + _dateTimeOffset;
 		public DateTime ServerTime => _dateTime;
 
@@ -25,6 +26,18 @@ namespace SharedLogic
 		internal void ClearTimeOffset()
 		{
 			_dateTimeOffset = TimeSpan.Zero;
+		}
+
+		public bool CanSetTimestamp(long timestamp, out TimeSetError? error)
+		{
+			if (_dateTime.Ticks > timestamp)
+			{
+				error = TimeSetError.Code.TimestampLessThanCurrent;
+				return false;
+			}
+
+			error = null;
+			return true;
 		}
 
 		internal void SetTimestamp(long timestamp)
@@ -59,5 +72,26 @@ namespace SharedLogic
 
 		public static long GetSharedTimestamp(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>().SharedTime.Ticks;
+	}
+
+	public struct TimeSetError
+	{
+		public enum Code
+		{
+			None,
+
+			TimestampLessThanCurrent
+		}
+
+		public readonly Code code;
+
+		public TimeSetError(Code code) : this()
+		{
+			this.code = code;
+		}
+
+		public static implicit operator TimeSetError(Code code) => new(code);
+
+		public override string ToString() => $"Can't set timestamp with code [ {code} ]";
 	}
 }

@@ -44,7 +44,7 @@ namespace Content
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Contains<T>() => resolver.Contains<T>();
 
-		/// <inheritdoc cref="ContentResolver.GetEnry{T}(in SerializableGuid)"/>
+		/// <inheritdoc cref="ContentResolver.GetEntry{T}(in SerializableGuid)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UniqueContentEntry<T> GetEntry<T>(in SerializableGuid guid) => resolver.GetEntry<T>(in guid);
 
