@@ -1,5 +1,6 @@
 ﻿using System;
 using Sapientia.Extensions;
+using UnityEngine;
 
 namespace Sapientia.Data
 {
@@ -154,6 +155,7 @@ namespace Sapientia.Data
 
 		public static implicit operator EnumMask<T>(ShortEnumMask<T> value)
 		{
+			Debug.LogWarning($"WTF: {value.mask} -> {(int)value.mask}");
 			return new EnumMask<T>()
 			{
 				mask = value.mask,
