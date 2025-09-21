@@ -151,19 +151,13 @@ namespace Sapientia.Data
 				mask = value.mask,
 			};
 		}
-	}
 
-	public class EnumMask
-	{
-		public static EnumMask<T> From<T>(params T[] values)
-			where T : unmanaged, Enum
+		public static implicit operator EnumMask<T>(ShortEnumMask<T> value)
 		{
-			var mask = new EnumMask<T>();
-
-			for (int i = 0; i < values.Length; i++)
-				mask.Add(values[i]);
-
-			return mask;
+			return new EnumMask<T>()
+			{
+				mask = value.mask,
+			};
 		}
 	}
 }

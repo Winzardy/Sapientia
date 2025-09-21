@@ -79,6 +79,12 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe short ToShort<T>(this T value) where T : unmanaged, Enum
+		{
+			return *(short*)(&value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe T1 ToEnum<T, T1>(this T value) where T : unmanaged, Enum where T1 : unmanaged, Enum
 		{
 			return *(T1*)(&value);
