@@ -22,6 +22,11 @@ namespace Sapientia.Data
 
 		public int mask;
 
+		private static void AssertValue(int value)
+		{
+			E.ASSERT(value is < BitsCount and >= 0, $"Количество бит выходит за пределы рабочего диапазона [0 >= (value: {value}) < {BitsCount}]");
+		}
+
 		public EnumMask(params T[] values) : this()
 		{
 			for (var i = 0; i < values.Length; i++)
@@ -52,13 +57,13 @@ namespace Sapientia.Data
 
 		public readonly bool Has(int value)
 		{
-			E.ASSERT(value is < BitsCount and >= 0);
+			AssertValue(value);
 			return (mask & (1 << value)) != 0;
 		}
 
 		public readonly bool HasOnly(int value)
 		{
-			E.ASSERT(value is < BitsCount and >= 0);
+			AssertValue(value);
 			var valueMask = 1 << value;
 			return ((mask & (1 << value)) != 0) && ((mask & ~valueMask) == 0);
 		}
@@ -75,7 +80,7 @@ namespace Sapientia.Data
 
 		public void Add(int value)
 		{
-			E.ASSERT(value is < BitsCount and >= 0);
+			AssertValue(value);
 			mask |= (1 << value);
 		}
 
