@@ -152,14 +152,5 @@ namespace Sapientia.Data
 				mask = value.mask,
 			};
 		}
-
-		public static implicit operator EnumMask<T>(ShortEnumMask<T> value)
-		{
-			Debug.LogWarning($"WTF: {value.mask} -> {(int)value.mask}");
-			return new EnumMask<T>()
-			{
-				mask = value.mask,
-			};
-		}
 	}
 }
