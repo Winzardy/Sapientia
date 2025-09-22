@@ -12,6 +12,9 @@ namespace Trading.UsagePass
 
 		public UsageLimitEntry limit;
 
+#if CLIENT
+		[UnityEngine.Tooltip("Если true, то будет использоваться реальное время, иначе виртуальное")]
+#endif
 		public bool realTime;
 
 		public void Reset(Tradeboard board)

@@ -11,7 +11,7 @@ namespace Content
 #if CLIENT
 		[UnityEngine.SerializeField]
 #endif
-		protected SerializableGuid guid = SerializableGuid.New();
+		protected SerializableGuid guid;
 
 		/// <summary>
 		/// Индексация (only runtime)

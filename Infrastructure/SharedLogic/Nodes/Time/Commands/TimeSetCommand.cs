@@ -20,7 +20,7 @@ namespace SharedLogic
 		{
 			var node = root.GetNode<TimeSharedNode>();
 
-			if (node.CanSetTimestamp(timestamp, out var error))
+			if (!node.CanSetTimestamp(timestamp, out var error))
 			{
 				if (error.TryGetValue(out var errorValue))
 					exception = new Exception(errorValue.ToString());
