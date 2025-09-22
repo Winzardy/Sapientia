@@ -46,7 +46,6 @@ namespace SharedLogic
 		public void Dispose()
 		{
 			Disposed?.Invoke(_index);
-
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _nodes);
 		}
 
@@ -84,6 +83,7 @@ namespace SharedLogic
 		where T : ISharedNode
 	{
 		private static ConcurrentDictionary<int, T> _indexToNode;
+		private static readonly object _gate = new();
 
 		static SharedNodeRegistry()
 		{
@@ -92,29 +92,42 @@ namespace SharedLogic
 
 		private static void OnRegistryDisposed(int index)
 		{
-			if (_indexToNode == null)
+			var map = Volatile.Read(ref _indexToNode);
+			if (map == null)
 				return;
 
-			if (!_indexToNode.TryRemove(index, out _))
-				return;
-
-			if (_indexToNode.IsEmpty)
-				StaticObjectPoolUtility.ReleaseAndSetNull(ref _indexToNode);
+			map.TryRemove(index, out _);
 		}
 
 		public static void Register(int index, T node)
 		{
-			_indexToNode ??= ConcurrentDictionaryPool<int, T>.Get();
-			_indexToNode.TryAdd(index, node);
+			EnsureMap().TryAdd(index, node);
+		}
+
+		private static ConcurrentDictionary<int, T> EnsureMap()
+		{
+			var map = Volatile.Read(ref _indexToNode);
+			if (map != null)
+				return map;
+
+			lock (_gate)
+			{
+				if (_indexToNode == null)
+					_indexToNode = new();
+				return _indexToNode;
+			}
 		}
 
 		public static bool TryGet(int index, out T node)
 		{
-			node = default;
-			if (_indexToNode == null)
+			var map = Volatile.Read(ref _indexToNode);
+			if (map == null)
+			{
+				node = default;
 				return false;
+			}
 
-			return _indexToNode.TryGetValue(index, out node);
+			return map.TryGetValue(index, out node);
 		}
 	}
 }

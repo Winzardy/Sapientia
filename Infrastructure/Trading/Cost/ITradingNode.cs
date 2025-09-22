@@ -2,7 +2,7 @@ using Sapientia;
 
 namespace Trading
 {
-	public interface ITradingNode : IDateTimeProvider
+	public interface ITradingNode : IDateTimeProviderWithVirtual
 	{
 		public ITradeReceiptRegistry<T> GetRegistry<T>() where T : struct, ITradeReceipt;
 	}

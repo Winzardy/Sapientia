@@ -57,7 +57,7 @@ namespace Sapientia
 
 		IBlackboardToken IBlackboardToken.Clone(Blackboard blackboard)
 		{
-			ref readonly var value = ref Blackboard<T>.Get(_hash.blackboard);
+			var value = Blackboard<T>.Get(_hash.blackboard);
 			return Blackboard<T>.Register(in value, blackboard, _hash.key);
 		}
 

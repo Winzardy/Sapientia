@@ -16,7 +16,7 @@ namespace SharedLogic
 
 		ILogger ISharedRoot.Logger => _logger;
 
-		public SharedRoot(ISharedNodesRegistrar registrar, ILogger logger = null)
+		public SharedRoot(ISharedNodesRegistrar registrar, IDateTimeProvider dateTimeProvider, ILogger logger = null)
 		{
 			_registrar = registrar;
 			_logger = logger;
@@ -24,7 +24,7 @@ namespace SharedLogic
 			_registry = new SharedNodeRegistry();
 
 			// Системные ноды
-			_registry.Register<TimeSharedNode>();
+			_registry.Register(new TimeSharedNode(dateTimeProvider));
 
 			_registrar.Register(_registry);
 		}

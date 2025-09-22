@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "UniTask",
-        "Sapientia"
+        "Sapientia",
+        "Fusumity.LocalSave"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

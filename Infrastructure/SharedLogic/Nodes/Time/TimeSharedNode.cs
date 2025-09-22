@@ -1,4 +1,5 @@
 using System;
+using Sapientia;
 using static SharedLogic.TimeSharedNode;
 
 namespace SharedLogic
@@ -7,10 +8,17 @@ namespace SharedLogic
 	{
 		private TimeSpan _dateTimeOffset;
 		private DateTime _dateTime;
+		private IDateTimeProvider _timeProvider;
 
-		// Для дебага
-		public DateTime SharedTime => ServerTime + _dateTimeOffset;
-		public DateTime ServerTime => _dateTime;
+		public DateTime DateTime => _dateTime;
+		public DateTime VirtualDateTime => DateTime + _dateTimeOffset;
+
+		public TimeSharedNode(IDateTimeProvider timeProvider)
+		{
+			_timeProvider = timeProvider;
+
+			_dateTime = _timeProvider.DateTime;
+		}
 
 		/// <summary>
 		/// Увеличивает смещение относительно серверного времени
@@ -48,7 +56,7 @@ namespace SharedLogic
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
-			_dateTime = new DateTime(data.timestamp);
+			_dateTime = data.timestamp == 0 ? new DateTime(data.timestamp) : _timeProvider.DateTime;
 		}
 
 		protected override void OnSave(out SaveData data)
@@ -68,10 +76,18 @@ namespace SharedLogic
 	public static class SharedTimeUtility
 	{
 		public static long GetTimestamp(this ISharedRoot root)
-			=> root.GetNode<TimeSharedNode>().ServerTime.Ticks;
+			=> GetDateTime(root).Ticks;
 
-		public static long GetSharedTimestamp(this ISharedRoot root)
-			=> root.GetNode<TimeSharedNode>().SharedTime.Ticks;
+		public static long GetVirtualTimestamp(this ISharedRoot root)
+			=> GetVirtualDateTime(root).Ticks;
+
+		public static DateTime GetDateTime(this ISharedRoot root)
+			=> root.GetNode<TimeSharedNode>()
+			   .DateTime;
+
+		public static DateTime GetVirtualDateTime(this ISharedRoot root)
+			=> root.GetNode<TimeSharedNode>()
+			   .VirtualDateTime;
 	}
 
 	public struct TimeSetError

@@ -8,6 +8,5 @@ namespace SharedLogic
 
 	public interface ICommandSender
 	{
-
 	}
 }

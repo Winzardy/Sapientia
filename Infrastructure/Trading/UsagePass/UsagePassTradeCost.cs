@@ -12,7 +12,7 @@ namespace Trading.UsagePass
 
 		public UsageLimitEntry limit;
 
-		public bool useSimulateTime;
+		public bool realTime;
 
 		public void Reset(Tradeboard board)
 		{
@@ -28,8 +28,8 @@ namespace Trading.UsagePass
 			var backend = board.Get<IUsagePassNode>();
 			var recipeKey = GetReceiptKey(board.Id);
 			ref readonly var model = ref backend.GetModel(recipeKey);
-			var dateTime = board.Get<ITradingNode>()
-			   .GetTime(useSimulateTime);
+			var tradingNode = board.Get<ITradingNode>();
+			var dateTime = realTime ? tradingNode.DateTime : tradingNode.VirtualDateTime;
 
 			if (!limit.CanApplyUsage(in model, dateTime, out var limitApplyError))
 			{
@@ -45,8 +45,8 @@ namespace Trading.UsagePass
 
 		protected override Task<UsagePassTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
-			var dateTime = board.Get<ITradingNode>()
-			   .GetTime(useSimulateTime);
+			var tradingNode = board.Get<ITradingNode>();
+			var dateTime = realTime ? tradingNode.DateTime : tradingNode.VirtualDateTime;
 			UsagePassTradeReceipt? receipt = new UsagePassTradeReceipt(dateTime.Ticks);
 			return Task.FromResult(receipt);
 		}

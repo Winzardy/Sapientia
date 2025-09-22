@@ -64,7 +64,7 @@ namespace Trading.Advertising
 			if (result != AdShowResult.Success)
 				return null;
 
-			var dateTime = board.Get<IDateTimeProvider>().GetTime(false);
+			var dateTime = board.Get<IDateTimeProviderWithVirtual>().DateTime;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
 

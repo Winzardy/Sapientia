@@ -8,13 +8,12 @@ namespace InAppPurchasing
 	/// </summary>
 	public interface IInAppPurchasingService
 	{
-		public void Initialize();
+		DateTime DateTime { get; }
 		public bool Contains(string transactionId);
 		public InAppPurchasingRegisterResult Register(in PurchaseReceipt receipt);
 		PurchaseReceipt? GetReceipt(string transactionId);
 
 		public IEnumerable<string> GetAllTransactions();
-		DateTime GetUtcNow();
 	}
 
 	public enum InAppPurchasingRegisterResult

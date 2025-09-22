@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sapientia.Pooling.Concurrent;
@@ -38,9 +39,26 @@ namespace Sapientia
 			OnDispose();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Contains<T>(string? key = null) => Blackboard<T>.Contains(this, key);
 
-		public ref readonly T Get<T>(string? key = null) => ref Blackboard<T>.Get(this, key);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T Get<T>(string? key = null) => Blackboard<T>.Get(this, key);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool TryGet<T>(out T value) => TryGet(null, out value);
+
+		public bool TryGet<T>(string? key, out T value)
+		{
+			if (!Contains<T>(key))
+			{
+				value = default;
+				return false;
+			}
+
+			value = Get<T>(key);
+			return true;
+		}
 
 		public BlackboardToken Register<T>(in T value, string? key = null)
 		{
@@ -103,32 +121,36 @@ namespace Sapientia
 			return _boardToEntry != null && _boardToEntry.ContainsKey(hash);
 		}
 
-		internal static ref readonly T Get(Blackboard blackboard, string? key = null)
+		internal static T Get(Blackboard blackboard, string? key = null)
 		{
-			// TODO: .NET 5+
-			// ref readonly var entry = ref CollectionsMarshal.GetValueRefOrNullRef(_dict, key);
-			// return ref entry.value;
+			// CollectionsMarshal.GetValueRefOrNullRef
+			var map = EnsureMap();
+			if (map == null)
+				throw GetException();
 
 			var hash = ToHash(blackboard, key);
-			if (_boardToEntry == null || !_boardToEntry.TryGetValue(hash, out var entry))
+			if (!map.TryGetValue(hash, out var entry))
+				throw GetException();
+
+			return entry.value;
+
+			Exception GetException()
 			{
 				var msg = $"{blackboard.GetName()}: ${typeof(T)} not found" +
 					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
-				throw blackboard.GetException(msg);
+				return blackboard.GetException(msg);
 			}
-
-			return ref entry.value;
 		}
 
 		internal static BlackboardToken<T> Register(in T value, Blackboard blackboard, string? key = null)
 		{
-			_boardToEntry ??= ConcurrentDictionaryPool<RegisteredTokenHash, Entry>.Get();
+			var map = EnsureMap();
 			var hash = ToHash(blackboard, key);
 			var newEntry = Pool<Entry>.Get();
 			{
 				newEntry.value = value;
 			}
-			if (!_boardToEntry.TryAdd(hash, newEntry))
+			if (!map.TryAdd(hash, newEntry))
 			{
 				Pool<Entry>.Release(newEntry);
 
@@ -155,13 +177,22 @@ namespace Sapientia
 
 			Pool<Entry>.Release(entry);
 			Pool<BlackboardToken<T>>.Release(token);
+		}
 
-			if (_boardToEntry.IsEmpty)
-				StaticObjectPoolUtility.ReleaseAndSetNull(ref _boardToEntry);
+		private static ConcurrentDictionary<RegisteredTokenHash, Entry> EnsureMap()
+		{
+			var map = _boardToEntry;
+			if (map != null)
+				return map;
+
+			var fresh = new ConcurrentDictionary<RegisteredTokenHash, Entry>();
+			var raced = Interlocked.CompareExchange(ref _boardToEntry, fresh, null);
+			return raced ?? fresh;
 		}
 
 		private static RegisteredTokenHash ToHash(Blackboard blackboard, string? key) => new(blackboard, key);
 
+		// вместо CollectionsMarshal.GetValueRefOrNullRef... которого нет в Unity
 		internal class Entry : IPoolable
 		{
 			internal T value;

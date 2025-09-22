@@ -7,11 +7,11 @@ namespace SharedLogic
 	/// Системная команда, которая отправляется перед каждой командой, чтобы двигать время
 	/// </summary>
 	[Serializable]
-	public struct TimedCommand : ICommand
+	public struct TimeSetCommand : ICommand
 	{
 		public long timestamp;
 
-		public TimedCommand(long timestamp)
+		public TimeSetCommand(long timestamp)
 		{
 			this.timestamp = timestamp;
 		}
