@@ -1,6 +1,5 @@
 ﻿using System;
 using Sapientia.Extensions;
-using UnityEngine;
 
 namespace Sapientia.Data
 {
