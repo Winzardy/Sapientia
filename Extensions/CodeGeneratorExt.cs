@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Sapientia.Extensions.Reflection;
@@ -19,6 +20,26 @@ namespace Sapientia.Extensions
 			if (Directory.Exists(path))
 				Directory.Delete(path, true);
 			Directory.CreateDirectory(path);
+
+			return path;
+		}
+
+		public static string ClearDirectory(Type type, string subFolderName, params string[] extensions)
+		{
+			var path = ReflectionExt.GetTypeAssemblyPath(type);
+			path = Path.Combine(path, GeneratedFolder);
+			path = Path.Combine(path, subFolderName);
+
+			var extensionsSet = new HashSet<string>(extensions);
+
+			var files = Directory.GetFiles(path);
+			foreach (var file in files)
+			{
+				var extension = Path.GetExtension(file) ?? string.Empty;
+				if (!extensionsSet.Contains(extension))
+					continue;
+				File.Delete(file);
+			}
 
 			return path;
 		}

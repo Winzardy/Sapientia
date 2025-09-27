@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Data;
+using Submodules.Sapientia.Memory;
 using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.Collections
@@ -57,21 +59,25 @@ namespace Sapientia.Collections
 			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => count;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public UnsafeDictionary(int capacity)
+		public UnsafeDictionary(int capacity) : this(default, capacity)
 		{
-			this = default;
-			Initialize(capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Initialize(int capacity)
+		public UnsafeDictionary(Id<MemoryManager> memoryId, int capacity)
+		{
+			this = default;
+			Initialize(memoryId, capacity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void Initialize(Id<MemoryManager> memoryId, int capacity)
 		{
 			var prime = capacity.GetPrime();
 			freeList = -1;
-			buckets = new UnsafeArray<int>(prime, false);
+			buckets = new UnsafeArray<int>(memoryId, prime);
 			buckets.Fill(-1);
-			entries = new UnsafeArray<Entry>(prime, true);
+			entries = new UnsafeArray<Entry>(memoryId, prime);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -253,7 +259,7 @@ namespace Sapientia.Collections
 		{
 			if (!buckets.IsCreated)
 			{
-				Initialize(0);
+				Initialize(default, 0);
 			}
 
 			var hashCode = key.GetHashCode() & _hashCodeMask;
@@ -321,9 +327,9 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity(int newSize)
 		{
-			var bucketsArray = new UnsafeArray<int>(newSize, false);
+			var bucketsArray = new UnsafeArray<int>(buckets.memoryId, newSize, ClearOptions.UninitializedMemory);
 			bucketsArray.Fill(-1);
-			var entryArray = new UnsafeArray<Entry>(newSize, true);
+			var entryArray = new UnsafeArray<Entry>(entries.memoryId, newSize, ClearOptions.ClearMemory);
 
 			MemoryExt.MemCopy(entries.ptr, entryArray.ptr, count);
 
@@ -423,9 +429,9 @@ namespace Sapientia.Collections
 				return num;
 			}
 
-			if (buckets.IsCreated == false)
+			if (!buckets.IsCreated)
 			{
-				Initialize(capacity);
+				Initialize(default, capacity);
 				return Capacity;
 			}
 

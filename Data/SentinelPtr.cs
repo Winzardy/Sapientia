@@ -244,7 +244,7 @@ namespace Sapientia.Data
 		public bool IsLengthInRange(int length)
 		{
 			CheckNullRef();
-			return _ptr.IsLengthInRange(length);
+			return _ptr.IsValidLength(length);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

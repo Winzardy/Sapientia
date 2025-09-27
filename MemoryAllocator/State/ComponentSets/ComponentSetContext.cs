@@ -6,16 +6,16 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public readonly unsafe struct ArchetypeContext<T> where T: unmanaged, IComponent
+	public readonly unsafe struct ComponentSetContext<T> where T: unmanaged, IComponent
 	{
 		public readonly WorldState worldState;
-		public readonly SafePtr<Archetype> innerArchetype;
+		public readonly SafePtr<ComponentSet> innerArchetype;
 
-		public ArchetypeContext(WorldState worldState) : this(worldState, worldState.GetArchetypePtr<T>())
+		public ComponentSetContext(WorldState worldState) : this(worldState, worldState.GetComponentSetPtr<T>())
 		{
 		}
 
-		public ArchetypeContext(WorldState worldState, SafePtr<Archetype> innerArchetype)
+		public ComponentSetContext(WorldState worldState, SafePtr<ComponentSet> innerArchetype)
 		{
 			this.worldState = worldState;
 			this.innerArchetype = innerArchetype;
@@ -34,13 +34,13 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<ArchetypeElement<T>> GetRawElements()
+		public SafePtr<ComponentSetElement<T>> GetRawElements()
 		{
 			return innerArchetype.ptr->GetRawElements<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<ArchetypeElement<T>> GetSpan()
+		public Span<ComponentSetElement<T>> GetSpan()
 		{
 			return innerArchetype.ptr->GetSpan<T>(worldState);
 		}
@@ -125,18 +125,18 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemListEnumerator<ArchetypeElement<T>> GetEnumerator()
+		public MemListEnumerator<ComponentSetElement<T>> GetEnumerator()
 		{
 			ref var elements = ref innerArchetype.Value()._elements;
-			var ptr = elements.GetValuePtr<ArchetypeElement<T>>(worldState);
+			var ptr = elements.GetValuePtr<ComponentSetElement<T>>(worldState);
 
-			return new MemListEnumerator<ArchetypeElement<T>>(ptr, innerArchetype.ptr->Count);
+			return new MemListEnumerator<ComponentSetElement<T>>(ptr, innerArchetype.ptr->Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemListEnumerable<ArchetypeElement<T>> GetEnumerable()
+		public MemListEnumerable<ComponentSetElement<T>> GetEnumerable()
 		{
-			return new MemListEnumerable<ArchetypeElement<T>>(GetEnumerator());
+			return new MemListEnumerable<ComponentSetElement<T>>(GetEnumerator());
 		}
 	}
 }

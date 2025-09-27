@@ -21,6 +21,13 @@ namespace Sapientia.MemoryAllocator.State
 			return _isEnabled == 1;
 		}
 
+		public readonly TValue GetValue()
+		{
+			if (_isEnabled == 1)
+				return value;
+			return default;
+		}
+
 		public readonly bool TryGetValue(out TValue value)
 		{
 			if (_isEnabled == 1)

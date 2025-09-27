@@ -1,5 +1,6 @@
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Memory;
 
 // Copy of Unity.Collections.Unicode file
 namespace Sapientia.Collections.FixedString

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {

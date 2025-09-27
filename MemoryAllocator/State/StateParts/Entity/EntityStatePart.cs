@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Sapientia.Collections.FixedString;
 using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator.State
 {
@@ -13,10 +14,12 @@ namespace Sapientia.MemoryAllocator.State
 
 	public unsafe struct EntityStatePart : IWorldStatePart
 	{
-		public Entity WorldEntity { get; private set; }
+		public Entity WorldEntity => worldEntity;
 		public int EntitiesCount { get; private set; }
 		public int EntitiesCapacity { get; private set; }
 		public int ExpandStep { get; private set; }
+
+		internal Entity worldEntity;
 
 		private MemArray<ushort> _freeEntitiesIds;
 		private MemArray<ushort> _entityIdToGeneration;
@@ -39,7 +42,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		public EntityStatePart(int entitiesCapacity, int expandStep = 512)
 		{
-			WorldEntity = default;
+			worldEntity = default;
 			EntitiesCount = 0;
 			EntitiesCapacity = entitiesCapacity;
 			ExpandStep = expandStep;
@@ -81,9 +84,9 @@ namespace Sapientia.MemoryAllocator.State
 			}
 
 #if ENABLE_ENTITY_NAMES
-			WorldEntity = CreateEntity(worldState, "World");
+			worldEntity = CreateEntity(worldState, "World");
 #else
-			WorldEntity = CreateEntity(worldState);
+			worldEntity = CreateEntity(worldState);
 #endif
 		}
 
@@ -179,6 +182,14 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				_freeEntitiesIds[worldState, i] = i;
 			}
+		}
+	}
+
+	public static class EntityStatePartExt
+	{
+		public static ReadOnlySpan<Entity> GetWorldEntitySpan(this ref EntityStatePart entityStatePart)
+		{
+			return entityStatePart.worldEntity.AsSpan();
 		}
 	}
 }

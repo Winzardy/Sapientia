@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator.Core
 {

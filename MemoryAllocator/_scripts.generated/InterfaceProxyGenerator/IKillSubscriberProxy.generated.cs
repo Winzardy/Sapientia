@@ -23,13 +23,13 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		public delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity);
+		public delegate void EntityKilledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity target);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void EntityKilled(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
+		public readonly void EntityKilled(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity target)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
 			var __method = UnsafeExt.As<Delegate, EntityKilledDelegate>(__delegate);
-			__method.Invoke(__executorPtr, worldState, in entity);
+			__method.Invoke(__executorPtr, worldState, in target);
 		}
 
 		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState);
@@ -46,23 +46,23 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IKillSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void EntityKilled(this in UnsafeProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity target)
 		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr().ptr, worldState, in entity);
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr().ptr, worldState, in target);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void EntityKilled(this ref ProxyPtr<IKillSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity target)
 		{
-			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__worldState).ptr, worldState, in entity);
+			__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__worldState).ptr, worldState, in target);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
+		public static void EntityKilled(this ref ProxyEvent<IKillSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity target)
 		{
 			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__worldState).ptr, worldState, in entity);
+				__proxyPtr.proxy.EntityKilled(__proxyPtr.GetPtr(__worldState).ptr, worldState, in target);
 			}
 		}
 
@@ -95,12 +95,12 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		// Чтобы найти дальнейшие `usages` метода - выше в классе `IKillSubscriberProxyExt` найдите `usages` методов `EntityKilled`
-		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity entity)
+		private static void EntityKilled(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity target)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.EntityKilled(worldState, in entity);
+			__source.EntityKilled(worldState, in target);
 #endif
 		}
 

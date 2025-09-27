@@ -7,6 +7,12 @@ namespace Sapientia.MemoryAllocator
 	public partial struct WorldState
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool TryGetUnmanagedLocalServicePtr<T>(out SafePtr<T> result) where T: unmanaged, IIndexedType
+		{
+			return GetLocalServiceRegistry().TryGetPtr<T>(out result);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly SafePtr<T> GetUnmanagedLocalServicePtr<T>() where T: unmanaged, IIndexedType
 		{
 			return GetLocalServiceRegistry().GetPtr<T>();
@@ -37,9 +43,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SafePtr<T> GetOrCreateUnmanagedLocalServicePtr<T>(out ServiceRegistryContext context) where T: unmanaged, IIndexedType
+		public readonly SafePtr<T> GetOrCreateUnmanagedLocalServicePtr<T>(out bool isCreated) where T: unmanaged, IIndexedType
 		{
-			return GetLocalServiceRegistry().GetOrCreatePtr<T>(out context);
+			return GetLocalServiceRegistry().GetOrCreatePtr<T>(out isCreated);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

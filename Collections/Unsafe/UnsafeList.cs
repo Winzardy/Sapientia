@@ -2,7 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using Sapientia.Extensions;
+using Submodules.Sapientia.Data;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.Collections
 {
@@ -13,31 +14,28 @@ namespace Sapientia.Collections
 		public SafePtr<T> ptr;
 		public int count;
 		public int capacity;
-#if UNITY_5_3_OR_NEWER
-		private Unity.Collections.Allocator _allocator;
-#endif
+
+		public readonly Id<MemoryManager> memoryId;
 
 		public bool IsCreated => ptr != default;
 
-		public UnsafeList(int capacity)
+		public UnsafeList(int capacity) : this(default, capacity)
 		{
-			this.ptr = MemoryExt.MakeArray<T>(capacity, false, false);
-			this.count = 0;
-			this.capacity = capacity;
-#if UNITY_5_3_OR_NEWER
-			_allocator = Unity.Collections.Allocator.None;
-#endif
 		}
 
-#if UNITY_5_3_OR_NEWER
-		public UnsafeList(int capacity, Unity.Collections.Allocator allocator)
+		public UnsafeList(Id<MemoryManager> memoryId, int capacity)
 		{
-			this.ptr = MemoryExt.MakeArray<T>(capacity, allocator, false, false);
+			if (capacity <= 0)
+			{
+				this = default;
+				return;
+			}
+
+			this.ptr = memoryId.GetManager().MakeArray<T>(capacity, ClearOptions.UninitializedMemory);
 			this.count = 0;
 			this.capacity = capacity;
-			_allocator = allocator;
+			this.memoryId = memoryId;
 		}
-#endif
 
 		public ref T Last
 		{
@@ -130,14 +128,9 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EnsureCapacity(int newCapacity)
 		{
-#if UNITY_5_3_OR_NEWER
-			if (_allocator != Unity.Collections.Allocator.None)
-				MemoryExt.ResizeArray<T>(ref ptr, ref capacity, newCapacity, _allocator, true, false, false);
-			else
-#endif
-			{
-				MemoryExt.ResizeArray<T>(ref ptr, ref capacity, newCapacity, true, false, false);
-			}
+			if (newCapacity <= capacity)
+				return;
+			memoryId.GetManager().ResizeArray<T>(ref ptr, ref capacity, newCapacity, true, ClearOptions.UninitializedMemory);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -146,14 +139,8 @@ namespace Sapientia.Collections
 			if (!IsCreated)
 				return;
 
-#if UNITY_5_3_OR_NEWER
-			if (_allocator != Unity.Collections.Allocator.None)
-				MemoryExt.MemFree(ptr, _allocator, false);
-			else
-#endif
-			{
-				MemoryExt.MemFree(ptr, false);
-			}
+			memoryId.GetManager().MemFree(ptr);
+
 			this = default;
 		}
 
