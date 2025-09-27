@@ -1,5 +1,6 @@
+#if CLIENT
 using UnityEngine;
-
+#endif
 namespace Sapientia
 {
 	public abstract class BlackboardConverter<T1, T2> : IBlackboardEvaluator<T2>

@@ -1,5 +1,8 @@
 using Sapientia;
 using Sapientia.Collections;
+#if CLIENT
+using UnityEngine;
+#endif
 
 namespace Trading
 {
@@ -8,9 +11,7 @@ namespace Trading
 		internal int selectedIndex;
 
 		// ReSharper disable once UseArrayEmptyMethod
-#if CLIENT
-		[UnityEngine.SerializeReference]
-#endif
+		[SerializeReference]
 		public TradeCost[] options = new TradeCost[0];
 
 		public TradeCost[] Items => options;

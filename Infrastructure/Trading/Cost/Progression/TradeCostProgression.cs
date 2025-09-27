@@ -1,14 +1,15 @@
 using System;
 using Sapientia;
+#if CLIENT
+using UnityEngine;
+#endif
 
 namespace Trading
 {
 	public partial class TradeCostProgression : TradeCost
 	{
 		// ReSharper disable once UseArrayEmptyMethod
-#if CLIENT
-		[UnityEngine.SerializeReference]
-#endif
+		[SerializeReference]
 		public TradeCost[] costs = new TradeCost[0];
 
 		public ref readonly TradeCost this[int index] => ref costs[index];

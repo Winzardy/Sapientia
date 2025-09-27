@@ -9,26 +9,26 @@ namespace Trading
 	/// Каталог лотов, позиций
 	/// </summary>
 	[Serializable]
-	public partial class TradeCatalogEntry : IExternallyIdentifiable
+	public partial class TradeCatalogConfig : IExternallyIdentifiable
 	{
 		private string _id;
 
-		public TraderOfferEntry[] offers;
+		public TraderOfferConfig[] offers;
 
 		public string Id => _id;
 
 		void IExternallyIdentifiable.SetId(string id) => _id = id;
 
-		public RefEnumerator<TraderOfferEntry> GetEnumerator() => new(offers);
+		public RefEnumerator<TraderOfferConfig> GetEnumerator() => new(offers);
 	}
 
 	/// <remarks>
 	/// Лот, позиция в магазине, не воспринимать как оффер (попап с предложением покупки), возможно название неудачное...
 	/// </remarks>
 	[Serializable]
-	public partial struct TraderOfferEntry
+	public partial struct TraderOfferConfig
 	{
-		public ContentReference<TradeEntry> trade;
+		public ContentReference<TradeConfig> trade;
 
 		[Obsolete("Временное решение, пока нет Condition")]
 		public bool checkPurchased;

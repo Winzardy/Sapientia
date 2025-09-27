@@ -40,6 +40,9 @@ namespace Sapientia.Pooling
 
 		public static void Release(ref PooledObject<T> p)
 		{
+			if (p._obj == null)
+				return;
+
 			p.Release();
 			p = default;
 		}

@@ -11,9 +11,10 @@ using Sapientia.TypeIndexer;
 namespace Sapientia.MemoryAllocator.State
 {
 	/// <summary>
-	/// Если настройки есть, то они будут доступны через `allocator.GetService<TGlobalSettings>()`
+	/// Доступ к настройкам в рантайме осуществляется через
+	/// <see cref="allocator.GetService{IConfigurationRuntime}"/>, если они заданы.
 	/// </summary>
-	public interface IConfiguration : IIndexedType
+	public interface IConfigurationRuntime : IIndexedType
 	{
 	}
 
@@ -43,7 +44,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 	}
 
-	public unsafe interface IElementDestroyHandler<T> : IElementDestroyHandler where T: unmanaged, IComponent
+	public unsafe interface IElementDestroyHandler<T> : IElementDestroyHandler where T : unmanaged, IComponent
 	{
 		public void EntityPtrArrayDestroyed(WorldState worldState, ArchetypeElement<T>** elementsPtr, int count);
 		public void EntityArrayDestroyed(WorldState worldState, ArchetypeElement<T>* elementsPtr, int count);
@@ -51,21 +52,21 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void IElementDestroyHandler.EntityPtrArrayDestroyed(WorldState worldState, void** elementsPtr, int count)
 		{
-			EntityPtrArrayDestroyed(worldState, (ArchetypeElement<T>**)elementsPtr, count);
+			EntityPtrArrayDestroyed(worldState, (ArchetypeElement<T>**) elementsPtr, count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void IElementDestroyHandler.EntityArrayDestroyed(WorldState worldState, void* elementsPtr, int count)
 		{
-			EntityArrayDestroyed(worldState, (ArchetypeElement<T>*)elementsPtr, count);
+			EntityArrayDestroyed(worldState, (ArchetypeElement<T>*) elementsPtr, count);
 		}
-
 	}
 
 	public unsafe interface IElementDestroyHandler : IInterfaceProxyType
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EntityPtrArrayDestroyed(WorldState worldState, void** elementsPtr, int count);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EntityArrayDestroyed(WorldState worldState, void* elementsPtr, int count);
 	}
@@ -93,25 +94,29 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(WorldState worldState, int elementsCount) where T: unmanaged, IIndexedType
+		public static ref Archetype RegisterArchetype<T>(WorldState worldState, int elementsCount) where T : unmanaged, IIndexedType
 		{
-			return ref RegisterArchetype<T>(worldState, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity);
+			return ref RegisterArchetype<T>(worldState, ServiceRegistryContext.Create<T, Archetype>(), elementsCount,
+				worldState.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount) where T: unmanaged
+		public static ref Archetype RegisterArchetype<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount)
+			where T : unmanaged
 		{
 			return ref RegisterArchetype<T>(worldState, context, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(WorldState worldState, int elementsCount, int entitiesCapacity) where T: unmanaged, IIndexedType
+		public static ref Archetype RegisterArchetype<T>(WorldState worldState, int elementsCount, int entitiesCapacity)
+			where T : unmanaged, IIndexedType
 		{
 			return ref RegisterArchetype<T>(worldState, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, entitiesCapacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount, int entitiesCapacity) where T: unmanaged
+		public static ref Archetype RegisterArchetype<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount,
+			int entitiesCapacity) where T : unmanaged
 		{
 			var archetypePtr = CreateArchetype<T>(worldState, elementsCount, entitiesCapacity);
 			context.RegisterService(worldState, archetypePtr);
@@ -120,25 +125,32 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(WorldState worldState, int elementsCount, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
+		public static ref Archetype RegisterArchetype<T>(WorldState worldState, int elementsCount, out ArchetypePtr<T> archetypePtr)
+			where T : unmanaged, IComponent
 		{
-			return ref RegisterArchetype<T>(worldState, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity, out archetypePtr);
+			return ref RegisterArchetype<T>(worldState, ServiceRegistryContext.Create<T, Archetype>(), elementsCount,
+				worldState.GetService<EntityStatePart>().EntitiesCapacity, out archetypePtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
+		public static ref Archetype RegisterArchetype<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount,
+			out ArchetypePtr<T> archetypePtr) where T : unmanaged, IComponent
 		{
-			return ref RegisterArchetype<T>(worldState, context, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity, out archetypePtr);
+			return ref RegisterArchetype<T>(worldState, context, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity,
+				out archetypePtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(WorldState worldState, int elementsCount, int entitiesCapacity, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
+		public static ref Archetype RegisterArchetype<T>(WorldState worldState, int elementsCount, int entitiesCapacity,
+			out ArchetypePtr<T> archetypePtr) where T : unmanaged, IComponent
 		{
-			return ref RegisterArchetype<T>(worldState, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, entitiesCapacity, out archetypePtr);
+			return ref RegisterArchetype<T>(worldState, ServiceRegistryContext.Create<T, Archetype>(), elementsCount, entitiesCapacity,
+				out archetypePtr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref Archetype RegisterArchetype<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount, int entitiesCapacity, out ArchetypePtr<T> archetypePtr) where T: unmanaged, IComponent
+		public static ref Archetype RegisterArchetype<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount,
+			int entitiesCapacity, out ArchetypePtr<T> archetypePtr) where T : unmanaged, IComponent
 		{
 			archetypePtr = CreateArchetype<T>(worldState, elementsCount, entitiesCapacity);
 			context.RegisterService(worldState, archetypePtr);
@@ -146,7 +158,8 @@ namespace Sapientia.MemoryAllocator.State
 			return ref archetypePtr.GetArchetype(worldState);
 		}
 
-		public static CachedPtr<Archetype> CreateArchetype<T>(WorldState worldState, int elementsCount, int entitiesCapacity) where T: unmanaged
+		public static CachedPtr<Archetype> CreateArchetype<T>(WorldState worldState, int elementsCount, int entitiesCapacity)
+			where T : unmanaged
 		{
 			var archetypePtr = CachedPtr<Archetype>.Create(worldState);
 			ref var archetype = ref archetypePtr.GetValue(worldState);
@@ -157,7 +170,7 @@ namespace Sapientia.MemoryAllocator.State
 			archetype.elementTypeName = typeof(T).Name;
 #endif
 
-			worldState.GetService<EntityStatePart>().AddSubscriber(worldState, (IndexedPtr)archetypePtr);
+			worldState.GetService<EntityStatePart>().AddSubscriber(worldState, (IndexedPtr) archetypePtr);
 
 			return archetypePtr;
 		}
@@ -166,7 +179,7 @@ namespace Sapientia.MemoryAllocator.State
 		public static CachedPtr<Archetype> RegisterArchetype(WorldState worldState, ServiceRegistryContext context, int elementsCount)
 		{
 			var ptr = CreateArchetype(worldState, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity);
-			context.RegisterService(worldState, (CachedPtr)ptr);
+			context.RegisterService(worldState, (CachedPtr) ptr);
 
 			return ptr;
 		}
@@ -185,7 +198,7 @@ namespace Sapientia.MemoryAllocator.State
 			archetype._elements = new MemSparseSet(worldState, TSize<ArchetypeElement>.size, elementsCount, entitiesCapacity);
 			archetype._destroyHandlerProxy = default;
 
-			worldState.GetService<EntityStatePart>().AddSubscriber(worldState, (IndexedPtr)archetypePtr);
+			worldState.GetService<EntityStatePart>().AddSubscriber(worldState, (IndexedPtr) archetypePtr);
 
 			return archetypePtr;
 		}
@@ -197,13 +210,13 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<ArchetypeElement<T>> GetRawElements<T>(WorldState worldState) where T: unmanaged
+		public SafePtr<ArchetypeElement<T>> GetRawElements<T>(WorldState worldState) where T : unmanaged
 		{
 			return _elements.GetValuePtr<ArchetypeElement<T>>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<ArchetypeElement<T>> GetSpan<T>(WorldState worldState) where T: unmanaged
+		public Span<ArchetypeElement<T>> GetSpan<T>(WorldState worldState) where T : unmanaged
 		{
 			return _elements.GetSpan<ArchetypeElement<T>>(worldState);
 		}
@@ -216,6 +229,7 @@ namespace Sapientia.MemoryAllocator.State
 				result = default;
 				return false;
 			}
+
 			result = _elements.Get<ArchetypeElement<T>>(worldState, entity.id).value;
 			return true;
 		}
@@ -256,7 +270,8 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SimpleList<T> ReadElements<T, TEnumerable>(WorldState worldState, TEnumerable entities) where T : unmanaged where TEnumerable: IEnumerable<Entity>
+		public SimpleList<T> ReadElements<T, TEnumerable>(WorldState worldState, TEnumerable entities)
+			where T : unmanaged where TEnumerable : IEnumerable<Entity>
 		{
 			var result = new SimpleList<T>();
 			foreach (var entity in entities)
@@ -264,6 +279,7 @@ namespace Sapientia.MemoryAllocator.State
 				if (_elements.Has(worldState, entity.id))
 					result.Add(_elements.Get<ArchetypeElement<T>>(worldState, entity.id).value);
 			}
+
 			return result;
 		}
 
@@ -291,7 +307,8 @@ namespace Sapientia.MemoryAllocator.State
 			_elements.EnsureGet<ArchetypeElement>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 			if (oldCapacity != _elements.Capacity)
-				UnityEngine.Debug.LogWarning($"Archetype was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+				UnityEngine.Debug.LogWarning(
+					$"Archetype was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
 #endif
 			return true;
 		}
@@ -310,6 +327,7 @@ namespace Sapientia.MemoryAllocator.State
 					return ref element.value;
 				}
 			}
+
 			isExist = false;
 			return ref UnsafeExt.DefaultRef<T>();
 		}
@@ -333,7 +351,8 @@ namespace Sapientia.MemoryAllocator.State
 				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				if (oldCapacity != _elements.Capacity)
-					UnityEngine.Debug.LogWarning($"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+					UnityEngine.Debug.LogWarning(
+						$"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
 #endif
 				element = new ArchetypeElement<T>(entity, default);
 
@@ -371,7 +390,8 @@ namespace Sapientia.MemoryAllocator.State
 				ref var element = ref _elements.EnsureGet<ArchetypeElement<T>>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				if (oldCapacity != _elements.Capacity)
-					UnityEngine.Debug.LogWarning($"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+					UnityEngine.Debug.LogWarning(
+						$"Archetype of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
 #endif
 				element = new ArchetypeElement<T>(entity, default);
 
@@ -380,24 +400,26 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear<T>(WorldState worldState) where T: unmanaged
+		public void Clear<T>(WorldState worldState) where T : unmanaged
 		{
 			if (_destroyHandlerProxy.IsCreated)
 			{
 				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(worldState);
 				_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, valueArray.ptr, _elements.Count);
 			}
+
 			_elements.Clear(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ClearFast<T>(WorldState worldState) where T: unmanaged
+		public void ClearFast<T>(WorldState worldState) where T : unmanaged
 		{
 			if (_destroyHandlerProxy.IsCreated)
 			{
 				var valueArray = _elements.GetValuePtr<ArchetypeElement<T>>(worldState);
 				_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, valueArray.ptr, _elements.Count);
 			}
+
 			_elements.ClearFast();
 		}
 
@@ -408,8 +430,10 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				if (_destroyHandlerProxy.IsCreated)
 				{
-					_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, _elements.GetValuePtrByDenseId(worldState, entity.id).ptr, 1);
+					_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState,
+						_elements.GetValuePtrByDenseId(worldState, entity.id).ptr, 1);
 				}
+
 				_elements.RemoveSwapBackByDenseId(worldState, denseId);
 			}
 		}

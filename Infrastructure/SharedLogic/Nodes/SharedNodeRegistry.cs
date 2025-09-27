@@ -16,6 +16,11 @@ namespace SharedLogic
 		public void Register(ISharedNodeRegistry registry);
 	}
 
+	public interface ISharedNodesRegistrarFactory
+	{
+		public ISharedNodesRegistrar Create();
+	}
+
 	/// <summary>
 	/// Реестр нодов
 	/// </summary>

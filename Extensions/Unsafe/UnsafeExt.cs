@@ -99,6 +99,12 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T AsRef<T>(in T value) where T : struct
+		{
+			return ref Unsafe.AsRef(in value);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T1 As<T, T1>(ref T value)
 		{
 #if UNITY_5_3_OR_NEWER

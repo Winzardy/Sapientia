@@ -4,7 +4,10 @@
     "references": [
         "UniTask",
         "Sapientia",
-        "Fusumity.LocalSave"
+        "Fusumity.LocalSave",
+        "Content",
+        "WLog",
+        "Fusumity"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

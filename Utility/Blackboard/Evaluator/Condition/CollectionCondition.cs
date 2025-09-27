@@ -1,5 +1,7 @@
 using System;
+#if CLIENT
 using UnityEngine;
+#endif
 
 namespace Sapientia
 {

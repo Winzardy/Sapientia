@@ -19,12 +19,14 @@ namespace Trading
 	{
 		private const string RESTORE_KEY = "restoring";
 
+		private string _id;
+
 		/// <summary>
 		/// Trade Id
 		/// </summary>
-		public string Id { get; private set; }
+		public string Id => _id;
 
-		internal void SetId(string id) => Id = id;
+		internal void SetId(string id) => _id = id;
 
 		public bool IsRestoreState => _restoreSources.Any();
 
@@ -66,7 +68,42 @@ namespace Trading
 
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
+
+#if CLIENT
+		private bool _fetchMode;
+
+		/// <summary>
+		/// Режим при котором мы получаем квитанции (чеки)
+		/// </summary>
+		public bool FetchMode => _fetchMode;
+
+		/// <inheritdoc cref="FetchMode"/>
+		public void SetFetchMode(bool value) => _fetchMode = value;
+
+		/// <inheritdoc cref="FetchMode"/>
+		public FetchModeScope FetchModeScope(bool value = true) => new(this, value);
+#else
+		public bool FetchMode => false;
+#endif
 	}
+
+#if CLIENT
+	public readonly struct FetchModeScope : IDisposable
+	{
+		private readonly Tradeboard _tradeboard;
+
+		public FetchModeScope(Tradeboard tradeboard, bool value = true)
+		{
+			_tradeboard = tradeboard;
+			_tradeboard.SetFetchMode(value);
+		}
+
+		public void Dispose()
+		{
+			_tradeboard.SetFetchMode(false);
+		}
+	}
+#endif
 
 	public static class TradeboardUtility
 	{
@@ -89,9 +126,9 @@ namespace Trading
 			Bind(board, reference.GetTradeId());
 		}
 
-		public static void Bind(this Tradeboard board, in TradeEntry entry)
+		public static void Bind(this Tradeboard board, in TradeConfig config)
 		{
-			Bind(board, entry.Id);
+			Bind(board, config.Id);
 		}
 
 		public static void Bind(this Tradeboard board, string tradeId)

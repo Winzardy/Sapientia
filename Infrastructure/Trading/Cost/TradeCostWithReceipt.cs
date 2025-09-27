@@ -8,39 +8,39 @@ namespace Trading
 	public abstract class TradeCostWithReceipt<T> : TradeCost, ITradeCostWithReceipt
 		where T : struct, ITradeReceipt
 	{
+		private const string ERROR_CATEGORY = "Can't issue receipt";
+
 		protected sealed override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
-			var canIssue = false;
+			if (board.FetchMode)
+				return CanFetch(board, out error);
 
-			error = null;
 			if (!board.Contains<ITradingNode>())
 			{
 				TradingDebug.LogError("Not found trading service...");
-			}
-			else
-			{
-				var backend = board.Get<ITradingNode>();
-				var registry = backend.GetRegistry<T>();
-				canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
+
+				error = new TradePayError(ERROR_CATEGORY, 0, null);
+				return false;
 			}
 
+			var backend = board.Get<ITradingNode>();
+			var registry = backend.GetRegistry<T>();
+			var canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
+			error = canIssue ? null : new TradePayError(ERROR_CATEGORY, 0, null);
 			return canIssue;
 		}
 
 		protected sealed override bool Pay(Tradeboard board)
 		{
-			var issue = false;
 			if (!board.Contains<ITradingNode>())
 			{
 				TradingDebug.LogError("Not found trading service...");
+				return false;
 			}
-			else
-			{
-				var backend = board.Get<ITradingNode>();
-				var registry = backend.GetRegistry<T>();
-				issue = registry.Issue(board, GetReceiptKey(board.Id));
-			}
-			return issue;
+
+			var backend = board.Get<ITradingNode>();
+			var registry = backend.GetRegistry<T>();
+			return registry.Issue(board, GetReceiptKey(board.Id));
 		}
 
 		protected abstract string GetReceiptKey(string tradeId);

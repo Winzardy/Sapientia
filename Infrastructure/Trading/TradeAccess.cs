@@ -1,3 +1,5 @@
+using JetBrains.Annotations;
+
 namespace Trading
 {
 	/// <summary>
@@ -5,11 +7,21 @@ namespace Trading
 	/// </summary>
 	public static class TradeAccess
 	{
-		public static bool CanPay(TradeCost cost, Tradeboard board, out TradePayError? error)
-			=> cost.CanExecute(board, out error);
+		public static bool CanPay([CanBeNull] TradeCost cost, Tradeboard board, out TradePayError? error)
+		{
+			if (cost == null)
+			{
+				error = null;
+				return true;
+			}
 
-		public static bool Pay(TradeCost cost, Tradeboard board)
-			=> cost.Execute(board);
+			return cost.CanExecute(board, out error);
+		}
+
+		public static bool Pay([CanBeNull] TradeCost cost, Tradeboard board)
+		{
+			return cost == null || cost.Execute(board);
+		}
 
 		public static bool CanReceive(TradeReward reward, Tradeboard board, out TradeReceiveError? error)
 			=> reward.CanExecute(board, out error);
@@ -17,10 +29,10 @@ namespace Trading
 		public static bool Receive(TradeReward reward, Tradeboard board)
 			=> reward.Execute(board);
 
-		public static bool CanExecute(in TradeEntry entry, Tradeboard board, out TradeExecuteError? error)
-			=> entry.CanExecute(board, out error);
+		public static bool CanExecute(in TradeConfig config, Tradeboard board, out TradeExecuteError? error)
+			=> config.CanExecute(board, out error);
 
-		public static bool Execute(in TradeEntry entry, Tradeboard board)
-			=> entry.Execute(board);
+		public static bool Execute(in TradeConfig config, Tradeboard board)
+			=> config.Execute(board);
 	}
 }
