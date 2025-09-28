@@ -391,7 +391,9 @@ namespace Sapientia.Collections
 
 		public delegate bool Predicate<T>(in T value);
 
-		public static RefEnumerator<T> Enumerate<T>(this T[] array) where T : struct => new(array ?? Array.Empty<T>());
+		public static RefEnumerator<T> AsRef<T>(this T[] array)
+			where T : struct
+			=> new(array ?? Array.Empty<T>());
 	}
 
 	public ref struct RefEnumerator<T>
