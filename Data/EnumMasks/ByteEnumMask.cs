@@ -10,15 +10,21 @@ namespace Sapientia.Data
 #endif
 		where T : unmanaged, Enum
 	{
+		public const int BitsCount = 8;
+
 		public static readonly ByteEnumMask<T> All = new() { mask = unchecked((byte)(~0)) };
 
 		public byte mask;
 
-		public static ByteEnumMask<T> Create(T value)
+		private static void AssertValue(byte value)
 		{
-			var result = new ByteEnumMask<T>();
-			result.Add(value);
-			return result;
+			E.ASSERT(value is < BitsCount and >= 0, $"Количество бит выходит за пределы рабочего диапазона [0 >= (value: {value}) < {BitsCount}]");
+		}
+
+		public ByteEnumMask(params T[] values) : this()
+		{
+			for (var i = 0; i < values.Length; i++)
+				Add(values[i]);
 		}
 
 		public bool HasNothing()
@@ -28,21 +34,23 @@ namespace Sapientia.Data
 
 		public readonly bool Has(T value)
 		{
-			return Has(value.ToInt());
+			return Has(value.ToByte());
 		}
 
 		public readonly bool HasOnly(T value)
 		{
-			return HasOnly(value.ToInt());
+			return HasOnly(value.ToByte());
 		}
 
-		public readonly bool Has(int value)
+		public readonly bool Has(byte value)
 		{
+			AssertValue(value);
 			return (mask & (1 << value)) != 0;
 		}
 
-		public readonly bool HasOnly(int value)
+		public readonly bool HasOnly(byte value)
 		{
+			AssertValue(value);
 			var valueMask = 1 << value;
 			return ((mask & (1 << value)) != 0) && ((mask & ~valueMask) == 0);
 		}
@@ -67,6 +75,7 @@ namespace Sapientia.Data
 
 		public void Add(byte value)
 		{
+			AssertValue(value);
 			mask |= (byte)(1 << value);
 		}
 
@@ -77,6 +86,7 @@ namespace Sapientia.Data
 
 		public void Remove(byte value)
 		{
+			AssertValue(value);
 			mask &= (byte)~(1 << value);
 		}
 
@@ -108,20 +118,6 @@ namespace Sapientia.Data
 			{
 				mask = value,
 			};
-		}
-	}
-
-	public class ByteEnumMask
-	{
-		public static ByteEnumMask<T> From<T>(params T[] values)
-			where T : unmanaged, Enum
-		{
-			var mask = new ByteEnumMask<T>();
-
-			for (var i = 0; i < values.Length; i++)
-				mask.Add(values[i]);
-
-			return mask;
 		}
 	}
 }

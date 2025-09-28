@@ -16,9 +16,16 @@ namespace Sapientia.Data
 #endif
 		where T : unmanaged, Enum
 	{
+		public const int BitsCount = 32;
+
 		public static readonly EnumMask<T> All = new() {mask = ~0};
 
 		public int mask;
+
+		private static void AssertValue(int value)
+		{
+			E.ASSERT(value is < BitsCount and >= 0, $"Количество бит выходит за пределы рабочего диапазона [0 >= (value: {value}) < {BitsCount}]");
+		}
 
 		public EnumMask(params T[] values) : this()
 		{
@@ -50,11 +57,13 @@ namespace Sapientia.Data
 
 		public readonly bool Has(int value)
 		{
+			AssertValue(value);
 			return (mask & (1 << value)) != 0;
 		}
 
 		public readonly bool HasOnly(int value)
 		{
+			AssertValue(value);
 			var valueMask = 1 << value;
 			return ((mask & (1 << value)) != 0) && ((mask & ~valueMask) == 0);
 		}
@@ -71,6 +80,7 @@ namespace Sapientia.Data
 
 		public void Add(int value)
 		{
+			AssertValue(value);
 			mask |= (1 << value);
 		}
 
@@ -81,6 +91,7 @@ namespace Sapientia.Data
 
 		public void Remove(int value)
 		{
+			E.ASSERT(value is < BitsCount and >= 0);
 			mask &= ~(1 << value);
 		}
 
@@ -106,6 +117,16 @@ namespace Sapientia.Data
 			return value.mask.As<int, uint>();
 		}
 
+		public static implicit operator short(EnumMask<T> value)
+		{
+			return unchecked((short)value.mask);
+		}
+
+		public static implicit operator ushort(EnumMask<T> value)
+		{
+			return unchecked((ushort)value.mask);
+		}
+
 		public static implicit operator EnumMask<T>(uint value)
 		{
 			var mask = value.As<uint, int>();
@@ -114,19 +135,21 @@ namespace Sapientia.Data
 				mask = mask,
 			};
 		}
-	}
 
-	public class EnumMask
-	{
-		public static EnumMask<T> From<T>(params T[] values)
-			where T : unmanaged, Enum
+		public static implicit operator UndefinedEnumMask(EnumMask<T> value)
 		{
-			var mask = new EnumMask<T>();
+			return new UndefinedEnumMask()
+			{
+				mask = value.mask,
+			};
+		}
 
-			for (int i = 0; i < values.Length; i++)
-				mask.Add(values[i]);
-
-			return mask;
+		public static implicit operator EnumMask<T>(UndefinedEnumMask value)
+		{
+			return new EnumMask<T>()
+			{
+				mask = value.mask,
+			};
 		}
 	}
 }
