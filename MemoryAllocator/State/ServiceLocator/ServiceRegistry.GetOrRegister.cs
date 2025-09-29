@@ -30,6 +30,9 @@ namespace Sapientia.MemoryAllocator
 			return result;
 		}
 
+		/// <summary>
+		/// Если сервиса нет, то регистрирует его
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrRegisterService<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
 		{
