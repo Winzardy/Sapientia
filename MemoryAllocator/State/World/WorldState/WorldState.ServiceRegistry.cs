@@ -48,6 +48,24 @@ namespace Sapientia.MemoryAllocator
 			GetServiceRegistry().RemoveService(this, indexedPtr);
 		}
 
+		/// <summary>
+		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly ref T GetOrCreateService<T>() where T: unmanaged, IInitializableService
+		{
+			return ref GetServiceRegistry().GetOrCreateService<T>(this);
+		}
+
+		/// <summary>
+		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly SafePtr<T> GetOrCreateServicePtr<T>() where T: unmanaged, IInitializableService
+		{
+			return GetServiceRegistry().GetOrCreateServicePtr<T>(this);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly ref T GetOrRegisterService<T>() where T: unmanaged, IIndexedType
 		{
