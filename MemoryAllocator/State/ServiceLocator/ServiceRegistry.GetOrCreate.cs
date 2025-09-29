@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator
 		public ref T GetOrCreateService<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged, IInitializableService
 		{
 			ref var service = ref GetOrRegisterServiceIndexedPtr<T>(worldState, context, out var isExist).GetValue<T>(worldState);
-			if (isExist)
+			if (!isExist)
 				service.Initialize(worldState);
 
 			return ref service;
@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr<T> GetOrCreateServicePtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged, IInitializableService
 		{
 			var servicePtr = GetOrRegisterServiceIndexedPtr<T>(worldState, context, out var isExist).GetPtr<T>(worldState);
-			if (isExist)
+			if (!isExist)
 				servicePtr.Value().Initialize(worldState);
 
 			return servicePtr;
