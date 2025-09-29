@@ -2,12 +2,55 @@ using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.TypeIndexer;
-using UnityEngine;
 
 namespace Sapientia.MemoryAllocator
 {
 	public partial struct WorldState
 	{
+		#region Managed
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ClassPtr<T> RegisterService<T>(T service)
+			where T : class, IIndexedType
+		{
+			var ptr = new ClassPtr<T>(service);
+			var typeIndex = TypeIndex.Create<T>();
+			ref var servicePtr = ref GetOrRegisterService<ClassPtr<T>>(typeIndex, ServiceType.NoState, out var isExist);
+			if (isExist)
+				servicePtr.Dispose();
+
+			servicePtr = ptr;
+			return ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveService<T>()
+			where T : class, IIndexedType
+		{
+			var typeIndex = TypeIndex.Create<T>();
+			if (!RemoveService<ClassPtr<T>>(typeIndex, ServiceType.NoState, out var servicePtr))
+				return;
+			servicePtr.Dispose();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T GetService<T>()
+			where T : class, IIndexedType
+		{
+			return GetServicePtr<T>().Value();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ClassPtr<T> GetServicePtr<T>()
+			where T : class, IIndexedType
+		{
+			var typeIndex = TypeIndex.Create<T>();
+			var ptr = GetService<ClassPtr<T>>(typeIndex, ServiceType.NoState);
+			return ptr;
+		}
+
+		#endregion
+
 		/// <summary>
 		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
 		/// </summary>
@@ -81,6 +124,20 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool RemoveService<T>(ServiceRegistryContext context, ServiceType serviceType, out T service) where T: unmanaged
+		{
+			switch (serviceType)
+			{
+				case ServiceType.WorldState:
+					return GetServiceRegistry().RemoveService<T>(this, context, out service);
+				case ServiceType.NoState:
+					return GetNoStateServiceRegistry().Remove<T>(context, out service);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly bool RemoveService<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
 		{
 			switch (serviceType)
@@ -121,6 +178,34 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly ref T GetOrRegisterService<T>(ServiceRegistryContext context, ServiceType serviceType = ServiceType.WorldState) where T: unmanaged
+		{
+			switch (serviceType)
+			{
+				case ServiceType.WorldState:
+					return ref GetServiceRegistry().GetOrRegisterService<T>(this, context);
+				case ServiceType.NoState:
+					return ref GetNoStateServiceRegistry().GetOrCreate<T>(context);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly ref T GetOrRegisterService<T>(ServiceRegistryContext context, ServiceType serviceType, out bool isExist) where T: unmanaged
+		{
+			switch (serviceType)
+			{
+				case ServiceType.WorldState:
+					return ref GetServiceRegistry().GetOrRegisterService<T>(this, context, out isExist);
+				case ServiceType.NoState:
+					return ref GetNoStateServiceRegistry().GetOrCreate<T>(context, out isExist);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly SafePtr<T> GetOrRegisterServicePtr<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
 		{
 			switch (serviceType)
@@ -135,6 +220,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly SafePtr<T> GetOrRegisterServicePtr<T>(ServiceRegistryContext context, ServiceType serviceType = ServiceType.WorldState)
+			where T: unmanaged
+		{
+			switch (serviceType)
+			{
+				case ServiceType.WorldState:
+					return GetServiceRegistry().GetOrRegisterServicePtr<T>(this, context);
+				case ServiceType.NoState:
+					return GetNoStateServiceRegistry().GetOrCreatePtr<T>(context);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly ref T GetService<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
 		{
 			switch (serviceType)
@@ -143,6 +243,20 @@ namespace Sapientia.MemoryAllocator
 					return ref GetServiceRegistry().GetService<T>(this);
 				case ServiceType.NoState:
 					return ref GetNoStateServiceRegistry().Get<T>();
+				default:
+					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly ref T GetService<T>(ServiceRegistryContext context, ServiceType serviceType = ServiceType.WorldState) where T: unmanaged
+		{
+			switch (serviceType)
+			{
+				case ServiceType.WorldState:
+					return ref GetServiceRegistry().GetService<T>(this, context);
+				case ServiceType.NoState:
+					return ref GetNoStateServiceRegistry().Get<T>(context);
 				default:
 					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
 			}

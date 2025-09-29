@@ -45,7 +45,7 @@ namespace Sapientia.MemoryAllocator
 
 		public bool IsPaused()
 		{
-			var updateStatePart = _world.worldState.GetLocalService<UpdateLocalStatePart>();
+			var updateStatePart = _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
 			return updateStatePart.IsPaused();
 		}
 

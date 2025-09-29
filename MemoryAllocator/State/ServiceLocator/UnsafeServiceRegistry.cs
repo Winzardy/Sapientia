@@ -151,6 +151,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetOrCreate<T>(ServiceRegistryContext context, out bool isExist) where T : unmanaged
+		{
+			return ref GetOrCreatePtr<T>(context, out isExist).Value();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrCreate<T>() where T : unmanaged, IIndexedType
 		{
 			var context = ServiceRegistryContext.Create<T>();

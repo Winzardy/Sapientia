@@ -59,14 +59,15 @@ namespace Sapientia.MemoryAllocator
 			LocalStatePartService.AddStatePart(_world.worldState, ptr);
 		}
 
-		public void AddLocalStatePart<T>() where T: IWorldLocalStatePart, new()
+		public void AddLocalStatePart<T>() where T: class, IWorldLocalStatePart, new()
 		{
 			AddLocalStatePart(new T());
 		}
 
-		public void AddLocalStatePart<T>(in T value) where T: IWorldLocalStatePart
+		public void AddLocalStatePart<T>(in T value) where T: class, IWorldLocalStatePart
 		{
-			LocalStatePartService.AddStatePart(_world.worldState, value);
+			var servicePtr = _world.worldState.RegisterService<T>(value);
+			LocalStatePartService.AddStatePart(_world.worldState, servicePtr);
 			ServiceContext<WorldId>.SetService(_world.worldState.WorldId, value);
 		}
 

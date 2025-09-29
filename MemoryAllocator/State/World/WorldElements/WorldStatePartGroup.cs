@@ -29,12 +29,12 @@ namespace Sapientia.MemoryAllocator
 			_builder.AddUnmanagedLocalStatePart<T>();
 		}
 
-		protected void AddLocalStatePart<T>() where T: IWorldLocalStatePart, new()
+		protected void AddLocalStatePart<T>() where T: class, IWorldLocalStatePart, new()
 		{
 			_builder.AddLocalStatePart<T>();
 		}
 
-		protected void AddLocalStatePart<T>(in T value) where T: IWorldLocalStatePart
+		protected void AddLocalStatePart<T>(in T value) where T: class, IWorldLocalStatePart
 		{
 			_builder.AddLocalStatePart<T>(value);
 		}
