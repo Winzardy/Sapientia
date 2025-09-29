@@ -3,25 +3,36 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public unsafe partial struct ServiceRegistry
+	public partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService(WorldState worldState, ServiceRegistryContext context)
+		public bool RemoveService(WorldState worldState, ServiceRegistryContext context)
 		{
-			_typeToPtr.Remove(worldState, context);
+			return _typeToPtr.Remove(worldState, context);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService<T>(WorldState worldState) where T: unmanaged, IIndexedType
+		public bool RemoveService<T>(WorldState worldState) where T: unmanaged, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();
-			_typeToPtr.Remove(worldState, typeIndex);
+			return _typeToPtr.Remove(worldState, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService(WorldState worldState, IndexedPtr indexedPtr)
+		public bool RemoveService<T>(WorldState worldState, out T service) where T: unmanaged, IIndexedType
 		{
-			_typeToPtr.Remove(worldState, indexedPtr.typeIndex);
+			var typeIndex = TypeIndex.Create<T>();
+			var result = _typeToPtr.Remove(worldState, typeIndex, out var servicePtr);
+			service = servicePtr.GetValue<T>(worldState);
+
+			return result;
+		}
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool RemoveService(WorldState worldState, IndexedPtr indexedPtr)
+		{
+			return _typeToPtr.Remove(worldState, indexedPtr.typeIndex);
 		}
 	}
 }

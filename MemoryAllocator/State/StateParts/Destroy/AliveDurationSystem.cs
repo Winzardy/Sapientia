@@ -5,7 +5,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void Update(WorldState worldState, IndexedPtr self, float deltaTime)
 		{
 			var aliveDurationSet = new ComponentSetContext<AliveDuration>(worldState);
-			ref var destroySet = ref worldState.GetOrCreateService<DestroyLogic>();
+			ref var destroySet = ref worldState.GetOrCreateService<DestroyLogic>(ServiceType.NoState);
 
 			foreach (ref var element in aliveDurationSet.GetEnumerable())
 			{

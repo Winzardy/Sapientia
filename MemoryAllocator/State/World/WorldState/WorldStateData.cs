@@ -10,7 +10,7 @@ namespace Sapientia.MemoryAllocator
 		public Allocator allocator;
 		public ServiceRegistry serviceRegistry; // Работает с состоянием мира
 
-		public UnsafeServiceRegistry localServiceRegistry; // Работает с локальными данными (Вне мира)
+		public UnsafeServiceRegistry noStateServiceRegistry; // Работает с локальными данными (Вне мира)
 
 		public ushort version;
 
@@ -30,7 +30,7 @@ namespace Sapientia.MemoryAllocator
 			// При добавлении сервиса происходит инициализация
 			serviceRegistry = default;
 			// При добавлении сервиса происходит инициализация
-			localServiceRegistry = default;
+			noStateServiceRegistry = default;
 		}
 
 		public static WorldStateData Deserialize(ref StreamBufferReader stream)
@@ -46,7 +46,7 @@ namespace Sapientia.MemoryAllocator
 
 			world.version++;
 			// При добавлении сервиса происходит инициализация
-			world.localServiceRegistry = default;
+			world.noStateServiceRegistry = default;
 
 			return world;
 		}
@@ -62,7 +62,7 @@ namespace Sapientia.MemoryAllocator
 			// Серввисы выделяются в аллокаторе, который будет очищен
 			serviceRegistry = default;
 			// Обязательно нужно очистить, т.к. сервисы выделяются в неуправляемой памяти
-			localServiceRegistry.Clear();
+			noStateServiceRegistry.Clear();
 			allocator.Clear();
 
 			tick = 0u;
@@ -75,7 +75,7 @@ namespace Sapientia.MemoryAllocator
 			// Не обязательно диспозить, т.к. сервисы выделяются в аллокаторе, который будет задиспожен
 			serviceRegistry = default;
 			// Обязательно нужно задиспозить, т.к. сервисы выделяются в неуправляемой памяти
-			localServiceRegistry.Dispose();
+			noStateServiceRegistry.Dispose();
 			allocator.Dispose();
 			this = default;
 		}

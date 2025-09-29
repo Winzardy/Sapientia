@@ -89,9 +89,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private readonly ref UnsafeServiceRegistry GetLocalServiceRegistry()
+		private readonly ref UnsafeServiceRegistry GetNoStateServiceRegistry()
 		{
-			return ref WorldStateData.localServiceRegistry;
+			return ref WorldStateData.noStateServiceRegistry;
 		}
 
 		public static WorldState Deserialize(ref StreamBufferReader stream)
