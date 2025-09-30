@@ -609,7 +609,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Set(WorldState worldState, int pos, bool value)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
+			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
 			var idx = pos >> 6;
 			var shift = pos & 0x3f;
 			var mask = 1ul << shift;
@@ -647,7 +647,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBits(WorldState worldState, int pos, bool value, int numBits)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
+			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -697,7 +697,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBits(WorldState worldState, int pos, ulong value, int numBits = 1)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
+			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
 
@@ -737,7 +737,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ulong GetBits(WorldState worldState, int pos, int numBits = 1)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
+			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
 
@@ -769,7 +769,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsSet(WorldState worldState, int pos)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
+			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
 			var idx = pos >> 6;
 			var shift = pos & 0x3f;
 			var mask = 1ul << shift;
@@ -824,7 +824,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Copy(WorldState worldState, int dstPos, ref MemBitArray srcBitArray, int srcPos, int numBits)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(in this.ptr);
+			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
 			if (numBits == 0)
 			{
 				return;
@@ -905,7 +905,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Find(WorldState worldState, int pos, int numBits)
 		{
-			var safePtr = worldState.GetSafePtr<ulong>(in this.ptr);
+			var safePtr = worldState.GetSafePtr<ulong>(this.ptr);
 			var count = length - pos;
 			return Bitwise.Find(safePtr.ptr, pos, count, numBits);
 		}
@@ -921,7 +921,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Find(WorldState worldState, int pos, int count, int numBits)
 		{
-			var safePtr = worldState.GetSafePtr<ulong>(in this.ptr);
+			var safePtr = worldState.GetSafePtr<ulong>(this.ptr);
 			return Bitwise.Find(safePtr.ptr, pos, count, numBits);
 		}
 
@@ -935,7 +935,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestNone(WorldState worldState, int pos, int numBits = 1)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
+			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -976,7 +976,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestAny(WorldState worldState, int pos, int numBits = 1)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
+			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -1017,7 +1017,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestAll(WorldState worldState, int pos, int numBits = 1)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
+			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -1058,7 +1058,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int CountBits(WorldState worldState, int pos, int numBits = 1)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(in ptr);
+			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;

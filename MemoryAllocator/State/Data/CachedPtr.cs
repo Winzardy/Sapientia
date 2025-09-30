@@ -50,36 +50,21 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPtr(WorldState worldState)
 		{
-			if (worldState.Version != _version)
-			{
-				_cachedPtr = worldState.GetSafePtr(memPtr);
-				_version = worldState.Version;
-			}
-
+			worldState.UpdateSafePtr(memPtr, ref _cachedPtr, ref _version);
 			return _cachedPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetPtr<T>(WorldState worldState) where T: unmanaged
 		{
-			if (worldState.Version != _version)
-			{
-				_cachedPtr = worldState.GetSafePtr(memPtr);
-				_version = worldState.Version;
-			}
-
+			worldState.UpdateSafePtr(memPtr, ref _cachedPtr, ref _version);
 			return _cachedPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Get<T>(WorldState worldState) where T : unmanaged
 		{
-			if (worldState.Version != _version)
-			{
-				_cachedPtr = worldState.GetSafePtr(memPtr);
-				_version = worldState.Version;
-			}
-
+			worldState.UpdateSafePtr(memPtr, ref _cachedPtr, ref _version);
 			return ref _cachedPtr.Value<T>();
 		}
 
@@ -135,9 +120,6 @@ namespace Sapientia.MemoryAllocator
 	{
 		public static readonly CachedPtr<T> Invalid = new (MemPtr.Invalid);
 
-#if UNITY_5_3_OR_NEWER
-		[Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestriction]
-#endif
 		private ushort _version;
 		private SafePtr<T> _cachedPtr;
 		public MemPtr memPtr;
@@ -213,24 +195,14 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetPtr(WorldState worldState)
 		{
-			if (worldState.Version != _version && memPtr.IsValid())
-			{
-				_cachedPtr = worldState.GetSafePtr(memPtr);
-				_version = worldState.Version;
-			}
-
+			worldState.UpdateSafePtr(memPtr, ref _cachedPtr, ref _version);
 			return _cachedPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetValue(WorldState worldState)
 		{
-			if (worldState.Version != _version)
-			{
-				_cachedPtr = worldState.GetSafePtr(memPtr);
-				_version = worldState.Version;
-			}
-
+			worldState.UpdateSafePtr(memPtr, ref _cachedPtr, ref _version);
 			return ref _cachedPtr.Value();
 		}
 
