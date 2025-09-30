@@ -85,6 +85,24 @@ namespace Trading
 #else
 		public bool FetchMode => false;
 #endif
+
+		private bool _fakeMode;
+		public bool FakeMode => _fakeMode;
+
+		private Action _callback;
+
+		public event Action<bool> fakeModeChanged;
+
+		public void SetFakeMode(bool value)
+		{
+			_fakeMode = value;
+			fakeModeChanged?.Invoke(value);
+		}
+
+		public FakeModeScope FakeModeScope(bool value)
+		{
+			return new(this, value);
+		}
 	}
 
 #if CLIENT
@@ -104,6 +122,19 @@ namespace Trading
 		}
 	}
 #endif
+
+	public readonly struct FakeModeScope : IDisposable
+	{
+		private readonly Tradeboard _tradeboard;
+
+		public FakeModeScope(Tradeboard tradeboard, bool value = true)
+		{
+			_tradeboard = tradeboard;
+			_tradeboard.SetFakeMode(value);
+		}
+
+		public void Dispose() => _tradeboard.SetFakeMode(false);
+	}
 
 	public static class TradeboardUtility
 	{

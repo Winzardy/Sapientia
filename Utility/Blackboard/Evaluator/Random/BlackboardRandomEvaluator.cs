@@ -1,0 +1,30 @@
+using System;
+using Sapientia.Evaluator;
+
+namespace Sapientia.BlackboardEvaluator
+{
+	[Serializable]
+	public class BlackboardRandomEvaluator<T> : BlackboardEvaluator<T>, IRandomEvaluator<T>
+		where T : struct, IComparable<T>
+	{
+		public T min;
+		public T max;
+
+		public BlackboardRandomEvaluator(T min, T max)
+		{
+			this.min = min;
+			this.max = max;
+		}
+
+		protected sealed override T OnGet(Blackboard blackboard)
+		{
+			var randomizer = blackboard.Get<IRandomizer<T>>();
+			return randomizer.Next(min, max);
+		}
+
+		public override string ToString(Blackboard board)
+		{
+			return $"{min}-{max}";
+		}
+	}
+}

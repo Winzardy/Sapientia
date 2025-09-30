@@ -1,21 +1,45 @@
 using System;
+using Sapientia.BlackboardEvaluator;
+
 #if CLIENT
+using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
-namespace Sapientia
+
+namespace Sapientia.Conditions.Common
 {
 	[Serializable]
+#if CLIENT
+	[TypeRegistryItem(
+		"\u2009Int Compare",
+		"Common/Math",
+		SdfIconType.ArrowLeftRight,
+		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
+		darkIconColorA: A,
+		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,
+		lightIconColorA: A
+	)]
+#endif
 	public class IntCompareCondition : Condition
 	{
 		[SerializeReference]
+#if CLIENT
+		[HorizontalGroup, HideLabel]
+#endif
 		public IBlackboardEvaluator<int> a;
 
+#if CLIENT
+		[HorizontalGroup(120), HideLabel]
+#endif
 		public ComparisonOperator logicOperator;
 
 		[SerializeReference]
+#if CLIENT
+		[HorizontalGroup, HideLabel]
+#endif
 		public IBlackboardEvaluator<int> b;
 
-		protected override bool IsMet(Blackboard blackboard)
+		protected override bool OnEvaluate(Blackboard blackboard)
 		{
 			return logicOperator switch
 			{
@@ -29,20 +53,4 @@ namespace Sapientia
 			};
 		}
 	}
-
-	// [Serializable]
-	// public class BlackboardValue<T> : IBlackboardEvaluator<T>
-	// {
-	// 	private const string CATALOG_ID = "BlackboardKeys";
-	//
-	// 	//	[ContextLabel(CATALOG_ID)]
-	// 	public Toggle<string> key;
-	//
-	// 	public T Evaluate(Blackboard context)
-	// 	{
-	// 		return key
-	// 			? context.Get<T>(key)
-	// 			: context.Get<T>();
-	// 	}
-	// }
 }

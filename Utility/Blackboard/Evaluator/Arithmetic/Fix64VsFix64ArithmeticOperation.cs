@@ -1,7 +1,9 @@
 using System;
-using Sirenix.OdinInspector;
+using Sapientia.Deterministic;
+
 #if CLIENT
 using UnityEngine;
+using Sirenix.OdinInspector;
 #endif
 
 namespace Sapientia.BlackboardEvaluator
@@ -9,7 +11,7 @@ namespace Sapientia.BlackboardEvaluator
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
-		"\u2009Int Operation",
+		"\u2009Float Operation",
 		"Math",
 		SdfIconType.ArrowLeftRight,
 		darkIconColorR: R, darkIconColorG: G,
@@ -20,26 +22,17 @@ namespace Sapientia.BlackboardEvaluator
 		lightIconColorA: A
 	)]
 #endif
-	public class IntVsIntArithmeticOperation : BlackboardEvaluator<int>
+	public class Fix64VsFix64ArithmeticOperation : BlackboardEvaluator<float>
 	{
 		[SerializeReference]
-#if CLIENT
-		[HorizontalGroup, HideLabel]
-#endif
-		public IBlackboardEvaluator<int> a;
+		public IBlackboardEvaluator<Fix64> a;
 
-#if CLIENT
-		[HorizontalGroup(60), HideLabel]
-#endif
 		public ArithmeticOperator @operator;
 
 		[SerializeReference]
-#if CLIENT
-		[HorizontalGroup, HideLabel]
-#endif
-		public IBlackboardEvaluator<int> b;
+		public IBlackboardEvaluator<Fix64> b;
 
-		protected override int OnGet(Blackboard blackboard)
+		protected override float OnGet(Blackboard blackboard)
 		{
 			return @operator switch
 			{

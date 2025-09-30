@@ -1,22 +1,37 @@
 using System;
+using Sapientia.BlackboardEvaluator;
+using Sapientia.Deterministic;
+
 #if CLIENT
+using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
 
-namespace Sapientia
+namespace Sapientia.Conditions.Common
 {
 	[Serializable]
+#if CLIENT
+	[TypeRegistryItem(
+		"\u2009Float Compare",
+		"Common/Math",
+		SdfIconType.ArrowLeftRight,
+		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
+		darkIconColorA: A,
+		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,
+		lightIconColorA: A
+	)]
+#endif
 	public class FloatCompareCondition : Condition
 	{
 		[SerializeReference]
-		public IBlackboardEvaluator<float> a;
+		public IBlackboardEvaluator<Fix64> a;
 
 		public ComparisonOperator logicOperator;
 
 		[SerializeReference]
-		public IBlackboardEvaluator<float> b;
+		public IBlackboardEvaluator<Fix64> b;
 
-		protected override bool IsMet(Blackboard context)
+		protected override bool OnEvaluate(Blackboard context)
 		{
 			return logicOperator switch
 			{

@@ -1,7 +1,9 @@
+using Sapientia.BlackboardEvaluator;
+
 namespace Sapientia
 {
-	internal interface ICondition : IEvaluator<Blackboard, bool>
+	internal interface ICondition : IBlackboardEvaluator<bool>
 	{
-		public bool IsMet(Blackboard blackboard) => Evaluate(blackboard);
+		public bool IsMet(Blackboard blackboard);
 	}
 }

@@ -44,8 +44,7 @@ namespace Content
 
 		/// <summary>
 		/// Возвращает значение контента по <paramref name="guid"/>, пытаясь использовать кеш индекса.
-		/// В отличие от <see cref="GetContentValue{T}"/>, этот метод не восстанавливает
-		/// <paramref name="index"/>
+		/// В отличие от <see cref="GetContentValue{T}"/>, этот метод не восстанавливает индексацию (<paramref name="index"/>)
 		/// </summary>
 		/// <param name="guid">Уникальный идентификатор записи</param>
 		/// <param name="index">Индексация</param>

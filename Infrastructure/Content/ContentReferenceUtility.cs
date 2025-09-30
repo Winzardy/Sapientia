@@ -10,6 +10,7 @@ namespace Content
 		public static IContentEntry<T> GetEntry<T>(this in ContentReference<T> reference)
 			=> reference.IsSingle ? ContentManager.GetEntry<T>() : ContentManager.GetEntry<T>(in reference.guid);
 
+		/// <inheritdoc cref="ContentUtility.GetContentValue{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Get<T>(this ref ContentReference<T> reference)
 			=> ref ContentUtility.GetContentValue<T>(in reference.guid, ref reference.index);
@@ -18,10 +19,7 @@ namespace Content
 		public static string GetId<T>(this in ContentReference<T> reference) =>
 			ContentManager.ToId<T>(in reference.guid);
 
-		/// <summary>
-		/// Возвращает значение на содержимое по ссылке <paramref name="reference"/>.
-		/// Если ссылка пустая, будет использован <paramref name="defaultEntryId"/> для загрузки контента по умолчанию.
-		/// </summary>
+		/// <inheritdoc cref="ContentUtility.ReadContentValue{T}"/>
 		/// <param name="defaultEntryId">Идентификатор записи по умолчанию, используемый если <paramref name="reference"/> пустой.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this in ContentReference<T> reference, string defaultEntryId)
@@ -32,9 +30,7 @@ namespace Content
 			return ref Read(reference);
 		}
 
-		/// <summary>
-		/// Разница между <see cref="Get{T}(ref Content.ContentReference)"/>, тем что он не восстанавливает Index
-		/// </summary>
+		/// <inheritdoc cref="ContentUtility.ReadContentValue{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this in ContentReference<T> reference)
 			=> ref ContentUtility.ReadContentValue<T>(in reference.guid, reference.index);

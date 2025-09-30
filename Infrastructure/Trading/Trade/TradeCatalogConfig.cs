@@ -2,6 +2,12 @@ using System;
 using Content;
 using Sapientia;
 using Sapientia.Collections;
+using Sapientia.Conditions;
+
+#if CLIENT
+using UnityEngine;
+using Sirenix.OdinInspector;
+#endif
 
 namespace Trading
 {
@@ -28,9 +34,12 @@ namespace Trading
 	[Serializable]
 	public partial struct TraderOfferConfig
 	{
-		public ContentReference<TradeConfig> trade;
+#if CLIENT
+		[BoxGroup]
+#endif
+		[SerializeReference]
+		public Condition condition;
 
-		[Obsolete("Временное решение, пока нет Condition")]
-		public bool checkPurchased;
+		public ContentReference<TradeConfig> trade;
 	}
 }

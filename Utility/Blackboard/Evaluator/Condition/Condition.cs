@@ -1,17 +1,23 @@
 using System;
+using Sapientia.Evaluator;
+#if CLIENT
+using Sirenix.OdinInspector;
+#endif
 
-namespace Sapientia
+namespace Sapientia.Conditions
 {
 	[Serializable]
-	public abstract class Condition : ICondition
+	public abstract partial class Condition : ICondition
 	{
 		public bool invert;
 
-		public bool Evaluate(Blackboard blackboard)
-		{
-			return invert ? !IsMet(blackboard) : IsMet(blackboard);
-		}
+		protected internal bool Evaluate(Blackboard blackboard) => IsMet(blackboard);
 
-		protected abstract bool IsMet(Blackboard blackboard);
+		bool IEvaluator<Blackboard, bool>.Evaluate(Blackboard blackboard)
+			=> IsMet(blackboard);
+
+		public bool IsMet(Blackboard blackboard) => invert ? !OnEvaluate(blackboard) : OnEvaluate(blackboard);
+
+		protected abstract bool OnEvaluate(Blackboard blackboard);
 	}
 }
