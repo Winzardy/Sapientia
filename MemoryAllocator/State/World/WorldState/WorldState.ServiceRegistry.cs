@@ -55,7 +55,7 @@ namespace Sapientia.MemoryAllocator
 		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetOrCreateService<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IInitializableService
+		public readonly ref T GetOrCreateService<T>(ServiceType serviceType) where T: unmanaged, IInitializableService
 		{
 			switch (serviceType)
 			{
@@ -72,7 +72,7 @@ namespace Sapientia.MemoryAllocator
 		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SafePtr<T> GetOrCreateServicePtr<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IInitializableService
+		public readonly SafePtr<T> GetOrCreateServicePtr<T>(ServiceType serviceType) where T: unmanaged, IInitializableService
 		{
 			switch (serviceType)
 			{
