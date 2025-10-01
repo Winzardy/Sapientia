@@ -12,6 +12,6 @@ namespace Sapientia.BlackboardEvaluator
 		protected sealed override T OnGet(Blackboard blackboard) => value;
 		public ref readonly T Value => ref value;
 
-		public override string ToString(Blackboard blackboard) => value?.ToString() ?? string.Empty;
+		public override string ToString() => value?.ToString() ?? string.Empty;
 	}
 }

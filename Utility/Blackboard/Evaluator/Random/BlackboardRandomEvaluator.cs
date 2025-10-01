@@ -22,9 +22,6 @@ namespace Sapientia.BlackboardEvaluator
 			return randomizer.Next(min, max);
 		}
 
-		public override string ToString(Blackboard board)
-		{
-			return $"{min}-{max}";
-		}
+		public override string ToString() => $"{min}-{max}";
 	}
 }

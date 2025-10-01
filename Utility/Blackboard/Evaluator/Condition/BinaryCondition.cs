@@ -9,9 +9,9 @@ namespace Sapientia.Conditions.Common
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
-		"\u2009Binary",
+		"\u2009Boolean Operation",
 		"Common",
-		SdfIconType.Gear,
+		SdfIconType.CodeSlash,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,

@@ -1,4 +1,5 @@
 using System;
+using Sapientia.Deterministic;
 using Sapientia.Extensions;
 #if CLIENT
 using Sirenix.OdinInspector;
@@ -11,7 +12,7 @@ namespace Sapientia.BlackboardEvaluator.Converter
 	[TypeRegistryItem(
 		"\u2009Float To Int",
 		"Converter/Math",
-		SdfIconType.ArrowLeftRight,
+		SdfIconType.ArrowBarRight,
 		darkIconColorR: R, darkIconColorG: G,
 		darkIconColorB: B,
 		darkIconColorA: A,
@@ -20,11 +21,11 @@ namespace Sapientia.BlackboardEvaluator.Converter
 		lightIconColorA: A
 	)]
 #endif
-	public class FloatToIntConverter : BlackboardConverter<float, int>
+	public class FloatToIntConverter : BlackboardConverter<Fix64, int>
 	{
 		public ClampType type;
 
-		protected override int Convert(float value)
+		protected override int Convert(Fix64 value)
 			=> type switch
 			{
 				ClampType.Ceil => FloatMathExt.CeilToInt(value),

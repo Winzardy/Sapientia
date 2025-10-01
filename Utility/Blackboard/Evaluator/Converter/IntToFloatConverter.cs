@@ -10,7 +10,7 @@ namespace Sapientia.BlackboardEvaluator.Converter
 	[TypeRegistryItem(
 		"\u2009Int To Float",
 		"Converter/Math",
-		SdfIconType.ArrowLeftRight,
+		SdfIconType.ArrowBarRight,
 		darkIconColorR: R, darkIconColorG: G,
 		darkIconColorB: B,
 		darkIconColorA: A,

@@ -42,12 +42,6 @@ namespace Trading
 		{
 		}
 
-		protected override void OnRelease()
-		{
-			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _restoreSources);
-			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
-		}
-
 		public void AddRestoreSource(string source)
 		{
 			_restoreSources ??= HashSetPool<string>.Get();
@@ -69,71 +63,95 @@ namespace Trading
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
 
+		#region Fetching
+
 #if CLIENT
-		private bool _fetchMode;
+		private bool _fetching;
 
 		/// <summary>
-		/// Режим при котором мы получаем квитанции (чеки)
+		/// Режим при котором мы получаем квитанции (чеки), так же автоматически включается Dummy (фейк) режим
 		/// </summary>
-		public bool FetchMode => _fetchMode;
+		public bool IsFetching => _fetching;
 
-		/// <inheritdoc cref="FetchMode"/>
-		public void SetFetchMode(bool value) => _fetchMode = value;
+		/// <inheritdoc cref="IsFetching"/>
+		public void SetFetching(bool value) => _fetching = value;
 
-		/// <inheritdoc cref="FetchMode"/>
-		public FetchModeScope FetchModeScope(bool value = true) => new(this, value);
+		/// <inheritdoc cref="IsFetching"/>
+		public FetchingScope FetchingScope(bool value = true) => new(this, value);
+
 #else
 		public bool FetchMode => false;
 #endif
 
-		private bool _fakeMode;
-		public bool FakeMode => _fakeMode;
+		#endregion
 
-		private Action _callback;
+		#region Dummy
 
-		public event Action<bool> fakeModeChanged;
+		private bool _dummyMode;
 
-		public void SetFakeMode(bool value)
+		/// <summary>
+		/// Режим симуляции покупки, чтобы вернуть стейт игры обратно (в нашем случае рандом)
+		/// </summary>
+		/// <remarks>
+		/// Назвал Dummy вместо Fake потому что Fake конфликтует с Fetching
+		/// </remarks>
+		public bool DummyMode => _dummyMode;
+
+		public event Action<bool> dummyModeChanged;
+
+		public void SetDummyMode(bool value)
 		{
-			_fakeMode = value;
-			fakeModeChanged?.Invoke(value);
+			_dummyMode = value;
+			dummyModeChanged?.Invoke(value);
 		}
 
-		public FakeModeScope FakeModeScope(bool value)
+		public DummyModeScope DummyModeScope(bool value = true) => new(this, value);
+
+		#endregion
+
+		protected override void OnRelease()
 		{
-			return new(this, value);
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _restoreSources);
+			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
+
+			_dummyMode = false;
+			_fetching = false;
+			_id = null;
+			_restoreSources?.Clear();
 		}
 	}
 
 #if CLIENT
-	public readonly struct FetchModeScope : IDisposable
+	public readonly struct FetchingScope : IDisposable
 	{
 		private readonly Tradeboard _tradeboard;
 
-		public FetchModeScope(Tradeboard tradeboard, bool value = true)
+		public FetchingScope(Tradeboard tradeboard, bool value = true)
 		{
 			_tradeboard = tradeboard;
-			_tradeboard.SetFetchMode(value);
+			_tradeboard.SetFetching(value);
+			_tradeboard.SetDummyMode(value);
 		}
 
 		public void Dispose()
 		{
-			_tradeboard.SetFetchMode(false);
+			_tradeboard.SetFetching(false);
+			_tradeboard.SetDummyMode(false);
 		}
 	}
 #endif
 
-	public readonly struct FakeModeScope : IDisposable
+	public readonly struct DummyModeScope : IDisposable
 	{
 		private readonly Tradeboard _tradeboard;
 
-		public FakeModeScope(Tradeboard tradeboard, bool value = true)
+		public DummyModeScope(Tradeboard tradeboard, bool value = true)
 		{
 			_tradeboard = tradeboard;
-			_tradeboard.SetFakeMode(value);
+			_tradeboard.SetDummyMode(value);
 		}
 
-		public void Dispose() => _tradeboard.SetFakeMode(false);
+		public void Dispose() => _tradeboard.SetDummyMode(false);
 	}
 
 	public static class TradeboardUtility

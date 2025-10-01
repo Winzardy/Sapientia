@@ -30,5 +30,5 @@ public class IntConstantEvaluator : BlackboardConstantEvaluator<int>
 	{
 	}
 
-	public override string ToString(Blackboard blackboard) => value > 1 ? value.ToString() : string.Empty;
+	public override string ToString() => value > 1 ? value.ToString() : string.Empty;
 }

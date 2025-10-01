@@ -12,7 +12,7 @@ namespace Trading
 
 		protected sealed override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
-			if (board.FetchMode)
+			if (board.IsFetching)
 				return CanFetch(board, out error);
 
 			if (!board.Contains<ITradingNode>())

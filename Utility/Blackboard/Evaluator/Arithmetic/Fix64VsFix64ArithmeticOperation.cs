@@ -11,9 +11,9 @@ namespace Sapientia.BlackboardEvaluator
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
-		"\u2009Float Operation",
+		"\u2009Arithmetic Operation",
 		"Math",
-		SdfIconType.ArrowLeftRight,
+		SdfIconType.PlusSlashMinus,
 		darkIconColorR: R, darkIconColorG: G,
 		darkIconColorB: B,
 		darkIconColorA: A,
@@ -25,23 +25,40 @@ namespace Sapientia.BlackboardEvaluator
 	public class Fix64VsFix64ArithmeticOperation : BlackboardEvaluator<float>
 	{
 		[SerializeReference]
-		public IBlackboardEvaluator<Fix64> a;
+		public BlackboardEvaluator<Fix64> a;
 
 		public ArithmeticOperator @operator;
 
 		[SerializeReference]
-		public IBlackboardEvaluator<Fix64> b;
+		public BlackboardEvaluator<Fix64> b;
 
 		protected override float OnGet(Blackboard blackboard)
 		{
 			return @operator switch
 			{
-				ArithmeticOperator.Add => a.Evaluate(blackboard) + b.Evaluate(blackboard),
-				ArithmeticOperator.Subtract => a.Evaluate(blackboard) - b.Evaluate(blackboard),
-				ArithmeticOperator.Divide => a.Evaluate(blackboard) / b.Evaluate(blackboard),
-				ArithmeticOperator.Multiply => a.Evaluate(blackboard) * b.Evaluate(blackboard),
+				ArithmeticOperator.Add => a.Get(blackboard) + b.Get(blackboard),
+				ArithmeticOperator.Subtract => a.Get(blackboard) - b.Get(blackboard),
+				ArithmeticOperator.Divide => a.Get(blackboard) / b.Get(blackboard),
+				ArithmeticOperator.Multiply => a.Get(blackboard) * b.Get(blackboard),
 				_ => throw new ArgumentOutOfRangeException()
 			};
+		}
+
+		public override string ToString()
+		{
+			var a1 = a.ToString();
+			var b1 = b.ToString();
+
+			var o = @operator switch
+			{
+				ArithmeticOperator.Add => "+",
+				ArithmeticOperator.Subtract => "-",
+				ArithmeticOperator.Divide => "/",
+				ArithmeticOperator.Multiply => "*",
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+			return $"{a1}{o}{b1}";
 		}
 	}
 }

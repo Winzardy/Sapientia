@@ -20,7 +20,5 @@ namespace Sapientia.BlackboardEvaluator
 		protected abstract T OnGet(Blackboard blackboard);
 
 		public static implicit operator BlackboardEvaluator<T>(T value) => BlackboardConstantFactory.Create<T>(value);
-
-		public virtual string ToString(Blackboard _) => ToString();
 	}
 }

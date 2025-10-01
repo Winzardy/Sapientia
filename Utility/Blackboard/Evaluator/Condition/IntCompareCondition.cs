@@ -11,8 +11,8 @@ namespace Sapientia.Conditions.Common
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
-		"\u2009Int Compare",
-		"Common/Math",
+		"\u2009Int Comparison",
+		"Common",
 		SdfIconType.ArrowLeftRight,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
@@ -26,7 +26,7 @@ namespace Sapientia.Conditions.Common
 #if CLIENT
 		[HorizontalGroup, HideLabel]
 #endif
-		public IBlackboardEvaluator<int> a;
+		public BlackboardEvaluator<int> a;
 
 #if CLIENT
 		[HorizontalGroup(120), HideLabel]
@@ -37,18 +37,18 @@ namespace Sapientia.Conditions.Common
 #if CLIENT
 		[HorizontalGroup, HideLabel]
 #endif
-		public IBlackboardEvaluator<int> b;
+		public BlackboardEvaluator<int> b;
 
 		protected override bool OnEvaluate(Blackboard blackboard)
 		{
 			return logicOperator switch
 			{
-				ComparisonOperator.GreaterOrEqual => a.Evaluate(blackboard) >= b.Evaluate(blackboard),
-				ComparisonOperator.LessOrEqual => a.Evaluate(blackboard) <= b.Evaluate(blackboard),
-				ComparisonOperator.Greater => a.Evaluate(blackboard) > b.Evaluate(blackboard),
-				ComparisonOperator.Less => a.Evaluate(blackboard) < b.Evaluate(blackboard),
-				ComparisonOperator.Equal => a.Evaluate(blackboard) == b.Evaluate(blackboard),
-				ComparisonOperator.NotEqual => a.Evaluate(blackboard) != b.Evaluate(blackboard),
+				ComparisonOperator.GreaterOrEqual => a.Get(blackboard) >= b.Get(blackboard),
+				ComparisonOperator.LessOrEqual => a.Get(blackboard) <= b.Get(blackboard),
+				ComparisonOperator.Greater => a.Get(blackboard) > b.Get(blackboard),
+				ComparisonOperator.Less => a.Get(blackboard) < b.Get(blackboard),
+				ComparisonOperator.Equal => a.Get(blackboard) == b.Get(blackboard),
+				ComparisonOperator.NotEqual => a.Get(blackboard) != b.Get(blackboard),
 				_ => throw new NotImplementedException(),
 			};
 		}

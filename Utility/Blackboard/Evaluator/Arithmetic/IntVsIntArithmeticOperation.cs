@@ -9,9 +9,9 @@ namespace Sapientia.BlackboardEvaluator
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
-		"\u2009Int Operation",
+		"\u2009Arithmetic Operation",
 		"Math",
-		SdfIconType.ArrowLeftRight,
+		SdfIconType.PlusSlashMinus,
 		darkIconColorR: R, darkIconColorG: G,
 		darkIconColorB: B,
 		darkIconColorA: A,
@@ -26,10 +26,10 @@ namespace Sapientia.BlackboardEvaluator
 #if CLIENT
 		[HorizontalGroup, HideLabel]
 #endif
-		public IBlackboardEvaluator<int> a;
+		public BlackboardEvaluator<int> a;
 
 #if CLIENT
-		[HorizontalGroup(60), HideLabel]
+		[HorizontalGroup(70), HideLabel]
 #endif
 		public ArithmeticOperator @operator;
 
@@ -37,18 +37,35 @@ namespace Sapientia.BlackboardEvaluator
 #if CLIENT
 		[HorizontalGroup, HideLabel]
 #endif
-		public IBlackboardEvaluator<int> b;
+		public BlackboardEvaluator<int> b;
 
 		protected override int OnGet(Blackboard blackboard)
 		{
 			return @operator switch
 			{
-				ArithmeticOperator.Add => a.Evaluate(blackboard) + b.Evaluate(blackboard),
-				ArithmeticOperator.Subtract => a.Evaluate(blackboard) - b.Evaluate(blackboard),
-				ArithmeticOperator.Divide => a.Evaluate(blackboard) / b.Evaluate(blackboard),
-				ArithmeticOperator.Multiply => a.Evaluate(blackboard) * b.Evaluate(blackboard),
+				ArithmeticOperator.Add => a.Get(blackboard) + b.Get(blackboard),
+				ArithmeticOperator.Subtract => a.Get(blackboard) - b.Get(blackboard),
+				ArithmeticOperator.Divide => a.Get(blackboard) / b.Get(blackboard),
+				ArithmeticOperator.Multiply => a.Get(blackboard) * b.Get(blackboard),
 				_ => throw new ArgumentOutOfRangeException()
 			};
+		}
+
+		public override string ToString()
+		{
+			var a1 = a.ToString();
+			var b1 = b.ToString();
+
+			var o = @operator switch
+			{
+				ArithmeticOperator.Add => "+",
+				ArithmeticOperator.Subtract => "-",
+				ArithmeticOperator.Divide => "/",
+				ArithmeticOperator.Multiply => "*",
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+			return $"{a1}{o}{b1}";
 		}
 	}
 }

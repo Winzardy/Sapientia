@@ -1,30 +1,14 @@
+using System;
 using Sapientia.Deterministic;
 
 namespace Submodules.Sapientia.Utility
 {
 	public class Fix64Rand
 	{
-		public struct State
-		{
-			public int a, b, c, d;
-
-			public bool isDefault
-			{
-				get
-				{
-					return
-						a == default &&
-						b == default &&
-						c == default &&
-						d == default;
-				}
-			}
-		}
-
 		private ulong _state;
 		private ulong _inc;
 
-		public State state
+		public State Current
 		{
 			get
 			{
@@ -52,10 +36,6 @@ namespace Submodules.Sapientia.Utility
 		public Fix64 Next() => NextFix64();
 		public int NextInt() => (int) NextFix64();
 
-		public Fix64Rand() : this((int) System.DateTime.UtcNow.Ticks)
-		{
-		}
-
 		public Fix64Rand(int seed) : this((ulong) seed)
 		{
 		}
@@ -69,7 +49,7 @@ namespace Submodules.Sapientia.Utility
 
 		public Fix64Rand(State state)
 		{
-			this.state = state;
+			this.Current = state;
 		}
 
 		internal Fix64 NextFix64() => Fix64.FromRaw(NextUInt32());
@@ -192,5 +172,19 @@ namespace Submodules.Sapientia.Utility
 		//  var cos = Fix64.FastCos(radians);
 		//  return new Fix64Vec2(cos, sin);
 		// }
+
+		[Serializable]
+		public struct State
+		{
+			public int a, b, c, d;
+
+			public bool IsDefault =>
+				a == 0 &&
+				b == 0 &&
+				c == 0 &&
+				d == 0;
+
+			public override string ToString() => $"a: {a}, b: {b}, c: {c}, d: {d}";
+		}
 	}
 }
