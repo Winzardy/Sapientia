@@ -19,6 +19,11 @@ namespace Sapientia.Extensions
 		public static readonly int align = UnsafeExt.AlignOf<T>();
 	}
 
+	public struct TDefaultValue<T> where T : unmanaged
+	{
+		public static T value = default(T);
+	}
+
 	public struct TReadonlyDefaultValue<T>
 	{
 		public static readonly T value = default!;
