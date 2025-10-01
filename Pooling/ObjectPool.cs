@@ -49,7 +49,15 @@ namespace Sapientia.Pooling
 			SetCapacity(maximumRetained);
 		}
 
-		public void Dispose() => Clear();
+		public void Dispose()
+		{
+			Clear();
+
+			if (_policy is IDisposable disposable)
+			{
+				disposable.Dispose();
+			}
+		}
 
 		public virtual T Get()
 		{

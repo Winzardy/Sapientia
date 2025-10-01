@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Pooling;
+#nullable enable
 
 namespace Sapientia.Extensions
 {
 	public class CompositeDisposable : IDisposable
 	{
-		private HashSet<IDisposable>? _disposables;
+		private List<IDisposable>? _disposables;
 
 		public virtual void Dispose()
 		{
@@ -20,13 +21,13 @@ namespace Sapientia.Extensions
 			_disposables.ReleaseToStaticPool();
 		}
 
-		protected void AddDisposable(IDisposable disposable)
+		public void AddDisposable(IDisposable disposable)
 		{
-			_disposables ??= HashSetPool<IDisposable>.Get();
+			_disposables ??= ListPool<IDisposable>.Get();
 			_disposables.Add(disposable);
 		}
 
-		protected void RemoveDisposable(IDisposable disposable)
+		public void RemoveDisposable(IDisposable disposable)
 		{
 			_disposables?.Remove(disposable);
 		}
