@@ -191,6 +191,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref TValue GetOrCreateValue(WorldState worldState, TKey key, out bool isCreated, TValue defaultValue = default)
+		{
+			var entry = FindEntry(worldState, key);
+			if (entry >= 0)
+			{
+				isCreated = false;
+				return ref entries[worldState, entry].value;
+			}
+
+			Add(worldState, key, defaultValue);
+			isCreated = true;
+			return ref GetValue(worldState, key);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGetValue(WorldState worldState, TKey key, out TValue value)
 		{
 			var entry = FindEntry(worldState, key);
