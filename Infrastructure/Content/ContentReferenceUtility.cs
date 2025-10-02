@@ -64,7 +64,7 @@ namespace Content
 
 		/// <param name="str">Либо Id, либо Guid</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ContentReference<T> ToReference<T>(string str) => new()
+		public static ContentReference<T> ToReference<T>(this string str) => new()
 		{
 			guid = SerializableGuid.TryParse(str, out var guid) ? guid : ContentManager.ToGuid<T>(str)
 		};

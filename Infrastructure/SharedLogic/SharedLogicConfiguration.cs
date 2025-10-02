@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Serialization;
 #if CLIENT
 using UnityEngine;
 #endif
@@ -16,9 +17,10 @@ namespace SharedLogic
 		public ISharedNodesRegistrarFactory registrarFactory;
 
 #if CLIENT
+		[FormerlySerializedAs("dataHandlerFactory")]
 		[Sirenix.OdinInspector.LabelText("Data Handler")]
 #endif
 		[SerializeReference]
-		public ISharedDataSerializerFactory dataHandlerFactory;
+		public ISharedDataSerializerFactory dataSerializerFactory;
 	}
 }

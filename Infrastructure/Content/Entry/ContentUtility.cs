@@ -12,6 +12,8 @@ namespace Content
 		/// <returns>Уникальный идентификатор</returns>
 		public static string Combine(in SerializableGuid guid, string mark) => $"{mark}_{guid}";
 
+		public static ref readonly T ToContentValue<T>(this string id) => ref ContentManager.Get<T>(id);
+
 		/// <summary>
 		/// Возвращает значение контента по <paramref name="guid"/>, пытаясь использовать кеш индекса.
 		/// В отличие от <see cref="ContentManager.Get{T}(in SerializableGuid)"/>, этот метод принимает/обновляет
@@ -21,7 +23,6 @@ namespace Content
 		/// <param name="index">Индексация</param>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <returns>Контент типа <typeparamref name="T"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T GetContentValue<T>(this in SerializableGuid guid, ref int index)
 		{
 			if (guid == ContentReference.Single.Guid)
@@ -50,7 +51,6 @@ namespace Content
 		/// <param name="index">Индексация</param>
 		/// <typeparam name="T">Тип контента</typeparam>
 		/// <returns>Контент типа <typeparamref name="T"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T ReadContentValue<T>(this in SerializableGuid guid, int index = -1)
 		{
 			if (guid == ContentReference.Single.Guid)
