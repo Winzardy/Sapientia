@@ -22,7 +22,10 @@ namespace Sapientia.Extensions
 	public struct TDefaultValue<T> where T : unmanaged
 	{
 #if UNITY_5_3_OR_NEWER
-		private struct TDefaultValueContext {}
+		private struct TDefaultValueContext
+		{
+		}
+
 		public static readonly SharedStatic<T> value = SharedStatic<T>.GetOrCreate<T, TDefaultValueContext>();
 #else
 		public static T value = default(T);
@@ -99,11 +102,13 @@ namespace Sapientia.Extensions
 #endif
 		}
 
+#if !UNITY_5_3_OR_NEWER
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T AsRef<T>(in T value) where T : struct
 		{
 			return ref Unsafe.AsRef(in value);
 		}
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T1 As<T, T1>(ref T value)

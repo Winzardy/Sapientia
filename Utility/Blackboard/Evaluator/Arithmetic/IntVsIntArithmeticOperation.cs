@@ -1,6 +1,7 @@
 using System;
-using Sirenix.OdinInspector;
+
 #if CLIENT
+using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
 

@@ -5,11 +5,12 @@ using SharedLogic.Internal;
 
 namespace SharedLogic
 {
-	public class SharedRoot : ISharedRoot
+	public partial class SharedRoot : ISharedRoot
 	{
 		private bool _initialized;
 
 		private readonly ISharedNodesRegistrar _registrar;
+		private readonly IDateTimeProvider _dateTimeProvider;
 		private readonly ILogger _logger;
 
 		private SharedNodeRegistry _registry;
@@ -19,6 +20,7 @@ namespace SharedLogic
 		public SharedRoot(ISharedNodesRegistrar registrar, IDateTimeProvider dateTimeProvider, ILogger logger = null)
 		{
 			_registrar = registrar;
+			_dateTimeProvider = dateTimeProvider;
 			_logger = logger;
 
 			_registry = new SharedNodeRegistry();

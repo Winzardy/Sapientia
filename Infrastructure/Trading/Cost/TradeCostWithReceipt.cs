@@ -12,9 +12,10 @@ namespace Trading
 
 		protected sealed override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
-			if (board.IsFetching)
+#if CLIENT
+			if (board.IsFetchMode)
 				return CanFetch(board, out error);
-
+#endif
 			if (!board.Contains<ITradingNode>())
 			{
 				TradingDebug.LogError("Not found trading service...");

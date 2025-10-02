@@ -66,21 +66,19 @@ namespace Trading
 		#region Fetching
 
 #if CLIENT
-		private bool _fetching;
+		private bool _fetchMode;
 
 		/// <summary>
 		/// Режим при котором мы получаем квитанции (чеки), так же автоматически включается Dummy (фейк) режим
 		/// </summary>
-		public bool IsFetching => _fetching;
+		public bool IsFetchMode => _fetchMode;
 
-		/// <inheritdoc cref="IsFetching"/>
-		public void SetFetching(bool value) => _fetching = value;
+		/// <inheritdoc cref="IsFetchMode"/>
+		public void SetFetching(bool value) => _fetchMode = value;
 
-		/// <inheritdoc cref="IsFetching"/>
-		public FetchingScope FetchingScope(bool value = true) => new(this, value);
+		/// <inheritdoc cref="IsFetchMode"/>
+		public FetchModeScope FetchModeScope(bool value = true) => new(this, value);
 
-#else
-		public bool FetchMode => false;
 #endif
 
 		#endregion
@@ -115,18 +113,22 @@ namespace Trading
 			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
 
 			_dummyMode = false;
-			_fetching = false;
+
 			_id = null;
 			_restoreSources?.Clear();
+
+#if CLIENT
+			_fetchMode = false;
+#endif
 		}
 	}
 
 #if CLIENT
-	public readonly struct FetchingScope : IDisposable
+	public readonly struct FetchModeScope : IDisposable
 	{
 		private readonly Tradeboard _tradeboard;
 
-		public FetchingScope(Tradeboard tradeboard, bool value = true)
+		public FetchModeScope(Tradeboard tradeboard, bool value = true)
 		{
 			_tradeboard = tradeboard;
 			_tradeboard.SetFetching(value);

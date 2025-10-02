@@ -1,8 +1,5 @@
 using System;
 using Sapientia.Evaluator;
-#if CLIENT
-using Sirenix.OdinInspector;
-#endif
 
 namespace Sapientia.Conditions
 {

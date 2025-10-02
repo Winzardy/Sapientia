@@ -5,10 +5,10 @@ using Sapientia;
 
 namespace SharedLogic
 {
-	public interface ISharedRoot : IDisposable
+	public partial interface ISharedRoot : IDisposable
 	{
-		[CanBeNull]
-		ILogger Logger { get; }
+		[CanBeNull] ILogger Logger { get; }
+
 		public T GetNode<T>() where T : class, ISharedNode;
 
 		public void Initialize();
