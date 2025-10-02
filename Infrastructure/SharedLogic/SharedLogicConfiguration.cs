@@ -1,6 +1,8 @@
 using System;
-using UnityEngine.Serialization;
+
 #if CLIENT
+using Sirenix.OdinInspector;
+using UnityEngine.Serialization;
 using UnityEngine;
 #endif
 
@@ -10,15 +12,15 @@ namespace SharedLogic
 	public partial struct SharedLogicConfiguration
 	{
 #if CLIENT
-		[Sirenix.OdinInspector.Title("Server")]
-		[Sirenix.OdinInspector.LabelText("Registrar")]
+		[Title("Server")]
+		[LabelText("Registrar")]
 #endif
 		[SerializeReference]
 		public ISharedNodesRegistrarFactory registrarFactory;
 
 #if CLIENT
 		[FormerlySerializedAs("dataHandlerFactory")]
-		[Sirenix.OdinInspector.LabelText("Data Handler")]
+		[LabelText("Data Handler")]
 #endif
 		[SerializeReference]
 		public ISharedDataSerializerFactory dataSerializerFactory;
