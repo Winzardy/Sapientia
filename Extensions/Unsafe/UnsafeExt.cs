@@ -6,6 +6,10 @@ using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 #endif
 
+#if !CLIENT
+using UnityUtility = System.Runtime.CompilerServices.Unsafe;
+#endif
+
 namespace Sapientia.Extensions
 {
 	public struct TSize<T> where T : struct
@@ -232,31 +236,30 @@ namespace Sapientia.Extensions
 		public static bool Has<T>(this T value, T flag)
 			where T : struct, Enum
 		{
-			if (Unsafe.SizeOf<T>() == 8)
+			if (UnsafeUtility.SizeOf<T>() == 8)
 			{
-				var v = Unsafe.As<T, ulong>(ref value);
-				var f = Unsafe.As<T, ulong>(ref flag);
+				var v = UnsafeUtility.As<T, ulong>(ref value);
+				var f = UnsafeUtility.As<T, ulong>(ref flag);
 				return (v & f) == f;
 			}
 
-			if (Unsafe.SizeOf<T>() == 4)
+			if (UnsafeUtility.SizeOf<T>() == 4)
 			{
-				var v = Unsafe.As<T, uint>(ref value);
-				var f = Unsafe.As<T, uint>(ref flag);
+				var v = UnsafeUtility.As<T, uint>(ref value);
+				var f = UnsafeUtility.As<T, uint>(ref flag);
 				return (v & f) == f;
 			}
 
-			if (Unsafe.SizeOf<T>() == 2)
+			if (UnsafeUtility.SizeOf<T>() == 2)
 			{
-				var v = Unsafe.As<T, ushort>(ref value);
-				var f = Unsafe.As<T, ushort>(ref flag);
+				var v = UnsafeUtility.As<T, ushort>(ref value);
+				var f = UnsafeUtility.As<T, ushort>(ref flag);
 				return (v & f) == f;
 			}
-
 			else
 			{
-				var v = Unsafe.As<T, byte>(ref value);
-				var f = Unsafe.As<T, byte>(ref flag);
+				var v = UnsafeUtility.As<T, byte>(ref value);
+				var f = UnsafeUtility.As<T, byte>(ref flag);
 				return (v & f) == f;
 			}
 		}
