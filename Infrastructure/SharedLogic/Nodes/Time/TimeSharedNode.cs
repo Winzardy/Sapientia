@@ -75,7 +75,7 @@ namespace SharedLogic
 		private DateTime GetDateTime()
 		{
 			if (_timeProvider == null || _timeProviderSuppress)
-				return _realDateTime;
+				return _dateTime;
 
 			return _timeProvider.DateTime;
 		}
@@ -83,6 +83,7 @@ namespace SharedLogic
 		internal TimeProviderSuppressFlow ProviderSuppressFlow() => new(this);
 		internal void SuppressTimeProvider(bool value) => _timeProviderSuppress = value;
 #endif
+
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
