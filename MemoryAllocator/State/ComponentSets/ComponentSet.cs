@@ -306,7 +306,7 @@ namespace Sapientia.MemoryAllocator.State
 				}
 			}
 			isExist = false;
-			return ref UnsafeExt.DefaultRef<T>();
+			return ref _elements.GetValuePtr<T>(worldState)[0];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

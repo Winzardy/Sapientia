@@ -2,7 +2,6 @@ using System; // Не убирать
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 #if UNITY_5_3_OR_NEWER
-using Unity.Burst;
 using Unity.Collections.LowLevel.Unsafe;
 #endif
 
@@ -48,11 +47,7 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T DefaultRef<T>() where T: unmanaged
 		{
-#if UNITY_5_3_OR_NEWER
-			return ref Unsafe.AsRef<T>(TReadonlyDefaultValue<T>.value);
-#else
 			return ref TDefaultValue<T>.value;
-#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

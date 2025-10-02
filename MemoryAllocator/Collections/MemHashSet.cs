@@ -81,7 +81,7 @@ namespace Sapientia.MemoryAllocator
 		/// Initializes buckets and slots arrays. Uses suggested capacity by finding next prime
 		/// greater than or equal to capacity.
 		/// </summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="capacity"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Initialize(WorldState worldState, int capacity)
@@ -130,7 +130,7 @@ namespace Sapientia.MemoryAllocator
 		/// Remove all items from this set. This clears the elements but not the underlying
 		/// buckets and slots array. Follow this call by TrimExcess to release these.
 		/// </summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState)
 		{
@@ -150,7 +150,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Checks if this hashset contains the item
 		/// </summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="item">item to check for containment</param>
 		/// <returns>true if item contained; false if not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -236,7 +236,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Remove item from this hashset
 		/// </summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="item">item to remove</param>
 		/// <returns>true if removed; false if not (i.e. if the item wasn't in the HashSet)</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -292,7 +292,7 @@ namespace Sapientia.MemoryAllocator
 		/// defragmentation, allowing faster execution; note that this is reasonable since
 		/// AddIfNotPresent attempts to insert new elements in re-opened spots.
 		/// </summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity(WorldState worldState)
 		{
@@ -336,7 +336,7 @@ namespace Sapientia.MemoryAllocator
 		/// Add item to this HashSet. Returns bool indicating whether item was added (won't be
 		/// added if already present)
 		/// </summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="value"></param>
 		/// <returns>true if added, false if already present</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

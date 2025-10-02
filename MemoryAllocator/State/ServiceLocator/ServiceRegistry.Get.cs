@@ -29,7 +29,7 @@ namespace Sapientia.MemoryAllocator
 			ref var ptr = ref _typeToPtr.GetValue(worldState, context, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(worldState);
-			return ref UnsafeExt.DefaultRef<T>();
+			return ref ptr.GetValue<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -40,7 +40,8 @@ namespace Sapientia.MemoryAllocator
 			ref var ptr = ref _typeToPtr.GetValue(worldState, typeIndex, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(worldState);
-			return ref UnsafeExt.DefaultRef<T>();
+
+			return ref worldState.GetZeroRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,13 +52,18 @@ namespace Sapientia.MemoryAllocator
 			return ref ptr.GetValue<T>(worldState);
 		}
 
+		/// <summary>
+		/// Мы должны быть уверены, что результат при `isExist = false` не будет использован!
+		/// Иначе может повредиться память стейта.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(WorldState worldState, ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
 		{
 			ref var ptr = ref _typeToPtr.GetValue(worldState, proxyPtr.indexedPtr.typeIndex, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(worldState);
-			return ref UnsafeExt.DefaultRef<T>();
+
+			return ref worldState.GetZeroRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

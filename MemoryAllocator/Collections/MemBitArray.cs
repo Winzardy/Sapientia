@@ -548,7 +548,7 @@ namespace Sapientia.MemoryAllocator
 		/// Initializes and returns an instance of UnsafeBitArray.
 		/// </summary>
 		/// <param name="numBits">Number of bits.</param>
-		/// <param name="worldator">The allocator to use.</param>
+		/// <param name="worldState">The allocator to use.</param>
 		/// <param name="options">Whether newly allocated bytes should be zeroed out.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemBitArray(WorldState worldState, int numBits, ClearOptions options = ClearOptions.ClearMemory)

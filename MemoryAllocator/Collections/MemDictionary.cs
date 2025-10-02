@@ -134,7 +134,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
 		public ref TValue this[WorldState worldState, in TKey key]
 		{
@@ -152,18 +152,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref TValue GetValue(WorldState worldState, TKey key)
-		{
-			var entry = FindEntry(worldState, key);
-			if (entry >= 0)
-			{
-				return ref entries[worldState, entry].value;
-			}
-
-			return ref UnsafeExt.DefaultRef<TValue>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref TValue GetValue(WorldState worldState, TKey key, out bool success)
 		{
 			var entry = FindEntry(worldState, key);
@@ -174,11 +162,15 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			success = false;
-			return ref UnsafeExt.DefaultRef<TValue>();
+			if (!buckets.IsCreated)
+			{
+				Initialize(worldState, 0);
+			}
+			return ref entries[worldState, 0].value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref TValue GetOrCreateValue(WorldState worldState, TKey key, TValue defaultValue = default)
+		public ref TValue GetOrCreateValue(WorldState worldState, in TKey key, TValue defaultValue = default)
 		{
 			var entry = FindEntry(worldState, key);
 			if (entry >= 0)
@@ -187,11 +179,11 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			Add(worldState, key, defaultValue);
-			return ref GetValue(worldState, key);
+			return ref this[worldState, key];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref TValue GetOrCreateValue(WorldState worldState, TKey key, out bool isCreated, TValue defaultValue = default)
+		public ref TValue GetOrCreateValue(WorldState worldState, in TKey key, out bool isCreated, TValue defaultValue = default)
 		{
 			var entry = FindEntry(worldState, key);
 			if (entry >= 0)
@@ -202,7 +194,7 @@ namespace Sapientia.MemoryAllocator
 
 			Add(worldState, key, defaultValue);
 			isCreated = true;
-			return ref GetValue(worldState, key);
+			return ref this[worldState, key];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -215,12 +207,12 @@ namespace Sapientia.MemoryAllocator
 				return true;
 			}
 
-			value = UnsafeExt.DefaultRef<TValue>();
+			value = default;
 			return false;
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key of the element to add to the dictionary.</param>
 		/// <param name="value"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -245,7 +237,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		/// <summary><para>Determines whether the dictionary contains an element with a specific key.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsKey(WorldState worldState, TKey key)
@@ -254,7 +246,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		/// <summary><para>Determines whether the dictionary contains an element with a specific value.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="value">The value to locate in the dictionary.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsValue(WorldState worldState, TValue value)
@@ -386,7 +378,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -396,7 +388,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
