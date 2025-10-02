@@ -5,12 +5,12 @@ using Sapientia.Data;
 using Unity.Collections.LowLevel.Unsafe;
 #endif
 
-#if !CLIENT
-using UnityUtility = System.Runtime.CompilerServices.Unsafe;
-#endif
-
 namespace Sapientia.Extensions
 {
+#if !CLIENT
+	using UnsafeUtility = System.Runtime.CompilerServices.Unsafe;
+#endif
+
 	public struct TSize<T> where T : struct
 	{
 		public static readonly int size = UnsafeExt.SizeOf<T>();

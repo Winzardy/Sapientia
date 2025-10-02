@@ -9,7 +9,7 @@ namespace SharedLogic
 		private readonly IDateTimeProvider _timeProvider;
 
 		private TimeSpan _dateTimeOffset;
-		private DateTime _realDateTime;
+		private DateTime _dateTime;
 
 		/// <summary>
 		/// Время без учета смещения!
@@ -19,7 +19,7 @@ namespace SharedLogic
 			get
 			{
 #if !CLIENT
-				return _realDateTime;
+				return _dateTime;
 #else
 				return GetDateTime();
 #endif
@@ -28,12 +28,14 @@ namespace SharedLogic
 
 		public DateTime DateTime => DateTimeWithoutOffset + _dateTimeOffset;
 
+#if CLIENT
 		private bool _timeProviderSuppress;
+#endif
 
 		public TimeSharedNode(IDateTimeProvider timeProvider)
 		{
 			_timeProvider = timeProvider;
-			_realDateTime = _timeProvider.DateTime;
+			_dateTime = _timeProvider.DateTime;
 		}
 
 		/// <summary>
@@ -54,7 +56,7 @@ namespace SharedLogic
 
 		public bool CanSetTimestamp(long timestamp, out TimeSetError? error)
 		{
-			if (_realDateTime.Ticks > timestamp)
+			if (_dateTime.Ticks > timestamp)
 			{
 				error = TimeSetError.Code.TimestampLessThanCurrent;
 				return false;
@@ -66,7 +68,7 @@ namespace SharedLogic
 
 		internal void SetTimestamp(long timestamp)
 		{
-			_realDateTime = new DateTime(timestamp);
+			_dateTime = new DateTime(timestamp);
 		}
 
 #if CLIENT
@@ -84,13 +86,13 @@ namespace SharedLogic
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
-			_realDateTime = data.timestamp == 0 ? new DateTime(data.timestamp) : _timeProvider.DateTime;
+			_dateTime = data.timestamp == 0 ? new DateTime(data.timestamp) : _timeProvider.DateTime;
 		}
 
 		protected override void OnSave(out SaveData data)
 		{
 			data.timestampOffset = _dateTimeOffset.Ticks;
-			data.timestamp = _realDateTime.Ticks;
+			data.timestamp = _dateTime.Ticks;
 		}
 
 		[Serializable]
@@ -101,6 +103,7 @@ namespace SharedLogic
 		}
 	}
 
+#if CLIENT
 	public readonly ref struct TimeProviderSuppressFlow
 	{
 		private readonly TimeSharedNode _node;
@@ -116,6 +119,7 @@ namespace SharedLogic
 			_node.SuppressTimeProvider(false);
 		}
 	}
+#endif
 
 	public static class SharedTimeUtility
 	{
