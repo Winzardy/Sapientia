@@ -19,10 +19,10 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(WorldState worldState, ServiceRegistryContext context, out bool exist) where T: unmanaged
+		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(WorldState worldState, ServiceRegistryContext context, out bool isExist) where T: unmanaged
 		{
-			var result = _typeToPtr.GetValue(worldState, context, out exist);
-			if (!exist)
+			var result = _typeToPtr.GetValue(worldState, context, out isExist);
+			if (!isExist)
 			{
 				result = new IndexedPtr(CachedPtr<T>.Create(worldState), context.typeIndex);
 				RegisterService(worldState, context, result);
@@ -30,6 +30,9 @@ namespace Sapientia.MemoryAllocator
 			return result;
 		}
 
+		/// <summary>
+		/// Если сервиса нет, то регистрирует его
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrRegisterService<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
 		{
@@ -37,9 +40,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(WorldState worldState, ServiceRegistryContext context, out bool exist) where T: unmanaged
+		public ref T GetOrRegisterService<T>(WorldState worldState, ServiceRegistryContext context, out bool isExist) where T: unmanaged
 		{
-			return ref GetOrRegisterServiceIndexedPtr<T>(worldState, context, out exist).GetValue<T>(worldState);
+			return ref GetOrRegisterServiceIndexedPtr<T>(worldState, context, out isExist).GetValue<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,9 +67,9 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(WorldState worldState, ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
+		public ref T GetOrRegisterService<T>(WorldState worldState, ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
 		{
-			return ref GetOrRegisterService<T>(worldState, proxyPtr.indexedPtr.typeIndex, out exist);
+			return ref GetOrRegisterService<T>(worldState, proxyPtr.indexedPtr.typeIndex, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

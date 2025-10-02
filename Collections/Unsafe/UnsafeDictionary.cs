@@ -129,7 +129,6 @@ namespace Sapientia.Collections
 		}
 
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
-		/// <param name="worldator"></param>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
 		public ref TValue this[in TKey key]
 		{
@@ -147,18 +146,6 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref TValue GetValue( TKey key)
-		{
-			var entry = FindEntry(key);
-			if (entry >= 0)
-			{
-				return ref entries[entry].value;
-			}
-
-			return ref UnsafeExt.DefaultRef<TValue>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref TValue GetValue(TKey key, out bool success)
 		{
 			var entry = FindEntry(key);
@@ -169,7 +156,11 @@ namespace Sapientia.Collections
 			}
 
 			success = false;
-			return ref UnsafeExt.DefaultRef<TValue>();
+			if (!buckets.IsCreated)
+			{
+				Initialize(default, 0);
+			}
+			return ref entries[0].value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -187,7 +178,7 @@ namespace Sapientia.Collections
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key of the element to add to the dictionary.</param>
 		/// <param name="value"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -212,7 +203,7 @@ namespace Sapientia.Collections
 		}
 
 		/// <summary><para>Determines whether the dictionary contains an element with a specific key.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key to locate in the dictionary.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsKey(TKey key)
@@ -221,7 +212,7 @@ namespace Sapientia.Collections
 		}
 
 		/// <summary><para>Determines whether the dictionary contains an element with a specific value.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="value">The value to locate in the dictionary.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsValue(TValue value)
@@ -354,7 +345,7 @@ namespace Sapientia.Collections
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -364,7 +355,7 @@ namespace Sapientia.Collections
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
-		/// <param name="worldator"></param>
+		/// <param name="worldState"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
 		/// <param name="value"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -22,9 +22,13 @@ namespace Sapientia.Data
 
 		public int mask;
 
+		[System.Diagnostics.Conditional(E.DEBUG)]
 		private static void AssertValue(int value)
 		{
-			E.ASSERT(value is < BitsCount and >= 0, $"Количество бит выходит за пределы рабочего диапазона [0 >= (value: {value}) < {BitsCount}]");
+			// Вместо Assert, т.к. создание строки просаживает производительность в редакторе
+			if (value is < BitsCount and >= 0)
+				return;
+			E.AssertException.Throw($"Количество бит выходит за пределы рабочего диапазона [0 >= (value: {value}) < {BitsCount}]");
 		}
 
 		public EnumMask(params T[] values) : this()

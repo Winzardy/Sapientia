@@ -2,7 +2,6 @@ using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Data;
-using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
 using Submodules.Sapientia.Memory;
 
@@ -66,18 +65,62 @@ namespace Sapientia.MemoryAllocator
 			return ref GetPtr<T>(context).Value();
 		}
 
+		/// <summary>
+		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(ServiceRegistryContext context, out bool isCreated) where T : unmanaged
+		public ref T GetOrCreate<T>(WorldState worldState) where T: unmanaged, IInitializableService
 		{
-			isCreated = false;
-			var value = _typeToPtr.GetValue(context, out var success);
-			if (success)
+			var typeIndex = TypeIndex.Create<T>();
+			return ref GetOrCreate<T>(worldState, typeIndex);
+		}
+
+		/// <summary>
+		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetOrCreate<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged, IInitializableService
+		{
+			ref var service = ref GetOrCreatePtr<T>(context, out var isExist).Value();
+			if (!isExist)
+				service.Initialize(worldState);
+
+			return ref service;
+		}
+
+		/// <summary>
+		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> GetOrCreatePtr<T>(WorldState worldState) where T: unmanaged, IInitializableService
+		{
+			var typeIndex = TypeIndex.Create<T>();
+			return GetOrCreatePtr<T>(worldState, typeIndex);
+		}
+
+		/// <summary>
+		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> GetOrCreatePtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged, IInitializableService
+		{
+			var servicePtr = GetOrCreatePtr<T>(context, out var isExist);
+			if (!isExist)
+				servicePtr.Value().Initialize(worldState);
+
+			return servicePtr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> GetOrCreatePtr<T>(ServiceRegistryContext context, out bool isExist) where T : unmanaged
+		{
+			var value = _typeToPtr.GetValue(context, out isExist);
+			if (isExist)
 				return value;
 
 			value = MemoryExt.MemAlloc<T>();
 			_typeToPtr.Add(context, value);
 
-			isCreated = true;
 			return value;
 		}
 
@@ -95,16 +138,22 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(out bool isCreated) where T : unmanaged, IIndexedType
+		public SafePtr<T> GetOrCreatePtr<T>(out bool isExist) where T : unmanaged, IIndexedType
 		{
 			var context = ServiceRegistryContext.Create<T>();
-			return GetOrCreatePtr<T>(context, out isCreated);
+			return GetOrCreatePtr<T>(context, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrCreate<T>(ServiceRegistryContext context) where T : unmanaged
 		{
 			return ref GetOrCreatePtr<T>(context).Value();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetOrCreate<T>(ServiceRegistryContext context, out bool isExist) where T : unmanaged
+		{
+			return ref GetOrCreatePtr<T>(context, out isExist).Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return 0f;
-			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
 			return updateStatePart.stateUpdateData.resumeDelay;
 		}
 
@@ -31,7 +31,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return;
-			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
 			updateStatePart.ResumeSimulation();
 		}
 
@@ -39,13 +39,13 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return;
-			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
 			updateStatePart.PauseSimulation();
 		}
 
 		public bool IsPaused()
 		{
-			var updateStatePart = _world.worldState.GetLocalService<UpdateLocalStatePart>();
+			var updateStatePart = _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
 			return updateStatePart.IsPaused();
 		}
 
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator
 			if (!IsValid)
 				return;
 
-			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
 			if (updateStatePart.IsPaused())
 				return;
 
@@ -103,7 +103,7 @@ namespace Sapientia.MemoryAllocator
 			if (!IsValid)
 				return;
 
-			ref var updateStatePart = ref _world.worldState.GetUnmanagedLocalService<UpdateLocalStatePart>();
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
 			if (!updateStatePart.ShouldLateUpdate())
 				return;
 

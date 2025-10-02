@@ -30,12 +30,6 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(ServiceRegistryContext context) where T: unmanaged
-		{
-			return ref GetServiceRegistry().GetService<T>(this, context);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T TryGetService<T>(ServiceRegistryContext context, out bool exist) where T: unmanaged
 		{
 			return ref GetServiceRegistry().TryGetService<T>(this, context, out exist);

@@ -7,8 +7,19 @@ namespace Sapientia.MemoryAllocator
 {
 	public unsafe partial struct Allocator
 	{
+		/// <summary>
+		/// Мы должны быть уверены, что результат не будет использован!
+		/// Иначе может повредиться память стейта.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetRef<T>(in MemPtr memPtr) where T : unmanaged
+		public ref T GetZeroRef<T>() where T : unmanaged
+		{
+			MemShow<T>(out var ptr);
+			return ref *(T*)ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetRef<T>(MemPtr memPtr) where T : unmanaged
 		{
 			return ref *(T*)GetSafePtr(memPtr).ptr;
 		}
@@ -22,6 +33,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetSafePtr(in MemPtr memPtr)
 		{
+			if (memPtr.IsZeroSized())
+				return default;
 			var memory = _zonesList[memPtr.zoneId].memory;
 			var safePtr = memory + memPtr.zoneOffset;
 #if DEBUG

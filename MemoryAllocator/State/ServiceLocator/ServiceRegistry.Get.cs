@@ -10,8 +10,9 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
 		{
-			ref var result = ref _typeToPtr.GetValue(worldState, context, out var success).GetValue<T>(worldState);
+			var ptr = _typeToPtr.GetValue(worldState, context, out var success);
 			E.ASSERT(success);
+			ref var result = ref ptr.GetValue<T>(worldState);
 			return ref result;
 		}
 
@@ -28,7 +29,7 @@ namespace Sapientia.MemoryAllocator
 			ref var ptr = ref _typeToPtr.GetValue(worldState, context, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(worldState);
-			return ref UnsafeExt.DefaultRef<T>();
+			return ref ptr.GetValue<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,34 +40,40 @@ namespace Sapientia.MemoryAllocator
 			ref var ptr = ref _typeToPtr.GetValue(worldState, typeIndex, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(worldState);
-			return ref UnsafeExt.DefaultRef<T>();
+
+			return ref worldState.GetZeroRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(WorldState worldState, ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
 		{
-			ref var result = ref _typeToPtr.GetValue(worldState, proxyPtr.indexedPtr.typeIndex, out var success).GetValue<T>(worldState);
+			var ptr = _typeToPtr.GetValue(worldState, proxyPtr.indexedPtr.typeIndex, out var success);
 			E.ASSERT(success);
-			return ref result;
+			return ref ptr.GetValue<T>(worldState);
 		}
 
+		/// <summary>
+		/// Мы должны быть уверены, что результат при `isExist = false` не будет использован!
+		/// Иначе может повредиться память стейта.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetService<T>(WorldState worldState, ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
 		{
 			ref var ptr = ref _typeToPtr.GetValue(worldState, proxyPtr.indexedPtr.typeIndex, out isExist);
 			if (isExist)
 				return ref ptr.GetValue<T>(worldState);
-			return ref UnsafeExt.DefaultRef<T>();
+
+			return ref worldState.GetZeroRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetServiceAs<TBase, T>(WorldState worldState) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			var typeIndex = TypeIndex.Create<TBase>();
-			ref var result = ref _typeToPtr.GetValue(worldState, typeIndex, out var success).GetValue<T>(worldState);
+			var ptr = _typeToPtr.GetValue(worldState, typeIndex, out var success);
 			E.ASSERT(success);
 
-			return ref result;
+			return ref ptr.GetValue<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -87,9 +94,9 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CachedPtr<T> GetServiceCachedPtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
 		{
-			var result = _typeToPtr.GetValue(worldState, context, out var success).GetCachedPtr<T>();
+			var result = _typeToPtr.GetValue(worldState, context, out var success);
 			E.ASSERT(success);
-			return result;
+			return result.GetCachedPtr<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -102,10 +109,10 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetServicePtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
 		{
-			var result = _typeToPtr.GetValue(worldState, context, out var success).GetPtr<T>(worldState);
+			var result = _typeToPtr.GetValue(worldState, context, out var success);
 			E.ASSERT(success);
 
-			return result;
+			return result.GetPtr<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,10 +137,10 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr<T> GetServiceAsPtr<TBase, T>(WorldState worldState) where TBase: unmanaged, IIndexedType where T: unmanaged
 		{
 			var typeIndex = TypeIndex.Create<TBase>();
-			var result = _typeToPtr.GetValue(worldState, typeIndex, out var success).GetPtr<T>(worldState);
+			var result = _typeToPtr.GetValue(worldState, typeIndex, out var success);
 			E.ASSERT(success);
 
-			return result;
+			return result.GetPtr<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
