@@ -5,7 +5,6 @@ using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Memory;
-using UnityEngine;
 
 namespace Sapientia.MemoryAllocator
 {

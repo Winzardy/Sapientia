@@ -101,6 +101,9 @@ namespace Trading
 		public static void Register<T>(this ITradingNode node, T[] receipts, string tradeId)
 			where T : struct, ITradeReceipt
 		{
+			if(node == null)
+				throw TradingDebug.NullException("Node can't be null!");
+
 			if (tradeId.IsNullOrEmpty())
 				throw TradingDebug.NullException("Trade ID cannot be null or empty");
 

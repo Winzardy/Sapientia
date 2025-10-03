@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 namespace Sapientia.Reflection
 {
@@ -15,7 +14,7 @@ namespace Sapientia.Reflection
 			catch (Exception e)
 			{
 #if UNITY_EDITOR
-				Debug.LogError(e.Message);
+				UnityEngine.Debug.LogError(e.Message);
 #endif
 				instance = default;
 				return false;

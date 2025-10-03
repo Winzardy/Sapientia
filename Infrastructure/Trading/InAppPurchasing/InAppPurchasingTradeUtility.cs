@@ -18,7 +18,7 @@ namespace Trading.InAppPurchasing
 				return;
 			}
 
-			if (data.issued != null && data.active.Contains(receipt.Id))
+			if (data.active != null && data.active.Contains(receipt.Id))
 			{
 				TradingDebug.LogError($"Receipt is already registered in active receipts by id [ {receipt.Id} ]");
 				return;
