@@ -7,6 +7,9 @@ namespace Sapientia.MemoryAllocator
 	/// ProxyEvent - список <see cref="ProxyEvent"/>.
 	/// Позволяет собрать инстансы <see cref="ProxyPtr"/> и вызвать у них методы интерфейса-наследника <see cref="IProxy"/>.
 	/// Для <see cref="ProxyEvent"/> тоже кодоген генерирует методы расширения.
+	/// Можно использовать по типу ивентов:
+	/// - <see cref="ProxyEvent"/> proxy;
+	/// - proxy.Do();
 	/// </summary>
 	public struct ProxyEvent<T> where T: unmanaged, IProxy
 	{

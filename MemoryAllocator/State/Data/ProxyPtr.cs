@@ -5,6 +5,10 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
+	public class SomeClass : ISomeInterface{}
+
+	public interface ISomeInterface{}
+
 	/// <summary>
 	/// ProxyPtr — это типобезопасная обёртка над <see cref="IndexedPtr"/>,
 	/// которая связывает блок памяти с конкретным прокси-типом <typeparamref name="T"/>.
