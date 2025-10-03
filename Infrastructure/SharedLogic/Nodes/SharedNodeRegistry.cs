@@ -36,7 +36,9 @@ namespace SharedLogic
 
 		private static int _i;
 
+		// Важен порядок, потому не использую один Dictionary
 		private List<ISharedNode> _nodes;
+		private Dictionary<string, ISharedNode> _idToNode;
 
 		private bool _initialized;
 
@@ -45,13 +47,17 @@ namespace SharedLogic
 		internal SharedNodeRegistry()
 		{
 			_index = Interlocked.Increment(ref _i) - 1;
+
 			_nodes = ListPool<ISharedNode>.Get();
+			_idToNode = DictionaryPool<string, ISharedNode>.Get();
 		}
 
 		public void Dispose()
 		{
 			Disposed?.Invoke(_index);
+
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _nodes);
+			StaticObjectPoolUtility.ReleaseAndSetNull(ref _idToNode);
 		}
 
 		internal IEnumerable<T> FilterBy<T>()
@@ -74,9 +80,17 @@ namespace SharedLogic
 			throw new Exception($"Not found node by type [ {typeof(T)} ] in registry by index [ {_index} ]");
 		}
 
+		internal ISharedNode GetNode(string id) => _idToNode[id];
+
+		internal bool TryGetNode(string id, out ISharedNode node) => _idToNode.TryGetValue(id, out node);
+
+		internal IEnumerator<ISharedNode> GetEnumerator() => _nodes.GetEnumerator();
+
 		public void Register<T>(T node) where T : ISharedNode
 		{
 			_nodes.Add(node);
+			_idToNode.Add(node.Id, node);
+
 			SharedNodeRegistry<T>.Register(_index, node);
 		}
 

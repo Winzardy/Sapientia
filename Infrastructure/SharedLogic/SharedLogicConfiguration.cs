@@ -19,10 +19,9 @@ namespace SharedLogic
 		public ISharedNodesRegistrarFactory registrarFactory;
 
 #if CLIENT
-		[FormerlySerializedAs("dataHandlerFactory")]
 		[LabelText("Data Handler")]
 #endif
 		[SerializeReference]
-		public ISharedDataSerializerFactory dataSerializerFactory;
+		public ISharedDataManipulatorFactory dataManipulatorFactory;
 	}
 }

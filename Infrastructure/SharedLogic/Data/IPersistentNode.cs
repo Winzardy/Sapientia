@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using SharedLogic.Internal;
 
@@ -5,16 +6,18 @@ namespace SharedLogic
 {
 	public interface IPersistentNode<TData> : IPersistentNode
 	{
-		void IPersistentNode.Load(ISharedDataReader reader)
+		Type IPersistentNode.DataType => typeof(TData);
+
+		void IPersistentNode.Load(ISharedDataManipulator manipulator)
 		{
-			var data = reader.Read<TData>(Id);
+			var data = manipulator.Read<TData>(Id);
 			Load(in data);
 		}
 
-		void IPersistentNode.Save(ISharedDataWriter writer)
+		void IPersistentNode.Save(ISharedDataManipulator manipulator)
 		{
 			Save(out var data);
-			writer.Write(Id, in data);
+			manipulator.Write(Id, in data);
 		}
 
 		public void Load(in TData data);
@@ -30,7 +33,9 @@ namespace SharedLogic.Internal
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public interface IPersistentNode : ISharedNode
 	{
-		internal void Load(ISharedDataReader reader);
-		internal void Save(ISharedDataWriter writer);
+		public Type DataType { get; }
+		internal void Load(ISharedDataManipulator manipulator);
+		internal void Save(ISharedDataManipulator manipulator);
+		string Id { get; }
 	}
 }

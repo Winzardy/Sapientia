@@ -137,6 +137,11 @@ namespace SharedLogic
 		public static DateTime GetDateTime(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
 			   .DateTime;
+
+		public static bool IsTimedCommand<T>(in T command) where T : struct, ICommand
+		{
+			return typeof(T) == typeof(TimeSetCommand);
+		}
 	}
 
 	public struct TimeSetError

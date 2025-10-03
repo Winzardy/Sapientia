@@ -47,7 +47,15 @@ namespace SharedLogic
 		public static Exception Exception(object msg) => logger?.Exception(msg) ?? new Exception(msg.ToString());
 
 #if CLIENT
-		public static UnityEngine.Color COLOR = Color.cyan;
+		public static UnityEngine.Color COLOR = Color.magenta;
 #endif
+
+		public static class Logging
+		{
+			public static class Command
+			{
+				public static bool execute = true;
+			}
+		}
 	}
 }

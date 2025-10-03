@@ -1,19 +1,29 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Sapientia;
 
 namespace SharedLogic
 {
-	public partial interface ISharedRoot : IDisposable
+	public interface ISharedRoot : IDisposable, IEnumerable<ISharedNode>
 	{
 		[CanBeNull] ILogger Logger { get; }
 
 		public T GetNode<T>() where T : class, ISharedNode;
+		public ISharedNode GetNode(string id);
+		public bool TryGetNode(string id, out ISharedNode node);
 
 		public void Initialize();
-		public void Save(ISharedDataWriter writer);
-		public void Load(ISharedDataReader reader);
+		public void Save(ISharedDataManipulator manipulator);
+		public void Load(ISharedDataManipulator manipulator);
+
+		public IEnumerable<TFilter> Enumerate<TFilter>();
+
+		public int Revision { get; }
+
+		public void OnExecuted<T>(in T command)
+			where T : struct, ICommand;
 	}
 
 	public static class SharedRootUtility

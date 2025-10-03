@@ -50,7 +50,7 @@ namespace Sapientia.Collections
 			where TValue : struct
 		{
 			var map = new HashMap<TKey, TValue>(array.Length);
-			foreach (ref var value in array.AsRef())
+			foreach (ref var value in array.AsSpan())
 				map.SetOrAdd(keySelector.Invoke(value), value);
 
 			return map;

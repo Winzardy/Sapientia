@@ -1,5 +1,6 @@
 ﻿using System;
 using Sapientia;
+using Sapientia.Extensions;
 
 namespace SharedLogic
 {
@@ -7,7 +8,10 @@ namespace SharedLogic
 	{
 		protected ISharedRoot _root;
 
-		public virtual string Id => GetType().Name;
+		private string _id;
+
+		public virtual string Id => _id ??= GetType().Name
+		   .Remove(nameof(SharedNode));
 
 		internal ILogger Logger => _root.Logger;
 

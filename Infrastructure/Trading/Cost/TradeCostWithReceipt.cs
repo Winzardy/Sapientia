@@ -24,10 +24,10 @@ namespace Trading
 				return false;
 			}
 
-			var backend = board.Get<ITradingNode>();
-			var registry = backend.GetRegistry<T>();
+			var node = board.Get<ITradingNode>();
+			var registry = node.GetRegistry<T>();
 			var canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
-			error = canIssue ? null : new TradePayError(ERROR_CATEGORY, 0, null);
+			error = canIssue ? null : new TradePayError(ERROR_CATEGORY, 1, null);
 			return canIssue;
 		}
 
@@ -39,8 +39,8 @@ namespace Trading
 				return false;
 			}
 
-			var backend = board.Get<ITradingNode>();
-			var registry = backend.GetRegistry<T>();
+			var node = board.Get<ITradingNode>();
+			var registry = node.GetRegistry<T>();
 			return registry.Issue(board, GetReceiptKey(board.Id));
 		}
 

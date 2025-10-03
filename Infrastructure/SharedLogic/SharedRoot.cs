@@ -1,31 +1,41 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Sapientia;
 using Sapientia.Extensions;
 using SharedLogic.Internal;
+using SharedLogic.Migration;
 
 namespace SharedLogic
 {
-	public partial class SharedRoot : ISharedRoot
+	public class SharedRoot : ISharedRoot
 	{
+		private const string REVISION_KEY = "Revision";
+
 		private bool _initialized;
+		private int _revision;
 
 		private readonly ISharedNodesRegistrar _registrar;
-		private readonly IDateTimeProvider _dateTimeProvider;
 		private readonly ILogger _logger;
 
 		private SharedNodeRegistry _registry;
 
 		ILogger ISharedRoot.Logger => _logger;
 
+		public event Action Loaded;
+		public event Action Saved;
+
+		public int Revision => _revision;
+
 		public SharedRoot(ISharedNodesRegistrar registrar, IDateTimeProvider dateTimeProvider, ILogger logger = null)
 		{
 			_registrar = registrar;
-			_dateTimeProvider = dateTimeProvider;
 			_logger = logger;
 
 			_registry = new SharedNodeRegistry();
 
 			// Системные ноды
+			_registry.Register(new MigrationSharedNode());
 			_registry.Register(new TimeSharedNode(dateTimeProvider));
 
 			_registrar.Register(_registry);
@@ -50,19 +60,51 @@ namespace SharedLogic
 				node.Initialize(this);
 		}
 
-		public void Load(ISharedDataReader reader)
-		{
-			foreach (var node in _registry.FilterBy<IPersistentNode>())
-				node.Load(reader);
-		}
-
-		public void Save(ISharedDataWriter writer)
-		{
-			foreach (var node in _registry.FilterBy<IPersistentNode>())
-				node.Save(writer);
-		}
-
 		public T GetNode<T>() where T : class, ISharedNode
 			=> _registry.GetNode<T>();
+
+		public IEnumerable<TFilter> Enumerate<TFilter>()
+		{
+			foreach (var node in _registry.FilterBy<TFilter>())
+				yield return node;
+		}
+
+		public ISharedNode GetNode(string id) => _registry.GetNode(id);
+		public bool TryGetNode(string id, out ISharedNode node) => _registry.TryGetNode(id, out node);
+
+		public IEnumerator<ISharedNode> GetEnumerator() => _registry.GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+		public void OnExecuted<T>(in T command)
+			where T : struct, ICommand
+		{
+			if (SharedTimeUtility.IsTimedCommand(in command))
+				return;
+
+			_revision++;
+
+			if (SLDebug.Logging.Command.execute)
+				_logger?.Log($"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})");
+		}
+
+		public void Load(ISharedDataManipulator manipulator)
+		{
+			foreach (var node in _registry.FilterBy<IPersistentNode>())
+				node.Load(manipulator);
+
+			_revision = manipulator.Read<int>(REVISION_KEY);
+
+			Loaded?.Invoke();
+		}
+
+		public void Save(ISharedDataManipulator manipulator)
+		{
+			foreach (var node in _registry.FilterBy<IPersistentNode>())
+				node.Save(manipulator);
+
+			manipulator.Write(REVISION_KEY, _revision);
+
+			Saved?.Invoke();
+		}
 	}
 }
