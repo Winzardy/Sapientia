@@ -7,7 +7,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IKillSubscriberProxy : IProxy
 	{
-		public static readonly ProxyId ProxyId = 14;
+		public static readonly ProxyId ProxyId = 15;
 		ProxyId IProxy.ProxyId
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]
