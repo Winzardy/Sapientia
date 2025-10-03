@@ -134,9 +134,42 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static PtrOffset operator -(SafePtr target, SafePtr source)
+		{
+			var offset = target.ptr - source.ptr;
+			return new PtrOffset(unchecked((int)offset));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr operator +(SafePtr safePtr, long index)
+		{
+			var newPtr = safePtr.ptr + index;
+#if DEBUG
+			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
+
+			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
+#else
+			return new SafePtr(newPtr);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr operator +(SafePtr safePtr, int index)
 		{
 			var newPtr = safePtr.ptr + index;
+#if DEBUG
+			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
+
+			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
+#else
+			return new SafePtr(newPtr);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr operator -(SafePtr safePtr, long index)
+		{
+			var newPtr = safePtr.ptr - index;
 #if DEBUG
 			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
 
@@ -362,6 +395,27 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static PtrOffset<T> operator -(SafePtr target, SafePtr<T> source)
+		{
+			var offset = (byte*)target.ptr - (byte*)source.ptr;
+			return new PtrOffset<T>(unchecked((int)offset));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static PtrOffset<T> operator -(SafePtr<T> target, SafePtr source)
+		{
+			var offset = (byte*)target.ptr - (byte*)source.ptr;
+			return new PtrOffset<T>(unchecked((int)offset));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static PtrOffset<T> operator -(SafePtr<T> target, SafePtr<T> source)
+		{
+			var offset = (byte*)target.ptr - (byte*)source.ptr;
+			return new PtrOffset<T>(unchecked((int)offset));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> operator +(SafePtr<T> safePtr, int index)
 		{
 			var newPtr = safePtr.ptr + index;
@@ -383,6 +437,18 @@ namespace Sapientia.Data
 #else
 			return new SafePtr<T>(safePtr.ptr - index);
 #endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> operator -(SafePtr<T> safePtr, PtrOffset offset)
+		{
+			return (SafePtr)safePtr - offset.byteOffset;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> operator +(SafePtr<T> safePtr, PtrOffset offset)
+		{
+			return (SafePtr)safePtr + offset.byteOffset;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

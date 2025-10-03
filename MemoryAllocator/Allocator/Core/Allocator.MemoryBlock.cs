@@ -13,6 +13,9 @@ namespace Sapientia.MemoryAllocator
 
 			public int prevBlockOffset;
 			public int blockSize; // Равен размеру структуры MemoryBlock + размер свободной памяти блока
+#if DEBUG
+			public int dataSize; // Размер, который был запрошен при аллокации
+#endif
 
 			public bool IsStartBlock
 			{
@@ -25,6 +28,9 @@ namespace Sapientia.MemoryAllocator
 				this.id = id;
 				this.prevBlockOffset = prevBlockOffset;
 				this.blockSize = blockSize;
+#if DEBUG
+				this.dataSize = 0;
+#endif
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
