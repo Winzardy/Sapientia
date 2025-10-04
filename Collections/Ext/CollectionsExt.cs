@@ -381,6 +381,14 @@ namespace Sapientia.Collections
 				yield return (value, index++);
 		}
 
+		public static T[] ToArrayOrNull<T>(this List<T> list)
+		{
+			if (list.IsNullOrEmpty())
+				return null!;
+
+			return list.ToArray();
+		}
+
 		public delegate bool Predicate<T>(in T value);
 	}
 
@@ -408,5 +416,7 @@ namespace Sapientia.Collections
 		{
 			_index = -1;
 		}
+
+		public RefEnumerator<T> GetEnumerator() => this;
 	}
 }

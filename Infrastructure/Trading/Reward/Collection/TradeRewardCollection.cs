@@ -1,6 +1,9 @@
 using System;
 using Sapientia.Collections;
 using Sapientia.Pooling;
+#if CLIENT
+using UnityEngine;
+#endif
 
 namespace Trading
 {
@@ -9,9 +12,7 @@ namespace Trading
 	{
 		public const string ERROR_CATEGORY = "Collection";
 
-#if CLIENT
-		[UnityEngine.SerializeReference]
-#endif
+		[SerializeReference]
 		// ReSharper disable once UseArrayEmptyMethod
 		public TradeReward[] items = new TradeReward[0];
 

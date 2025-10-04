@@ -10,10 +10,10 @@ namespace Content.Management
 	{
 		private Dictionary<SerializableGuid, TValue> _temporary;
 
-		//Можно будет переделать на FrozenDictionary, когда его завезут в Unity
+		// Можно будет переделать на FrozenDictionary, когда его завезут в Unity
 		private Dictionary<SerializableGuid, int> _keyToIndex;
 
-		//Можно будет переделать на FrozenDictionary, когда его завезут в Unity
+		// Можно будет переделать на FrozenDictionary, когда его завезут в Unity
 		private Dictionary<string, int> _idToIndex;
 
 		private TValue[] _values;
@@ -94,7 +94,7 @@ namespace Content.Management
 		public bool Contains(string id) => _idToIndex.ContainsKey(id);
 		public bool Contains(int index) => _values.ContainsIndexSafe(index);
 
-		public bool TryAdd(in SerializableGuid guid, TValue value) => _temporary.TryAdd(guid, value);
+		public bool TryAdd(in SerializableGuid guid, TValue entry) => _temporary.TryAdd(guid, entry);
 		public bool Remove(in SerializableGuid guid) => _temporary.Remove(guid);
 	}
 }

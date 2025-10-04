@@ -1,14 +1,15 @@
 using System;
 using Sapientia;
+#if CLIENT
+using UnityEngine;
+#endif
 
 namespace Trading
 {
 	public partial class TradeCostProgression : TradeCost
 	{
 		// ReSharper disable once UseArrayEmptyMethod
-#if CLIENT
-		[UnityEngine.SerializeReference]
-#endif
+		[SerializeReference]
 		public TradeCost[] costs = new TradeCost[0];
 
 		public ref readonly TradeCost this[int index] => ref costs[index];
@@ -36,7 +37,7 @@ namespace Trading
 
 		private TradeCost Current(Tradeboard board)
 		{
-			var backend = board.Get<ITradingBackend>();
+			var backend = board.Get<ITradingNode>();
 			var index = 0;
 			//backend.Current(board, this);
 
@@ -45,7 +46,7 @@ namespace Trading
 
 		private void Next(Tradeboard board)
 		{
-			var backend = board.Get<ITradingBackend>();
+			var backend = board.Get<ITradingNode>();
 			//	backend.Next(board, this);
 		}
 	}

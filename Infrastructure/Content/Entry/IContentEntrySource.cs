@@ -17,7 +17,7 @@ namespace Content
 		public new IContentEntry<T> ContentEntry { get; }
 	}
 
-	public interface IContentEntrySource : IValidatable
+	public interface IContentEntrySource
 	{
 		/// <summary>
 		/// <see cref="ContentEntryScriptableObject{T}._entry"/>
@@ -25,6 +25,7 @@ namespace Content
 		public const string ENTRY_FIELD_NAME = "_entry";
 
 		public IContentEntry ContentEntry { get; }
+		public bool Validate();
 	}
 
 	public interface INestedContentEntrySource : IContentEntrySource

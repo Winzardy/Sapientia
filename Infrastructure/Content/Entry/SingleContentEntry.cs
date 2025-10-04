@@ -1,7 +1,14 @@
+using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace Content
 {
+	/// <summary>
+	/// Не использовать в обычных полях! (нет поддержки и надобность поддержки под вопросом)
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[Serializable]
 	public partial class SingleContentEntry<T> : BaseContentEntry<T>, ISingleContentEntry<T>
 	{
 		protected SingleContentEntry(in T value) : base(in value)

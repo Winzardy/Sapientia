@@ -4,7 +4,7 @@ using Sapientia.Reflection;
 
 namespace Content
 {
-	public abstract partial class BaseContentEntry<T>
+	public partial class BaseContentEntry<T>
 	{
 		public virtual IReadOnlyDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> Nested => null;
 

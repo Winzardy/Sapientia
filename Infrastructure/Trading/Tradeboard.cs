@@ -19,12 +19,14 @@ namespace Trading
 	{
 		private const string RESTORE_KEY = "restoring";
 
+		private string _id;
+
 		/// <summary>
 		/// Trade Id
 		/// </summary>
-		public string Id { get; private set; }
+		public string Id => _id;
 
-		internal void SetId(string id) => Id = id;
+		internal void SetId(string id) => _id = id;
 
 		public bool IsRestoreState => _restoreSources.Any();
 
@@ -38,12 +40,6 @@ namespace Trading
 
 		public Tradeboard(Blackboard source) : base(source)
 		{
-		}
-
-		protected override void OnRelease()
-		{
-			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _restoreSources);
-			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
 		}
 
 		public void AddRestoreSource(string source)
@@ -66,14 +62,112 @@ namespace Trading
 
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
+
+		#region Fetching
+
+#if CLIENT
+		private bool _fetchMode;
+
+		/// <summary>
+		/// Режим при котором мы получаем квитанции (чеки), так же автоматически включается Dummy (фейк) режим
+		/// </summary>
+		public bool IsFetchMode => _fetchMode;
+
+		/// <inheritdoc cref="IsFetchMode"/>
+		public void SetFetching(bool value) => _fetchMode = value;
+
+		/// <inheritdoc cref="IsFetchMode"/>
+		public FetchModeScope FetchModeScope(bool value = true) => new(this, value);
+
+#endif
+
+		#endregion
+
+		#region Dummy
+
+		private bool _dummyMode;
+
+		/// <summary>
+		/// Режим симуляции покупки, чтобы вернуть стейт игры обратно (в нашем случае рандом)
+		/// </summary>
+		/// <remarks>
+		/// Назвал Dummy вместо Fake потому что Fake конфликтует с Fetching
+		/// </remarks>
+		public bool DummyMode => _dummyMode;
+
+		public event Action<bool> dummyModeChanged;
+
+		public void SetDummyMode(bool value)
+		{
+			_dummyMode = value;
+			dummyModeChanged?.Invoke(value);
+		}
+
+		public DummyModeScope DummyModeScope(bool value = true) => new(this, value);
+
+		#endregion
+
+		protected override void OnRelease()
+		{
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _restoreSources);
+			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
+
+			_dummyMode = false;
+
+			_id = null;
+			_restoreSources?.Clear();
+
+#if CLIENT
+			_fetchMode = false;
+#endif
+		}
+	}
+
+#if CLIENT
+	public readonly struct FetchModeScope : IDisposable
+	{
+		private readonly Tradeboard _tradeboard;
+
+		public FetchModeScope(Tradeboard tradeboard, bool value = true)
+		{
+			_tradeboard = tradeboard;
+			_tradeboard.SetFetching(value);
+			_tradeboard.SetDummyMode(value);
+		}
+
+		public void Dispose()
+		{
+			_tradeboard.SetFetching(false);
+			_tradeboard.SetDummyMode(false);
+		}
+	}
+#endif
+
+	public readonly struct DummyModeScope : IDisposable
+	{
+		private readonly Tradeboard _tradeboard;
+
+		public DummyModeScope(Tradeboard tradeboard, bool value = true)
+		{
+			_tradeboard = tradeboard;
+			_tradeboard.SetDummyMode(value);
+		}
+
+		public void Dispose() => _tradeboard.SetDummyMode(false);
 	}
 
 	public static class TradeboardUtility
 	{
 		public static string GetTradeId(this in ContentReference<TradeCost> reference) => reference.guid;
+		public static string GetTradeId(this in ContentReference<TradeReward> reference) => reference.guid;
 		public static string GetTradeId(this ContentEntry<TradeCost> reference) => reference.Guid;
 
 		public static void Bind(this Tradeboard board, in ContentReference<TradeCost> reference)
+		{
+			Bind(board, reference.GetTradeId());
+		}
+
+		public static void Bind(this Tradeboard board, in ContentReference<TradeReward> reference)
 		{
 			Bind(board, reference.GetTradeId());
 		}
@@ -83,19 +177,14 @@ namespace Trading
 			Bind(board, reference.GetTradeId());
 		}
 
-		public static void Bind(this Tradeboard board, in TradeEntry entry)
+		public static void Bind(this Tradeboard board, in TradeConfig config)
 		{
-			Bind(board, entry.Id);
+			Bind(board, config.Id);
 		}
 
 		public static void Bind(this Tradeboard board, string tradeId)
 		{
 			board.SetId(tradeId);
 		}
-	}
-
-	public interface IDateTimeProvider
-	{
-		public DateTime Now { get; }
 	}
 }

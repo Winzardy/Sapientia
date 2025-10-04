@@ -50,7 +50,7 @@ namespace Targeting
 		{
 			var prefix = platform switch
 			{
-				PlatformType.IOS => "\uf8ff ", //
+				PlatformType.IOS => "\uf8ff ", // 
 				PlatformType.ANDROID => "\ud83e\udd16", // 🤖
 				_ => string.Empty
 			};

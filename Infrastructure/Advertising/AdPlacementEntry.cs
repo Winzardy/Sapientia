@@ -78,7 +78,7 @@ namespace Advertising
 		void IExternallyIdentifiable.SetId(string id) => this.id = id;
 	}
 
-	public static class AdPlacementEntryExt
+	public static class AdPlacementEntryUtility
 	{
 		public static bool CanShow<T>(this T entry, out AdShowError? error) where T : AdPlacementEntry
 			=> AdManager.CanShow(entry, out error);

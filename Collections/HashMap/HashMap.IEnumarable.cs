@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -42,4 +43,19 @@ namespace Sapientia.Collections
 			}
 		}
 	}
+
+	public static class HashMapUtility
+	{
+		public static HashMap<TKey, TValue> ToHashMap<TKey, TValue>(this TValue[] array, HashMapKeySelector<TValue, TKey> keySelector)
+			where TValue : struct
+		{
+			var map = new HashMap<TKey, TValue>(array.Length);
+			foreach (ref var value in array.AsSpan())
+				map.SetOrAdd(keySelector.Invoke(value), value);
+
+			return map;
+		}
+	}
+
+	public delegate TKey HashMapKeySelector<TValue, TKey>(in TValue value) where TValue : struct;
 }

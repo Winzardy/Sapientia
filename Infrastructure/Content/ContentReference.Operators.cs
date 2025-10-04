@@ -16,7 +16,7 @@ namespace Content
 		#endregion
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator bool(in ContentReference<T> reference) => reference.Contains();
+		public static implicit operator bool(in ContentReference<T> reference) => reference.IsValid();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator T(in ContentReference<T> reference) => reference.Read();
@@ -49,13 +49,25 @@ namespace Content
 		#region ContentEntry
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ContentReference<T>(UniqueContentEntry<T> entry) => new(in entry.Guid, entry.Index);
+		public static implicit operator ContentReference<T>(UniqueContentEntry<T> entry)
+		{
+			if (entry == null)
+				return SerializableGuid.Empty;
+
+			return new ContentReference<T>(in entry.Guid, entry.Index);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ContentReference<T>(SingleContentEntry<T> _) => new(in IContentReference.SINGLE_GUID);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ContentReference<T>(ContentEntry<T> entry) => new(in entry.Guid, entry.Index);
+		public static implicit operator ContentReference<T>(ContentEntry<T> entry)
+		{
+			if (entry == null)
+				return SerializableGuid.Empty;
+
+			return new ContentReference<T>(in entry.Guid, entry.Index);
+		}
 
 		#endregion
 	}
