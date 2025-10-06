@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Sapientia.Extensions;
 
 namespace Sapientia.Data
 {
@@ -248,8 +249,8 @@ namespace Sapientia.Data
 		{
 			this.ptr = ptr;
 #if DEBUG
-			lowBound = null;
-			hiBound = null;
+			lowBound = (byte*)ptr;
+			hiBound = (byte*)(this.ptr + 1);
 #endif
 		}
 
@@ -287,6 +288,12 @@ namespace Sapientia.Data
 		public readonly ref T Value()
 		{
 			return ref *ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly ref U Value<U>() where U : unmanaged
+		{
+			return ref *(U*)ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
