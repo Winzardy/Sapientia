@@ -15,8 +15,8 @@ namespace SharedLogic
 		public bool TryGetNode(string id, out ISharedNode node);
 
 		public void Initialize();
-		public void Save(ISharedDataManipulator manipulator);
-		public void Load(ISharedDataManipulator manipulator);
+		public void Save(ISharedDataStreamer streamer);
+		public void Load(ISharedDataStreamer streamer);
 
 		public IEnumerable<TFilter> Enumerate<TFilter>();
 

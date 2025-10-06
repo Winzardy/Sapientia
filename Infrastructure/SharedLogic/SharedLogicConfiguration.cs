@@ -19,9 +19,9 @@ namespace SharedLogic
 		public ISharedNodesRegistrarFactory registrarFactory;
 
 #if CLIENT
-		[LabelText("Data Handler")]
+		[LabelText("Data Streamer")]
 #endif
 		[SerializeReference]
-		public ISharedDataManipulatorFactory dataManipulatorFactory;
+		public ISharedDataStreamerFactory dataStreamerFactory;
 	}
 }

@@ -87,22 +87,22 @@ namespace SharedLogic
 				_logger?.Log($"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})");
 		}
 
-		public void Load(ISharedDataManipulator manipulator)
+		public void Load(ISharedDataStreamer streamer)
 		{
 			foreach (var node in _registry.FilterBy<IPersistentNode>())
-				node.Load(manipulator);
+				node.Load(streamer);
 
-			_revision = manipulator.Read<int>(REVISION_KEY);
+			_revision = streamer.Read<int>(REVISION_KEY);
 
 			Loaded?.Invoke();
 		}
 
-		public void Save(ISharedDataManipulator manipulator)
+		public void Save(ISharedDataStreamer streamer)
 		{
 			foreach (var node in _registry.FilterBy<IPersistentNode>())
-				node.Save(manipulator);
+				node.Save(streamer);
 
-			manipulator.Write(REVISION_KEY, _revision);
+			streamer.Write(REVISION_KEY, _revision);
 
 			Saved?.Invoke();
 		}

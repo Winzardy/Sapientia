@@ -80,7 +80,7 @@ namespace SharedLogic
 			return _timeProvider.DateTime;
 		}
 
-		internal TimeProviderSuppressFlow ProviderSuppressFlow() => new(this);
+		internal TimeProviderSuppressFlow ProviderSuppressScope() => new(this);
 		internal void SuppressTimeProvider(bool value) => _timeProviderSuppress = value;
 #endif
 

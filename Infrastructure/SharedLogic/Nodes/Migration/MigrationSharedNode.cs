@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Sapientia;
+using Sapientia.Collections;
 using Sapientia.Pooling;
 using SharedLogic.Internal;
 
@@ -35,52 +36,53 @@ namespace SharedLogic.Migration
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _idToMigrator);
 		}
 
-		void IPersistentNode.Load(ISharedDataManipulator manipulator)
+		void IPersistentNode.Load(ISharedDataStreamer streamer)
 		{
-			var data = manipulator.Read<SaveData>(Id);
-			OnLoad(in data, manipulator);
+			var data = streamer.Read<SaveData>(Id);
+			OnLoad(in data, streamer);
 		}
 
-		void IPersistentNode.Save(ISharedDataManipulator manipulator)
+		void IPersistentNode.Save(ISharedDataStreamer streamer)
 		{
 			OnSave(out var data);
-			manipulator.Write(Id, in data);
+			streamer.Write(Id, in data);
 		}
 
-		private void OnLoad(in SaveData data, ISharedDataManipulator manipulator)
+		private void OnLoad(in SaveData data, ISharedDataStreamer streamer)
 		{
-			foreach (var nodeData in data.nodes)
-			{
-				if (!_idToMigrator.TryGetValue(nodeData.nodeId, out var migrator))
-					continue;
-
-				if (nodeData.nodeVersion < migrator.Version)
+			if (!data.nodes.IsNullOrEmpty())
+				foreach (var nodeData in data.nodes)
 				{
-					// В обратную сторону не умеет мигрировать :)
-					_logger?.LogWarning(
-						$"Tried to migrate newer version [ {migrator.Version} ] to older [ {nodeData.nodeVersion} ] — downgrade not supported");
-					continue;
-				}
+					if (!_idToMigrator.TryGetValue(nodeData.nodeId, out var migrator))
+						continue;
 
-				if (migrator.Version != nodeData.nodeVersion)
-				{
-					var success = false;
-					var lastVersion = 0;
-					// Специально итерируем по каждой версии отдельно, чтобы плавно накатить изменения
-					for (int i = migrator.Version; i < nodeData.nodeVersion; i++)
+					if (nodeData.nodeVersion < migrator.Version)
 					{
-						var targetVersion = i + 1;
-						if (migrator.Migrate(manipulator, targetVersion))
-						{
-							success = true;
-							lastVersion = targetVersion;
-						}
+						// В обратную сторону не умеет мигрировать :)
+						_logger?.LogWarning(
+							$"Tried to migrate newer version [ {migrator.Version} ] to older [ {nodeData.nodeVersion} ] — downgrade not supported");
+						continue;
 					}
 
-					if (success)
-						_logger?.Log($"Node [ {nodeData.nodeId} ] migrated: {nodeData.nodeVersion} -> {lastVersion} (version)");
+					if (migrator.Version != nodeData.nodeVersion)
+					{
+						var success = false;
+						var lastVersion = 0;
+						// Специально итерируем по каждой версии отдельно, чтобы плавно накатить изменения
+						for (int i = migrator.Version; i < nodeData.nodeVersion; i++)
+						{
+							var targetVersion = i + 1;
+							if (migrator.Migrate(streamer, targetVersion))
+							{
+								success = true;
+								lastVersion = targetVersion;
+							}
+						}
+
+						if (success)
+							_logger?.Log($"Node [ {nodeData.nodeId} ] migrated: {nodeData.nodeVersion} -> {lastVersion} (version)");
+					}
 				}
-			}
 		}
 
 		private void OnSave(out SaveData data)

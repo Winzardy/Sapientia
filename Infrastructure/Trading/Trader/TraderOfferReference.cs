@@ -14,7 +14,8 @@ namespace Trading
 		   .Read()
 		   .offers[offerIndex];
 
-		public TraderOfferReference(in ContentReference<TraderConfig> trader, in ContentReference<TradeCatalogConfig> catalog, int offerIndex)
+		public TraderOfferReference(in ContentReference<TraderConfig> trader, in ContentReference<TradeCatalogConfig> catalog,
+			int offerIndex)
 		{
 			this.trader = trader;
 			this.catalog = catalog;

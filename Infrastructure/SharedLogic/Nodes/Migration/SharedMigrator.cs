@@ -9,7 +9,7 @@ namespace SharedLogic.Migration
 		public int Version { get; }
 
 		/// <param name="targetVersion">Версия которую пытаемся накатить</param>
-		public bool Migrate(ISharedDataManipulator manipulator, int targetVersion);
+		public bool Migrate(ISharedDataStreamer streamer, int targetVersion);
 	}
 
 	public abstract class SharedMigrator<TData> : ISharedMigrator
@@ -23,12 +23,12 @@ namespace SharedLogic.Migration
 			_nodeId = nodeId;
 		}
 
-		public bool Migrate(ISharedDataManipulator manipulator, int targetVersion)
+		public bool Migrate(ISharedDataStreamer streamer, int targetVersion)
 		{
-			var data = manipulator.Read<TData>(_nodeId);
+			var data = streamer.Read<TData>(_nodeId);
 			if (OnMigrate(ref data, targetVersion))
 			{
-				manipulator.Write(_nodeId, data);
+				streamer.Write(_nodeId, data);
 				return true;
 			}
 

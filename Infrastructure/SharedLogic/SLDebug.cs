@@ -52,6 +52,9 @@ namespace SharedLogic
 
 		public static class Logging
 		{
+			public static bool loaded = true;
+			public static bool saved = false;
+
 			public static class Command
 			{
 				public static bool execute = true;
