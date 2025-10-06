@@ -8,7 +8,12 @@ using Sapientia.TypeIndexer;
 namespace Sapientia.MemoryAllocator
 {
 	/// <summary>
-	/// Кеширует внутри себя сырой указатель на данные (Помимо указателя на область памяти в аллокаторе)
+	/// Содержит указатель на область памяти в аллокаторе <see cref="MemPtr"/>.
+	/// Кеширует внутри себя сырой указатель <see cref="SafePtr"/> (), который получаем из <see cref="MemPtr"/>.
+	/// Нужно это для быстрого доступа к памяти.
+	/// Также <see cref="CachedPtr"/> версионирован:
+	///  - Если версия не совпадает с версией <see cref="WorldState"/> (Может измениться при десериализации/сериализации),
+	/// то <see cref="SafePtr"/> инвалидируется и при обращении из <see cref="MemPtr"/> получаем новый <see cref="SafePtr"/>.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
 	public struct CachedPtr : IEquatable<CachedPtr>
@@ -113,7 +118,11 @@ namespace Sapientia.MemoryAllocator
 	}
 
 	/// <summary>
-	/// Кеширует внутри себя сырой указатель на данные (Помимо указателя на область памяти в аллокаторе)
+	/// Содержит указатель на область памяти в аллокаторе <see cref="MemPtr"/>.
+	/// Кеширует внутри себя сырой указатель <see cref="SafePtr"/> (), который получаем один раз из <see cref="MemPtr"/>.
+	/// Нужно это для быстрого доступа к памяти.
+	/// Также <see cref="CachedPtr"/> версионирован:
+	///  - Если версия не совпадает с версией <see cref="WorldState"/>, то из <see cref="MemPtr"/> нужно получить новый указатель <see cref="SafePtr"/>.
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
 	public struct CachedPtr<T> : IEquatable<CachedPtr<T>> where T : unmanaged

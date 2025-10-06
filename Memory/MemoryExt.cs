@@ -32,9 +32,19 @@ namespace Submodules.Sapientia.Memory
 			return MemoryManagerController.GetMemoryManager().MemAlloc<T>();
 		}
 
+		public static SafePtr MemAlloc<T>(ClearOptions clearMemory) where T : unmanaged
+		{
+			return MemoryManagerController.GetMemoryManager().MemAlloc<T>(clearMemory);
+		}
+
 		public static SafePtr MemAlloc(int size)
 		{
 			return MemoryManagerController.GetMemoryManager().MemAlloc(size);
+		}
+
+		public static SafePtr MemAlloc(int size, ClearOptions clearMemory)
+		{
+			return MemoryManagerController.GetMemoryManager().MemAlloc(size, clearMemory);
 		}
 
 		public static SafePtr<T> MakeArray<T>(int length, ClearOptions clearMemory = ClearOptions.ClearMemory) where T : unmanaged

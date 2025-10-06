@@ -36,6 +36,11 @@ namespace Sapientia.Data
 			return mask == 0;
 		}
 
+		public bool HasAnything()
+		{
+			return mask == 0;
+		}
+
 		public readonly bool Has(T value)
 		{
 			return Has(value.ToByte());

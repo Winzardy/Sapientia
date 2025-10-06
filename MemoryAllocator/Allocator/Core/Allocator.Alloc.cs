@@ -58,15 +58,60 @@ namespace Sapientia.MemoryAllocator
 
 			var requiredBlockSize = Align(size + TSize<MemoryBlock>.size);
 			var blockRef = AllocateBlock(requiredBlockSize, out var blockPtr);
+#if DEBUG
+			blockPtr.ptr->dataSize = size;
+#endif
 
 			E.ASSERT(blockPtr.ptr->blockSize >= TSize<MemoryBlock>.size + BLOCK_ALIGN, $"{nameof(MemAlloc)}. Выделенный размер блока меньше минимального.");
 			E.ASSERT(blockPtr.ptr->blockSize >= requiredBlockSize, $"{nameof(MemAlloc)}. Выделенный размер блока меньше запрашиваемого.");
 
 			var memPtr = new MemPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
-			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
+			valuePtr = new SafePtr((blockPtr + 1).ptr, size);
 
 			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size, $"{nameof(MemAlloc)}. Некорректный указатель на блок памяти.");
 			E.ASSERT(GetSafePtr(memPtr).ptr - TSize<MemoryBlock>.size == blockPtr.ptr, $"{nameof(MemAlloc)}. Некорректное MemPtr на блок памяти.");
+
+			return memPtr;
+		}
+
+		/// <summary>
+		/// Не аллоцируем память, только показываем. Используется для ref default в случае возврата пустого значения.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private MemPtr MemShow<T>(out SafePtr<T> tValuePtr)
+			where T : unmanaged
+		{
+			var result = MemShow(TSize<T>.size, out var valuePtr);
+			tValuePtr = valuePtr;
+
+			return result;
+		}
+
+		/// <summary>
+		/// Не аллоцируем память, только показываем. Используется для ref default в случае возврата пустого значения.
+		/// </summary>
+		private MemPtr MemShow(int size, out SafePtr valuePtr)
+		{
+			if (size == 0)
+			{
+				valuePtr = default;
+				return MemPtr.CreateZeroSized();
+			}
+
+			var requiredBlockSize = Align(size + TSize<MemoryBlock>.size);
+			var blockRef = ShowBlock(requiredBlockSize, out var blockPtr);
+#if DEBUG
+			blockPtr.ptr->dataSize = size;
+#endif
+
+			E.ASSERT(blockPtr.ptr->blockSize >= TSize<MemoryBlock>.size + BLOCK_ALIGN, $"{nameof(MemShow)}. Выделенный размер блока меньше минимального.");
+			E.ASSERT(blockPtr.ptr->blockSize >= requiredBlockSize, $"{nameof(MemShow)}. Выделенный размер блока меньше запрашиваемого.");
+
+			var memPtr = new MemPtr(blockRef.memoryZoneId, blockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
+			valuePtr = new SafePtr((blockPtr + 1).ptr, size);
+
+			E.ASSERT(valuePtr.ptr - (byte*)blockPtr.ptr == TSize<MemoryBlock>.size, $"{nameof(MemShow)}. Некорректный указатель на блок памяти.");
+			E.ASSERT(GetSafePtr(memPtr).ptr - TSize<MemoryBlock>.size == blockPtr.ptr, $"{nameof(MemShow)}. Некорректное MemPtr на блок памяти.");
 
 			return memPtr;
 		}
@@ -80,12 +125,15 @@ namespace Sapientia.MemoryAllocator
 			var blockRef = (MemoryBlockRef)worldPtr;
 
 			var newBlockRef = ReAllocateBlock(blockRef, requiredBlockSize, out var blockPtr);
+#if DEBUG
+			blockPtr.ptr->dataSize = size;
+#endif
 
 			E.ASSERT(blockPtr.ptr->blockSize >= MIN_BLOCK_SIZE, $"{nameof(MemReAlloc)}. Выделенный размер блока меньше минимального.");
 			E.ASSERT(blockPtr.ptr->blockSize >= requiredBlockSize, $"{nameof(MemReAlloc)}. Выделенный размер блока меньше запрашиваемого.");
 
 			var newMemPtr = new MemPtr(newBlockRef.memoryZoneId, newBlockRef.memoryZoneOffset + TSize<MemoryBlock>.size);
-			valuePtr = new SafePtr((blockPtr + 1).ptr, blockPtr.ptr->blockSize - TSize<MemoryBlock>.size);
+			valuePtr = new SafePtr((blockPtr + 1).ptr, size);
 
 			E.ASSERT((valuePtr.ptr - (byte*)blockPtr.ptr) == TSize<MemoryBlock>.size, $"{nameof(MemReAlloc)}. Некорректный указатель на блок памяти.");
 			E.ASSERT(GetSafePtr(newMemPtr).ptr - TSize<MemoryBlock>.size == blockPtr.ptr, $"{nameof(MemReAlloc)}. Некорректное MemPtr на блок памяти.");

@@ -46,6 +46,16 @@ namespace Sapientia.MemoryAllocator
 			return ref GetAllocator().GetRef<T>(memPtr);
 		}
 
+		/// <summary>
+		/// Мы должны быть уверены, что результат не будет использован!
+		/// Иначе может повредиться память стейта.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T GetZeroRef<T>() where T: unmanaged
+		{
+			return ref GetAllocator().GetZeroRef<T>();
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemPtr CopyPtrTo(WorldState dstWorldState, in MemPtr srsPtr)
 		{
