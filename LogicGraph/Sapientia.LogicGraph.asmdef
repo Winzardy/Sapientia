@@ -1,0 +1,19 @@
+{
+    "name": "Sapientia.LogicGraph",
+    "rootNamespace": "",
+    "references": [
+        "GUID:bd10b8cc39d09ac4e9c31728752096c0",
+        "GUID:2ba5007401ed6e84b83507a013917614",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:2665a8d13d1b3f18800f46e256720795"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
