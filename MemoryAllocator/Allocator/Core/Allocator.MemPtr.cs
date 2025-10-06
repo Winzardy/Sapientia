@@ -38,15 +38,23 @@ namespace Sapientia.MemoryAllocator
 			var memory = _zonesList[memPtr.zoneId].memory;
 			var safePtr = memory + memPtr.zoneOffset;
 #if DEBUG
-			var size = (safePtr.Cast<MemoryBlock>() - 1).ptr->blockSize - TSize<MemoryBlock>.size;
-			return new SafePtr(safePtr.ptr, size);
+			var dataSize = (safePtr.Cast<MemoryBlock>() - 1).ptr->dataSize;
+			return new SafePtr(safePtr.ptr, dataSize);
 #else
 			return new SafePtr(safePtr.ptr);
 #endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private int GetPtrSize(in MemPtr memPtr)
+		public int GetAllocatedSize(MemPtr memPtr)
+		{
+			if (memPtr.IsZeroSized())
+				return 0;
+			return GetBlockSize(memPtr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private int GetPtrSize(MemPtr memPtr)
 		{
 			return GetBlockSize(memPtr) - TSize<MemoryBlock>.size;
 		}

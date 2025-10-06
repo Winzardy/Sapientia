@@ -5,10 +5,16 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
+	/// <summary>
+	/// IndexedPtr — это обёртка над указателем,
+	/// которая хранит также индекс типа через <see cref="TypeIndex"/>.
+	///
+	/// Используется как универсальный указатель с информацией о типе.
+	/// </summary>
 	public struct IndexedPtr : IEquatable<IndexedPtr>
 	{
 		public readonly TypeIndex typeIndex;
-		public CachedPtr _ptr;
+		private CachedPtr _ptr;
 
 		public readonly bool IsCreated
 		{

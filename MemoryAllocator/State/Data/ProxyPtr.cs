@@ -5,6 +5,23 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
+	public class SomeClass : ISomeInterface{}
+
+	public interface ISomeInterface{}
+
+	/// <summary>
+	/// ProxyPtr — это типобезопасная обёртка над <see cref="IndexedPtr"/>,
+	/// которая связывает блок памяти с конкретным прокси-типом <typeparamref name="T"/>.
+	///
+	/// Основные возможности:
+	/// - Хранит данные в <see cref="IndexedPtr"/> и соответствующий прокси-объект <see cref="IProxy"/>.
+	/// - Прокси - это контейнер с реализацией метода для конкретного типа <see cref="IndexedPtr.typeIndex"/>.
+	/// - Для всех структур-наследников <see cref="IProxy"/> кодогеном генерируются методы расширения, реализующие методы интерфейса-наследника <see cref="IProxy"/>.
+	///
+	/// Фактически аналог приведения типа к интерфейсу, по типу:
+	/// var boxed = (ISomeInterface)SomeClass;
+	/// boxed.Do();
+	/// </summary>
 	public unsafe struct ProxyPtr<T> : IEquatable<ProxyPtr<T>> where T: unmanaged, IProxy
 	{
 		public IndexedPtr indexedPtr;
