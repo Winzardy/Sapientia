@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Core;
+using Sapientia.Memory;
 using Sapientia.ServiceManagement;
 
 namespace Sapientia.MemoryAllocator

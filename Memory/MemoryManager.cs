@@ -115,6 +115,25 @@ namespace Submodules.Sapientia.Memory
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr MemAlloc(int size, ClearOptions clearMemory)
+		{
+			var ptr = MemAlloc(size, TAlign<byte>.align);
+			if (clearMemory == ClearOptions.ClearMemory)
+				MemoryExt.MemClear(ptr, size);
+			return ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> MemAlloc<T>(ClearOptions clearMemory)
+			where T : unmanaged
+		{
+			var ptr = MemAlloc<T>();
+			if (clearMemory == ClearOptions.ClearMemory)
+				MemoryExt.MemClear(ptr, TSize<T>.size);
+			return ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr MemAlloc(int size)
 		{
 			return MemAlloc(size, TAlign<byte>.align);

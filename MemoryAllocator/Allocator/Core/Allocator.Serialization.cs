@@ -1,6 +1,6 @@
 using Sapientia.Collections;
 using Sapientia.Extensions;
-using Sapientia.MemoryAllocator.Core;
+using Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {
