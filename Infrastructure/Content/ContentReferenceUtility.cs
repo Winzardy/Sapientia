@@ -66,7 +66,11 @@ namespace Content
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ContentReference<T> ToReference<T>(this string str) => new()
 		{
-			guid = SerializableGuid.TryParse(str, out var guid) ? guid : ContentManager.ToGuid<T>(str)
+			guid = SerializableGuid.TryParse(str, out var guid)
+				? guid
+				: ContentManager.IsInitialized
+					? ContentManager.ToGuid<T>(str)
+					: SerializableGuid.Empty
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -23,6 +23,8 @@ namespace Content
 			get => _instance;
 		}
 #endif
+		internal static bool IsInitialized => resolver != null;
+
 		/// <inheritdoc cref="ContentResolver.Any{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Any<T>() => resolver.Any<T>();
