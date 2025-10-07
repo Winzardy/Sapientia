@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Sapientia.Collections;
@@ -5,6 +6,7 @@ using Sapientia.Extensions;
 
 namespace Trading
 {
+	[Serializable]
 	public abstract class TradeCostWithReceipt<T> : TradeCost, ITradeCostWithReceipt
 		where T : struct, ITradeReceipt
 	{
