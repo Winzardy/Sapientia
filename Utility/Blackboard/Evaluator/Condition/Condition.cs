@@ -8,12 +8,12 @@ namespace Sapientia.Conditions
 	{
 		public bool invert;
 
-		protected internal bool Evaluate(Blackboard blackboard) => IsMet(blackboard);
+		protected internal bool Evaluate(Blackboard blackboard) => IsFulfilled(blackboard);
 
 		bool IEvaluator<Blackboard, bool>.Evaluate(Blackboard blackboard)
-			=> IsMet(blackboard);
+			=> IsFulfilled(blackboard);
 
-		public bool IsMet(Blackboard blackboard) => invert ? !OnEvaluate(blackboard) : OnEvaluate(blackboard);
+		public bool IsFulfilled(Blackboard blackboard) => invert ? !OnEvaluate(blackboard) : OnEvaluate(blackboard);
 
 		protected abstract bool OnEvaluate(Blackboard blackboard);
 	}

@@ -34,8 +34,9 @@ namespace Trading
 
 #if CLIENT
 		[Tooltip("Полная очистка")]
-		Full,
 #endif
+		Full,
+
 		// Incremental
 	}
 

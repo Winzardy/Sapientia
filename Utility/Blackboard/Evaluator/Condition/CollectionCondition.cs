@@ -17,7 +17,7 @@ public enum ConditionGroupMode
 [TypeRegistryItem(
 	"\u2009Collection",
 	null,
-	SdfIconType.Basket,
+	SdfIconType.Stack,
 	darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 	darkIconColorA: A,
 	lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,

@@ -21,14 +21,14 @@ namespace Trading
 
 		protected override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
-			return condition.IsMet(board)
+			return condition.IsFulfilled(board)
 				? a.CanExecute(board, out error)
 				: b.CanExecute(board, out error);
 		}
 
 		protected override bool Pay(Tradeboard board)
 		{
-			if (condition.IsMet(board))
+			if (condition.IsFulfilled(board))
 				return a.Execute(board);
 
 			return b.Execute(board);

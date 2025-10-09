@@ -23,11 +23,21 @@ namespace Sapientia.Conditions.Common
 #endif
 	public class Fix64CompareCondition : Condition
 	{
+#if CLIENT
+		[HorizontalGroup(GROUP)]
+		[HorizontalGroup(GROUP+"/group"), HideLabel]
+#endif
 		[SerializeReference]
 		public BlackboardEvaluator<Fix64> a;
 
+#if CLIENT
+		[HorizontalGroup(GROUP+"/group", 120), HideLabel]
+#endif
 		public ComparisonOperator logicOperator;
 
+#if CLIENT
+		[HorizontalGroup(GROUP+"/group"), HideLabel]
+#endif
 		[SerializeReference]
 		public BlackboardEvaluator<Fix64> b;
 

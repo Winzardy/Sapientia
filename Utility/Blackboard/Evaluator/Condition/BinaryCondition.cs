@@ -21,28 +21,29 @@ namespace Sapientia.Conditions.Common
 	public class BinaryCondition : Condition
 	{
 #if CLIENT
-		[HorizontalGroup, HideLabel]
+		[HorizontalGroup(GROUP)]
+		[HorizontalGroup(GROUP+"/group"), HideLabel]
 #endif
 		[SerializeReference]
 		public Condition a;
 
 #if CLIENT
-		[HorizontalGroup(40), HideLabel]
+		[HorizontalGroup(GROUP+"/group", 45), HideLabel]
 #endif
 		public LogicalOperator @operator;
 
 #if CLIENT
-		[HorizontalGroup, HideLabel]
+		[HorizontalGroup(GROUP+"/group"), HideLabel]
 #endif
 		[SerializeReference]
 		public Condition b;
 
-		protected override bool OnEvaluate(Blackboard context)
+		protected override bool OnEvaluate(Blackboard blackboard)
 		{
 			return @operator switch
 			{
-				LogicalOperator.Or => a.IsMet(context) || b.IsMet(context),
-				LogicalOperator.And => a.IsMet(context) && b.IsMet(context),
+				LogicalOperator.Or => a.IsFulfilled(blackboard) || b.IsFulfilled(blackboard),
+				LogicalOperator.And => a.IsFulfilled(blackboard) && b.IsFulfilled(blackboard),
 				_ => throw new ArgumentOutOfRangeException()
 			};
 		}

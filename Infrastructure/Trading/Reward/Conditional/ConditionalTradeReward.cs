@@ -21,6 +21,6 @@ namespace Trading
 			=> reward.CanExecute(board, out error);
 
 		protected override bool Receive(Tradeboard board)
-			=> !condition.IsMet(board) || reward.Execute(board);
+			=> !condition.IsFulfilled(board) || reward.Execute(board);
 	}
 }

@@ -22,21 +22,22 @@ namespace Sapientia.Conditions.Common
 #endif
 	public class IntCompareCondition : Condition
 	{
-		[SerializeReference]
 #if CLIENT
-		[HorizontalGroup, HideLabel]
+		[HorizontalGroup(GROUP)]
+		[HorizontalGroup(GROUP+"/group"), HideLabel]
 #endif
+		[SerializeReference]
 		public BlackboardEvaluator<int> a;
 
 #if CLIENT
-		[HorizontalGroup(120), HideLabel]
+		[HorizontalGroup(GROUP+"/group", 120), HideLabel]
 #endif
 		public ComparisonOperator logicOperator;
 
-		[SerializeReference]
 #if CLIENT
-		[HorizontalGroup, HideLabel]
+		[HorizontalGroup(GROUP+"/group"), HideLabel]
 #endif
+		[SerializeReference]
 		public BlackboardEvaluator<int> b;
 
 		protected override bool OnEvaluate(Blackboard blackboard)

@@ -4,6 +4,6 @@ namespace Sapientia
 {
 	internal interface ICondition : IBlackboardEvaluator<bool>
 	{
-		public bool IsMet(Blackboard blackboard);
+		public bool IsFulfilled(Blackboard blackboard);
 	}
 }

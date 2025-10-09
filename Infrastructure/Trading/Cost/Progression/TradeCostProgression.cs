@@ -76,10 +76,10 @@ namespace Trading
 
 			if (stage is {useOverrideCondition: true, overrideCondition: not null})
 			{
-				if (!stage.overrideCondition.IsMet(board))
+				if (!stage.overrideCondition.IsFulfilled(board))
 					return;
 			}
-			else if (condition != null && !condition.IsMet(board))
+			else if (condition != null && !condition.IsFulfilled(board))
 			{
 				return;
 			}

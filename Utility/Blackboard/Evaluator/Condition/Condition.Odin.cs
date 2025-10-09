@@ -15,6 +15,8 @@ namespace Sapientia.Conditions
 		public const float BOX_R = 0.8f;
 		public const float BOX_G = 0.8f;
 		public const float BOX_B = 1;
+
+		public const string GROUP =  "g";
 	}
 }
 #endif
