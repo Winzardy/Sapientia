@@ -32,7 +32,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetPtr<T>(ServiceRegistryContext context) where T : unmanaged
 		{
-			return _typeToPtr[context];
+			return _typeToPtr.GetValue(context, out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator
 		public SafePtr<T> GetPtr<T>() where T : unmanaged, IIndexedType
 		{
 			var context = ServiceRegistryContext.Create<T>();
-			return _typeToPtr[context];
+			return _typeToPtr.GetValue(context, out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
