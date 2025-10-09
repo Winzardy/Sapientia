@@ -15,7 +15,7 @@ namespace Trading
 		/// </summary>
 		public static IEnumerable<TradeReward> EnumerateActual(this TradeReward reward, Tradeboard board)
 		{
-			using (board.FetchModeScope())
+			using (board.DummyModeScope())
 				foreach (var actualReward in reward.EnumerateActual(board))
 					yield return actualReward;
 		}
