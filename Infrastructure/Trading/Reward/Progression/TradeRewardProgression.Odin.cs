@@ -11,12 +11,12 @@ namespace Trading
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,
 		lightIconColorA: A,
 		priority: 5)]
-	public sealed partial class TradeCostProgression
+	public sealed partial class TradeRewardProgression
 	{
 		/// <remarks>
 		/// Необходимо для Odin <c>[SerializeReference]</c>, без публичного пустого конструктора не даст создавать экземпляры в инспекторе
 		/// </remarks>
-		public TradeCostProgression()
+		public TradeRewardProgression()
 		{
 		}
 	}

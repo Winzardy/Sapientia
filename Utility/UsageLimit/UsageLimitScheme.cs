@@ -3,7 +3,7 @@ using System;
 namespace Sapientia
 {
 	[Serializable]
-	public struct UsageLimitEntry
+	public struct UsageLimitScheme
 	{
 		public const int INFINITY_USAGES = -1;
 
@@ -15,11 +15,11 @@ namespace Sapientia
 		/// <summary>
 		/// Сброс между использованиями
 		/// </summary>
-		public ScheduleEntry reset;
+		public ScheduleScheme reset;
 
 		/// <summary>
 		/// Полный сброса лимита
 		/// </summary>
-		public ScheduleEntry fullReset;
+		public ScheduleScheme fullReset;
 	}
 }

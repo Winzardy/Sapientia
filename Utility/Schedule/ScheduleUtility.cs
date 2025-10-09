@@ -22,11 +22,27 @@ namespace Sapientia
 			where T : struct, ISchedulePoint
 			=> GetKind(point.Code);
 
-		public static bool IsPassed(this ScheduleEntry schedule, DateTime utcAt, DateTime utcNow)
-			=> IsPassed(schedule.points, utcAt, utcNow);
+		public static bool IsPassed(this ScheduleScheme scheme, DateTime utcAt, DateTime utcNow)
+			=> IsPassed(scheme.points, utcAt, utcNow);
 
-		public static bool IsEmpty(this ScheduleEntry schedule)
-			=> schedule.points.IsNullOrEmpty();
+		public static bool IsEmpty(this ScheduleScheme scheme)
+			=> scheme.points.IsNullOrEmpty();
+
+		public static int CalculatePassedPointCount(this ScheduleScheme schedule, DateTime utcAt, DateTime utcNow)
+			=> CalculatePassedPointCount(schedule.points, utcAt, utcNow);
+
+		public static int CalculatePassedPointCount<T>(this T[] points, DateTime utcAt, DateTime utcNow)
+			where T : struct, ISchedulePoint
+		{
+			var count = 0;
+			for (var i = 0; i < points.Length; i++)
+			{
+				if (IsPassed(ref points[i], utcAt, utcNow))
+					count++;
+			}
+
+			return count;
+		}
 
 		public static bool IsPassed<T>(this T[] points, DateTime utcAt, DateTime utcNow)
 			where T : struct, ISchedulePoint
@@ -66,12 +82,12 @@ namespace Sapientia
 		}
 
 		/// <returns>Ближайшую дату</returns>
-		public static DateTime ToDateTime(this ScheduleEntry entry, DateTime utcAt)
+		public static DateTime ToDateTime(this ScheduleScheme scheme, DateTime utcAt)
 		{
 			var dateTime = DateTime.MinValue;
-			for (var i = 0; i < entry.points.Length; i++)
+			for (var i = 0; i < scheme.points.Length; i++)
 			{
-				var pointDateTime = ToDateTime(ref entry.points[i], utcAt);
+				var pointDateTime = ToDateTime(ref scheme.points[i], utcAt);
 				if (dateTime == DateTime.MinValue || pointDateTime < dateTime)
 					dateTime = pointDateTime;
 			}
@@ -314,7 +330,6 @@ namespace Sapientia
 						return false;
 
 					date = new DateTime(year, targetMonth, targetDay, decode.hr, decode.min, (int) decode.sec, DateTimeKind.Utc);
-					return true;
 				}
 				else
 				{
@@ -328,8 +343,9 @@ namespace Sapientia
 						return false;
 
 					date = new DateTime(year, targetMonth, targetDay, decode.hr, decode.min, (int) decode.sec, DateTimeKind.Utc);
-					return true;
 				}
+
+				return true;
 			}
 		}
 	}

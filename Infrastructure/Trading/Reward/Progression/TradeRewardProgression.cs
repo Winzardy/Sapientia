@@ -12,26 +12,29 @@ using UnityEngine;
 namespace Trading
 {
 	[Serializable]
-	public partial class TradeCostProgression : TradeCost, IResettableCost
+	public partial class TradeRewardProgression : TradeReward
 	{
-		private const string GROUP_CATALOG_ID = "TradeCostProgression";
-		private const string KEY_FORMAT = "TradeCostProgression_{0}";
+		private const string GROUP_CATALOG_ID = "TradeRewardProgression";
+		private const string KEY_FORMAT = "TradeRewardProgression_{0}";
 		private const string GUID_KEY_FORMAT = "{0}_{1}";
 
 		[NonSerialized]
 		private string _progressKeyCache;
 
-		public ContentEntry<TradeCostProgressionStage[]> stages;
+		public ContentEntry<TradeRewardProgressionStage[]> stages;
 
 		/// <summary>
-		/// Условие при котором цена прогрессирует, если 'None', то прогрессирует всегда
+		/// Условие при котором награда прогрессирует, если 'None', то прогрессирует всегда
 		/// </summary>
 		[SerializeReference]
 		public Condition condition;
 
 		/// <summary>
 		/// Если использовать группу, то прогрессия будет связана по выбранной группе,
-		/// например цена из одной группы будет отмечаться по этой группе
+		/// например награда из одной группы будет отмечаться по этой группе
+		///
+		/// <br/><br/>
+		/// P.S так же работает в связке с ценами!
 		/// </summary>
 		[ContextLabel(GROUP_CATALOG_ID)]
 		public Toggle<int> group;
@@ -44,16 +47,16 @@ namespace Trading
 			node.ResetProgress(GetProgressKey(board.Id), in autoReset);
 		}
 
-		protected override bool CanPay(Tradeboard board, out TradePayError? error)
+		protected override bool CanReceive(Tradeboard board, out TradeReceiveError? error)
 		{
 			ref readonly var stage = ref GetCurrentStage(board);
-			return stage.cost.CanExecute(board, out error);
+			return stage.reward.CanExecute(board, out error);
 		}
 
-		protected override bool Pay(Tradeboard board)
+		protected override bool Receive(Tradeboard board)
 		{
 			ref readonly var stage = ref GetCurrentStage(board);
-			var success = stage.cost
+			var success = stage.reward
 			   .Execute(board);
 
 			if (success)
@@ -62,15 +65,15 @@ namespace Trading
 			return success;
 		}
 
-		private ref readonly TradeCostProgressionStage GetCurrentStage(Tradeboard board)
+		private ref readonly TradeRewardProgressionStage GetCurrentStage(Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
-			var progress = node.GetCurrentProgress(GetProgressKey(board.Id), autoReset);
-			var index = progress >= stages.Value.Length ? ^1 : progress;
+			var progressPoint = node.GetCurrentProgress(GetProgressKey(board.Id), autoReset);
+			var index = progressPoint >= stages.Value.Length ? ^1 : progressPoint;
 			return ref stages.Value.GetValueByIndex(index);
 		}
 
-		private void TryIncrementStage(in TradeCostProgressionStage stage, Tradeboard board)
+		private void TryIncrementStage(in TradeRewardProgressionStage stage, Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
 
@@ -90,16 +93,15 @@ namespace Trading
 
 		private string GetProgressKey(string tradeId)
 		{
-			return _progressKeyCache ??=
-				group ? KEY_FORMAT.Format(group) : GUID_KEY_FORMAT.Format(tradeId, stages.Guid);
+			return _progressKeyCache ??= group ? KEY_FORMAT.Format(group) : GUID_KEY_FORMAT.Format(tradeId, stages.Guid);
 		}
 	}
 
 	[Serializable]
-	public struct TradeCostProgressionStage
+	public struct TradeRewardProgressionStage
 	{
 		[SerializeReference]
-		public TradeCost cost;
+		public TradeReward reward;
 
 		/// <summary>
 		/// Условие при котором на данном этапе прогрессирует

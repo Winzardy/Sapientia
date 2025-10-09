@@ -1,10 +1,9 @@
 #if CLIENT
-using Sapientia.Evaluator;
 using UnityEngine;
 
 namespace Sapientia.Conditions
 {
-	public abstract partial class Condition : IEvaluator<Blackboard, bool>
+	public abstract partial class Condition
 	{
 		public static readonly Color COLOR = new(R, G, B, A);
 

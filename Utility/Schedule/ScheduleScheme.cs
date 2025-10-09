@@ -6,7 +6,7 @@ namespace Sapientia
 	/// Временные точки, с помощью которых можно создать расписание для события. Например сброс счетчиков
 	/// </summary>
 	[Serializable]
-	public struct ScheduleEntry
+	public struct ScheduleScheme
 	{
 		public SchedulePoint[] points;
 	}

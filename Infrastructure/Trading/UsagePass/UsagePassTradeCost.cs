@@ -10,7 +10,7 @@ namespace Trading.UsagePass
 	{
 		public const string ERROR_CATEGORY = "UsagePass";
 
-		public UsageLimitEntry limit;
+		public UsageLimitScheme limit;
 
 #if CLIENT
 		[UnityEngine.Tooltip("Если true, то будет использоваться реальное время, иначе виртуальное")]
@@ -32,7 +32,7 @@ namespace Trading.UsagePass
 			var recipeKey = GetReceiptKey(board.Id);
 			ref readonly var model = ref backend.GetModel(recipeKey);
 			var tradingNode = board.Get<ITradingNode>();
-			var dateTime = realTime ? tradingNode.DateTime : tradingNode.VirtualDateTime;
+			var dateTime = realTime ? tradingNode.DateTimeWithoutOffset : tradingNode.DateTime;
 
 			if (!limit.CanApplyUsage(in model, dateTime, out var limitApplyError))
 			{
@@ -49,7 +49,7 @@ namespace Trading.UsagePass
 		protected override Task<UsagePassTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
 			var tradingNode = board.Get<ITradingNode>();
-			var dateTime = realTime ? tradingNode.DateTime : tradingNode.VirtualDateTime;
+			var dateTime = realTime ? tradingNode.DateTimeWithoutOffset : tradingNode.DateTime;
 			UsagePassTradeReceipt? receipt = new UsagePassTradeReceipt(dateTime.Ticks);
 			return Task.FromResult(receipt);
 		}

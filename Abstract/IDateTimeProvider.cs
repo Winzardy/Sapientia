@@ -4,7 +4,7 @@ namespace Sapientia
 {
 	public interface IDateTimeProvider
 	{
-		public DateTime DateTime { get; }
+		public DateTime DateTimeWithoutOffset { get; }
 	}
 
 	public interface IDateTimeProviderWithVirtual : IDateTimeProvider
@@ -12,6 +12,6 @@ namespace Sapientia
 		/// <summary>
 		/// Время, которое могут двигать
 		/// </summary>
-		public DateTime VirtualDateTime { get; }
+		public DateTime DateTime { get; }
 	}
 }

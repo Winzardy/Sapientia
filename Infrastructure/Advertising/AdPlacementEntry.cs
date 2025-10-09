@@ -49,7 +49,7 @@ namespace Advertising
 		/// </summary>
 		public bool integrationTrack;
 
-		public UsageLimitEntry usageLimit;
+		public UsageLimitScheme usageLimit;
 
 		// TODO: добавить Dictionary<Condition, UsageLimitEntry>
 		// нужно для случаев если хотим переопределить лимит по условиям

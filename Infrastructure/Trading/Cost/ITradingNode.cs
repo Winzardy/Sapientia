@@ -5,6 +5,10 @@ namespace Trading
 	public interface ITradingNode : IDateTimeProviderWithVirtual
 	{
 		public ITradeReceiptRegistry<T> GetRegistry<T>() where T : struct, ITradeReceipt;
+
+		int GetCurrentProgress(string key, in TradeProgressionScheme scheme);
+		void IncrementProgress(string key, in TradeProgressionScheme scheme);
+		void ResetProgress(string key, in TradeProgressionScheme scheme);
 	}
 
 	public interface ITradeRegistry

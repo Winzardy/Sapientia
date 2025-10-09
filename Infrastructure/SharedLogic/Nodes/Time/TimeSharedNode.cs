@@ -35,7 +35,7 @@ namespace SharedLogic
 		public TimeSharedNode(IDateTimeProvider timeProvider)
 		{
 			_timeProvider = timeProvider;
-			_dateTime = _timeProvider.DateTime;
+			_dateTime = _timeProvider.DateTimeWithoutOffset;
 		}
 
 		/// <summary>
@@ -77,7 +77,7 @@ namespace SharedLogic
 			if (_timeProvider == null || _timeProviderSuppress)
 				return _dateTime;
 
-			return _timeProvider.DateTime;
+			return _timeProvider.DateTimeWithoutOffset;
 		}
 
 		internal TimeProviderSuppressFlow ProviderSuppressScope() => new(this);
@@ -87,7 +87,7 @@ namespace SharedLogic
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
-			_dateTime = data.timestamp == 0 ? new DateTime(data.timestamp) : _timeProvider.DateTime;
+			_dateTime = data.timestamp == 0 ? new DateTime(data.timestamp) : _timeProvider.DateTimeWithoutOffset;
 		}
 
 		protected override void OnSave(out SaveData data)
