@@ -67,6 +67,7 @@ namespace Trading
 
 #if CLIENT
 		private bool _fetchMode;
+		private int _fetchRequest;
 
 		/// <summary>
 		/// Режим при котором мы получаем квитанции (чеки), так же автоматически включается Dummy (фейк) режим
@@ -74,7 +75,15 @@ namespace Trading
 		public bool IsFetchMode => _fetchMode;
 
 		/// <inheritdoc cref="IsFetchMode"/>
-		public void SetFetching(bool value) => _fetchMode = value;
+		public void SetFetchMode(bool value)
+		{
+			if (value)
+				_fetchRequest++;
+			else
+				_fetchRequest--;
+
+			_fetchMode = _fetchRequest != 0;
+		}
 
 		/// <inheritdoc cref="IsFetchMode"/>
 		public FetchModeScope FetchModeScope(bool value = true) => new(this, value);
@@ -86,6 +95,7 @@ namespace Trading
 		#region Dummy
 
 		private bool _dummyMode;
+		private int _dummyRequest;
 
 		/// <summary>
 		/// Режим симуляции покупки, чтобы вернуть стейт игры обратно (в нашем случае рандом)
@@ -99,8 +109,16 @@ namespace Trading
 
 		public void SetDummyMode(bool value)
 		{
-			_dummyMode = value;
-			dummyModeChanged?.Invoke(value);
+			var l = _dummyMode;
+
+			if (value)
+				_dummyRequest++;
+			else
+				_dummyRequest--;
+
+			_dummyMode = _dummyRequest != 0;
+			if (l != _dummyMode)
+				dummyModeChanged?.Invoke(value);
 		}
 
 		public DummyModeScope DummyModeScope(bool value = true) => new(this, value);
@@ -113,12 +131,14 @@ namespace Trading
 			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
 
 			_dummyMode = false;
+			_dummyRequest = 0;
 
 			_id = null;
 			_restoreSources?.Clear();
 
 #if CLIENT
 			_fetchMode = false;
+			_fetchRequest = 0;
 #endif
 		}
 	}
@@ -127,17 +147,26 @@ namespace Trading
 	public readonly struct FetchModeScope : IDisposable
 	{
 		private readonly Tradeboard _tradeboard;
+		private readonly bool _value;
 
 		public FetchModeScope(Tradeboard tradeboard, bool value = true)
 		{
+			_value = value;
 			_tradeboard = tradeboard;
-			_tradeboard.SetFetching(value);
+
+			if (!value)
+				return;
+
+			_tradeboard.SetFetchMode(value);
 			_tradeboard.SetDummyMode(value);
 		}
 
 		public void Dispose()
 		{
-			_tradeboard.SetFetching(false);
+			if (!_value)
+				return;
+
+			_tradeboard.SetFetchMode(false);
 			_tradeboard.SetDummyMode(false);
 		}
 	}
@@ -146,14 +175,24 @@ namespace Trading
 	public readonly struct DummyModeScope : IDisposable
 	{
 		private readonly Tradeboard _tradeboard;
+		private readonly bool _value;
 
 		public DummyModeScope(Tradeboard tradeboard, bool value = true)
 		{
+			_value = value;
 			_tradeboard = tradeboard;
-			_tradeboard.SetDummyMode(value);
+
+			if (!value)
+				_tradeboard.SetDummyMode(value);
 		}
 
-		public void Dispose() => _tradeboard.SetDummyMode(false);
+		public void Dispose()
+		{
+			if (!_value)
+				return;
+
+			_tradeboard.SetDummyMode(false);
+		}
 	}
 
 	public static class TradeboardUtility

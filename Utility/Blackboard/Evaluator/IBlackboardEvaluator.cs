@@ -8,10 +8,10 @@ namespace Sapientia.BlackboardEvaluator
 
 	public abstract class BlackboardEvaluator<T> : IBlackboardEvaluator<T>
 	{
-		public const float R = 0.6f;
-		public const float G = 1f;
-		public const float B = 0.6f;
-		public const float A = 1;
+		public const float R = IEvaluator.R;
+		public const float G = IEvaluator.G;
+		public const float B = IEvaluator.B;
+		public const float A = IEvaluator.A;
 
 		T IEvaluator<Blackboard, T>.Evaluate(Blackboard blackboard) => Get(blackboard);
 
@@ -21,4 +21,5 @@ namespace Sapientia.BlackboardEvaluator
 
 		public static implicit operator BlackboardEvaluator<T>(T value) => BlackboardConstantFactory.Create<T>(value);
 	}
+
 }

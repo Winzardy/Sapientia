@@ -1,9 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Sapientia;
-using Sapientia.Conditions;
 using Sapientia.Deterministic;
-
-
 #if CLIENT
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -35,6 +33,16 @@ namespace Trading
 				return reward.Execute(board);
 
 			return true;
+		}
+
+		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		{
+			var randomizer = board.Get<IRandomizer<Fix64>>();
+			var roll = randomizer.Next(0, MAX_CHANCE);
+
+			if (roll <= chance)
+				foreach (var actualReward in reward.EnumerateActual(board))
+					yield return actualReward;
 		}
 	}
 }
