@@ -25,7 +25,7 @@ namespace Sapientia.Conditions
 		[HorizontalGroup(GROUP+"/group"), HideLabel]
 #endif
 		[SerializeReference]
-		public IBlackboardCondition a;
+		public BlackboardCondition a;
 
 #if CLIENT
 		[HorizontalGroup(GROUP+"/group", 45), HideLabel]
@@ -36,7 +36,7 @@ namespace Sapientia.Conditions
 		[HorizontalGroup(GROUP+"/group"), HideLabel]
 #endif
 		[SerializeReference]
-		public IBlackboardCondition b;
+		public BlackboardCondition b;
 
 		protected override bool OnEvaluate(Blackboard blackboard)
 		{
