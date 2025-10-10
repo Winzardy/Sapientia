@@ -381,6 +381,12 @@ namespace Sapientia.Collections
 				yield return (value, index++);
 		}
 
+		public static bool WithinRange<T>(this ICollection<T> source, int index)
+		{
+			if (source == null) return false;
+			return index >= 0 && index < source.Count;
+		}
+
 		public static T[] ToArrayOrNull<T>(this List<T> list)
 		{
 			if (list.IsNullOrEmpty())

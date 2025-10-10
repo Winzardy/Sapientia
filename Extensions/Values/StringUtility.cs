@@ -34,7 +34,7 @@ namespace Sapientia.Extensions
 		public static StringBuilder Prepend(this StringBuilder builder, string value)
 			=> builder.Insert(0, value);
 
-		public static string GetCompositeString<T>(this IEnumerable<T> collection, bool verticalOrHorizontal = true, Func<T, string> getter = null,
+		public static string GetCompositeString<T>(this IEnumerable<T> collection, Func<T, string> getter = null, bool verticalOrHorizontal = true,
 			bool numerate = true,
 			string separator = "")
 		{
