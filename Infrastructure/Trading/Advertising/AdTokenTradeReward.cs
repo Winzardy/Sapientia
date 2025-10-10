@@ -1,12 +1,13 @@
 using System;
 using Content;
+using Sapientia.Evaluator.Blackboard;
 
 namespace Trading.Advertising
 {
 	[Serializable]
 	public partial class AdTokenTradeReward : TradeReward
 	{
-		public int count;
+		public BlackboardEvaluator<int> count = 1;
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
@@ -14,13 +15,13 @@ namespace Trading.Advertising
 		protected override bool CanReceive(Tradeboard board, out TradeReceiveError? error)
 		{
 			error = null;
-			return board.Contains<IAdvertisingBackend>();
+			return board.Contains<IAdvertisingNode>();
 		}
 
 		protected override bool Receive(Tradeboard board)
 		{
-			var model = board.Get<IAdvertisingBackend>();
-			model.AddToken(group, count);
+			var node = board.Get<IAdvertisingNode>();
+			node.AddToken(group, count.Get(board));
 			return true;
 		}
 	}

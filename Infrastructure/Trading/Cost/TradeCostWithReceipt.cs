@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Sapientia.Collections;
@@ -5,42 +6,44 @@ using Sapientia.Extensions;
 
 namespace Trading
 {
+	[Serializable]
 	public abstract class TradeCostWithReceipt<T> : TradeCost, ITradeCostWithReceipt
 		where T : struct, ITradeReceipt
 	{
+		private const string ERROR_CATEGORY = "Can't issue receipt";
+
 		protected sealed override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
-			var canIssue = false;
+#if CLIENT
+			if (board.IsFetchMode)
+				return CanFetch(board, out error);
+#endif
+			if (!board.Contains<ITradingNode>())
+			{
+				TradingDebug.LogError("Not found trading node...");
 
-			error = null;
-			if (!board.Contains<ITradingBackend>())
-			{
-				TradingDebug.LogError("Not found trading service...");
-			}
-			else
-			{
-				var backend = board.Get<ITradingBackend>();
-				var registry = backend.GetRegistry<T>();
-				canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
+				error = new TradePayError(ERROR_CATEGORY, 0, null);
+				return false;
 			}
 
+			var node = board.Get<ITradingNode>();
+			var registry = node.GetRegistry<T>();
+			var canIssue = registry.CanIssue(board, GetReceiptKey(board.Id));
+			error = canIssue ? null : new TradePayError(ERROR_CATEGORY, 1, null);
 			return canIssue;
 		}
 
 		protected sealed override bool Pay(Tradeboard board)
 		{
-			var issue = false;
-			if (!board.Contains<ITradingBackend>())
+			if (!board.Contains<ITradingNode>())
 			{
-				TradingDebug.LogError("Not found trading service...");
+				TradingDebug.LogError("Not found trading node...");
+				return false;
 			}
-			else
-			{
-				var backend = board.Get<ITradingBackend>();
-				var registry = backend.GetRegistry<T>();
-				issue = registry.Issue(board, GetReceiptKey(board.Id));
-			}
-			return issue;
+
+			var node = board.Get<ITradingNode>();
+			var registry = node.GetRegistry<T>();
+			return registry.Issue(board, GetReceiptKey(board.Id));
 		}
 
 		protected abstract string GetReceiptKey(string tradeId);
@@ -97,9 +100,12 @@ namespace Trading
 
 	public static class TradeReceiptUtility
 	{
-		public static void Register<T>(this ITradingBackend backend, T[] receipts, string tradeId)
+		public static void Register<T>(this ITradingNode node, T[] receipts, string tradeId)
 			where T : struct, ITradeReceipt
 		{
+			if(node == null)
+				throw TradingDebug.NullException("Node can't be null!");
+
 			if (tradeId.IsNullOrEmpty())
 				throw TradingDebug.NullException("Trade ID cannot be null or empty");
 
@@ -107,16 +113,16 @@ namespace Trading
 				return;
 
 			for (int i = 0; i < receipts.Length; i++)
-				backend.Register(receipts[i], tradeId);
+				node.Register(receipts[i], tradeId);
 		}
 
-		public static void Register<T>(this ITradingBackend backend, in T receipt, string tradeId)
+		public static void Register<T>(this ITradingNode node, in T receipt, string tradeId)
 			where T : struct, ITradeReceipt
 		{
 			if (tradeId.IsNullOrEmpty())
 				throw TradingDebug.NullException("Trade ID cannot be null or empty");
 
-			var registry = backend.GetRegistry<T>();
+			var registry = node.GetRegistry<T>();
 
 			if (registry == null)
 				throw TradingDebug.Exception($"Not found receipt registry by type [ {typeof(T)} ]");

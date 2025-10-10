@@ -1,4 +1,6 @@
-﻿namespace Sapientia
+﻿using System;
+
+namespace Sapientia
 {
 	public interface IIdentifiable
 	{

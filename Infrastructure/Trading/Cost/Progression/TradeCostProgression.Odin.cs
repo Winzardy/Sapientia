@@ -5,8 +5,8 @@ namespace Trading
 {
 	[TypeRegistryItem(
 		"\u2009Progression",
-		"",
-		SdfIconType.BarChartSteps,
+		"/",
+		SdfIconType.SortUp,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B, darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,
 		lightIconColorA: A,

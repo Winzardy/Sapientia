@@ -8,10 +8,10 @@ namespace Sapientia
 	{
 		public Type ValueType { get; }
 
-		/// <param name="unregister">
-		/// Отписывать ли токен в <see cref="Blackboard"/>, нужно чтобы массово отписывать токены
+		/// <param name="solo">
+		/// Отписывать ли токен в <see cref="Blackboard"/>, мини хак чтобы при массовой отписке не дергать отписку отдельного токена
 		/// </param>
-		public void Release(bool unregister = true);
+		public void Release(bool solo = true);
 
 		internal int Generation { get; }
 		internal IBlackboardToken Clone(Blackboard blackboard);
@@ -34,13 +34,13 @@ namespace Sapientia
 		public void Dispose() => Release(true);
 
 		/// <inheritdoc/>
-		public void Release(bool unregister)
+		public void Release(bool solo)
 		{
 			if (_hash == default)
 				throw new InvalidOperationException("Token already released");
 
-			if (unregister)
-				_hash.blackboard.Unregister(this);
+			if (solo)
+				_hash.blackboard.ReleaseToken(this);
 
 			Blackboard<T>.Unregister(this);
 		}
@@ -57,7 +57,7 @@ namespace Sapientia
 
 		IBlackboardToken IBlackboardToken.Clone(Blackboard blackboard)
 		{
-			ref readonly var value = ref Blackboard<T>.Get(_hash.blackboard);
+			var value = Blackboard<T>.Get(_hash.blackboard);
 			return Blackboard<T>.Register(in value, blackboard, _hash.key);
 		}
 

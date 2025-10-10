@@ -195,6 +195,12 @@ namespace Sapientia.Collections
 			array = newArray;
 		}
 
+		public static ref T GetValueByIndex<T>(this T[] array, Index index)
+		{
+			var i = index.GetOffset(array.Length);
+			return ref array[i];
+		}
+
 		public static void Add<T>(ref T[] array, T value)
 		{
 			Expand(ref array, array.Length + 1);

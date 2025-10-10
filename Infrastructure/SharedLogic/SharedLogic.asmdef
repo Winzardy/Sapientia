@@ -1,0 +1,21 @@
+{
+    "name": "SharedLogic",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "Sapientia",
+        "Fusumity.LocalSave",
+        "Content",
+        "WLog",
+        "Fusumity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Sapientia.Pooling;
 
 namespace Trading
 {
@@ -10,13 +9,9 @@ namespace Trading
 			yield return this;
 		}
 
-		/// <returns>Перебирает внутренние элементы и возвращает массив</returns>
-		public TradeReward[] ToArray()
+		protected internal virtual IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
-			using var _ = ListPool<TradeReward>.Get(out var list);
-			foreach (var reward in this)
-				list.Add(reward);
-			return list.ToArray();
+			yield return this;
 		}
 	}
 }
