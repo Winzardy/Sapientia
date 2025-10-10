@@ -75,7 +75,7 @@ namespace Trading
 		public bool IsFetchMode => _fetchMode;
 
 		/// <inheritdoc cref="IsFetchMode"/>
-		public void SetFetchMode(bool value)
+		internal void SetFetchMode(bool value)
 		{
 			if (value)
 				_fetchRequest++;
@@ -107,9 +107,9 @@ namespace Trading
 
 		public event Action<bool> dummyModeChanged;
 
-		public void SetDummyMode(bool value)
+		internal void SetDummyMode(bool value)
 		{
-			var l = _dummyMode;
+			var prev = _dummyMode;
 
 			if (value)
 				_dummyRequest++;
@@ -117,7 +117,8 @@ namespace Trading
 				_dummyRequest--;
 
 			_dummyMode = _dummyRequest != 0;
-			if (l != _dummyMode)
+
+			if (prev != _dummyMode)
 				dummyModeChanged?.Invoke(value);
 		}
 
