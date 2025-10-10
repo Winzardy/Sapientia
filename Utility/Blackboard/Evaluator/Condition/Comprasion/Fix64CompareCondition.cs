@@ -1,5 +1,5 @@
 using System;
-using Sapientia.BlackboardEvaluator;
+using Sapientia.Evaluator.Blackboard;
 using Sapientia.Deterministic;
 
 #if CLIENT
@@ -7,13 +7,13 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
 
-namespace Sapientia.Conditions.Common
+namespace Sapientia.Conditions.Comparison
 {
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
 		"\u2009Float Comparison",
-		"Common",
+		"Comparison",
 		SdfIconType.ArrowLeftRight,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
@@ -21,7 +21,7 @@ namespace Sapientia.Conditions.Common
 		lightIconColorA: A
 	)]
 #endif
-	public class Fix64CompareCondition : Condition
+	public class Fix64CompareCondition : BlackboardCondition
 	{
 #if CLIENT
 		[HorizontalGroup(GROUP)]

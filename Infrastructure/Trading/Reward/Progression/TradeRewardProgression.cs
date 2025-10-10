@@ -27,7 +27,7 @@ namespace Trading
 		/// Условие при котором награда прогрессирует, если 'None', то прогрессирует всегда
 		/// </summary>
 		[SerializeReference]
-		public Condition condition;
+		public BlackboardCondition condition;
 
 		/// <summary>
 		/// Если использовать группу, то прогрессия будет связана по выбранной группе,
@@ -112,6 +112,6 @@ namespace Trading
 		/// Условие при котором на данном этапе прогрессирует
 		/// </summary>
 		[SerializeReference]
-		public Condition overrideCondition;
+		public BlackboardCondition overrideCondition;
 	}
 }

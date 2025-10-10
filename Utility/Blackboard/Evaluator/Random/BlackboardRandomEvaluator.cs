@@ -1,7 +1,6 @@
 using System;
-using Sapientia.Evaluator;
 
-namespace Sapientia.BlackboardEvaluator
+namespace Sapientia.Evaluator.Blackboard
 {
 	[Serializable]
 	public class BlackboardRandomEvaluator<T> : BlackboardEvaluator<T>, IRandomEvaluator<T>
@@ -16,7 +15,7 @@ namespace Sapientia.BlackboardEvaluator
 			this.max = max;
 		}
 
-		protected sealed override T OnGet(Blackboard blackboard)
+		protected sealed override T OnGet(Sapientia.Blackboard blackboard)
 		{
 			var randomizer = blackboard.Get<IRandomizer<T>>();
 			return randomizer.Next(min, max);

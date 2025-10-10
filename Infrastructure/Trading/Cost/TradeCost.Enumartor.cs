@@ -8,5 +8,10 @@ namespace Trading
 		{
 			yield return this;
 		}
+
+		public virtual IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		{
+			yield return this;
+		}
 	}
 }

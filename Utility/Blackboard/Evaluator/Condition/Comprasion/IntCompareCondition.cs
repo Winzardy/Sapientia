@@ -1,18 +1,18 @@
 using System;
-using Sapientia.BlackboardEvaluator;
+using Sapientia.Evaluator.Blackboard;
 
 #if CLIENT
 using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
 
-namespace Sapientia.Conditions.Common
+namespace Sapientia.Conditions.Comparison
 {
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
 		"\u2009Int Comparison",
-		"Common",
+		"Comparison",
 		SdfIconType.ArrowLeftRight,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
@@ -20,7 +20,7 @@ namespace Sapientia.Conditions.Common
 		lightIconColorA: A
 	)]
 #endif
-	public class IntCompareCondition : Condition
+	public class IntCompareCondition : BlackboardCondition
 	{
 #if CLIENT
 		[HorizontalGroup(GROUP)]

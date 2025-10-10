@@ -5,7 +5,7 @@ namespace Trading
 {
 	[TypeRegistryItem(
 		"\u2009If / else",
-		"",
+		"/",
 		SdfIconType.Alt,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,

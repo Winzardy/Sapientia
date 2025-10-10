@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Content;
 using Sapientia;
 using Sapientia.Collections;
@@ -27,7 +28,7 @@ namespace Trading
 		/// Условие при котором цена прогрессирует, если 'None', то прогрессирует всегда
 		/// </summary>
 		[SerializeReference]
-		public Condition condition;
+		public BlackboardCondition condition;
 
 		/// <summary>
 		/// Если использовать группу, то прогрессия будет связана по выбранной группе,
@@ -93,12 +94,20 @@ namespace Trading
 			return _progressKeyCache ??=
 				group ? KEY_FORMAT.Format(group) : GUID_KEY_FORMAT.Format(tradeId, stages.Guid);
 		}
+
+		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		{
+			var stage = GetCurrentStage(board);
+			foreach (var cost in stage.cost.EnumerateActual(board))
+				yield return cost;
+		}
 	}
 
 	[Serializable]
 	public struct TradeCostProgressionStage
 	{
 		[SerializeReference]
+		[TradeAccess(TradeAccessType.ByParent)]
 		public TradeCost cost;
 
 		/// <summary>
@@ -110,6 +119,6 @@ namespace Trading
 		/// Условие при котором на данном этапе прогрессирует
 		/// </summary>
 		[SerializeReference]
-		public Condition overrideCondition;
+		public BlackboardCondition overrideCondition;
 	}
 }

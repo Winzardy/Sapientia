@@ -5,13 +5,13 @@ using Sapientia.Extensions;
 using Sirenix.OdinInspector;
 #endif
 
-namespace Sapientia.BlackboardEvaluator.Converter
+namespace Sapientia.Evaluator.Blackboard.Converter
 {
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
 		"\u2009Float To Int",
-		"Common",
+		"Convert",
 		SdfIconType.ArrowBarRight,
 		darkIconColorR: R, darkIconColorG: G,
 		darkIconColorB: B,

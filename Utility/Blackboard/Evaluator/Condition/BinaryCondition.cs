@@ -4,13 +4,13 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
 
-namespace Sapientia.Conditions.Common
+namespace Sapientia.Conditions
 {
 	[Serializable]
 #if CLIENT
 	[TypeRegistryItem(
 		"\u2009Boolean Operation",
-		"Common",
+		"/",
 		SdfIconType.CodeSlash,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
@@ -18,14 +18,14 @@ namespace Sapientia.Conditions.Common
 		lightIconColorA: A
 	)]
 #endif
-	public class BinaryCondition : Condition
+	public class BinaryCondition : InvertableBlackboardCondition
 	{
 #if CLIENT
 		[HorizontalGroup(GROUP)]
 		[HorizontalGroup(GROUP+"/group"), HideLabel]
 #endif
 		[SerializeReference]
-		public Condition a;
+		public IBlackboardCondition a;
 
 #if CLIENT
 		[HorizontalGroup(GROUP+"/group", 45), HideLabel]
@@ -36,7 +36,7 @@ namespace Sapientia.Conditions.Common
 		[HorizontalGroup(GROUP+"/group"), HideLabel]
 #endif
 		[SerializeReference]
-		public Condition b;
+		public IBlackboardCondition b;
 
 		protected override bool OnEvaluate(Blackboard blackboard)
 		{

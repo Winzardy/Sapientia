@@ -11,7 +11,7 @@ namespace Trading
 	public partial class ConditionalTradeReward : TradeReward
 	{
 		[SerializeReference]
-		public Condition condition;
+		public BlackboardCondition condition;
 
 		[SerializeReference]
 		public TradeReward reward;

@@ -1,6 +1,5 @@
 using System;
 using Sapientia.Evaluator.Blackboard;
-using Sapientia.Deterministic;
 #if CLIENT
 using Sirenix.OdinInspector;
 #endif
@@ -9,26 +8,26 @@ namespace Sapientia.Evaluator.Blackboard
 {
 #if CLIENT
 	[TypeRegistryItem(
-		"\u2009Constant",
+		"\u2009Range",
 		"/",
-		SdfIconType.DiamondFill,
+		SdfIconType.DiamondHalf,
 		darkIconColorR: R, darkIconColorG: G,
 		darkIconColorB: B,
 		darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G,
 		lightIconColorB: B,
 		lightIconColorA: A,
-		priority: 100
+		priority: 99
 	)]
 #endif
 	[Serializable]
-	public class Fix64ConstantEvaluator : BlackboardConstantEvaluator<Fix64>
+	public class IntRandomEvaluator : BlackboardRandomEvaluator<int>
 	{
-		public Fix64ConstantEvaluator() : this(Fix64.Zero)
+		public IntRandomEvaluator() : this(0, 1)
 		{
 		}
 
-		public Fix64ConstantEvaluator(Fix64 value) : base(value)
+		public IntRandomEvaluator(int min, int max) : base(min, max)
 		{
 		}
 	}

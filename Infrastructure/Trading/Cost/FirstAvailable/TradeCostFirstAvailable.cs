@@ -1,6 +1,7 @@
 namespace Trading
 {
 	// Ощущение что это Options просто с первым доступным...
+	// TODO: сделать
 	public sealed partial class TradeCostFirstAvailable : TradeCost
 	{
 		protected override bool CanPay(Tradeboard board, out TradePayError? error)

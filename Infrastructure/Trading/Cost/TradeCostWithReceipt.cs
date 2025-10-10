@@ -20,7 +20,7 @@ namespace Trading
 #endif
 			if (!board.Contains<ITradingNode>())
 			{
-				TradingDebug.LogError("Not found trading service...");
+				TradingDebug.LogError("Not found trading node...");
 
 				error = new TradePayError(ERROR_CATEGORY, 0, null);
 				return false;
@@ -37,7 +37,7 @@ namespace Trading
 		{
 			if (!board.Contains<ITradingNode>())
 			{
-				TradingDebug.LogError("Not found trading service...");
+				TradingDebug.LogError("Not found trading node...");
 				return false;
 			}
 

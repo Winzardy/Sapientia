@@ -5,7 +5,7 @@ namespace Trading
 {
 	[TypeRegistryItem(
 		"\u2009Condition",
-		"",
+		"/",
 		SdfIconType.BagCheck,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,

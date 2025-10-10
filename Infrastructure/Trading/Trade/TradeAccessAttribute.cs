@@ -2,6 +2,9 @@ using System;
 
 namespace Trading
 {
+	/// <summary>
+	/// Данный аттрибут дает возможность в редакторе фильтровать допустимые цены!
+	/// </summary>
 	/// <list type="table">
 	/// <item>
 	/// <term>field</term>
@@ -25,6 +28,9 @@ namespace Trading
 	public enum TradeAccessType
 	{
 		Low,
+
+		ByParent, // Доступ определяется родителем
+
 		Medium,
 		High,
 	}

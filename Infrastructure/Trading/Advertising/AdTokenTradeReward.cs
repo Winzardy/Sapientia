@@ -1,6 +1,6 @@
 using System;
 using Content;
-using Sapientia.BlackboardEvaluator;
+using Sapientia.Evaluator.Blackboard;
 
 namespace Trading.Advertising
 {

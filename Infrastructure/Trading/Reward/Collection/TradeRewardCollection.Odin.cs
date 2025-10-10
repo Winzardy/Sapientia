@@ -8,7 +8,7 @@ namespace Trading
 {
 	[TypeRegistryItem(
 		"\u2009Collection",
-		"",
+		"/",
 		SdfIconType.Stack,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,

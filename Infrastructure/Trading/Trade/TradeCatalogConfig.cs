@@ -38,7 +38,7 @@ namespace Trading
 		[BoxGroup]
 #endif
 		[SerializeReference]
-		public Condition condition;
+		public BlackboardCondition condition;
 
 		public ContentReference<TradeConfig> trade;
 	}

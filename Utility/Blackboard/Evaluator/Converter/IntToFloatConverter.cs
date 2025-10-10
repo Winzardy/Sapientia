@@ -3,7 +3,7 @@ using System;
 using Sirenix.OdinInspector;
 #endif
 
-namespace Sapientia.BlackboardEvaluator.Converter
+namespace Sapientia.Evaluator.Blackboard.Converter
 {
 	[Serializable]
 #if CLIENT

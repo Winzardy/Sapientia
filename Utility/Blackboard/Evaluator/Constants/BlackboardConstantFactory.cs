@@ -1,6 +1,6 @@
 using Sapientia.Deterministic;
 
-namespace Sapientia.BlackboardEvaluator
+namespace Sapientia.Evaluator.Blackboard
 {
 	public static class BlackboardConstantFactory
 	{

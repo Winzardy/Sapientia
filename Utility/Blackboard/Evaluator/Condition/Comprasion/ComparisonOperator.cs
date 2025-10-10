@@ -1,4 +1,4 @@
-namespace Sapientia.Conditions.Common
+namespace Sapientia.Conditions.Comparison
 {
 	public enum ComparisonOperator
 	{

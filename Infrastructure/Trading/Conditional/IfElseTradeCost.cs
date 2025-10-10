@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Conditions;
 
 #if CLIENT
@@ -11,12 +12,14 @@ namespace Trading
 	public partial class IfElseTradeCost : TradeCost
 	{
 		[SerializeReference]
-		public Condition condition;
+		public BlackboardCondition condition;
 
 		[SerializeReference]
+		[TradeAccess(TradeAccessType.ByParent)]
 		public TradeCost a;
 
 		[SerializeReference]
+		[TradeAccess(TradeAccessType.ByParent)]
 		public TradeCost b = new NotAvailableTradeCost();
 
 		protected override bool CanPay(Tradeboard board, out TradePayError? error)
@@ -32,6 +35,20 @@ namespace Trading
 				return a.Execute(board);
 
 			return b.Execute(board);
+		}
+
+		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		{
+			if (condition.IsFulfilled(board))
+			{
+				foreach (var cost in a.EnumerateActual(board))
+					yield return cost;
+			}
+			else
+			{
+				foreach (var cost in b.EnumerateActual(board))
+					yield return cost;
+			}
 		}
 	}
 }

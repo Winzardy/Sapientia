@@ -5,7 +5,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
 
-namespace Sapientia.BlackboardEvaluator
+namespace Sapientia.Evaluator.Blackboard
 {
 	[Serializable]
 #if CLIENT
@@ -40,7 +40,7 @@ namespace Sapientia.BlackboardEvaluator
 #endif
 		public BlackboardEvaluator<int> b;
 
-		protected override int OnGet(Blackboard blackboard)
+		protected override int OnGet(Sapientia.Blackboard blackboard)
 		{
 			return @operator switch
 			{

@@ -5,7 +5,7 @@ namespace Trading
 {
 	[TypeRegistryItem(
 		"\u2009First Available",
-		"",
+		"/",
 		SdfIconType.ShieldFillCheck,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B, darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,

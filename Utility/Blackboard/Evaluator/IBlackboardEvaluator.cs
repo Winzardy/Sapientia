@@ -1,8 +1,8 @@
 using Sapientia.Evaluator;
 
-namespace Sapientia.BlackboardEvaluator
+namespace Sapientia.Evaluator.Blackboard
 {
-	public interface IBlackboardEvaluator<out T> : IEvaluator<Blackboard, T>
+	public interface IBlackboardEvaluator<out T> : IEvaluator<Sapientia.Blackboard, T>
 	{
 	}
 
@@ -13,11 +13,11 @@ namespace Sapientia.BlackboardEvaluator
 		public const float B = IEvaluator.B;
 		public const float A = IEvaluator.A;
 
-		T IEvaluator<Blackboard, T>.Evaluate(Blackboard blackboard) => Get(blackboard);
+		T IEvaluator<Sapientia.Blackboard, T>.Evaluate(Sapientia.Blackboard blackboard) => Get(blackboard);
 
-		public T Get(Blackboard blackboard) => OnGet(blackboard);
+		public T Get(Sapientia.Blackboard blackboard) => OnGet(blackboard);
 
-		protected abstract T OnGet(Blackboard blackboard);
+		protected abstract T OnGet(Sapientia.Blackboard blackboard);
 
 		public static implicit operator BlackboardEvaluator<T>(T value) => BlackboardConstantFactory.Create<T>(value);
 	}
