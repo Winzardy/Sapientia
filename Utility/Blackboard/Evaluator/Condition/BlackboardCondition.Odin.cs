@@ -17,6 +17,7 @@ namespace Sapientia.Conditions
 		public const float BOX_B = 1;
 
 		public const string GROUP =  "g";
+		public const int OPERATOR_WIDTH = 55;
 	}
 }
 #endif

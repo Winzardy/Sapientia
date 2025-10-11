@@ -24,11 +24,20 @@ namespace Sapientia.Evaluator.Blackboard
 #endif
 	public class Fix64VsFix64ArithmeticOperation : BlackboardEvaluator<float>
 	{
+#if CLIENT
+		[HorizontalGroup, HideLabel]
+#endif
 		[SerializeReference]
 		public BlackboardEvaluator<Fix64> a;
 
+#if CLIENT
+		[HorizontalGroup(OPERATOR_WIDTH), HideLabel]
+#endif
 		public ArithmeticOperator @operator;
 
+#if CLIENT
+		[HorizontalGroup, HideLabel]
+#endif
 		[SerializeReference]
 		public BlackboardEvaluator<Fix64> b;
 

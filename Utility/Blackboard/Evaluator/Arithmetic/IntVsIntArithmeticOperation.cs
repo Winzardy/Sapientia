@@ -1,4 +1,5 @@
 using System;
+using Sapientia.Extensions;
 
 #if CLIENT
 using Sirenix.OdinInspector;
@@ -30,7 +31,7 @@ namespace Sapientia.Evaluator.Blackboard
 		public BlackboardEvaluator<int> a;
 
 #if CLIENT
-		[HorizontalGroup(70), HideLabel]
+		[HorizontalGroup(OPERATOR_WIDTH), HideLabel]
 #endif
 		public ArithmeticOperator @operator;
 

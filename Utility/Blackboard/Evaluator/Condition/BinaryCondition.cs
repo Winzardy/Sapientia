@@ -28,7 +28,7 @@ namespace Sapientia.Conditions
 		public BlackboardCondition a;
 
 #if CLIENT
-		[HorizontalGroup(GROUP+"/group", 45), HideLabel]
+		[HorizontalGroup(GROUP+"/group", OPERATOR_WIDTH), HideLabel]
 #endif
 		public LogicalOperator @operator;
 

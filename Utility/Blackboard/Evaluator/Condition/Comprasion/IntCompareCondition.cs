@@ -30,7 +30,7 @@ namespace Sapientia.Conditions.Comparison
 		public BlackboardEvaluator<int> a;
 
 #if CLIENT
-		[HorizontalGroup(GROUP+"/group", 120), HideLabel]
+		[HorizontalGroup(GROUP+"/group", OPERATOR_WIDTH), HideLabel]
 #endif
 		public ComparisonOperator logicOperator;
 

@@ -31,7 +31,7 @@ namespace Sapientia.Conditions.Comparison
 		public BlackboardEvaluator<Fix64> a;
 
 #if CLIENT
-		[HorizontalGroup(GROUP+"/group", 120), HideLabel]
+		[HorizontalGroup(GROUP+"/group", OPERATOR_WIDTH), HideLabel]
 #endif
 		public ComparisonOperator logicOperator;
 

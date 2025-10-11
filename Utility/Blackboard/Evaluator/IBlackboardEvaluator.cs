@@ -1,3 +1,4 @@
+using Sapientia.Conditions;
 using Sapientia.Evaluator;
 
 namespace Sapientia.Evaluator.Blackboard
@@ -12,6 +13,8 @@ namespace Sapientia.Evaluator.Blackboard
 		public const float G = IEvaluator.G;
 		public const float B = IEvaluator.B;
 		public const float A = IEvaluator.A;
+
+		public const int OPERATOR_WIDTH = BlackboardCondition.OPERATOR_WIDTH;
 
 		T IEvaluator<Sapientia.Blackboard, T>.Evaluate(Sapientia.Blackboard blackboard) => Get(blackboard);
 
