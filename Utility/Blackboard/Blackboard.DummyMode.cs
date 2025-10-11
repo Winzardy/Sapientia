@@ -2,7 +2,7 @@ using System;
 
 namespace Sapientia
 {
-	public abstract partial class Blackboard
+	public partial class Blackboard
 	{
 		private bool _dummyMode;
 		private int _dummyRequest;

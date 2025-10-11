@@ -15,11 +15,15 @@ namespace Sapientia
 	/// <remarks>
 	/// ⚠️ Важно: only-runtime
 	/// </remarks>
-	public abstract partial class Blackboard : IPoolable, IDisposable
+	public partial class Blackboard : IPoolable, IDisposable
 	{
 		private ConcurrentHashSet<IBlackboardToken>? _tokens;
 
-		protected Blackboard(Blackboard? source = null)
+		public Blackboard()
+		{
+		}
+
+		public Blackboard(Blackboard? source = null)
 		{
 			if (source?._tokens == null)
 				return;
@@ -111,7 +115,6 @@ namespace Sapientia
 		public sealed override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
 
 		public static implicit operator bool(Blackboard? bb) => bb != null;
-
 	}
 
 	internal static class Blackboard<T>
