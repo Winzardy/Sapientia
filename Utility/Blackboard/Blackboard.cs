@@ -18,7 +18,7 @@ namespace Sapientia
 	public partial class Blackboard : IPoolable, IDisposable
 	{
 		private ConcurrentHashSet<IBlackboardToken>? _tokens;
-
+		public event Action Released;
 		public Blackboard()
 		{
 		}
@@ -103,10 +103,12 @@ namespace Sapientia
 
 			OnReleaseDummyMode();
 
+			Released?.Invoke();
 			OnRelease();
 		}
 
 		protected virtual string Name => GetType().Name;
+
 		protected virtual Exception GetArgumentException(object msg) => new ArgumentException(msg.ToString());
 
 		internal string GetName() => Name;

@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Advertising;
 using Content;
 using Sapientia;
+using Sapientia.Evaluators;
+using UnityEngine;
 
 namespace Trading.Advertising
 {
@@ -20,7 +22,8 @@ namespace Trading.Advertising
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
 
-		public int count = 1;
+		[SerializeReference]
+		public Evaluator<Blackboard, int> count = 1;
 
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
@@ -29,7 +32,7 @@ namespace Trading.Advertising
 			if (board.Contains<IAdvertisingNode>())
 			{
 				var backend = board.Get<IAdvertisingNode>();
-				if (backend.GetTokenCount(group) >= count)
+				if (backend.GetTokenCount(group) >= count.Get(board))
 					return true;
 			}
 
@@ -51,7 +54,7 @@ namespace Trading.Advertising
 			if (board.Contains<IAdvertisingNode>())
 			{
 				var model = board.Get<IAdvertisingNode>();
-				if (model.GetTokenCount(group) >= count)
+				if (model.GetTokenCount(group) >= count.Get(board))
 					return AdTradeReceipt.Empty(group, placement);
 			}
 

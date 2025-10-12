@@ -1,13 +1,14 @@
 using System;
 using Content;
-using Sapientia.Evaluator.Blackboard;
+using Sapientia;
+using Sapientia.Evaluators;
 
 namespace Trading.Advertising
 {
 	[Serializable]
 	public partial class AdTokenTradeReward : TradeReward
 	{
-		public BlackboardEvaluator<int> count = 1;
+		public Evaluator<Blackboard, int> count = 1;
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;

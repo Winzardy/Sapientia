@@ -1,0 +1,60 @@
+using System;
+using Sapientia.Extensions;
+
+#if CLIENT
+using Sirenix.OdinInspector;
+using UnityEngine;
+#endif
+
+namespace Sapientia.Evaluators
+{
+	[Serializable]
+	public abstract class IntVsIntArithmeticOperation<TContext> : Evaluator<TContext, int>
+	{
+		[SerializeReference]
+#if CLIENT
+		[HorizontalGroup, HideLabel]
+#endif
+		public Evaluator<TContext, int> a;
+
+#if CLIENT
+		[HorizontalGroup(OPERATOR_WIDTH), HideLabel]
+#endif
+		public ArithmeticOperator @operator;
+
+		[SerializeReference]
+#if CLIENT
+		[HorizontalGroup, HideLabel]
+#endif
+		public Evaluator<TContext, int> b;
+
+		protected override int OnGet(TContext context)
+		{
+			return @operator switch
+			{
+				ArithmeticOperator.Add => a.Get(context) + b.Get(context),
+				ArithmeticOperator.Subtract => a.Get(context) - b.Get(context),
+				ArithmeticOperator.Divide => a.Get(context) / b.Get(context),
+				ArithmeticOperator.Multiply => a.Get(context) * b.Get(context),
+				_ => throw new ArgumentOutOfRangeException()
+			};
+		}
+
+		public override string ToString()
+		{
+			var a1 = a.ToString();
+			var b1 = b.ToString();
+
+			var o = @operator switch
+			{
+				ArithmeticOperator.Add => IEvaluator.ARITHMETIC_OPERATOR_ADD,
+				ArithmeticOperator.Subtract => IEvaluator.ARITHMETIC_OPERATOR_SUBTRACT,
+				ArithmeticOperator.Divide => IEvaluator.ARITHMETIC_OPERATOR_DIVIDE,
+				ArithmeticOperator.Multiply => IEvaluator.ARITHMETIC_OPERATOR_MULTIPLY,
+				_ => throw new ArgumentOutOfRangeException()
+			};
+
+			return $"{a1}{o}{b1}";
+		}
+	}
+}

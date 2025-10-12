@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using Content;
 using Sapientia;
 using Sapientia.Collections;
@@ -27,7 +28,7 @@ namespace Trading
 		/// Условие при котором награда прогрессирует, если 'None', то прогрессирует всегда
 		/// </summary>
 		[SerializeReference]
-		public BlackboardCondition condition;
+		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
 
 		/// <summary>
 		/// Если использовать группу, то прогрессия будет связана по выбранной группе,
@@ -112,6 +113,7 @@ namespace Trading
 		/// Условие при котором на данном этапе прогрессирует
 		/// </summary>
 		[SerializeReference]
-		public BlackboardCondition overrideCondition;
+		[DefaultValue(default(ObjectProviderBlackboardProxyEvaluator))]
+		public Condition<Blackboard> overrideCondition;
 	}
 }

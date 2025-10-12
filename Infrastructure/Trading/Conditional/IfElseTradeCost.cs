@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sapientia;
 using Sapientia.Conditions;
 
 #if CLIENT
@@ -12,7 +13,7 @@ namespace Trading
 	public partial class IfElseTradeCost : TradeCost
 	{
 		[SerializeReference]
-		public BlackboardCondition condition;
+		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
 
 		[SerializeReference]
 		[TradeAccess(TradeAccessType.ByParent)]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Sapientia;
 using Sapientia.Conditions;
 #if CLIENT
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace Trading
 	public partial class ConditionalTradeReward : TradeReward
 	{
 		[SerializeReference]
-		public BlackboardCondition condition;
+		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
 
 		[SerializeReference]
 		public TradeReward reward;
