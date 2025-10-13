@@ -21,7 +21,7 @@ namespace Sapientia.Evaluators
 	)]
 #endif
 	[Serializable]
-	public class Fix64BlackboardRandomEvaluator : Fix64RandomEvaluator<Blackboard>
+	public class Fix64BlackboardRandomEvaluator : Fix64RangeRandomEvaluator<Blackboard>
 	{
 		protected override IRandomizer<Fix64> GetRandomizer(Blackboard board) => board.Get<IRandomizer<Fix64>>();
 	}

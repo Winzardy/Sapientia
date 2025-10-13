@@ -19,6 +19,9 @@ namespace Sapientia
 	{
 		private ConcurrentHashSet<IBlackboardToken>? _tokens;
 		public event Action Released;
+
+		protected internal bool _active = true;
+
 		public Blackboard()
 		{
 		}
@@ -72,13 +75,12 @@ namespace Sapientia
 			return token;
 		}
 
-		protected virtual void OnRelease()
+		public void Overwrite<T>(in T value, string? key = null)
 		{
+			Blackboard<T>.Overwrite(in value, this, key);
 		}
 
-		protected virtual void OnDispose()
-		{
-		}
+		public void OnGet() => _active = true;
 
 		internal void ReleaseToken(IBlackboardToken token)
 		{
@@ -93,6 +95,8 @@ namespace Sapientia
 
 		private void ReleaseInternal()
 		{
+			_active = false;
+
 			if (_tokens != null)
 			{
 				foreach (var token in _tokens)
@@ -105,6 +109,14 @@ namespace Sapientia
 
 			Released?.Invoke();
 			OnRelease();
+		}
+
+		protected virtual void OnRelease()
+		{
+		}
+
+		protected virtual void OnDispose()
+		{
 		}
 
 		protected virtual string Name => GetType().Name;
@@ -170,6 +182,19 @@ namespace Sapientia
 			var token = Pool<BlackboardToken<T>>.Get();
 			token.Bind(in hash);
 			return token;
+		}
+
+		internal static void Overwrite(in T value, Blackboard blackboard, string? key = null)
+		{
+			var hash = ToHash(blackboard, key);
+			if (_boardToEntry == null || !_boardToEntry.TryGetValue(hash, out var entry))
+			{
+				var msg = $"{blackboard.GetName()}: {typeof(T)} not registered" +
+					(!key.IsNullOrEmpty() ? $" with key [ {key} ]" : "");
+				throw blackboard.GetException(msg);
+			}
+
+			entry.value = value;
 		}
 
 		internal static void Unregister(BlackboardToken<T> token)

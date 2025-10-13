@@ -1,9 +1,7 @@
 using System;
-
+using UnityEngine;
 #if CLIENT
 using Sirenix.OdinInspector;
-using UnityEngine.Serialization;
-using UnityEngine;
 #endif
 
 namespace SharedLogic

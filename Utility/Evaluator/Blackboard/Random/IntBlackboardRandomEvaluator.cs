@@ -20,7 +20,7 @@ namespace Sapientia.Evaluators
 	)]
 #endif
 	[Serializable]
-	public class IntBlackboardRandomEvaluator : IntRandomEvaluator<Blackboard>
+	public class IntBlackboardRandomEvaluator : IntRangeRandomEvaluator<Blackboard>
 	{
 		protected override IRandomizer<int> GetRandomizer(Blackboard board) => board.Get<IRandomizer<int>>();
 	}

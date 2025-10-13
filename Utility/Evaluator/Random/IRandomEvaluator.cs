@@ -1,4 +1,3 @@
-using System;
 
 namespace Sapientia.Evaluators
 {
@@ -7,7 +6,6 @@ namespace Sapientia.Evaluators
 	}
 
 	public interface IRandomEvaluator<T> : IRandomEvaluator
-		where T : struct, IComparable<T>
 	{
 	}
 }

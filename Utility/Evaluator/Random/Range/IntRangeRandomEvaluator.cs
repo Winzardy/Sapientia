@@ -20,13 +20,13 @@ namespace Sapientia.Evaluators
 	)]
 #endif
 	[Serializable]
-	public abstract class IntRandomEvaluator<TContext> : RandomEvaluator<TContext,int>
+	public abstract class IntRangeRandomEvaluator<TContext> : RangeRandomEvaluator<TContext,int>
 	{
-		public IntRandomEvaluator() : this(0, 1)
+		public IntRangeRandomEvaluator() : this(0, 1)
 		{
 		}
 
-		public IntRandomEvaluator(int min, int max) : base(min, max)
+		public IntRangeRandomEvaluator(int min, int max) : base(min, max)
 		{
 		}
 	}
