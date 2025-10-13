@@ -60,7 +60,6 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			EntityArrayDestroyed(worldState, (ComponentSetElement<T>*)elementsPtr, count);
 		}
-
 	}
 
 	public unsafe interface IElementDestroyHandler : IInterfaceProxyType

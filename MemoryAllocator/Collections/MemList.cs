@@ -286,6 +286,18 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange(WorldState worldState, Span<T> collection)
+		{
+			EnsureCapacity(worldState, _count + collection.Length);
+			E.ASSERT(IsCreated);
+
+			var ptr = _arr.GetValuePtr(worldState, _count);
+			collection.CopyTo(ptr.GetSpan(collection.Length));
+
+			_count += collection.Length;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddRange<TEnumerable>(WorldState worldState, TEnumerable collection) where TEnumerable: IEnumerable<T>
 		{
 			foreach (var value in collection)

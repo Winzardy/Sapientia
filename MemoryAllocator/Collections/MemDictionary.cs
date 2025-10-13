@@ -136,7 +136,7 @@ namespace Sapientia.MemoryAllocator
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
 		/// <param name="worldState"></param>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public ref TValue this[WorldState worldState, in TKey key]
+		public ref TValue this[WorldState worldState, TKey key]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
@@ -170,7 +170,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref TValue GetOrCreateValue(WorldState worldState, in TKey key, TValue defaultValue = default)
+		public ref TValue GetOrCreateValue(WorldState worldState, TKey key, TValue defaultValue = default)
 		{
 			var entry = FindEntry(worldState, key);
 			if (entry >= 0)
