@@ -15,5 +15,6 @@ namespace Sapientia.Conditions
 		protected abstract TContext2 Convert(TContext1 context);
 
 		public IEvaluator Proxy => value;
+		public Type ProxyType => typeof(Condition<TContext2>);
 	}
 }

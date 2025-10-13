@@ -14,5 +14,6 @@ namespace Sapientia.Evaluators
 		protected abstract TContext2 Convert(TContext1 context);
 
 		public IEvaluator Proxy => value;
+		public Type ProxyType => typeof(Evaluator<TContext2, TValue>);
 	}
 }
