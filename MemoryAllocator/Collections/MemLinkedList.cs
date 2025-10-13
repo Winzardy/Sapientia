@@ -352,8 +352,11 @@ namespace Sapientia.MemoryAllocator
 			{
 				get
 				{
+#if DEBUG
 					var worldState = _list.GetWorldState_DEBUG();
 					return _list.GetCount(worldState);
+#endif
+					return default;
 				}
 			}
 
