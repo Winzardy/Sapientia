@@ -21,6 +21,6 @@ namespace Sapientia.Evaluators
 		public static implicit operator EvaluatedValue<TContext, TValue>(Evaluator<TContext, TValue> evaluator)
 			=> new() {evaluator = evaluator};
 
-		public TValue Get(TContext context) => evaluator != null ? evaluator.Get(context) : value;
+		public TValue Get(TContext context) => evaluator ? evaluator.Get(context) : value;
 	}
 }

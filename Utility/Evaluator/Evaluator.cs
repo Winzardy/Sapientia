@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 
 namespace Sapientia.Evaluators
@@ -22,5 +23,7 @@ namespace Sapientia.Evaluators
 
 		public static implicit operator Evaluator<TContext, TValue>(TValue value)
 			=> new ConstantEvaluator<TContext, TValue>(value);
+
+		public static implicit operator bool(Evaluator<TContext, TValue> evaluator) => evaluator != null;
 	}
 }
