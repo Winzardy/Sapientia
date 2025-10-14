@@ -30,8 +30,7 @@ namespace Sapientia.Conditions.Comparison
 #if CLIENT
 		[HorizontalGroup(GROUP + "/group"), HideLabel]
 #endif
-		[SerializeReference]
-		public Evaluator<TContext, Fix64> b;
+		public EvaluatedValue<TContext, Fix64> b;
 
 		protected override bool OnEvaluate(TContext context)
 		{

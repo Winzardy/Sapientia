@@ -1,7 +1,4 @@
 using System;
-#if CLIENT
-using Sirenix.OdinInspector;
-#endif
 
 namespace Sapientia.Evaluators
 {

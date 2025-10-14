@@ -11,10 +11,10 @@ namespace Sapientia.Evaluators
 	[Serializable]
 	public abstract class IntVsIntArithmeticOperation<TContext> : Evaluator<TContext, int>
 	{
-		[SerializeReference]
 #if CLIENT
 		[HorizontalGroup, HideLabel]
 #endif
+		[SerializeReference]
 		public Evaluator<TContext, int> a;
 
 #if CLIENT
@@ -22,11 +22,10 @@ namespace Sapientia.Evaluators
 #endif
 		public ArithmeticOperator @operator;
 
-		[SerializeReference]
 #if CLIENT
 		[HorizontalGroup, HideLabel]
 #endif
-		public Evaluator<TContext, int> b;
+		public EvaluatedValue<TContext, int> b;
 
 		protected override int OnGet(TContext context)
 		{

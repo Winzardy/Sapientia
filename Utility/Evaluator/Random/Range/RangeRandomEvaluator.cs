@@ -10,8 +10,8 @@ namespace Sapientia.Evaluators
 	public abstract class RangeRandomEvaluator<TContext, TValue> : RandomEvaluator<TContext, TValue>, IRangeEvaluator
 		where TValue : struct, IComparable<TValue>
 	{
-		public TValue min;
-		public TValue max;
+		public EvaluatedValue<TContext, TValue> min;
+		public EvaluatedValue<TContext, TValue> max;
 
 		public RangeRandomEvaluator(TValue min, TValue max)
 		{
@@ -21,15 +21,17 @@ namespace Sapientia.Evaluators
 
 		protected override TValue OnRandom(TContext context, IRandomizer<TValue> randomizer)
 		{
-			return randomizer.Next(min, max);
+			var minInclusive = min.Get(context);
+			var maxExclusive = max.Get(context);
+			return randomizer.Next(minInclusive, maxExclusive);
 		}
 
 		public override string ToString() => $"{min}-{max}";
 
 #if CLIENT
-			public const string SELECTOR_NAME = "\u2009Range (random)";
-			public const string SELECTOR_CATEGORY = "/";
-			public const Sirenix.OdinInspector.SdfIconType SELECTOR_ICON = Sirenix.OdinInspector.SdfIconType.DiamondHalf;
+		public const string SELECTOR_NAME = "\u2009Range (random)";
+		public const string SELECTOR_CATEGORY = "/";
+		public const Sirenix.OdinInspector.SdfIconType SELECTOR_ICON = Sirenix.OdinInspector.SdfIconType.DiamondHalf;
 #endif
 	}
 }

@@ -21,8 +21,7 @@ namespace Sapientia.Conditions.Comparison
 		[PropertyOrder(1)]
 		[HorizontalGroup(GROUP + "/group"), HideLabel]
 #endif
-		[SerializeReference]
-		public Evaluator<TContext, Fix64> min = Fix64.Zero;
+		public EvaluatedValue<TContext, Fix64> min = Fix64.Zero;
 
 #if CLIENT
 		[PropertyOrder(3)]
@@ -50,8 +49,7 @@ namespace Sapientia.Conditions.Comparison
 		[PropertyOrder(7)]
 		[HorizontalGroup(GROUP + "/group"), HideLabel]
 #endif
-		[SerializeReference]
-		public Evaluator<TContext, Fix64> max = Fix64.One;
+		public EvaluatedValue<TContext, Fix64> max = Fix64.One;
 
 		protected override bool OnEvaluate(TContext context)
 		{

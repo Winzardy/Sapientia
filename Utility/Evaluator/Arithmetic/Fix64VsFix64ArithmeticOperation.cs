@@ -38,8 +38,7 @@ namespace Sapientia.Evaluators
 #if CLIENT
 		[HorizontalGroup, HideLabel]
 #endif
-		[SerializeReference]
-		public Evaluator<TContext,Fix64> b;
+		public EvaluatedValue<TContext,Fix64> b;
 
 		protected override Fix64 OnGet(TContext context)
 		{
