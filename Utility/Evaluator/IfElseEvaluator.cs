@@ -13,8 +13,7 @@ namespace Sapientia.Evaluators
 		[SerializeReference]
 		public Evaluator<TContext, TValue> a;
 
-		[SerializeReference]
-		public Evaluator<TContext, TValue> b = new ConstantEvaluator<TContext, TValue>(default);
+		public EvaluatedValue<TContext, TValue> b = default(TValue);
 
 		protected override TValue OnGet(TContext context)
 		{

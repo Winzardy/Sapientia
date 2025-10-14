@@ -7,7 +7,7 @@ namespace Trading.InAppPurchasing
 	/// Обязательно нужно вешать на цену, чтобы вспомогательные системы смогли
 	/// получить продукт, например TraderPurchaseGranter
 	/// </summary>
-	public interface IAPTradeCost
+	public interface IInAppPurchasingTradeCost
 	{
 		[CanBeNull]
 		public IAPProductEntry GetProductEntry();

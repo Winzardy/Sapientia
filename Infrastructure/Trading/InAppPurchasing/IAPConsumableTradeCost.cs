@@ -8,7 +8,7 @@ namespace Trading.InAppPurchasing
 {
 	[Serializable]
 	[TradeAccess(TradeAccessType.High)]
-	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>, IAPTradeCost
+	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>, IInAppPurchasingTradeCost
 	{
 		private const string ERROR_CATEGORY = "InAppPurchasing";
 

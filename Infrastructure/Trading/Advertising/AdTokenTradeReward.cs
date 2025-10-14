@@ -2,15 +2,13 @@ using System;
 using Content;
 using Sapientia;
 using Sapientia.Evaluators;
-using UnityEngine;
 
 namespace Trading.Advertising
 {
 	[Serializable]
 	public partial class AdTokenTradeReward : TradeReward
 	{
-		[SerializeReference]
-		public Evaluator<Blackboard, int> count = 1;
+		public EvaluatedValue<Blackboard, int> count = 1;
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
