@@ -7,9 +7,9 @@ namespace Sapientia.Evaluators
 {
 #if CLIENT
 	[TypeRegistryItem(
-		"\u2009Range",
-		"/",
-		SdfIconType.DiamondHalf,
+		SELECTOR_NAME,
+		SELECTOR_CATEGORY,
+		SELECTOR_ICON,
 		darkIconColorR: R, darkIconColorG: G,
 		darkIconColorB: B,
 		darkIconColorA: A,

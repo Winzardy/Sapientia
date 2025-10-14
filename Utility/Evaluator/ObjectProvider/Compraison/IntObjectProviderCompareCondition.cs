@@ -4,9 +4,9 @@ namespace Sapientia.Conditions.Comparison
 {
 #if CLIENT
 	[Sirenix.OdinInspector.TypeRegistryItem(
-		"\u2009Int Comparison",
-		"Comparison",
-		Sirenix.OdinInspector.SdfIconType.ArrowLeftRight,
+		SELECTOR_NAME,
+		SELECTOR_CATEGORY,
+		SELECTOR_ICON,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,

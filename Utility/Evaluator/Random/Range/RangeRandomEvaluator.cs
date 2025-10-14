@@ -25,5 +25,11 @@ namespace Sapientia.Evaluators
 		}
 
 		public override string ToString() => $"{min}-{max}";
+
+#if CLIENT
+			public const string SELECTOR_NAME = "\u2009Range (random)";
+			public const string SELECTOR_CATEGORY = "/";
+			public const Sirenix.OdinInspector.SdfIconType SELECTOR_ICON = Sirenix.OdinInspector.SdfIconType.DiamondHalf;
+#endif
 	}
 }

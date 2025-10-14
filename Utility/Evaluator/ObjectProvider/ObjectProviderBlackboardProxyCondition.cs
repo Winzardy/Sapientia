@@ -10,7 +10,7 @@ namespace Sapientia
 #if CLIENT
 	[TypeRegistryItem(
 		IProxyEvaluator.SELECTOR_NAME,
-		"/",
+		IProxyEvaluator.SELECTOR_GROUP,
 		IProxyEvaluator.SELECTOR_ICON,
 		darkIconColorR: R, darkIconColorG: G,
 		darkIconColorB: B,

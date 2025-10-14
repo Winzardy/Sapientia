@@ -10,11 +10,12 @@ namespace Sapientia.Conditions.Comparison
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,
-		lightIconColorA: A
+		lightIconColorA: A,
+		priority: SELECTOR_PRIORITY
 	)]
 #endif
 	[Serializable]
-	public sealed class Fix64ObjectProviderCompareCondition : Fix64CompareCondition<IObjectsProvider>
+	public sealed class Fix64InRangeObjectProviderCondition : Fix64InRangeCondition<IObjectsProvider>
 	{
 	}
 }

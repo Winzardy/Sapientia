@@ -17,6 +17,9 @@ namespace Sapientia.Evaluators
 
 		public ref readonly TValue Value => ref value;
 
+		public static implicit operator TValue(ConstantEvaluator<TContext, TValue> evaluator)
+			=> evaluator.value;
+
 		public override string ToString()
 		{
 			//TODO: костыль убрать

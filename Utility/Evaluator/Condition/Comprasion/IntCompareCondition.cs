@@ -11,22 +11,26 @@ namespace Sapientia.Conditions.Comparison
 	public abstract class IntCompareCondition<TContext> : Condition<TContext>
 	{
 #if CLIENT
+		public const string SELECTOR_NAME = "\u2009Int Comparison";
+		public const string SELECTOR_CATEGORY = "Comparison";
+		public const SdfIconType SELECTOR_ICON = SdfIconType.ArrowLeftRight;
+
 		[HorizontalGroup(GROUP)]
-		[HorizontalGroup(GROUP+"/group"), HideLabel]
+		[HorizontalGroup(GROUP + "/group"), HideLabel]
 #endif
 		[SerializeReference]
-		public Evaluator<TContext,int> a;
+		public Evaluator<TContext, int> a;
 
 #if CLIENT
-		[HorizontalGroup(GROUP+"/group", OPERATOR_WIDTH), HideLabel]
+		[HorizontalGroup(GROUP + "/group", OPERATOR_WIDTH), HideLabel]
 #endif
 		public ComparisonOperator logicOperator;
 
 #if CLIENT
-		[HorizontalGroup(GROUP+"/group"), HideLabel]
+		[HorizontalGroup(GROUP + "/group"), HideLabel]
 #endif
 		[SerializeReference]
-		public Evaluator<TContext,int> b;
+		public Evaluator<TContext, int> b;
 
 		protected override bool OnEvaluate(TContext context)
 		{

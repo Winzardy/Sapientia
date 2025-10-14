@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using Sapientia.Conditions;
 using UnityEngine;
 
 namespace Sapientia.Evaluators
 {
 	[Serializable]
-	public partial class IfElseEvaluator<TContext, TValue> : Evaluator<TContext, TValue>
+	public class IfElseEvaluator<TContext, TValue> : Evaluator<TContext, TValue>
 	{
 		[SerializeReference]
 		public Condition<TContext> condition;
