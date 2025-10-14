@@ -8,8 +8,8 @@ namespace Trading
 {
 	[TypeRegistryItem(
 		"\u2009Collection",
-		"",
-		SdfIconType.Basket,
+		"/",
+		SdfIconType.Stack,
 		darkIconColorR: R, darkIconColorG: G, darkIconColorB: B,
 		darkIconColorA: A,
 		lightIconColorR: R, lightIconColorG: G, lightIconColorB: B,
@@ -19,7 +19,7 @@ namespace Trading
 		/// <summary>
 		/// Фильтрует типы только в инспекторе!
 		/// </summary>
-		public bool Filter(Type type) => !typeof(IEnumerable<TradeReward>).IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
+		public bool Filter(Type type) => type.HasAttribute<SerializableAttribute>();
 	}
 }
 #endif

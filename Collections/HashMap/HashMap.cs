@@ -10,7 +10,7 @@ namespace Sapientia.Collections
 	public sealed partial class HashMap<TKey, TValue>
 		where TValue : struct
 	{
-		private TValue _defaultValue = default;
+		private TValue _defaultValue;
 
 		internal Dictionary<TKey, int> _keyToIndex;
 		internal SimpleList<TValue> _values;
@@ -23,18 +23,28 @@ namespace Sapientia.Collections
 			get => ref _values[_keyToIndex[key]];
 		}
 
+		public ref TValue this[int index]
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ref _values[index];
+		}
+
 		public int Count => _values.Count;
 
 		public IEnumerable<TKey> Keys => _keyToIndex.Keys;
 
 		public HashMap()
 		{
+			_defaultValue = default;
+
 			_values = new();
 			_keyToIndex = new Dictionary<TKey, int>();
 		}
 
 		public HashMap(HashMap<TKey, TValue> source)
 		{
+			_defaultValue = default;
+
 			_values = new SimpleList<TValue>(source._values);
 			_keyToIndex = new Dictionary<TKey, int>(source.Count);
 
@@ -47,6 +57,14 @@ namespace Sapientia.Collections
 
 				_last = (key, true);
 			}
+		}
+
+		public HashMap(int capacity)
+		{
+			_defaultValue = default;
+
+			_values = new(capacity);
+			_keyToIndex = new Dictionary<TKey, int>(capacity);
 		}
 
 		public void Clear()
@@ -126,6 +144,13 @@ namespace Sapientia.Collections
 
 			return ref defaultValue;
 		}
+
+		public int GetIndexByKey(TKey key)
+		{
+			return _keyToIndex[key];
+		}
+
+		public TValue[] ToArray() => _values.ToArray();
 
 		public bool IsEmpty() => _values.Count == 0;
 	}

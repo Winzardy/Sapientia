@@ -23,5 +23,12 @@ namespace Trading
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		{
+			foreach (var cost in items)
+				foreach (var c in cost.EnumerateActual(board))
+					yield return c;
+		}
 	}
 }

@@ -49,7 +49,7 @@ namespace Advertising
 		/// </summary>
 		public bool integrationTrack;
 
-		public UsageLimitEntry usageLimit;
+		public UsageLimitScheme usageLimit;
 
 		// TODO: добавить Dictionary<Condition, UsageLimitEntry>
 		// нужно для случаев если хотим переопределить лимит по условиям
@@ -78,7 +78,7 @@ namespace Advertising
 		void IExternallyIdentifiable.SetId(string id) => this.id = id;
 	}
 
-	public static class AdPlacementEntryExt
+	public static class AdPlacementEntryUtility
 	{
 		public static bool CanShow<T>(this T entry, out AdShowError? error) where T : AdPlacementEntry
 			=> AdManager.CanShow(entry, out error);

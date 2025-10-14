@@ -6,15 +6,16 @@ namespace Trading
 	[Serializable]
 	public struct TraderOfferReference
 	{
-		public ContentReference<TraderEntry> trader;
-		public ContentReference<TradeCatalogEntry> catalog;
+		public ContentReference<TraderConfig> trader;
+		public ContentReference<TradeCatalogConfig> catalog;
 		public int offerIndex;
 
-		public readonly ref readonly TraderOfferEntry GetEntry() => ref catalog
+		public readonly ref readonly TraderOfferConfig Config => ref catalog
 		   .Read()
 		   .offers[offerIndex];
 
-		public TraderOfferReference(in ContentReference<TraderEntry> trader, in ContentReference<TradeCatalogEntry> catalog, int offerIndex)
+		public TraderOfferReference(in ContentReference<TraderConfig> trader, in ContentReference<TradeCatalogConfig> catalog,
+			int offerIndex)
 		{
 			this.trader = trader;
 			this.catalog = catalog;

@@ -11,9 +11,10 @@ using Sapientia.TypeIndexer;
 namespace Sapientia.MemoryAllocator.State
 {
 	/// <summary>
-	/// Если настройки есть, то они будут доступны через `allocator.GetService<TGlobalSettings>()`
+	/// Доступ к настройкам в рантайме осуществляется через
+	/// <see cref="allocator.GetService{IConfigurationRuntime}"/>, если они заданы.
 	/// </summary>
-	public interface IConfiguration : IIndexedType
+	public interface IConfigurationRuntime : IIndexedType
 	{
 	}
 
@@ -59,7 +60,6 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			EntityArrayDestroyed(worldState, (ComponentSetElement<T>*)elementsPtr, count);
 		}
-
 	}
 
 	public unsafe interface IElementDestroyHandler : IInterfaceProxyType

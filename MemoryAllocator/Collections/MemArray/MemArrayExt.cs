@@ -44,9 +44,10 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			var size = fromArr.ElementSize;
-			if (arr.IsCreated == false || (copyExact == false ? arr.Length < fromArr.Length : arr.Length != fromArr.Length))
+			if (!arr.IsCreated || (copyExact ? arr.Length != fromArr.Length : arr.Length < fromArr.Length))
 			{
-				if (arr.IsCreated) arr.Dispose(worldState);
+				if (arr.IsCreated)
+					arr.Dispose(worldState);
 				arr = new MemArray(worldState, size, fromArr.Length);
 			}
 

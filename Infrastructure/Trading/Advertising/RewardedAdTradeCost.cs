@@ -15,7 +15,7 @@ namespace Trading.Advertising
 
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
-		public ContentReference<RewardedAdPlacementEntry> placement;
+		public ContentReference<RewardedAdPlacementEntry> placement = "Default";
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
@@ -26,9 +26,9 @@ namespace Trading.Advertising
 		{
 			error = null;
 
-			if (board.Contains<IAdvertisingBackend>())
+			if (board.Contains<IAdvertisingNode>())
 			{
-				var backend = board.Get<IAdvertisingBackend>();
+				var backend = board.Get<IAdvertisingNode>();
 				if (backend.GetTokenCount(group) >= count)
 					return true;
 			}
@@ -48,9 +48,9 @@ namespace Trading.Advertising
 
 		protected override async Task<AdTradeReceipt?> FetchAsync(Tradeboard board, CancellationToken cancellationToken)
 		{
-			if (board.Contains<IAdvertisingBackend>())
+			if (board.Contains<IAdvertisingNode>())
 			{
-				var model = board.Get<IAdvertisingBackend>();
+				var model = board.Get<IAdvertisingNode>();
 				if (model.GetTokenCount(group) >= count)
 					return AdTradeReceipt.Empty(group, placement);
 			}
@@ -64,7 +64,7 @@ namespace Trading.Advertising
 			if (result != AdShowResult.Success)
 				return null;
 
-			var dateTime = board.Get<IDateTimeProvider>().Now;
+			var dateTime = board.Get<IDateTimeProviderWithVirtual>().DateTimeWithoutOffset;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
 
@@ -83,7 +83,7 @@ namespace Trading.Advertising
 
 		public int GetAvailableCount(Tradeboard tradeboard)
 		{
-			return tradeboard.Get<IAdvertisingBackend>()
+			return tradeboard.Get<IAdvertisingNode>()
 			   .GetTokenCount(group);
 		}
 

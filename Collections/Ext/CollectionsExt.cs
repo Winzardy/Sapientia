@@ -381,6 +381,20 @@ namespace Sapientia.Collections
 				yield return (value, index++);
 		}
 
+		public static bool WithinRange<T>(this ICollection<T> source, int index)
+		{
+			if (source == null) return false;
+			return index >= 0 && index < source.Count;
+		}
+
+		public static T[] ToArrayOrNull<T>(this List<T> list)
+		{
+			if (list.IsNullOrEmpty())
+				return null!;
+
+			return list.ToArray();
+		}
+
 		public delegate bool Predicate<T>(in T value);
 	}
 
@@ -408,5 +422,7 @@ namespace Sapientia.Collections
 		{
 			_index = -1;
 		}
+
+		public RefEnumerator<T> GetEnumerator() => this;
 	}
 }

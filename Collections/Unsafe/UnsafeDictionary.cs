@@ -7,7 +7,6 @@ using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
 using Submodules.Sapientia.Memory;
-using INLINE = System.Runtime.CompilerServices.MethodImplAttribute;
 
 namespace Sapientia.Collections
 {
@@ -499,7 +498,7 @@ namespace Sapientia.Collections
 			private readonly int _count;
 			private int _index;
 
-			[INLINE(MethodImplOptions.AggressiveInlining)]
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			internal Enumerator(SafePtr<Entry> entries, int count)
 			{
 				_entries = entries;

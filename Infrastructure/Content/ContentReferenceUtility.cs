@@ -10,35 +10,16 @@ namespace Content
 		public static IContentEntry<T> GetEntry<T>(this in ContentReference<T> reference)
 			=> reference.IsSingle ? ContentManager.GetEntry<T>() : ContentManager.GetEntry<T>(in reference.guid);
 
+		/// <inheritdoc cref="ContentUtility.GetContentValue{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Get<T>(this ref ContentReference<T> reference)
-		{
-			if (reference.IsSingle)
-				return ref ContentManager.Get<T>();
-
-#if UNITY_EDITOR
-			if (UnityEngine.Application.isPlaying)
-#endif
-				if (reference.index >= 0
-				    && ContentManager.TryGetEntry<T>(reference.index, out var entryByIndex)
-				    && entryByIndex == reference.guid)
-				{
-					return ref entryByIndex.Value;
-				}
-
-			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
-			reference.index = entryByGuid.Index;
-			return ref entryByGuid.Value;
-		}
+			=> ref ContentUtility.GetContentValue<T>(in reference.guid, ref reference.index);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetId<T>(this in ContentReference<T> reference) =>
 			ContentManager.ToId<T>(in reference.guid);
 
-		/// <summary>
-		/// Возвращает ссылку на содержимое по ссылке <paramref name="reference"/>.
-		/// Если ссылка пустая, будет использован <paramref name="defaultEntryId"/> для загрузки контента по умолчанию.
-		/// </summary>
+		/// <inheritdoc cref="ContentUtility.ReadContentValue{T}"/>
 		/// <param name="defaultEntryId">Идентификатор записи по умолчанию, используемый если <paramref name="reference"/> пустой.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this in ContentReference<T> reference, string defaultEntryId)
@@ -49,28 +30,10 @@ namespace Content
 			return ref Read(reference);
 		}
 
-		/// <summary>
-		/// Разница между <see cref="Get{T}(ref Content.ContentReference)"/>, тем что он не восстанавливает Index
-		/// </summary>
+		/// <inheritdoc cref="ContentUtility.ReadContentValue{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this in ContentReference<T> reference)
-		{
-			if (reference.IsSingle)
-				return ref ContentManager.Get<T>();
-
-#if UNITY_EDITOR
-			if (UnityEngine.Application.isPlaying)
-#endif
-				if (reference.index >= 0
-				    && ContentManager.TryGetEntry<T>(reference.index, out var entryByIndex)
-				    && entryByIndex == reference.guid)
-				{
-					return ref entryByIndex.Value;
-				}
-
-			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
-			return ref entryByGuid.Value;
-		}
+			=> ref ContentUtility.ReadContentValue<T>(in reference.guid, reference.index);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToId<T>(this in ContentReference<T> reference)
@@ -82,21 +45,7 @@ namespace Content
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Get<T>(this ref ContentReference reference)
-		{
-			if (reference.IsSingle)
-				return ref ContentManager.Get<T>();
-
-			if (reference.index >= 0
-			    && ContentManager.TryGetEntry<T>(reference.index, out var entryByIndex)
-			    && entryByIndex == reference.guid)
-			{
-				return ref entryByIndex.Value;
-			}
-
-			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
-			reference.index = entryByGuid.Index;
-			return ref entryByGuid.Value;
-		}
+			=> ref ContentUtility.GetContentValue<T>(in reference.guid, ref reference.index);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetId<T>(this in ContentReference reference) =>
@@ -107,20 +56,7 @@ namespace Content
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Read<T>(this in ContentReference reference)
-		{
-			if (reference.IsSingle)
-				return ref ContentManager.Get<T>();
-
-			if (reference.index >= 0
-			    && ContentManager.TryGetEntry<T>(reference.index, out var entryByIndex)
-			    && entryByIndex == reference.guid)
-			{
-				return ref entryByIndex.Value;
-			}
-
-			var entryByGuid = ContentManager.GetEntry<T>(in reference.guid);
-			return ref entryByGuid.Value;
-		}
+			=> ref ContentUtility.ReadContentValue<T>(in reference.guid, reference.index);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToId<T>(this in ContentReference reference)
@@ -128,9 +64,13 @@ namespace Content
 
 		/// <param name="str">Либо Id, либо Guid</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ContentReference<T> ToReference<T>(string str) => new()
+		public static ContentReference<T> ToReference<T>(this string str) => new()
 		{
-			guid = SerializableGuid.TryParse(str, out var guid) ? guid : ContentManager.ToGuid<T>(str)
+			guid = SerializableGuid.TryParse(str, out var guid)
+				? guid
+				: ContentManager.IsInitialized
+					? ContentManager.ToGuid<T>(str)
+					: SerializableGuid.Empty
 		};
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -149,6 +89,18 @@ namespace Content
 			{
 				for (int i = 0; i < list.Count; i++)
 					result.Add(list[i].ToReference());
+
+				return result.ToArray();
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ContentReference<T>[] ToReferences<T>(this IEnumerable<IContentEntry<T>> enumerable)
+		{
+			using (ListPool<ContentReference<T>>.Get(out var result))
+			{
+				foreach (var entry in enumerable)
+					result.Add(entry.ToReference());
 
 				return result.ToArray();
 			}

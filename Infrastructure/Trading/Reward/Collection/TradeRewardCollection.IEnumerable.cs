@@ -9,7 +9,7 @@ namespace Trading
 #endif
 	public partial class TradeRewardCollection : IEnumerable<TradeReward>
 	{
-		public override IEnumerator<TradeReward> GetEnumerator()
+		public IEnumerator<TradeReward> GetEnumerator()
 		{
 			using (ListPool<TradeReward>.Get(out var sorted))
 			{
@@ -23,5 +23,12 @@ namespace Trading
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		{
+			foreach (var raw in items)
+				foreach (var reward in raw.EnumerateActual(board))
+					yield return reward;
+		}
 	}
 }

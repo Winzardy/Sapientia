@@ -13,7 +13,9 @@ namespace Sapientia.Extensions
 
 		protected virtual void OnDisposeInternal() => OnDispose();
 
-		protected virtual void OnDispose() {}
+		protected virtual void OnDispose()
+		{
+		}
 
 		/// <summary>
 		/// Подписывает на сообщение. Автоотписка при Dispose
