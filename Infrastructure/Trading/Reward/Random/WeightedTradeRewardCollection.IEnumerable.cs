@@ -26,13 +26,5 @@ namespace Trading
 			foreach (var reward in items[index].reward.EnumerateActual(board))
 				yield return reward;
 		}
-
-		public override IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			var randomizer = board.Get<IRandomizer<int>>();
-			items.Roll<WeightedReward, Blackboard>(board, randomizer, out var index);
-			foreach (var result in items[index].reward.EnumerateActualResult(board))
-				yield return result;
-		}
 	}
 }

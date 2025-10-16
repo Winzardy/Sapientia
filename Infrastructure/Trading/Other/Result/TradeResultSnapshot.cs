@@ -7,15 +7,15 @@ namespace Trading
 {
 	public struct TradeResultSnapshot
 	{
-		public string tradeId;
+		public readonly string tradeId;
 
 		[CanBeNull]
-		public ITradeRewardResult[] rewards;
+		public readonly ITradeRewardResult[] rewards;
 
 		[CanBeNull]
-		public ITradeCostResult[] costs;
+		public readonly ITradeCostResult[] costs;
 
-		internal TradeResultSnapshot(string tradeId, TradeRawResult raw)
+		internal TradeResultSnapshot(string tradeId, in TradeRawResult raw)
 		{
 			this.tradeId = tradeId;
 

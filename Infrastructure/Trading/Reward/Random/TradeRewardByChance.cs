@@ -48,18 +48,6 @@ namespace Trading
 					yield return actualReward;
 		}
 
-		public override IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			var randomizer = board.Get<IRandomizer<Fix64>>();
-			var roll = randomizer.Next(0, MAX_CHANCE);
-
-			if (roll <= chance)
-				foreach (var result in reward.EnumerateActualResult(board))
-					yield return result;
-		}
-
-
 		#endregion
-
 	}
 }

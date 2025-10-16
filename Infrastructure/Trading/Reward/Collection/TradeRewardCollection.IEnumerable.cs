@@ -31,12 +31,5 @@ namespace Trading
 				foreach (var reward in raw.EnumerateActual(board))
 					yield return reward;
 		}
-
-		public override IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			foreach (var raw in items)
-				foreach (var result in raw.EnumerateActualResult(board))
-					yield return result;
-		}
 	}
 }

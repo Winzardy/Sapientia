@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Trading.Result;
 
 namespace Trading
@@ -22,12 +21,6 @@ namespace Trading
 		{
 			this.RegisterResultHandleTo(board, out FreeTradeCostResultHandle _);
 			return true;
-		}
-
-		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			this.RegisterResultHandleTo(board, out FreeTradeCostResultHandle handle);
-			yield return handle;
 		}
 	}
 

@@ -12,25 +12,6 @@ namespace Trading
 
 		public ref readonly TradeRawResult RawResult => ref _rawResult;
 
-		public THandle RegisterRewardHandle<TReward, THandle>(TReward source)
-			where TReward : TradeReward
-			where THandle : class, ITradeRewardResultHandle<TReward>, new()
-		{
-			var handle = Pool<THandle>.Get();
-			handle.Bind(source);
-
-			// Токен чтобы потом отпустить в пул
-			_resultHandleTokens ??= ListPool<ITradeResultHandleToken>.Get();
-			var token = Pool<TradeRewardResultHandleToken<THandle>>.Get();
-			token.Bind(handle);
-			_resultHandleTokens.Add(token);
-
-			_rawResult.rewards ??= ListPool<ITradeRewardResultHandle>.Get();
-			_rawResult.rewards.Add(handle);
-
-			return handle;
-		}
-
 		public THandle RegisterCostHandle<TCost, THandle>(TCost source)
 			where TCost : TradeCost
 			where THandle : class, ITradeCostResultHandle<TCost>, new()
@@ -50,8 +31,27 @@ namespace Trading
 			return handle;
 		}
 
+		public THandle RegisterRewardHandle<TReward, THandle>(TReward source)
+			where TReward : TradeReward
+			where THandle : class, ITradeRewardResultHandle<TReward>, new()
+		{
+			var handle = Pool<THandle>.Get();
+			handle.Bind(source);
+
+			// Токен чтобы потом отпустить в пул
+			_resultHandleTokens ??= ListPool<ITradeResultHandleToken>.Get();
+			var token = Pool<TradeRewardResultHandleToken<THandle>>.Get();
+			token.Bind(handle);
+			_resultHandleTokens.Add(token);
+
+			_rawResult.rewards ??= ListPool<ITradeRewardResultHandle>.Get();
+			_rawResult.rewards.Add(handle);
+
+			return handle;
+		}
+
 		/// <summary>
-		/// Перенос результата на другую сделку (tradeboard)
+		/// Перенос обработку (handle) результата на другую сделку (tradeboard)
 		/// </summary>
 		/// <returns>Как Tradeboard отпустят, TradeRawResult становится не актуальным!</returns>
 		public TradeRawResult TransferResultHandlesTo(Tradeboard newBoard)
@@ -61,7 +61,7 @@ namespace Trading
 			return _rawResult;
 		}
 
-		public TradeResultSnapshot SnapshotResult() => new(Id, _rawResult);
+		public TradeResultSnapshot SnapshotResult() => new(Id, in _rawResult);
 
 		private void OnReleaseResultHandle()
 		{
@@ -73,6 +73,8 @@ namespace Trading
 				StaticObjectPoolUtility.ReleaseAndSetNull(ref _resultHandleTokens);
 			}
 
+			_rawResult.costs?.ReleaseToStaticPool();
+			_rawResult.rewards?.ReleaseToStaticPool();
 			_rawResult = default;
 		}
 	}
@@ -82,7 +84,7 @@ namespace Trading
 	/// </summary>
 	public struct TradeRawResult
 	{
-		public List<ITradeRewardResultHandle> rewards;
 		public List<ITradeCostResultHandle> costs;
+		public List<ITradeRewardResultHandle> rewards;
 	}
 }

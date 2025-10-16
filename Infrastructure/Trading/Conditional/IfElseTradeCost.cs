@@ -55,20 +55,6 @@ namespace Trading
 			}
 		}
 
-		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			if (condition.IsFulfilled(board))
-			{
-				foreach (var result in a.EnumerateActualResult(board))
-					yield return result;
-			}
-			else
-			{
-				foreach (var result in b.EnumerateActualResult(board))
-					yield return result;
-			}
-		}
-
 		#endregion
 	}
 }

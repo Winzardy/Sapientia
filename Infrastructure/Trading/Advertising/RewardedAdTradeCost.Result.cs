@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Advertising;
 using Content;
 using Trading.Result;
@@ -15,16 +14,6 @@ namespace Trading.Advertising
 				handle.count = totalCount;
 			}
 			return totalCount;
-		}
-
-		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			var totalCount = GetCountInternal(board);
-			this.RegisterResultHandleTo(board, out RewardedAdTradeCostResultHandle handle);
-			{
-				handle.count = totalCount;
-			}
-			yield return handle;
 		}
 	}
 

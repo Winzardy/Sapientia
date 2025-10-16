@@ -24,8 +24,6 @@ namespace Trading
 		protected override bool Receive(Tradeboard board)
 			=> !condition.IsFulfilled(board) || reward.Execute(board);
 
-		#region Enumerate
-
 		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			if (!condition.IsFulfilled(board))
@@ -34,16 +32,5 @@ namespace Trading
 			foreach (var actualReward in reward.EnumerateActual(board))
 				yield return actualReward;
 		}
-
-		public override IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			if (!condition.IsFulfilled(board))
-				yield break;
-
-			foreach (var result in reward.EnumerateActualResult(board))
-				yield return result;
-		}
-
-		#endregion
 	}
 }

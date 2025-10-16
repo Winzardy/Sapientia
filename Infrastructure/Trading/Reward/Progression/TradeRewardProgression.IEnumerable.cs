@@ -24,13 +24,5 @@ namespace Trading
 				        .EnumerateActual(board))
 				yield return reward;
 		}
-
-		public override IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			foreach (var result in GetCurrentStage(board)
-				        .reward
-				        .EnumerateActualResult(board))
-				yield return result;
-		}
 	}
 }

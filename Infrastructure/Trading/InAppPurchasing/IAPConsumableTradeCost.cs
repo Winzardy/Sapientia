@@ -103,12 +103,6 @@ namespace Trading.InAppPurchasing
 		}
 
 		#endregion
-
-		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
-		{
-			this.RegisterResultHandleTo(board, out IAPConsumableTradeCostResultHandle handle);
-			yield return handle;
-		}
 	}
 
 	public class IAPConsumableTradeCostResult : ITradeCostResult
@@ -122,7 +116,7 @@ namespace Trading.InAppPurchasing
 		{
 			return new IAPConsumableTradeCostResult
 			{
-				productRef = Source.product,
+				productRef = Source.product
 			};
 		}
 	}
