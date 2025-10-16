@@ -7,7 +7,7 @@ namespace Sapientia.LogicGraph.Logic
 {
 	public struct BlueprintCompiler
 	{
-		private PtrOffset<MonotonicAllocator> _allocatorOffset;
+		private PtrOffset<ArenaAllocator> _allocatorOffset;
 
 		private PtrOffset<PtrOffset<CompiledBlueprint>> _compiledBlueprints;
 		private int _blueprintsCount;
@@ -30,7 +30,7 @@ namespace Sapientia.LogicGraph.Logic
 				reservedSize += CompiledBlueprint.CalculateSizeToReserve(blueprint);
 			}
 
-			var allocatorPtr = MonotonicAllocator.Create(reservedSize);
+			var allocatorPtr = ArenaAllocator.Create(reservedSize);
 
 			ref var allocator = ref allocatorPtr.Value();
 			var compilerOffset = allocator.MemAlloc<BlueprintCompiler>();
@@ -74,7 +74,7 @@ namespace Sapientia.LogicGraph.Logic
 		public static SafePtr<BlueprintCompiler> Deserialize(ref StreamBufferReader stream)
 		{
 			var compilerOffset = stream.Read<PtrOffset<BlueprintCompiler>>();
-			var allocator = MonotonicAllocator.Deserialize(ref stream);
+			var allocator = ArenaAllocator.Deserialize(ref stream);
 
 			return allocator.Value().GetPtr(compilerOffset);
 		}

@@ -13,7 +13,7 @@ namespace Sapientia.LogicGraph.Logic
 	/// </summary>
 	public struct CompiledBlueprint
 	{
-		public PtrOffset<MonotonicAllocator> allocatorOffset;
+		public PtrOffset<ArenaAllocator> allocatorOffset;
 
 		public int version;
 		public Id<Blueprint> id;
@@ -38,13 +38,15 @@ namespace Sapientia.LogicGraph.Logic
 		/// </summary>
 		public PtrOffset<EdgeDataHeader> edgesData;
 		public int edgesDataSize;
+		public SafePtr<EdgeDataHeader> EdgesDataPtr => allocatorOffset.GetPtr(edgesData);
 
 		// Данные стейтов нод НЕ фиксированного размера
 		/// <summary>
 		/// Внутри находятся дефолтные значения стейтов ноды, они уникальны для всех инстансов и могут меняться.
 		/// </summary>
-		public PtrOffset nodeState;
-		public int nodeStateSize;
+		public PtrOffset nodesState;
+		public int nodesStateSize;
+		public SafePtr NodesStatePtr => allocatorOffset.GetPtr(nodesState);
 
 		public static int CalculateSizeToReserve(Blueprint blueprint)
 		{
@@ -67,7 +69,7 @@ namespace Sapientia.LogicGraph.Logic
 			return size;
 		}
 
-		public static PtrOffset<CompiledBlueprint> Compile(ref MonotonicAllocator allocator, Blueprint blueprint)
+		public static PtrOffset<CompiledBlueprint> Compile(ref ArenaAllocator allocator, Blueprint blueprint)
 		{
 			var result = allocator.MemAlloc<CompiledBlueprint>();
 			ref var compiled = ref allocator.GetRef(result);
@@ -87,14 +89,14 @@ namespace Sapientia.LogicGraph.Logic
 
 			// Создаём базовое состояние блюпринта
 			nodeBodiesSize = 0;
-			nodeStateSize = 0;
+			nodesStateSize = 0;
 			foreach (var node in blueprint.nodes)
 			{
 				nodeBodiesSize += node.BodySize;
-				nodeStateSize += node.StateSize;
+				nodesStateSize += node.StateSize;
 			}
 			nodeBodies = allocator.MemAlloc(nodeBodiesSize); // 1. CalculateSizeToReserve (Аллокация)
-			nodeState = allocator.MemAlloc(nodeStateSize); // 2. CalculateSizeToReserve (Аллокация)
+			nodesState = allocator.MemAlloc(nodesStateSize); // 2. CalculateSizeToReserve (Аллокация)
 
 			// Ссылки на статические данные ноды
 			nodeHeaders = allocator.MemAlloc<NodeHeader>(blueprint.nodes.Length); // 3. CalculateSizeToReserve (Аллокация)
@@ -127,7 +129,7 @@ namespace Sapientia.LogicGraph.Logic
 			edgeToData = allocator.MemAlloc<EdgeToData>(edgesCount); // 5. CalculateSizeToReserve (Аллокация)
 
 			var nodeBodiesPtr = allocator.GetPtr(nodeBodies);
-			var nodeStatePtr = allocator.GetPtr(nodeState);
+			var nodeStatePtr = allocator.GetPtr(nodesState);
 			var nodeStaticDataPtr = allocator.GetPtr(nodeHeaders);
 			var edgeToDataPtr = allocator.GetPtr(edgeToData);
 

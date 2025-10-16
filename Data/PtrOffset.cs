@@ -40,6 +40,12 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static PtrOffset operator -(PtrOffset offset, int byteOffset)
+		{
+			return new PtrOffset(offset.byteOffset +- byteOffset);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static PtrOffset operator -(PtrOffset a, PtrOffset b)
 		{
 			return new PtrOffset(a.byteOffset - b.byteOffset);
