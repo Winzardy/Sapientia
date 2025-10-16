@@ -15,5 +15,7 @@ namespace Sapientia.Evaluators
 
 		public IEvaluator Proxy => value;
 		public Type ProxyType => typeof(Evaluator<TContext2, TValue>);
+
+		public override string ToString() => value.ToString();
 	}
 }
