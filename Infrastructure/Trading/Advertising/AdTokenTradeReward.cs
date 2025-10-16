@@ -22,8 +22,18 @@ namespace Trading.Advertising
 		protected override bool Receive(Tradeboard board)
 		{
 			var node = board.Get<IAdvertisingNode>();
-			node.AddToken(group, count.Get(board));
+			var totalCount = GetCountInternal(board);
+			node.AddToken(group, totalCount);
+			this.RegisterResultHandleTo(board, out AdTokenTradeRewardResultHandle result);
+			{
+				result.count = totalCount;
+			}
 			return true;
+		}
+
+		private int GetCountInternal(Tradeboard board)
+		{
+			return count.Evaluate(board);
 		}
 	}
 }

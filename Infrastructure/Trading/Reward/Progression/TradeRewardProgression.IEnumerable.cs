@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Trading.Result;
 
 namespace Trading
 {
@@ -16,12 +17,20 @@ namespace Trading
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			foreach (var reward in GetCurrentStage(board)
 				        .reward
 				        .EnumerateActual(board))
 				yield return reward;
+		}
+
+		public override IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			foreach (var result in GetCurrentStage(board)
+				        .reward
+				        .EnumerateActualResult(board))
+				yield return result;
 		}
 	}
 }

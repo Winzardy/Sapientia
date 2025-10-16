@@ -9,7 +9,7 @@ namespace Sapientia.Evaluators
 		[SerializeReference]
 		public Evaluator<TContext2, TValue> value;
 
-		protected override TValue OnGet(TContext1 context) => value.Get(Convert(context));
+		protected override TValue OnEvaluate(TContext1 context) => value.Evaluate(Convert(context));
 
 		protected abstract TContext2 Convert(TContext1 context);
 

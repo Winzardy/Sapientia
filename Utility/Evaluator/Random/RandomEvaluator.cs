@@ -7,7 +7,7 @@ namespace Sapientia.Evaluators
 		where TValue : struct, IComparable<TValue>
 
 	{
-		protected sealed override TValue OnGet(TContext context)
+		protected sealed override TValue OnEvaluate(TContext context)
 		{
 			var randomizer = GetRandomizer(context);
 			return OnRandom(context, randomizer);

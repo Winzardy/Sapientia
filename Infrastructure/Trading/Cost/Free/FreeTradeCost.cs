@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Trading.Result;
 
 namespace Trading
 {
@@ -16,6 +18,25 @@ namespace Trading
 			return true;
 		}
 
-		protected override bool Pay(Tradeboard board) => true;
+		protected override bool Pay(Tradeboard board)
+		{
+			this.RegisterResultHandleTo(board, out FreeTradeCostResultHandle _);
+			return true;
+		}
+
+		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			this.RegisterResultHandleTo(board, out FreeTradeCostResultHandle handle);
+			yield return handle;
+		}
+	}
+
+	public class FreeTradeCostResult : ITradeCostResult
+	{
+	}
+
+	public class FreeTradeCostResultHandle : TradeCostResultHandle<FreeTradeCost>
+	{
+		public override ITradeCostResult Bake() => new FreeTradeCostResult();
 	}
 }

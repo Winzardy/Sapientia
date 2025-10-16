@@ -15,11 +15,16 @@ namespace Sapientia.Evaluators
 	[Serializable]
 	public abstract partial class Evaluator<TContext, TValue> : IEvaluator<TContext, TValue>
 	{
-		TValue IEvaluator<TContext, TValue>.Evaluate(TContext context) => Get(context);
+		/// <summary>
+		/// Вычисляет значение в зависимости от контекста
+		/// </summary>
+		/// <remarks>
+		/// Повторный вызов запускает вычисление заново — внутри может использоваться рандом или логика, меняющая состояние.
+		/// Чтобы переиспользовать полученное значение в логике, следует кешировать результат
+		/// </remarks>
+		public TValue Evaluate(TContext context) => OnEvaluate(context);
 
-		public TValue Get(TContext context) => OnGet(context);
-
-		protected abstract TValue OnGet(TContext context);
+		protected abstract TValue OnEvaluate(TContext context);
 
 		public static implicit operator Evaluator<TContext, TValue>(TValue value)
 			=> new ConstantEvaluator<TContext, TValue>(value);

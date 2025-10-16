@@ -15,12 +15,12 @@ namespace Sapientia.Evaluators
 
 		public EvaluatedValue<TContext, TValue> b = default(TValue);
 
-		protected override TValue OnGet(TContext context)
+		protected override TValue OnEvaluate(TContext context)
 		{
 			if (condition.IsFulfilled(context))
-				return a.Get(context);
+				return a.Evaluate(context);
 
-			return b.Get(context);
+			return b.Evaluate(context);
 		}
 	}
 }

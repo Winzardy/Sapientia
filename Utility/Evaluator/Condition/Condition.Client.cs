@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Sapientia.Conditions
 {
-	public abstract partial class Condition<T>
+	public abstract partial class Condition<TContext>
 	{
 		public static readonly Color COLOR = new(R, G, B, A);
 

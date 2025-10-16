@@ -53,9 +53,9 @@ namespace Sapientia.Conditions.Comparison
 
 		protected override bool OnEvaluate(TContext context)
 		{
-			var v = value.Get(context);
-			var a = min.Get(context);
-			var b = max.Get(context);
+			var v = value.Evaluate(context);
+			var a = min.Evaluate(context);
+			var b = max.Evaluate(context);
 			return v > a && v < b;
 		}
 	}

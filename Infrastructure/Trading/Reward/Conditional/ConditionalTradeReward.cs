@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Sapientia;
 using Sapientia.Conditions;
+using Trading.Result;
 #if CLIENT
 using UnityEngine;
 #endif
@@ -23,7 +24,9 @@ namespace Trading
 		protected override bool Receive(Tradeboard board)
 			=> !condition.IsFulfilled(board) || reward.Execute(board);
 
-		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		#region Enumerate
+
+		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			if (!condition.IsFulfilled(board))
 				yield break;
@@ -31,5 +34,16 @@ namespace Trading
 			foreach (var actualReward in reward.EnumerateActual(board))
 				yield return actualReward;
 		}
+
+		public override IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			if (!condition.IsFulfilled(board))
+				yield break;
+
+			foreach (var result in reward.EnumerateActualResult(board))
+				yield return result;
+		}
+
+		#endregion
 	}
 }

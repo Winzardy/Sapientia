@@ -21,6 +21,15 @@ namespace Sapientia.Evaluators
 		public static implicit operator EvaluatedValue<TContext, TValue>(Evaluator<TContext, TValue> evaluator)
 			=> new() {evaluator = evaluator};
 
-		public TValue Get(TContext context) => evaluator ? evaluator.Get(context) : value;
+		/// <inheritdoc cref="Evaluator{TContext, TValue}.Evaluate(TContext)"/>
+		public TValue Evaluate(TContext context) => evaluator ? evaluator.Evaluate(context) : value;
+
+		public override string ToString()
+		{
+			if (evaluator)
+				return evaluator.ToString();
+
+			return value?.ToString() ?? string.Empty;
+		}
 	}
 }

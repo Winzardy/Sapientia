@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Trading.Result;
 
 namespace Trading
 {
@@ -9,9 +10,14 @@ namespace Trading
 			yield return this;
 		}
 
-		protected internal virtual IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		public virtual IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			yield return this;
+		}
+
+		public virtual IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			yield break;
 		}
 	}
 }

@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
 using InAppPurchasing;
+using Trading.Result;
 
 namespace Trading.InAppPurchasing
 {
@@ -53,6 +55,11 @@ namespace Trading.InAppPurchasing
 			return new IAPTradeReceipt(receipt.Value);
 		}
 
+		protected override void OnIssue(Tradeboard board, string receiptKey)
+		{
+			this.RegisterResultHandleTo(board, out IAPConsumableTradeCostResultHandle _);
+		}
+
 		public IAPProductEntry GetProductEntry() => product.Read();
 
 		protected override string GetReceiptKey(string _) => product.ToReceiptKey();
@@ -96,5 +103,27 @@ namespace Trading.InAppPurchasing
 		}
 
 		#endregion
+
+		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			this.RegisterResultHandleTo(board, out IAPConsumableTradeCostResultHandle handle);
+			yield return handle;
+		}
+	}
+
+	public class IAPConsumableTradeCostResult : ITradeCostResult
+	{
+		public ContentReference<IAPConsumableProductEntry> productRef;
+	}
+
+	public class IAPConsumableTradeCostResultHandle : TradeCostResultHandle<IAPConsumableTradeCost>
+	{
+		public override ITradeCostResult Bake()
+		{
+			return new IAPConsumableTradeCostResult
+			{
+				productRef = Source.product,
+			};
+		}
 	}
 }

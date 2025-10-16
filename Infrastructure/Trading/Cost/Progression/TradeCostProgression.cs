@@ -5,6 +5,7 @@ using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Conditions;
 using Sapientia.Extensions;
+using Trading.Result;
 
 #if CLIENT
 using UnityEngine;
@@ -95,12 +96,23 @@ namespace Trading
 				group ? KEY_FORMAT.Format(group) : GUID_KEY_FORMAT.Format(tradeId, stages.Guid);
 		}
 
+		#region Enumerate
+
 		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
 		{
 			var stage = GetCurrentStage(board);
 			foreach (var cost in stage.cost.EnumerateActual(board))
 				yield return cost;
 		}
+
+		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			var stage = GetCurrentStage(board);
+			foreach (var result in stage.cost.EnumerateActualResult(board))
+				yield return result;
+		}
+
+		#endregion
 	}
 
 	[Serializable]

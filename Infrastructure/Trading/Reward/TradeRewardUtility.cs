@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Content;
 using Sapientia.Pooling;
+using Trading.Result;
 
 namespace Trading
 {
@@ -20,7 +21,6 @@ namespace Trading
 					yield return actualReward;
 		}
 
-
 		public static TradeReward[] GetAllRawReward(this TradeReward reward)
 		{
 			using (ListPool<TradeReward>.Get(out var list))
@@ -32,6 +32,20 @@ namespace Trading
 
 				return list.ToArray();
 			}
+		}
+
+		public static void RegisterResultHandleTo<THandle, TReward>(this TReward source, Tradeboard board, out THandle handle)
+			where TReward : TradeReward
+			where THandle : class, ITradeRewardResultHandle<TReward>, new()
+		{
+			handle = RegisterResultHandleTo<THandle, TReward>(source, board);
+		}
+
+		public static THandle RegisterResultHandleTo<THandle, TReward>(this TReward source, Tradeboard board)
+			where TReward : TradeReward
+			where THandle : class, ITradeRewardResultHandle<TReward>, new()
+		{
+			return board.RegisterRewardHandle<TReward, THandle>(source);
 		}
 	}
 }

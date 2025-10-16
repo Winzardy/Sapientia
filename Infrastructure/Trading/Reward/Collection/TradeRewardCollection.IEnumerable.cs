@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Sapientia.Pooling;
+using Trading.Result;
 
 namespace Trading
 {
@@ -24,11 +25,18 @@ namespace Trading
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			foreach (var raw in items)
 				foreach (var reward in raw.EnumerateActual(board))
 					yield return reward;
+		}
+
+		public override IEnumerable<ITradeRewardResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			foreach (var raw in items)
+				foreach (var result in raw.EnumerateActualResult(board))
+					yield return result;
 		}
 	}
 }

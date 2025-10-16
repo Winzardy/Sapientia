@@ -40,14 +40,14 @@ namespace Sapientia.Evaluators
 #endif
 		public EvaluatedValue<TContext,Fix64> b;
 
-		protected override Fix64 OnGet(TContext context)
+		protected override Fix64 OnEvaluate(TContext context)
 		{
 			return @operator switch
 			{
-				ArithmeticOperator.Add => a.Get(context) + b.Get(context),
-				ArithmeticOperator.Subtract => a.Get(context) - b.Get(context),
-				ArithmeticOperator.Divide => a.Get(context) / b.Get(context),
-				ArithmeticOperator.Multiply => a.Get(context) * b.Get(context),
+				ArithmeticOperator.Add => a.Evaluate(context) + b.Evaluate(context),
+				ArithmeticOperator.Subtract => a.Evaluate(context) - b.Evaluate(context),
+				ArithmeticOperator.Divide => a.Evaluate(context) / b.Evaluate(context),
+				ArithmeticOperator.Multiply => a.Evaluate(context) * b.Evaluate(context),
 				_ => throw new ArgumentOutOfRangeException()
 			};
 		}

@@ -92,7 +92,7 @@ namespace Sapientia
 			where T : IWeightableWithEvaluator<TContext>
 		{
 			for (int i = 0; i < elements.Count; i++)
-				fill.Add(elements[i].Weight.Get(context));
+				fill.Add(elements[i].Weight.Evaluate(context));
 		}
 
 		private static int TotalWeight(this IList<int> weights)

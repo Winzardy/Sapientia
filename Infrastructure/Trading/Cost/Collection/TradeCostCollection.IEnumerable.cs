@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Sapientia.Pooling;
+using Trading.Result;
 
 namespace Trading
 {
@@ -27,8 +28,15 @@ namespace Trading
 		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
 		{
 			foreach (var cost in items)
-				foreach (var c in cost.EnumerateActual(board))
-					yield return c;
+				foreach (var actualCost in cost.EnumerateActual(board))
+					yield return actualCost;
+		}
+
+		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			foreach (var cost in items)
+				foreach (var result in cost.EnumerateActualResult(board))
+					yield return result;
 		}
 	}
 }

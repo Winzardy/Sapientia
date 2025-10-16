@@ -36,12 +36,12 @@ namespace Sapientia.Conditions.Comparison
 		{
 			return logicOperator switch
 			{
-				ComparisonOperator.GreaterOrEqual => a.Get(context) >= b.Get(context),
-				ComparisonOperator.LessOrEqual => a.Get(context) <= b.Get(context),
-				ComparisonOperator.Greater => a.Get(context) > b.Get(context),
-				ComparisonOperator.Less => a.Get(context) < b.Get(context),
-				ComparisonOperator.Equal => a.Get(context) == b.Get(context),
-				ComparisonOperator.NotEqual => a.Get(context) != b.Get(context),
+				ComparisonOperator.GreaterOrEqual => a.Evaluate(context) >= b.Evaluate(context),
+				ComparisonOperator.LessOrEqual => a.Evaluate(context) <= b.Evaluate(context),
+				ComparisonOperator.Greater => a.Evaluate(context) > b.Evaluate(context),
+				ComparisonOperator.Less => a.Evaluate(context) < b.Evaluate(context),
+				ComparisonOperator.Equal => a.Evaluate(context) == b.Evaluate(context),
+				ComparisonOperator.NotEqual => a.Evaluate(context) != b.Evaluate(context),
 				_ => throw new ArgumentOutOfRangeException()
 			};
 		}

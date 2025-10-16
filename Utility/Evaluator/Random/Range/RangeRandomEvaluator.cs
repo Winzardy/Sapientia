@@ -21,8 +21,8 @@ namespace Sapientia.Evaluators
 
 		protected override TValue OnRandom(TContext context, IRandomizer<TValue> randomizer)
 		{
-			var minInclusive = min.Get(context);
-			var maxExclusive = max.Get(context);
+			var minInclusive = min.Evaluate(context);
+			var maxExclusive = max.Evaluate(context);
 			return randomizer.Next(minInclusive, maxExclusive);
 		}
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Sapientia;
 using Sapientia.Conditions;
+using Trading.Result;
 
 #if CLIENT
 using UnityEngine;
@@ -38,6 +39,8 @@ namespace Trading
 			return b.Execute(board);
 		}
 
+		#region Enumerate
+
 		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
 		{
 			if (condition.IsFulfilled(board))
@@ -51,5 +54,21 @@ namespace Trading
 					yield return cost;
 			}
 		}
+
+		public override IEnumerable<ITradeCostResultHandle> EnumerateActualResult(Tradeboard board)
+		{
+			if (condition.IsFulfilled(board))
+			{
+				foreach (var result in a.EnumerateActualResult(board))
+					yield return result;
+			}
+			else
+			{
+				foreach (var result in b.EnumerateActualResult(board))
+					yield return result;
+			}
+		}
+
+		#endregion
 	}
 }

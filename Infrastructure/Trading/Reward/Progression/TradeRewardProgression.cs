@@ -113,7 +113,6 @@ namespace Trading
 		/// Условие при котором на данном этапе прогрессирует
 		/// </summary>
 		[SerializeReference]
-		[DefaultValue(default(ObjectProviderBlackboardProxyEvaluator))]
 		public Condition<Blackboard> overrideCondition;
 	}
 }
