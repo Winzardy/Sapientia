@@ -53,11 +53,31 @@ namespace Trading
 		{
 			if (results.IsNullOrEmpty())
 				yield break;
+
 			foreach (var result in results)
 			{
-				if (result is ICompositeTradeRewardResult composite)
+				if (result is IEnumerable<ITradeRewardResult> enumerable)
 				{
-					foreach (var child in ExpandAll(composite.Children))
+					foreach (var child in ExpandAll(enumerable))
+						yield return child;
+				}
+				else
+				{
+					yield return result;
+				}
+			}
+		}
+
+		public static IEnumerable<ITradeRewardResult> ExpandAll(this IEnumerable<ITradeRewardResult> results)
+		{
+			if (results.IsNullOrEmpty())
+				yield break;
+
+			foreach (var result in results)
+			{
+				if (result is IEnumerable<ITradeRewardResult> enumerable)
+				{
+					foreach (var child in ExpandAll(enumerable))
 						yield return child;
 				}
 				else
