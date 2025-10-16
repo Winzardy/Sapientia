@@ -24,9 +24,9 @@ namespace Trading.Advertising
 			var node = board.Get<IAdvertisingNode>();
 			var totalCount = GetCountInternal(board);
 			node.AddToken(group, totalCount);
-			this.RegisterResultHandleTo(board, out AdTokenTradeRewardResultHandle result);
+			this.RegisterResultHandleTo(board, out AdTokenTradeRewardResultHandle handle);
 			{
-				result.count = totalCount;
+				handle.count = totalCount;
 			}
 			return true;
 		}
