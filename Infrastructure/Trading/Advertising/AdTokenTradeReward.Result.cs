@@ -6,6 +6,18 @@ namespace Trading.Advertising
 	{
 		public int group;
 		public int count;
+
+		public bool Merge(ITradeRewardResult other)
+		{
+			if (other is not AdTokenTradeRewardResult result)
+				return false;
+
+			if (result.group != group)
+				return false;
+
+			count += result.count;
+			return true;
+		}
 	}
 
 	public class AdTokenTradeRewardResultHandle : TradeRewardResultHandle<AdTokenTradeReward>

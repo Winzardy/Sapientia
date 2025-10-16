@@ -6,5 +6,6 @@ namespace Trading.Result
 	/// </summary>
 	public interface ITradeRewardResult
 	{
+		public bool Merge(ITradeRewardResult other) => false;
 	}
 }
