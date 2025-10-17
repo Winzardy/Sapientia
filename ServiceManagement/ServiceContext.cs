@@ -71,7 +71,7 @@ namespace Sapientia.ServiceManagement
 		public static void RemoveContext(in TContext oldContext)
 		{
 			using var scope = _asyncClass.GetBusyScope();
-			if (_currentContext.Equals(oldContext))
+			if (Equals(_currentContext, oldContext))
 				_currentContext = default;
 
 			foreach (var subscriber in _subscribers)
