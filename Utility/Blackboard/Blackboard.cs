@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Sapientia.Extensions;
@@ -17,7 +18,7 @@ namespace Sapientia
 	/// </remarks>
 	public partial class Blackboard : IPoolable, IDisposable
 	{
-		private ConcurrentHashSet<IBlackboardToken>? _tokens;
+		private HashSet<IBlackboardToken>? _tokens;
 		public event Action Released;
 
 		protected internal bool _active = true;
@@ -31,7 +32,7 @@ namespace Sapientia
 			if (source?._tokens == null)
 				return;
 
-			_tokens ??= ConcurrentHashSetPool<IBlackboardToken>.Get();
+			_tokens ??= HashSetPool<IBlackboardToken>.Get();
 
 			foreach (var token in source._tokens)
 			{
@@ -69,7 +70,7 @@ namespace Sapientia
 
 		public BlackboardToken Register<T>(in T value, string? key = null)
 		{
-			_tokens ??= ConcurrentHashSetPool<IBlackboardToken>.Get();
+			_tokens ??= HashSetPool<IBlackboardToken>.Get();
 			var token = Blackboard<T>.Register(in value, this, key);
 			_tokens.Add(token);
 			return token;
