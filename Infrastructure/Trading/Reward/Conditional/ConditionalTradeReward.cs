@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Sapientia;
 using Sapientia.Conditions;
+using Trading.Result;
 #if CLIENT
 using UnityEngine;
 #endif
@@ -11,7 +13,7 @@ namespace Trading
 	public partial class ConditionalTradeReward : TradeReward
 	{
 		[SerializeReference]
-		public BlackboardCondition condition;
+		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
 
 		[SerializeReference]
 		public TradeReward reward;
@@ -22,7 +24,7 @@ namespace Trading
 		protected override bool Receive(Tradeboard board)
 			=> !condition.IsFulfilled(board) || reward.Execute(board);
 
-		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			if (!condition.IsFulfilled(board))
 				yield break;

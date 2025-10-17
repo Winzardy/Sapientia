@@ -2,7 +2,7 @@ using System;
 
 namespace Sapientia
 {
-	public abstract partial class Blackboard
+	public partial class Blackboard
 	{
 		private bool _dummyMode;
 		private int _dummyRequest;
@@ -19,6 +19,9 @@ namespace Sapientia
 
 		protected internal void SetDummyMode(bool value)
 		{
+			if (!_active)
+				throw new ArgumentException("Cannot change DummyMode for an inactive blackboard...");
+
 			var prev = _dummyMode;
 
 			if (value)
@@ -27,6 +30,9 @@ namespace Sapientia
 				_dummyRequest--;
 
 			_dummyMode = _dummyRequest != 0;
+
+			if (_dummyRequest < 0)
+				throw new ArgumentException("DummyRequest cannot be less than zero...");
 
 			if (prev != _dummyMode)
 				DummyModeChanged?.Invoke(value);
@@ -43,22 +49,15 @@ namespace Sapientia
 		public readonly struct DummyScope : IDisposable
 		{
 			private readonly Blackboard _blackboard;
-			private readonly bool _value;
 
 			public DummyScope(Blackboard blackboard, bool value = true)
 			{
-				_value = value;
 				_blackboard = blackboard;
-
-				if (!value)
-					_blackboard.SetDummyMode(value);
+				_blackboard.SetDummyMode(value);
 			}
 
 			public void Dispose()
 			{
-				if (!_value)
-					return;
-
 				_blackboard.SetDummyMode(false);
 			}
 		}

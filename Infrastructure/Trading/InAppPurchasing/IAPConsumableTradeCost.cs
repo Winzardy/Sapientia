@@ -1,14 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Content;
 using InAppPurchasing;
+using Trading.Result;
 
 namespace Trading.InAppPurchasing
 {
 	[Serializable]
 	[TradeAccess(TradeAccessType.High)]
-	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>, IAPTradeCost
+	public partial class IAPConsumableTradeCost : TradeCostWithReceipt<IAPTradeReceipt>, IInAppPurchasingTradeCost
 	{
 		private const string ERROR_CATEGORY = "InAppPurchasing";
 
@@ -51,6 +53,11 @@ namespace Trading.InAppPurchasing
 			}
 
 			return new IAPTradeReceipt(receipt.Value);
+		}
+
+		protected override void OnIssue(Tradeboard board, string receiptKey)
+		{
+			this.RegisterResultHandleTo(board, out IAPConsumableTradeCostResultHandle _);
 		}
 
 		public IAPProductEntry GetProductEntry() => product.Read();
@@ -96,5 +103,21 @@ namespace Trading.InAppPurchasing
 		}
 
 		#endregion
+	}
+
+	public class IAPConsumableTradeCostResult : ITradeCostResult
+	{
+		public ContentReference<IAPConsumableProductEntry> productRef;
+	}
+
+	public class IAPConsumableTradeCostResultHandle : TradeCostResultHandle<IAPConsumableTradeCost>
+	{
+		public override ITradeCostResult Bake()
+		{
+			return new IAPConsumableTradeCostResult
+			{
+				productRef = Source.product
+			};
+		}
 	}
 }

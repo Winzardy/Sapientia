@@ -21,18 +21,15 @@ namespace Trading
 
 		private string _id;
 
+		private HashSet<string> _restoreSources;
+		private BlackboardToken? _registerRestoreToken;
+
 		/// <summary>
-		/// Trade Id
+		/// Идентификатор сделки (tradeId)
 		/// </summary>
 		public string Id => _id;
 
-		internal void SetId(string id) => _id = id;
-
 		public bool IsRestoreState => _restoreSources.Any();
-
-		private HashSet<string> _restoreSources;
-
-		private BlackboardToken? _registerRestoreToken;
 
 		public Tradeboard()
 		{
@@ -40,6 +37,25 @@ namespace Trading
 
 		public Tradeboard(Blackboard source) : base(source)
 		{
+		}
+
+		protected override void OnRelease()
+		{
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _restoreSources);
+			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
+
+			_id = null;
+			_restoreSources?.Clear();
+
+#if CLIENT
+			OnReleaseFetchMode();
+#endif
+			OnReleaseResultHandle();
+		}
+
+		internal void SetId(string id)
+		{
+			_id = id;
 		}
 
 		public void AddRestoreSource(string source)
@@ -62,19 +78,6 @@ namespace Trading
 
 		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
 			base.GetArgumentException(msg);
-
-		protected override void OnRelease()
-		{
-			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _restoreSources);
-			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
-
-			_id = null;
-			_restoreSources?.Clear();
-
-#if CLIENT
-			OnReleaseFetchMode();
-#endif
-		}
 	}
 
 	public static class TradeboardUtility

@@ -1,13 +1,14 @@
 using System;
 using Content;
-using Sapientia.Evaluator.Blackboard;
+using Sapientia;
+using Sapientia.Evaluators;
 
 namespace Trading.Advertising
 {
 	[Serializable]
 	public partial class AdTokenTradeReward : TradeReward
 	{
-		public BlackboardEvaluator<int> count = 1;
+		public EvaluatedValue<Blackboard, int> count = 1;
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
@@ -21,8 +22,18 @@ namespace Trading.Advertising
 		protected override bool Receive(Tradeboard board)
 		{
 			var node = board.Get<IAdvertisingNode>();
-			node.AddToken(group, count.Get(board));
+			var totalCount = GetCountInternal(board);
+			node.AddToken(group, totalCount);
+			this.RegisterResultHandleTo(board, out AdTokenTradeRewardResultHandle handle);
+			{
+				handle.count = totalCount;
+			}
 			return true;
+		}
+
+		private int GetCountInternal(Tradeboard board)
+		{
+			return count.Evaluate(board);
 		}
 	}
 }

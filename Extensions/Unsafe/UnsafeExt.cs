@@ -219,8 +219,12 @@ namespace Sapientia.Extensions
 			return (uint) hash;
 		}
 
+		/// <summary>
+		/// Быстрая версия <see cref="Enum.HasFlag"/> без бокса и рефлексии.
+		/// Проверяет, что все указанные флаги включены.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>(this T value, T flag)
+		public static bool HasFlags<T>(this T value, T flag)
 			where T : struct, Enum
 		{
 			if (UnsafeUtility.SizeOf<T>() == 8)
