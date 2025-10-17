@@ -44,7 +44,7 @@ namespace Sapientia.ServiceManagement
 		public static void SetContext(in TContext newContext)
 		{
 			using var scope = _asyncClass.GetBusyScope();
-			if (_currentContext.Equals(newContext))
+			if (Equals(_currentContext, newContext))
 				return;
 			_currentContext = newContext;
 
@@ -58,8 +58,9 @@ namespace Sapientia.ServiceManagement
 		public static void ReplaceContext(in TContext oldContext, in TContext newContext)
 		{
 			using var scope = _asyncClass.GetBusyScope();
-			if (_currentContext.Equals(oldContext))
-				_currentContext = newContext;
+			if (Equals(_currentContext, oldContext))
+				return;
+			_currentContext = newContext;
 
 			foreach (var subscriber in _subscribers)
 			{
