@@ -1,7 +1,6 @@
 using System;
-using Sapientia.Deterministic;
 
-namespace Submodules.Sapientia.Utility
+namespace Sapientia.Deterministic.Utility
 {
 	public class Fix64Rand
 	{
