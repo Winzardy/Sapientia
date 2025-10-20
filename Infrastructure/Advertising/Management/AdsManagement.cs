@@ -225,7 +225,13 @@ namespace Advertising
 				void OnDisplayFailed(AdPlacementEntry _, string __, object ___) => tcs.TrySetResult(AdShowResult.Failed);
 
 				void OnRewardedClosed(AdPlacementEntry _, bool full, object __)
-					=> tcs.TrySetResult(full ? AdShowResult.Success : AdShowResult.Canceled);
+				{
+					if (full)
+						tcs.TrySetResult(AdShowResult.Success);
+					else
+						tcs.TrySetCanceled(cancellationToken);
+				}
+
 				void OnRewardedLoadFailed(string _, object __) => tcs.TrySetResult(AdShowResult.Failed);
 
 				void OnInterstitialClosed(AdPlacementEntry _, object __) => tcs.TrySetResult(AdShowResult.Success);
