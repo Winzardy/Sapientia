@@ -34,7 +34,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T GetService<T>()
+		public T GetServiceClass<T>()
 			where T : class, IIndexedType
 		{
 			return GetServiceClassPtr<T>().Value();
