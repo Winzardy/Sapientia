@@ -14,6 +14,8 @@ namespace Sapientia.MemoryAllocator
 
 		public bool IsStarted { get; private set; }
 
+		public WorldId Id => worldState.WorldId;
+
 		public bool IsValid
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,6 +43,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				elementsService.AddWorldElement(worldState, statePart.ToProxy<IWorldElementProxy>());
 			}
+
 			foreach (var system in systems)
 			{
 				elementsService.AddWorldSystem(worldState, system);
@@ -71,6 +74,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				element.Start(worldState, worldState, element);
 			}
+
 			IsStarted = true;
 
 			SendStartedMessage();
