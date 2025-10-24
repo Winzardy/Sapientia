@@ -23,21 +23,57 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
+		public delegate void BeforeUpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self);
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public readonly void BeforeUpdate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
+			var __method = UnsafeExt.As<Delegate, BeforeUpdateDelegate>(__delegate);
+			__method.Invoke(__executorPtr, worldState, self);
+		}
+
 		public delegate void UpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Update(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 1);
 			var __method = UnsafeExt.As<Delegate, UpdateDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState, self, deltaTime);
+		}
+
+		public delegate void AfterUpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self);
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public readonly void AfterUpdate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 2);
+			var __method = UnsafeExt.As<Delegate, AfterUpdateDelegate>(__delegate);
+			__method.Invoke(__executorPtr, worldState, self);
+		}
+
+		public delegate void BeforeLateUpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self);
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public readonly void BeforeLateUpdate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 3);
+			var __method = UnsafeExt.As<Delegate, BeforeLateUpdateDelegate>(__delegate);
+			__method.Invoke(__executorPtr, worldState, self);
 		}
 
 		public delegate void LateUpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void LateUpdate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 1);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 4);
 			var __method = UnsafeExt.As<Delegate, LateUpdateDelegate>(__delegate);
+			__method.Invoke(__executorPtr, worldState, self);
+		}
+
+		public delegate void AfterLateUpdateDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self);
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public readonly void AfterLateUpdate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 5);
+			var __method = UnsafeExt.As<Delegate, AfterLateUpdateDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState, self);
 		}
 
@@ -45,7 +81,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 2);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 6);
 			var __method = UnsafeExt.As<Delegate, ProxyDisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState);
 		}
@@ -54,7 +90,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Initialize(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 3);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 7);
 			var __method = UnsafeExt.As<Delegate, InitializeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState, self);
 		}
@@ -63,7 +99,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void LateInitialize(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 4);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 8);
 			var __method = UnsafeExt.As<Delegate, LateInitializeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState, self);
 		}
@@ -72,7 +108,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Start(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 5);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 9);
 			var __method = UnsafeExt.As<Delegate, StartDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState, self);
 		}
@@ -81,7 +117,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 6);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 10);
 			var __method = UnsafeExt.As<Delegate, DisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState, self);
 		}
@@ -90,6 +126,27 @@ namespace Sapientia.TypeIndexer
 
 	public static unsafe class IWorldSystemProxyExt
 	{
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeUpdate(this in UnsafeProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.BeforeUpdate(__proxyPtr.GetPtr().ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeUpdate(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.BeforeUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeUpdate(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			{
+				__proxyPtr.proxy.BeforeUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+			}
+		}
+
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void Update(this in UnsafeProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
@@ -112,6 +169,48 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void AfterUpdate(this in UnsafeProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.AfterUpdate(__proxyPtr.GetPtr().ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void AfterUpdate(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.AfterUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void AfterUpdate(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			{
+				__proxyPtr.proxy.AfterUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeLateUpdate(this in UnsafeProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.BeforeLateUpdate(__proxyPtr.GetPtr().ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeLateUpdate(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.BeforeLateUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeLateUpdate(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			{
+				__proxyPtr.proxy.BeforeLateUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public static void LateUpdate(this in UnsafeProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
 			__proxyPtr.proxy.LateUpdate(__proxyPtr.GetPtr().ptr, worldState, self);
@@ -129,6 +228,27 @@ namespace Sapientia.TypeIndexer
 			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
 				__proxyPtr.proxy.LateUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void AfterLateUpdate(this in UnsafeProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.AfterLateUpdate(__proxyPtr.GetPtr().ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void AfterLateUpdate(this ref ProxyPtr<IWorldSystemProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.AfterLateUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void AfterLateUpdate(this ref ProxyEvent<IWorldSystemProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			{
+				__proxyPtr.proxy.AfterLateUpdate(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
 			}
 		}
 
@@ -244,6 +364,27 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `BeforeUpdate`
+		private static void BeforeUpdate(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
+			__source.BeforeUpdate(worldState, self);
+#endif
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static Delegate CreateBeforeUpdateDelegate()
+		{
+			return new IWorldSystemProxy.BeforeUpdateDelegate(BeforeUpdate);
+		}
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
 		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `Update`
 		private static void Update(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self, System.Single deltaTime)
 		{
@@ -265,6 +406,48 @@ namespace Sapientia.TypeIndexer
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
 #endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `AfterUpdate`
+		private static void AfterUpdate(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
+			__source.AfterUpdate(worldState, self);
+#endif
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static Delegate CreateAfterUpdateDelegate()
+		{
+			return new IWorldSystemProxy.AfterUpdateDelegate(AfterUpdate);
+		}
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `BeforeLateUpdate`
+		private static void BeforeLateUpdate(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
+			__source.BeforeLateUpdate(worldState, self);
+#endif
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static Delegate CreateBeforeLateUpdateDelegate()
+		{
+			return new IWorldSystemProxy.BeforeLateUpdateDelegate(BeforeLateUpdate);
+		}
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
 		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `LateUpdate`
 		private static void LateUpdate(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
@@ -282,6 +465,27 @@ namespace Sapientia.TypeIndexer
 		public static Delegate CreateLateUpdateDelegate()
 		{
 			return new IWorldSystemProxy.LateUpdateDelegate(LateUpdate);
+		}
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldSystemProxyExt` найдите `usages` методов `AfterLateUpdate`
+		private static void AfterLateUpdate(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
+			__source.AfterLateUpdate(worldState, self);
+#endif
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static Delegate CreateAfterLateUpdateDelegate()
+		{
+			return new IWorldSystemProxy.AfterLateUpdateDelegate(AfterLateUpdate);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
