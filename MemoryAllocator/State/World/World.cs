@@ -93,7 +93,15 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
+				system.BeforeUpdate(worldState, worldState, system);
+			}
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
 				system.Update(worldState, worldState, system, deltaTime);
+			}
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
+				system.AfterUpdate(worldState, worldState, system);
 			}
 
 			ScheduleLateUpdate = true;
@@ -111,7 +119,15 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
+				system.BeforeLateUpdate(worldState, worldState, system);
+			}
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
 				system.LateUpdate(worldState, worldState, system);
+			}
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
+				system.AfterLateUpdate(worldState, worldState, system);
 			}
 
 			SendLateUpdateMessage();
