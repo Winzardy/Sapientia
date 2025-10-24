@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 
 namespace Sapientia.Reflection
 {
@@ -30,6 +31,18 @@ namespace Sapientia.Reflection
 			where T : class
 		{
 			return (T) Activator.CreateInstance(type);
+		}
+
+		public static object CreateInstanceSafe(this Type type)
+		{
+			try
+			{
+				return Activator.CreateInstance(type);
+			}
+			catch
+			{
+				return FormatterServices.GetUninitializedObject(type);
+			}
 		}
 	}
 }
