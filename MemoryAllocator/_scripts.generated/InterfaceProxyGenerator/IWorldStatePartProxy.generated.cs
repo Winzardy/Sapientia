@@ -50,11 +50,20 @@ namespace Sapientia.TypeIndexer
 			__method.Invoke(__executorPtr, worldState, self);
 		}
 
+		public delegate void EarlyStartDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self);
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public readonly void EarlyStart(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 3);
+			var __method = UnsafeExt.As<Delegate, EarlyStartDelegate>(__delegate);
+			__method.Invoke(__executorPtr, worldState, self);
+		}
+
 		public delegate void StartDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Start(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 3);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 4);
 			var __method = UnsafeExt.As<Delegate, StartDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState, self);
 		}
@@ -63,7 +72,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 4);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 5);
 			var __method = UnsafeExt.As<Delegate, DisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState, self);
 		}
@@ -132,6 +141,27 @@ namespace Sapientia.TypeIndexer
 			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
 				__proxyPtr.proxy.LateInitialize(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void EarlyStart(this in UnsafeProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.EarlyStart(__proxyPtr.GetPtr().ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void EarlyStart(this ref ProxyPtr<IWorldStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			__proxyPtr.proxy.EarlyStart(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void EarlyStart(this ref ProxyEvent<IWorldStatePartProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			{
+				__proxyPtr.proxy.EarlyStart(__proxyPtr.GetPtr(__worldState).ptr, worldState, self);
 			}
 		}
 
@@ -243,6 +273,27 @@ namespace Sapientia.TypeIndexer
 		public static Delegate CreateLateInitializeDelegate()
 		{
 			return new IWorldStatePartProxy.LateInitializeDelegate(LateInitialize);
+		}
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldStatePartProxyExt` найдите `usages` методов `EarlyStart`
+		private static void EarlyStart(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.IndexedPtr self)
+		{
+			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
+			__source.EarlyStart(worldState, self);
+#endif
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static Delegate CreateEarlyStartDelegate()
+		{
+			return new IWorldStatePartProxy.EarlyStartDelegate(EarlyStart);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]
