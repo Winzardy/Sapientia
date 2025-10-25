@@ -73,9 +73,15 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
+				element.EarlyStart(worldState, worldState, element);
+			}
+			LocalStatePartService.EarlyStart(worldState);
+
+			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
+			{
 				element.Start(worldState, worldState, element);
 			}
-
+			LocalStatePartService.Start(worldState);
 			IsStarted = true;
 
 			SendStartedMessage();

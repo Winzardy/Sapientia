@@ -9,6 +9,10 @@ namespace Sapientia.MemoryAllocator
 		public virtual void LateInitialize(WorldState worldState, IndexedPtr self) {}
 
 		/// <summary>
+		/// Right before first world update and Start
+		/// </summary>
+		public virtual void EarlyStart(WorldState worldState, IndexedPtr self) {}
+		/// <summary>
 		/// Right before first world update
 		/// </summary>
 		public virtual void Start(WorldState worldState, IndexedPtr self) {}
