@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Pooling;
+
 #nullable enable
 
 namespace Sapientia.Extensions

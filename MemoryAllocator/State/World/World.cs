@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.Data;
 using Sapientia.MemoryAllocator.State;
 using Sapientia.TypeIndexer;
 
@@ -95,10 +96,12 @@ namespace Sapientia.MemoryAllocator
 			{
 				system.BeforeUpdate(worldState, worldState, system);
 			}
+
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
 				system.Update(worldState, worldState, system, deltaTime);
 			}
+
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
 				system.AfterUpdate(worldState, worldState, system);
@@ -121,10 +124,12 @@ namespace Sapientia.MemoryAllocator
 			{
 				system.BeforeLateUpdate(worldState, worldState, system);
 			}
+
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
 				system.LateUpdate(worldState, worldState, system);
 			}
+
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
 				system.AfterLateUpdate(worldState, worldState, system);
@@ -151,5 +156,26 @@ namespace Sapientia.MemoryAllocator
 
 			worldState.RemoveWorld();
 		}
+
+		public static implicit operator WorldState(World world) => world.worldState;
+	}
+
+	public static class WorldExtensions
+	{
+		public static T GetService<T>(this World world)
+			where T : class, IIndexedType
+			=> world.worldState.GetService<T>();
+
+		public static ref T Get<T>(this World world, ServiceType type = ServiceType.WorldState)
+			where T : unmanaged, IIndexedType
+			=> ref world.worldState.GetService<T>(type);
+
+		public static SafePtr<T> GetPtr<T>(this World world, ServiceType type = ServiceType.WorldState)
+			where T : unmanaged, IIndexedType
+			=> world.worldState.GetServicePtr<T>(type);
+
+		public static ref T GetOrCreate<T>(this World world, ServiceType type = ServiceType.WorldState)
+			where T : unmanaged, IInitializableService
+			=> ref world.worldState.GetOrCreateService<T>(type);
 	}
 }

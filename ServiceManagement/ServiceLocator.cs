@@ -7,9 +7,9 @@ namespace Sapientia.ServiceManagement
 {
 	public static partial class ServiceLocator<TService>
 	{
-		internal static readonly SimpleList<IContextSubscriber> contextSubscribers = new ();
+		internal static readonly SimpleList<IContextSubscriber> contextSubscribers = new();
 
-		private static AsyncValue<TService> _instance = new (default);
+		private static AsyncValue<TService> _instance = new(default);
 
 		public static TService Instance
 		{
@@ -31,7 +31,7 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService GetOrCreate<T>() where T: TService, new()
+		public static TService GetOrCreate<T>() where T : TService, new()
 		{
 			if (Instance == null)
 				return Create<T>();
@@ -46,7 +46,7 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService Create<T>() where T: TService, new()
+		public static TService Create<T>() where T : TService, new()
 		{
 			var value = new T();
 			Register(value);
