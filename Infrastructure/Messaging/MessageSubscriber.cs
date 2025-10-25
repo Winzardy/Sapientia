@@ -4,17 +4,6 @@ namespace Sapientia.Extensions
 {
 	public abstract class MessageSubscriber : CompositeDisposable
 	{
-		public sealed override void Dispose()
-		{
-			OnDisposeInternal();
-
-			base.Dispose();
-		}
-
-		protected virtual void OnDisposeInternal() => OnDispose();
-
-		protected virtual void OnDispose() { }
-
 		/// <summary>
 		/// Подписывает на сообщение. Автоотписка при Dispose
 		/// </summary>
