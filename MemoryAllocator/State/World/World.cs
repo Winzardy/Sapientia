@@ -23,6 +23,8 @@ namespace Sapientia.MemoryAllocator
 			get => worldState.IsValid;
 		}
 
+		public float Time => worldState.Time;
+
 		public World(WorldState worldState, int elementsCapacity = 64)
 		{
 			this.worldState = worldState;
