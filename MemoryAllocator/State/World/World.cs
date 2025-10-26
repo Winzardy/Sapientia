@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Sapientia.Data;
 using Sapientia.MemoryAllocator.State;
 using Sapientia.TypeIndexer;
@@ -77,12 +78,14 @@ namespace Sapientia.MemoryAllocator
 			{
 				element.EarlyStart(worldState, worldState, element);
 			}
+
 			LocalStatePartService.EarlyStart(worldState);
 
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
 				element.Start(worldState, worldState, element);
 			}
+
 			LocalStatePartService.Start(worldState);
 			IsStarted = true;
 
@@ -185,5 +188,14 @@ namespace Sapientia.MemoryAllocator
 		public static ref T GetOrCreate<T>(this World world, ServiceType type = ServiceType.WorldState)
 			where T : unmanaged, IInitializableService
 			=> ref world.worldState.GetOrCreateService<T>(type);
+
+		[CanBeNull]
+		public static World ToWorld(this Entity entity)
+		{
+			var world = WorldManager.GetWorld(entity.worldId);
+			if (world is {IsValid: false})
+				return null;
+			return world;
+		}
 	}
 }
