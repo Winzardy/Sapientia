@@ -310,14 +310,14 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetElement<T>(WorldState worldState, Entity entity, out bool isCreated) where T : unmanaged
+		public ref T GetElement<T>(WorldState worldState, Entity entity, out bool isExist) where T : unmanaged
 		{
 			if (_elements.Has(worldState, entity.id))
 			{
 				ref var element = ref _elements.Get<ComponentSetElement<T>>(worldState, entity.id);
 				E.ASSERT(element.entity == entity);
 
-				isCreated = false;
+				isExist = true;
 				return ref element.value;
 			}
 			else
@@ -332,7 +332,7 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 				element = new ComponentSetElement<T>(entity, default);
 
-				isCreated = true;
+				isExist = false;
 				return ref element.value;
 			}
 		}

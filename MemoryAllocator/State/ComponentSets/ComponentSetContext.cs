@@ -82,9 +82,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetElement(Entity entity, out bool isCreated)
+		public ref T GetElement(Entity entity, out bool isExist)
 		{
-			return ref innerArchetype.ptr->GetElement<T>(worldState, entity, out isCreated);
+			return ref innerArchetype.ptr->GetElement<T>(worldState, entity, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
