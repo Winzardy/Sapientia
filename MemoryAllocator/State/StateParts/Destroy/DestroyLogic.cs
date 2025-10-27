@@ -86,8 +86,8 @@ namespace Sapientia.MemoryAllocator.State
 		public void RequestKill(Entity entity, float delay)
 		{
 			E.ASSERT(IsAlive(entity));
-			ref var request = ref _delayKillRequestSet.GetElement(entity, out var isCreated);
-			if (isCreated || request.delay > delay)
+			ref var request = ref _delayKillRequestSet.GetElement(entity, out var isExist);
+			if (!isExist || request.delay > delay)
 				request.delay = delay;
 		}
 
