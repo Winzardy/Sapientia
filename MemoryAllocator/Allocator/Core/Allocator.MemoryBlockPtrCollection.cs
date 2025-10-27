@@ -131,6 +131,16 @@ namespace Sapientia.MemoryAllocator
 			return blockPtr.ptr->blockSize;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private int GetDataSize(in MemPtr memPtr)
+		{
+			var blockPtr = (_zonesList[memPtr.zoneId].memory + memPtr.zoneOffset - TSize<MemoryBlock>.size).Cast<MemoryBlock>();
+#if DEBUG
+			return blockPtr.ptr->dataSize;
+#endif
+			return blockPtr.ptr->blockSize - TSize<MemoryBlock>.size;
+		}
+
 		private void CreateFreeBlock(SafePtr<MemoryZone> zone, SafePtr<MemoryBlock> blockPtr, MemoryBlockRef blockRef, int requiredBlockSize, int prevBlockOffset)
 		{
 			E.ASSERT(blockPtr.ptr >= zone.ptr->memory.ptr && blockPtr.ptr < zone.ptr->zoneEnd, $"{nameof(CreateFreeBlock)}. Указатель на блок находится вне выделенной области памяти.");
