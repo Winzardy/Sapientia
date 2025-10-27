@@ -175,7 +175,7 @@ namespace Sapientia.MemoryAllocator
 	{
 		public static T GetService<T>(this World world)
 			where T : class, IIndexedType
-			=> world.worldState.GetService<T>();
+			=> world.worldState.GetServiceClass<T>();
 
 		public static ref T Get<T>(this World world, ServiceType type = ServiceType.WorldState)
 			where T : unmanaged, IIndexedType

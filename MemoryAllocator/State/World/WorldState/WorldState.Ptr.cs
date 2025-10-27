@@ -75,7 +75,7 @@ namespace Sapientia.MemoryAllocator
 		public ProxyPtr<T> CopyPtrTo<T>(WorldState dstWorldState, in ProxyPtr<T> srsPtr)
 			where T: unmanaged, IProxy
 		{
-			var indexedPtr = CopyPtrTo(dstWorldState, srsPtr.indexedPtr);
+			var indexedPtr = CopyPtrTo(dstWorldState, in srsPtr.indexedPtr);
 			var result = new ProxyPtr<T>(indexedPtr);
 			return result;
 		}
