@@ -32,7 +32,9 @@ namespace Trading
 		{
 			var randomizer = board.Get<IRandomizer<int>>();
 			if (items.Roll<WeightedReward, Blackboard>(board, randomizer, out var index))
+			{
 				return items[index].reward.Execute(board);
+			}
 			return true;
 		}
 
@@ -42,12 +44,11 @@ namespace Trading
 	[Serializable]
 	public class WeightedReward : IWeightableWithEvaluator<Blackboard>
 	{
-		[SerializeReference]
-		public Evaluator<Blackboard, int> weight = 0;
+		public EvaluatedValue<Blackboard, int> weight = 1;
 
 		[SerializeReference]
 		public TradeReward reward;
 
-		public Evaluator<Blackboard, int> Weight => weight;
+		public EvaluatedValue<Blackboard, int> Weight => weight;
 	}
 }
