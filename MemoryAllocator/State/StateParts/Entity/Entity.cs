@@ -18,9 +18,9 @@ namespace Sapientia.MemoryAllocator.State
 			get
 			{
 #if ENABLE_ENTITY_NAMES
-				var worldState = worldId.GetWorldState();
-				if (!worldState.IsValid)
+				if (!worldId.IsValid())
 					return "No World State";
+				var worldState = worldId.GetWorldState();
 				return worldState.GetService<EntityStatePart>().GetEntityName(worldState, this);
 #else
 				return "[ENABLE_ENTITY_NAMES] is Disabled";

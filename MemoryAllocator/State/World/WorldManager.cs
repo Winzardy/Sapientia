@@ -183,24 +183,21 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldState GetWorldState(this ref WorldId worldId)
 		{
-			if (!worldId.IsValid())
-				return default;
+			E.ASSERT(worldId.IsValid());
 			return _worldsStates[worldId.index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static World GetWorld(WorldId worldId)
 		{
-			if (!worldId.IsValid())
-				return default;
+			E.ASSERT(worldId.IsValid());
 			return _worlds[worldId.index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static World GetWorld(this ref WorldId worldId)
 		{
-			if (!worldId.IsValid())
-				return default;
+			E.ASSERT(worldId.IsValid());
 			return _worlds[worldId.index];
 		}
 
