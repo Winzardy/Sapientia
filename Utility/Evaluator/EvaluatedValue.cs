@@ -22,7 +22,7 @@ namespace Sapientia.Evaluators
 			=> new() {evaluator = evaluator};
 
 		/// <inheritdoc cref="Evaluator{TContext, TValue}.Evaluate(TContext)"/>
-		public TValue Evaluate(TContext context) => evaluator ? evaluator.Evaluate(context) : value;
+		public readonly TValue Evaluate(TContext context) => evaluator ? evaluator.Evaluate(context) : value;
 
 		public override string ToString()
 		{

@@ -10,6 +10,6 @@ namespace Sapientia
 
 	public interface IWeightableWithEvaluator<TContext>
 	{
-		public Evaluator<TContext, int> Weight { get; }
+		public EvaluatedValue<TContext, int> Weight { get; }
 	}
 }
