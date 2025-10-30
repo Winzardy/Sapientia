@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -43,8 +46,6 @@ namespace Sapientia.Extensions
 			TraceWriter = new ErrorTraceWriter(),
 #endif
 		};
-
-
 
 		private static readonly JsonSerializerSettings JSON_SETTINGS_NONE_TYPED = new(JSON_SETTINGS_DEFAULT)
 		{
@@ -152,9 +153,8 @@ namespace Sapientia.Extensions
 		// If you see error in Newtonsoft.Json.Serialization.JsonArrayContract.CreateWrapper check this - https://github.com/jilleJr/Newtonsoft.Json-for-Unity/issues/77
 		public static T FromJson<T>(this string json) => FromJson<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
 
-#if !CLIENT
 		public static DefaultSerializationBinder serializationBinder = new CustomSerializationBinder();
-#endif
+
 		public static T FromJson<T>(this string json, JsonSerializerSettings settings)
 		{
 #if !CLIENT
@@ -300,7 +300,6 @@ namespace Sapientia.Extensions
 		}
 	}
 
-#if !CLIENT
 	public class CustomSerializationBinder : DefaultSerializationBinder
 	{
 		private readonly ConcurrentDictionary<string, string> _rawToMatch = new();
@@ -309,7 +308,6 @@ namespace Sapientia.Extensions
 		{
 			if (_rawToMatch.TryGetValue(assemblyName, out var correctAssemblyName))
 				return base.BindToType(correctAssemblyName, typeName);
-
 			try
 			{
 				return base.BindToType(assemblyName, typeName);
@@ -317,9 +315,9 @@ namespace Sapientia.Extensions
 			catch
 			{
 				var match = AppDomain.CurrentDomain
-				   .GetAssemblies()
-				   .Select(a => new { Assembly = a, Type = a.GetType(typeName, throwOnError: false) })
-				   .FirstOrDefault(x => x.Type != null);
+					.GetAssemblies()
+					.Select(a => new {Assembly = a, Type = a.GetType(typeName, throwOnError: false)})
+					.FirstOrDefault(x => x.Type != null);
 
 				if (match == null)
 					throw new JsonSerializationException(
@@ -331,6 +329,14 @@ namespace Sapientia.Extensions
 				return base.BindToType(correctAssemblyName, typeName);
 			}
 		}
+
+		public override void BindToName(Type serializedType, out string? assemblyName, out string? typeName)
+		{
+			base.BindToName(serializedType, out var rawAssemblyName, out typeName);
+			var name = Assembly.GetAssembly(serializedType).GetName().Name;
+			if (rawAssemblyName != null)
+				_rawToMatch[rawAssemblyName] = name;
+			assemblyName = name;
+		}
 	}
-#endif
 }
