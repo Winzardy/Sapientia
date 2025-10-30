@@ -42,6 +42,8 @@ namespace Sapientia.Extensions
 				args.ErrorContext.Handled = true;
 			},
 			MissingMemberHandling = MissingMemberHandling.Error,
+			SerializationBinder = new CustomSerializationBinder(),
+			TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
 #if UNITY_EDITOR
 			TraceWriter = new ErrorTraceWriter(),
 #endif
@@ -153,15 +155,8 @@ namespace Sapientia.Extensions
 		// If you see error in Newtonsoft.Json.Serialization.JsonArrayContract.CreateWrapper check this - https://github.com/jilleJr/Newtonsoft.Json-for-Unity/issues/77
 		public static T FromJson<T>(this string json) => FromJson<T>(json, JSON_SETTINGS_AUTO_TYPED)!;
 
-		public static DefaultSerializationBinder serializationBinder = new CustomSerializationBinder();
-
 		public static T FromJson<T>(this string json, JsonSerializerSettings settings)
-		{
-#if !CLIENT
-			settings.SerializationBinder = serializationBinder;
-#endif
-			return JsonConvert.DeserializeObject<T>(json, settings)!;
-		}
+			=> JsonConvert.DeserializeObject<T>(json, settings)!;
 
 		public static T? FromJsonOrDefault<T>(this string json)
 		{

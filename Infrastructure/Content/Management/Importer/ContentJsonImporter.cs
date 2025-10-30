@@ -18,6 +18,7 @@ namespace Content.Management
 			},
 			DefaultValueHandling = DefaultValueHandling.Ignore,
 			TypeNameHandling = TypeNameHandling.Auto,
+			TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
 			NullValueHandling = NullValueHandling.Ignore,
 		};
 
