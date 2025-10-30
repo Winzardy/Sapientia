@@ -1,4 +1,8 @@
 using System;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 
@@ -8,26 +12,24 @@ namespace Content.Management
 	{
 		private const char SEPARATOR = ',';
 
+		// ReSharper disable once InconsistentNaming
+		private static ISerializationBinder _serializationBinder => NewtonsoftJsonUtility.JSON_SETTINGS_DEFAULT.SerializationBinder;
+
+		private static readonly Regex _regex = new(
+			@",\s*Version=\d+(?:\.\d+){1,3}\s*,\s*Culture=[^,\]]+\s*,\s*PublicKeyToken=[^,\]]+(?:,\s*Retargetable=\w+)?",
+			RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
 		public static string ToKey(Type type)
 		{
-			if (type.IsGenericType)
-			{
-				// тут надо рекурсивно собрать typeName
-			}
-
-			NewtonsoftJsonUtility.serializationBinder.BindToName(type, out var assemblyName, out var typeName);
+			_serializationBinder.BindToName(type, out var assemblyName, out var typeName);
+			typeName = _regex.Replace(typeName!, string.Empty);
 			return $"{typeName}{SEPARATOR} {assemblyName}";
 		}
 
 		public static Type Resolve(string key)
 		{
-			if (key.Contains('`'))
-			{
-				// тут надо получить генерик тип...
-			}
-
 			var (typeName, assemblyName) = Split(key);
-			return NewtonsoftJsonUtility.serializationBinder.BindToType(assemblyName, typeName);
+			return _serializationBinder.BindToType(assemblyName, typeName);
 		}
 
 		private static (string typeName, string assemblyName) Split(string fullTypeKey)
