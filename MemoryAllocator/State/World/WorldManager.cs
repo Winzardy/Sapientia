@@ -175,8 +175,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldState GetWorldState(WorldId worldId)
 		{
-			if (!worldId.IsValid())
-				return default;
+			E.ASSERT(worldId.IsValid());
 			return _worldsStates[worldId.index];
 		}
 
