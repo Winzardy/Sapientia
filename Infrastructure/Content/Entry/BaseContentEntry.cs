@@ -27,7 +27,11 @@ namespace Content
 
 		protected BaseContentEntry(in T value)
 		{
+#if CLIENT
+			ContentEditValue = value;
+#else
 			this.value = value;
+#endif
 		}
 
 		public void Register()
