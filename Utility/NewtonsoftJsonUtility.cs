@@ -9,10 +9,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Sapientia.Collections;
 using Sapientia.JsonConverters;
-#if !CLIENT
-using System.Collections.Concurrent;
-using System.Linq;
-#endif
 
 namespace Sapientia.Extensions
 {
@@ -297,7 +293,7 @@ namespace Sapientia.Extensions
 
 	public class CustomSerializationBinder : DefaultSerializationBinder
 	{
-		private readonly ConcurrentDictionary<string, string> _rawToMatch = new();
+		private static readonly ConcurrentDictionary<string, string> _rawToMatch = new();
 
 		public override Type BindToType(string assemblyName, string typeName)
 		{
