@@ -56,7 +56,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldScope GetWorldScope(this ref WorldId worldId, out WorldState worldState)
 		{
-			var scope = new WorldScope(_currentWorldState.IsValid ? CurrentWorldId : default);
+			var scope = new WorldScope(_currentWorldState.IsValid && _currentWorldState.WorldId.IsValid() ? CurrentWorldId : default);
 			worldId.SetCurrentWorld();
 			worldState = _currentWorldState;
 			return scope;
