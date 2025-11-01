@@ -175,28 +175,32 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldState GetWorldState(WorldId worldId)
 		{
-			E.ASSERT(worldId.IsValid());
+			if (!worldId.IsValid())
+				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
 			return _worldsStates[worldId.index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldState GetWorldState(this ref WorldId worldId)
 		{
-			E.ASSERT(worldId.IsValid());
+			if (!worldId.IsValid())
+				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
 			return _worldsStates[worldId.index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static World GetWorld(WorldId worldId)
 		{
-			E.ASSERT(worldId.IsValid());
+			if (!worldId.IsValid())
+				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
 			return _worlds[worldId.index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static World GetWorld(this ref WorldId worldId)
 		{
-			E.ASSERT(worldId.IsValid());
+			if (!worldId.IsValid())
+				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
 			return _worlds[worldId.index];
 		}
 
