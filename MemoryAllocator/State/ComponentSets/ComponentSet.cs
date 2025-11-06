@@ -397,7 +397,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBackElement(WorldState worldState, Entity entity)
+		public bool RemoveSwapBackElement(WorldState worldState, Entity entity)
 		{
 			if (_elements.TryGetDenseId(worldState, entity.id, out var denseId))
 			{
@@ -407,7 +407,11 @@ namespace Sapientia.MemoryAllocator.State
 					_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, safePtr.ptr, 1);
 				}
 				_elements.RemoveSwapBackByDenseId(worldState, denseId);
+
+				return true;
 			}
+
+			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
