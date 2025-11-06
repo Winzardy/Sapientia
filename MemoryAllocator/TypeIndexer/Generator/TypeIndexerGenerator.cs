@@ -73,6 +73,7 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("");
 			sourceBuilder.AppendLine("namespace Sapientia.TypeIndexer");
 			sourceBuilder.AppendLine("{");
+			sourceBuilder.AppendLine("#if !PROXY_REFACTORING");
 			sourceBuilder.AppendLine($"	public static class {IndexedTypesInitializer}");
 			sourceBuilder.AppendLine("	{");
 			sourceBuilder.AppendLine("		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSplashScreen)]");
@@ -80,21 +81,10 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine("		{");
 			sourceBuilder.AppendLine("			var indexToType = new Type[]");
 			sourceBuilder.AppendLine("			{");
-			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");
-
-			for (var i = 0; i < types.Length; i++)
-			{
-				sourceBuilder.AppendLine($"				Type.GetType(\"{types[i].AssemblyQualifiedName}\"),");
-			}
-
-			sourceBuilder.AppendLine("#else");
-
 			for (var i = 0; i < types.Length; i++)
 			{
 				sourceBuilder.AppendLine($"				typeof({types[i].GetFullName()}),");
 			}
-
-			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			var types = new Dictionary<Type, {nameof(TypeIndex)}>(indexToType.Length);");
@@ -105,37 +95,20 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			var delegateIndexToDelegate = new {nameof(Delegate)}[]");
 			sourceBuilder.AppendLine("			{");
-			sourceBuilder.AppendLine("#if PROXY_REFACTORING");
-			sourceBuilder.AppendLine("#else");
 			sourceBuilder.AppendLine(GenerateDelegateIndexBody(proxyTypes));
-			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			var delegates = new Dictionary<({nameof(TypeIndex)}, {nameof(ProxyId)}), {nameof(DelegateIndex)}>");
 			sourceBuilder.AppendLine("			{");
-
-			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");
-			sourceBuilder.Append(GenerateDelegatesBody(proxyTypes, true));
-			sourceBuilder.AppendLine("#else");
 			sourceBuilder.Append(GenerateDelegatesBody(proxyTypes, false));
-			sourceBuilder.AppendLine("#endif");
-
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.Initialize)}(types, indexToType, delegateIndexToDelegate, delegates);");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine("#if UNITY_EDITOR || (DEBUG && !UNITY_5_3_OR_NEWER)");
-			sourceBuilder.AppendLine($"			var openGeneric = typeof({nameof(TypeIndex)}<>);");
-			sourceBuilder.AppendLine($"			foreach (var (typeArg, _) in types)");
-			sourceBuilder.AppendLine($"			{{");
-			sourceBuilder.AppendLine($"				var closedGeneric = openGeneric.MakeGenericType(typeArg);");
-			sourceBuilder.AppendLine($"				{typeof(RuntimeHelpers).FullName}.{nameof(RuntimeHelpers.RunClassConstructor)}(closedGeneric.TypeHandle);");
-			sourceBuilder.AppendLine($"			}}");
-			sourceBuilder.AppendLine("#else");
 			sourceBuilder.Append(GenerateTypeIndexInitialization(types));
-			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("		}");
 			sourceBuilder.AppendLine("	}");
+			sourceBuilder.AppendLine("#endif");
 			sourceBuilder.AppendLine("}");
 			RuntimeHelpers.RunClassConstructor(typeof(int).TypeHandle);
 
