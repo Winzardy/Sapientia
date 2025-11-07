@@ -2,6 +2,7 @@ namespace Sapientia.Pooling
 {
 	public interface IPoolable
 	{
+		// TODO: пытался переименовать в OnRelease, не получилось, надо позже повторить...
 		public void Release();
 
 		public void OnGet()

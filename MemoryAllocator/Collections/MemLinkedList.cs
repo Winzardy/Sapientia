@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 
 namespace Sapientia.MemoryAllocator
 {
-
 	[DebuggerTypeProxy(typeof(MemLinkedList<>.LinkedListProxy))]
 	public struct MemLinkedList<T> : IMemLinkedListEnumerable<T> where T : unmanaged
 	{
