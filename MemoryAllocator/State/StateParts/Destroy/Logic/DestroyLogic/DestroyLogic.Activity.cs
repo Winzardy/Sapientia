@@ -11,6 +11,8 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void Enable(Entity target)
 		{
+			E.ASSERT(IsExist(target) && !_destroyRequestSet.HasElement(target), "Попытка включить entity, которая не существует или отправлена на уничтожение.");
+
 			if (!_disabledSet.RemoveSwapBackElement(target))
 				return;
 
