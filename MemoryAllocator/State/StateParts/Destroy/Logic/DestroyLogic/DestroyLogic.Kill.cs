@@ -9,13 +9,13 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RequestKill(Entity entity)
 		{
-			E.ASSERT(IsAlive(entity));
+			E.ASSERT(IsAlive(entity), "Попытка запросить уничтожение entity, которая уже отправлена на уничтожение.");
 			_killRequestSet.GetElement(entity);
 		}
 
 		public void RequestKill(Entity entity, float delay)
 		{
-			E.ASSERT(IsAlive(entity));
+			E.ASSERT(IsAlive(entity), "Попытка запросить уничтожение entity, которая уже отправлена на уничтожение.");
 			ref var request = ref _delayKillRequestSet.GetElement(entity, out var isExist);
 			if (!isExist || request.delay > delay)
 				request.delay = delay;
