@@ -28,6 +28,8 @@ namespace Sapientia.Pooling
 		private T? _single;
 		private int _count;
 
+		public int Count => _count + (_single != null ? 1 : 0);
+
 		/// <summary>
 		/// Creates an instance of <see cref="ObjectPool{T}"/>.
 		/// </summary>
@@ -40,13 +42,13 @@ namespace Sapientia.Pooling
 		/// Creates an instance of <see cref="ObjectPool{T}"/>.
 		/// </summary>
 		/// <param name="policy">The pooling policy to use.</param>
-		/// <param name="maximumRetained">The maximum number of objects to retain in the pool. <c>-1</c> - infinity</param>
-		public ObjectPool(IObjectPoolPolicy<T> policy, int maximumRetained)
+		/// <param name="capacity">The maximum number of objects to retain in the pool. <c>-1</c> - infinity</param>
+		public ObjectPool(IObjectPoolPolicy<T> policy, int capacity)
 		{
 			_policy = policy ?? throw new ArgumentNullException(nameof(policy));
 			_queue = new ConcurrentQueue<T>();
 
-			SetCapacity(maximumRetained);
+			SetCapacity(capacity);
 		}
 
 		public void Dispose()
