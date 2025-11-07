@@ -56,7 +56,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldScope GetWorldScope(this ref WorldId worldId, out WorldState worldState)
 		{
-			var scope = new WorldScope(_currentWorldState.IsValid ? CurrentWorldId : default);
+			var scope = new WorldScope(_currentWorldState.IsValid && _currentWorldState.WorldId.IsValid() ? CurrentWorldId : default);
 			worldId.SetCurrentWorld();
 			worldState = _currentWorldState;
 			return scope;
@@ -176,28 +176,31 @@ namespace Sapientia.MemoryAllocator
 		public static WorldState GetWorldState(WorldId worldId)
 		{
 			if (!worldId.IsValid())
-				return default;
+				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
 			return _worldsStates[worldId.index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldState GetWorldState(this ref WorldId worldId)
 		{
-			E.ASSERT(worldId.IsValid());
+			if (!worldId.IsValid())
+				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
 			return _worldsStates[worldId.index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static World GetWorld(WorldId worldId)
 		{
-			E.ASSERT(worldId.IsValid());
+			if (!worldId.IsValid())
+				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
 			return _worlds[worldId.index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static World GetWorld(this ref WorldId worldId)
 		{
-			E.ASSERT(worldId.IsValid());
+			if (!worldId.IsValid())
+				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
 			return _worlds[worldId.index];
 		}
 

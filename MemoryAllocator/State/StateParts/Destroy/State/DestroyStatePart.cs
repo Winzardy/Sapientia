@@ -4,9 +4,9 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public void Initialize(WorldState worldState, IndexedPtr self)
 		{
-			ComponentSet.RegisterComponentSet<DestroyElement>(worldState, 1024)
+			ComponentSet.RegisterComponentSet<DestroyComponent>(worldState, 1024)
 				.SetDestroyHandler<DestroyElementDestroyHandler>(worldState);
-			ComponentSet.RegisterComponentSet<KillElement>(worldState, 2048)
+			ComponentSet.RegisterComponentSet<KillCallbackComponent>(worldState, 2048)
 				.SetDestroyHandler<KillElementDestroyHandler>(worldState);
 			ComponentSet.RegisterComponentSet<KillRequest>(worldState, 256);
 			ComponentSet.RegisterComponentSet<DelayKillRequest>(worldState, 64);
@@ -14,6 +14,10 @@ namespace Sapientia.MemoryAllocator.State
 
 			ComponentSet.RegisterComponentSet<AliveDuration>(worldState, 512);
 			ComponentSet.RegisterComponentSet<AliveTimeDebt>(worldState, 512);
+
+			ComponentSet.RegisterComponentSet<DisabledComponent>(worldState, 512);
+			ComponentSet.RegisterComponentSet<ActivityCallbackComponent>(worldState, 512)
+				.SetDestroyHandler<ActivityComponentDestroyHandler>(worldState);
 		}
 	}
 }
