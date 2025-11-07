@@ -9,10 +9,14 @@ namespace Sapientia.Pooling
 
 		public virtual void OnGet(T obj)
 		{
+			if(obj is IPoolable poolable)
+				poolable.OnGet();
 		}
 
 		public virtual void OnRelease(T obj)
 		{
+			if(obj is IPoolable poolable)
+				poolable.Release();
 		}
 
 		public virtual void OnDispose(T obj)
