@@ -207,7 +207,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsValid(this ref WorldId worldId)
 		{
-			if (worldId.index < _count && _worldsStates[worldId.index].WorldId.id == worldId.id)
+			if (worldId.index < _count && _worldsStates[worldId.index].IsValid && _worldsStates[worldId.index].WorldId.id == worldId.id)
 				return true;
 
 			for (ushort i = 0; i < _count; i++)
