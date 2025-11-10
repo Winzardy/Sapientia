@@ -192,10 +192,15 @@ namespace Sapientia.MemoryAllocator
 		[CanBeNull]
 		public static World ToWorld(this Entity entity)
 		{
-			var world = WorldManager.GetWorld(entity.worldId);
-			if (world is {IsValid: false})
+			if (!entity.IsValid())
 				return null;
-			return world;
+
+			return WorldManager.GetWorld(entity.worldId);
+		}
+
+		public static bool IsValid(this Entity entity)
+		{
+			return entity.worldId.IsValid() && entity.IsExist(entity.GetWorldState());
 		}
 	}
 }
