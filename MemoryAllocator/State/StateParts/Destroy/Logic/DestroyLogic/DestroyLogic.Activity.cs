@@ -6,7 +6,7 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public bool IsEnabled(Entity target)
 		{
-			return !_disabledSet.HasElement(target);
+			return IsExist(target) && !_disabledSet.HasElement(target);
 		}
 
 		public void Enable(Entity target)
