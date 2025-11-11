@@ -7,7 +7,7 @@ namespace Sapientia.TypeIndexer
 {
 	public unsafe struct IDisabledSubscriberProxy : IProxy
 	{
-		public static readonly ProxyId ProxyId = 16;
+		public static readonly ProxyId ProxyId = 18;
 		ProxyId IProxy.ProxyId
 		{
 			[System.Runtime.CompilerServices.MethodImplAttribute(256)]
@@ -23,13 +23,13 @@ namespace Sapientia.TypeIndexer
 			set => _firstDelegateIndex = value;
 		}
 
-		public delegate void OnEntityDisabledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity callbackReceiver);
+		public delegate void OnEntityDisabledDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.State.Entity callbackReceiver);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public readonly void OnEntityDisabled(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity callbackReceiver)
+		public readonly void OnEntityDisabled(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.State.Entity callbackReceiver)
 		{
 			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 0);
 			var __method = UnsafeExt.As<Delegate, OnEntityDisabledDelegate>(__delegate);
-			__method.Invoke(__executorPtr, worldState, in callbackReceiver);
+			__method.Invoke(__executorPtr, worldState, callbackReceiver);
 		}
 
 		public delegate void ProxyDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState);
@@ -46,23 +46,23 @@ namespace Sapientia.TypeIndexer
 	public static unsafe class IDisabledSubscriberProxyExt
 	{
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void OnEntityDisabled(this in UnsafeProxyPtr<IDisabledSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity callbackReceiver)
+		public static void OnEntityDisabled(this in UnsafeProxyPtr<IDisabledSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.State.Entity callbackReceiver)
 		{
-			__proxyPtr.proxy.OnEntityDisabled(__proxyPtr.GetPtr().ptr, worldState, in callbackReceiver);
+			__proxyPtr.proxy.OnEntityDisabled(__proxyPtr.GetPtr().ptr, worldState, callbackReceiver);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void OnEntityDisabled(this ref ProxyPtr<IDisabledSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity callbackReceiver)
+		public static void OnEntityDisabled(this ref ProxyPtr<IDisabledSubscriberProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.State.Entity callbackReceiver)
 		{
-			__proxyPtr.proxy.OnEntityDisabled(__proxyPtr.GetPtr(__worldState).ptr, worldState, in callbackReceiver);
+			__proxyPtr.proxy.OnEntityDisabled(__proxyPtr.GetPtr(__worldState).ptr, worldState, callbackReceiver);
 		}
 
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
-		public static void OnEntityDisabled(this ref ProxyEvent<IDisabledSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity callbackReceiver)
+		public static void OnEntityDisabled(this ref ProxyEvent<IDisabledSubscriberProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.State.Entity callbackReceiver)
 		{
 			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
-				__proxyPtr.proxy.OnEntityDisabled(__proxyPtr.GetPtr(__worldState).ptr, worldState, in callbackReceiver);
+				__proxyPtr.proxy.OnEntityDisabled(__proxyPtr.GetPtr(__worldState).ptr, worldState, callbackReceiver);
 			}
 		}
 
@@ -95,12 +95,12 @@ namespace Sapientia.TypeIndexer
 		[UnityEngine.Scripting.Preserve]
 #endif
 		// Чтобы найти дальнейшие `usages` метода - выше в классе `IDisabledSubscriberProxyExt` найдите `usages` методов `OnEntityDisabled`
-		private static void OnEntityDisabled(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, in Sapientia.MemoryAllocator.State.Entity callbackReceiver)
+		private static void OnEntityDisabled(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState, Sapientia.MemoryAllocator.State.Entity callbackReceiver)
 		{
 			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
 #if PROXY_REFACTORING
 #else
-			__source.OnEntityDisabled(worldState, in callbackReceiver);
+			__source.OnEntityDisabled(worldState, callbackReceiver);
 #endif
 		}
 

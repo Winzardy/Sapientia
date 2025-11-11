@@ -4,12 +4,12 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public interface IEnabledSubscriber : IInterfaceProxyType
 	{
-		public void OnEntityEnabled(WorldState worldState, in Entity callbackReceiver);
+		public void OnEntityEnabled(WorldState worldState, Entity callbackReceiver);
 	}
 
 	public interface IDisabledSubscriber : IInterfaceProxyType
 	{
-		public void OnEntityDisabled(WorldState worldState, in Entity callbackReceiver);
+		public void OnEntityDisabled(WorldState worldState, Entity callbackReceiver);
 	}
 
 	public struct ActivityCallbackComponent : IComponent
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator.State
 					if (!isExist)
 						continue;
 
-					for (var i = 0; i < targetComponent.enableCallbackTargets.Count; i++)
+					for (var i = 0; i < targetComponent.enableCallbacks.Count; i++)
 					{
 						if (targetComponent.enableCallbacks[worldState, i].callbackReceiver == target)
 						{
@@ -82,7 +82,7 @@ namespace Sapientia.MemoryAllocator.State
 					if (!isExist)
 						continue;
 
-					for (var i = 0; i < targetComponent.disableCallbackTargets.Count; i++)
+					for (var i = 0; i < targetComponent.disableCallbacks.Count; i++)
 					{
 						if (targetComponent.disableCallbacks[worldState, i].callbackReceiver == target)
 						{
