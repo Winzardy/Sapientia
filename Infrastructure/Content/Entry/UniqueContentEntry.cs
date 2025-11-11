@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
+using Sapientia;
 using Sapientia.Extensions;
 
 namespace Content
@@ -55,9 +57,8 @@ namespace Content
 	{
 	}
 
-	public partial interface IUniqueContentEntry : IContentEntry
+	public partial interface IUniqueContentEntry : IContentEntry, IIdentifiable
 	{
-		public string Id { get; }
 		public ref readonly SerializableGuid Guid { get; }
 
 		public int Index { get; }

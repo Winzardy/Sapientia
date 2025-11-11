@@ -75,17 +75,16 @@ namespace Content.Management
 			_idToIndex = new Dictionary<string, int>(source.Count);
 
 			int index = 0;
-			foreach (var entry in source)
+			foreach (var (guid, value) in source)
 			{
-				_values[index] = entry.Value;
+				_values[index] = value;
 
-				_keyToIndex[entry.Key] = index;
+				_keyToIndex[guid] = index;
 
-				if (entry.Value is IIdentifiable identifiable)
-					_idToIndex[identifiable.Id] = index;
+				if (!value.Id.IsNullOrEmpty())
+					_idToIndex[value.Id] = index;
 
-				entry.Value.SetIndex(index);
-
+				value.SetIndex(index);
 				index++;
 			}
 		}

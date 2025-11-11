@@ -4,7 +4,7 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public interface IKillSubscriber : IInterfaceProxyType
 	{
-		public void OnEntityKilled(WorldState worldState, in Entity callbackReceiver);
+		public void OnEntityKilled(WorldState worldState, Entity callbackReceiver);
 	}
 
 	public struct KillCallbackComponent : IComponent
