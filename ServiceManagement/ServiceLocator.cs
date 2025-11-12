@@ -1,7 +1,8 @@
-using System;
-using System.Runtime.CompilerServices;
+using Game.App.ServiceManagement;
 using Sapientia.Collections;
 using Sapientia.Data;
+using System;
+using System.Runtime.CompilerServices;
 
 namespace Sapientia.ServiceManagement
 {
@@ -113,72 +114,60 @@ namespace Sapientia.ServiceManagement
 
 	public static class ServiceLocator
 	{
-		#region Get
+		private static IServicesSupplier _supplier;
+
+		public static void SetServiceSupplier(IServicesSupplier supplier)
+		{
+			_supplier = supplier;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService GetOrCreate<TService>() where TService : new()
 		{
+			if (_supplier != null &&
+				_supplier.TryGet<TService>(out var service))
+			{
+				if (ServiceLocator<TService>.HasInstance())
+				{
+#if CLIENT
+					UnityEngine.Debug.LogError($"Duplicate instance of [ {typeof(TService).Name} ] detected");
+#endif
+				}
+
+				return service;
+			}
+
 			return ServiceLocator<TService>.GetOrCreate<TService>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService GetOrCreate<TService, TConcrete>() where TConcrete : TService, new()
-		{
-			return ServiceLocator<TService>.GetOrCreate<TConcrete>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Get<TService>(out TService service)
-		{
-			var result = ServiceLocator<TService>.TryGet(out service);
-
-			if (!result)
-				throw new Exception($"Not have target service [ {typeof(TService)} ]");
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService Get<TService>()
-		{
-			Get<TService>(out var service);
-			return service;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void GetOrCreate<TService>(out TService service) where TService : new()
 		{
-			service = ServiceLocator<TService>.GetOrCreate<TService>();
+			service = GetOrCreate<TService>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TService Get<TService>()
+		{
+			if (_supplier == null)
+				throw new Exception("Service Supplier is null.");
+
+			return _supplier.Get<TService>();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Get<TService>(out TService service)
+		{
+			service = Get<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGet<TService>(out TService service)
 		{
-			return ServiceLocator<TService>.TryGet(out service);
-		}
+			if (_supplier == null)
+				throw new Exception("Service Supplier is null.");
 
-		#endregion
-
-		#region Create
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService Create<TService>() where TService : new()
-		{
-			return ServiceLocator<TService>.Create<TService>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService Create<TService, TConcrete>() where TConcrete : TService, new()
-		{
-			return ServiceLocator<TService>.Create<TConcrete>();
-		}
-
-		#endregion
-
-		#region Register
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryRegisterAsService<TService>(this TService service)
-		{
-			return ServiceLocator<TService>.TryRegister(service);
+			return _supplier.TryGet(out service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -187,32 +176,10 @@ namespace Sapientia.ServiceManagement
 			return ServiceLocator<TService>.Register(service);
 		}
 
-		#endregion
-
-		#region Unregister
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryUnRegisterAsService<TService>(this TService service)
-		{
-			return ServiceLocator<TService>.TryUnRegister(service);
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void UnRegisterAsService<TService>(this TService service)
 		{
 			ServiceLocator<TService>.UnRegister(service);
 		}
-
-		#endregion
-
-		#region Replace
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService ReplaceService<TService>(this TService service)
-		{
-			return ServiceLocator<TService>.ReplaceService(service);
-		}
-
-		#endregion
 	}
 }
