@@ -16,18 +16,8 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService GetOrCreate<TService>() where TService : new()
 		{
-			if (_supplier != null &&
-				_supplier.TryGet<TService>(out var service))
-			{
-				if (ServiceLocator<TService>.HasInstance())
-				{
-#if CLIENT
-					UnityEngine.Debug.LogError($"Duplicate instance of [ {typeof(TService).Name} ] detected");
-#endif
-				}
-
+			if (TryGetFromSupplier(out TService service))
 				return service;
-			}
 
 			return ServiceLocator<TService>.GetOrCreate<TService>();
 		}
@@ -41,10 +31,20 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Get<TService>()
 		{
-			if (_supplier == null)
-				throw new Exception("Service Supplier is null.");
+			if (TryGetFromSupplier(out TService service))
+				return service;
 
-			return _supplier.Get<TService>();
+			if (!ServiceLocator<TService>.TryGet(out service))
+				throw new Exception($"Not have target service [ {typeof(TService)} ]");
+
+			return service;
+
+			//TODO: change to this, once everything is stable.
+
+			//if (_supplier == null)
+			//	throw new Exception("Service Supplier is null.");
+
+			//return _supplier.Get<TService>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,10 +56,16 @@ namespace Sapientia.ServiceManagement
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGet<TService>(out TService service)
 		{
-			if (_supplier == null)
-				throw new Exception("Service Supplier is null.");
+			return
+				TryGetFromSupplier(out service) ||
+				ServiceLocator<TService>.TryGet(out service);
 
-			return _supplier.TryGet(out service);
+			//TODO: change to this, once everything is stable.
+
+			//if (_supplier == null)
+			//	throw new Exception("Service Supplier is null.");
+
+			//return _supplier.TryGet(out service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,6 +78,25 @@ namespace Sapientia.ServiceManagement
 		public static void UnRegisterAsService<TService>(this TService service)
 		{
 			ServiceLocator<TService>.UnRegister(service);
+		}
+
+		private static bool TryGetFromSupplier<TService>(out TService service)
+		{
+			if (_supplier != null &&
+				_supplier.TryGet(out service))
+			{
+				if (ServiceLocator<TService>.HasInstance())
+				{
+#if CLIENT
+					UnityEngine.Debug.LogError($"Duplicate instance of [ {typeof(TService).Name} ] detected");
+#endif
+				}
+
+				return true;
+			}
+
+			service = default;
+			return false;
 		}
 	}
 }
