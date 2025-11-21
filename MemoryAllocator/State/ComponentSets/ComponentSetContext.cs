@@ -123,12 +123,6 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ClearFast()
-		{
-			_innerArchetype.ptr->ClearFast<T>(WorldState);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveSwapBackElement(Entity entity)
 		{
 			return _innerArchetype.ptr->RemoveSwapBackElement(WorldState, entity);
