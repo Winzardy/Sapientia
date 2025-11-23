@@ -67,8 +67,8 @@ namespace Trading
 					return state.current;
 
 				// case TradeProgressionResetType.Incremental:
-				// 	var passedPointCount = scheme.schedule.CalculatePassedPointCount(utcAt, dateTime);
-				// 	return state.current - passedPointCount;
+				// var passedPointCount = scheme.schedule.CalculatePassedPointCount(utcAt, dateTime);
+				// return state.current - passedPointCount;
 
 				default:
 					throw new ArgumentOutOfRangeException();

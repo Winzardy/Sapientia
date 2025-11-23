@@ -9,6 +9,14 @@ namespace UnityEngine
 	public class SerializeReferenceAttribute : Attribute
 	{
 	}
+
+	[Conditional("CLIENT")]
+	public class TooltipAttribute: Attribute
+	{
+		public TooltipAttribute(string tooltip)
+		{
+		}
+	}
 }
 
 /// Надоело везде писать UnityEngine.SerializeReference и оборачивать в дефайны

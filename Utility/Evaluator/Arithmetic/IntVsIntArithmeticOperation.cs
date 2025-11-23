@@ -34,7 +34,7 @@ namespace Sapientia.Evaluators
 				ArithmeticOperator.Add => a.Evaluate(context) + b.Evaluate(context),
 				ArithmeticOperator.Subtract => a.Evaluate(context) - b.Evaluate(context),
 				ArithmeticOperator.Divide => a.Evaluate(context) / b.Evaluate(context),
-				ArithmeticOperator.Multiply => a.Evaluate(context) * b.Evaluate(context),
+				ArithmeticOperator.Multiply => a.Evaluate(context) % b.Evaluate(context),
 				_ => throw new ArgumentOutOfRangeException()
 			};
 		}
@@ -50,6 +50,7 @@ namespace Sapientia.Evaluators
 				ArithmeticOperator.Subtract => IEvaluator.ARITHMETIC_OPERATOR_SUBTRACT,
 				ArithmeticOperator.Divide => IEvaluator.ARITHMETIC_OPERATOR_DIVIDE,
 				ArithmeticOperator.Multiply => IEvaluator.ARITHMETIC_OPERATOR_MULTIPLY,
+				ArithmeticOperator.Modulus => IEvaluator.ARITHMETIC_OPERATOR_MODULUS,
 				_ => throw new ArgumentOutOfRangeException()
 			};
 

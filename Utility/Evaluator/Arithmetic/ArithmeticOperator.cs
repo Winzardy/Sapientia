@@ -26,6 +26,11 @@ namespace Sapientia
 		[LabelText(IEvaluator.ARITHMETIC_OPERATOR_MULTIPLY)]
 		[Tooltip("Умножение (A умножить на B)")]
 #endif
-		Multiply
+		Multiply,
+#if CLIENT
+		[LabelText(IEvaluator.ARITHMETIC_OPERATOR_MODULUS)]
+		[Tooltip("Остаток от деления (A % B)")]
+#endif
+		Modulus,
 	}
 }
