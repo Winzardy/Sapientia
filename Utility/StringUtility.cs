@@ -31,6 +31,11 @@ namespace Sapientia.Extensions
 			return string.IsNullOrWhiteSpace(str);
 		}
 
+		public static string Strip(this string str, string substring)
+		{
+			return str.Replace(substring, "");
+		}
+
 		public static StringBuilder Prepend(this StringBuilder builder, string value)
 			=> builder.Insert(0, value);
 

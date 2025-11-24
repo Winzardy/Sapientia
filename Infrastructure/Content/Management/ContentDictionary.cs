@@ -95,5 +95,16 @@ namespace Content.Management
 
 		public bool TryAdd(in SerializableGuid guid, TValue entry) => _temporary.TryAdd(guid, entry);
 		public bool Remove(in SerializableGuid guid) => _temporary.Remove(guid);
+
+		internal bool TryGet(in SerializableGuid guid, out TValue value)
+		{
+			if (IsFrozen && _keyToIndex.TryGetValue(guid, out var index))
+			{
+				value = _values[index];
+				return true;
+			}
+
+			return _temporary.TryGetValue(guid, out value);
+		}
 	}
 }

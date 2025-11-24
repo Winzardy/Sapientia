@@ -32,6 +32,11 @@ namespace Sapientia.MemoryAllocator.State
 			this.entity = entity;
 			this.value = value;
 		}
+
+		public static implicit operator (Entity, TValue)(ComponentSetElement<TValue> element)
+		{
+			return (element.entity, element.value);
+		}
 	}
 
 	public struct ComponentSetElement
@@ -376,17 +381,6 @@ namespace Sapientia.MemoryAllocator.State
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear<T>(WorldState worldState) where T: unmanaged
-		{
-			if (_destroyHandlerProxy.IsCreated)
-			{
-				var valueArray = _elements.GetValuePtr<ComponentSetElement<T>>(worldState);
-				_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, valueArray.ptr, _elements.Count);
-			}
-			_elements.Clear(worldState);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ClearFast<T>(WorldState worldState) where T: unmanaged
 		{
 			if (_destroyHandlerProxy.IsCreated)
 			{
