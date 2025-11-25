@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Sapientia.Collections;
 using Sapientia.Pooling;
 using Trading.Result;
 
@@ -56,9 +57,18 @@ namespace Trading
 		/// <returns>Как Tradeboard отпустят, TradeRawResult становится не актуальным!</returns>
 		public TradeRawResult TransferResultHandlesTo(Tradeboard newBoard)
 		{
-			newBoard._resultHandleTokens.AddRange(_resultHandleTokens);
-			StaticObjectPoolUtility.ReleaseAndSetNull(ref _resultHandleTokens);
+			newBoard.ApplyTransfer(_resultHandleTokens);
+			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _resultHandleTokens);
 			return _rawResult;
+		}
+
+		private void ApplyTransfer(List<ITradeResultHandleToken> handles)
+		{
+			if (handles.IsNullOrEmpty())
+				return;
+
+			_resultHandleTokens ??= ListPool<ITradeResultHandleToken>.Get();
+			_resultHandleTokens.AddRange(handles);
 		}
 
 		public TradeResultSnapshot SnapshotResult() => new(Id, in _rawResult);

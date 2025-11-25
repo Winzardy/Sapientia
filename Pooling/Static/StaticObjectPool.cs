@@ -66,11 +66,5 @@ namespace Sapientia.Pooling
 
 			ReleaseAndSetNull(ref obj);
 		}
-
-		public static void Get<T>(ref T value)
-			where T : class
-		{
-			value = StaticObjectPool<T>.Get();
-		}
 	}
 }
