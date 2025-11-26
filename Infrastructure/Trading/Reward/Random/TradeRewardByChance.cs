@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using Sapientia;
 using Sapientia.Deterministic;
+using Sapientia.Evaluators;
 #if CLIENT
+using Fusumity.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
@@ -13,10 +15,12 @@ namespace Trading
 	public partial class TradeRewardByChance : TradeReward
 	{
 		private static readonly Fix64 MAX_CHANCE = Fix64.One;
+
+		[Tooltip("Вероятность от 0 до 1")]
 #if CLIENT
-		[PropertyRange(0, 1)]
+		[PropertyRangeParent(0, 1)]
 #endif
-		public Fix64 chance;
+		public EvaluatedValue<Blackboard, Fix64> chance;
 
 		[SerializeReference]
 		public TradeReward reward;
@@ -29,7 +33,7 @@ namespace Trading
 			var randomizer = board.Get<IRandomizer<Fix64>>();
 			var roll = randomizer.Next(0, MAX_CHANCE);
 
-			if (roll <= chance)
+			if (roll <= chance.Evaluate(board))
 				return reward.Execute(board);
 
 			return true;
@@ -42,7 +46,7 @@ namespace Trading
 			var randomizer = board.Get<IRandomizer<Fix64>>();
 			var roll = randomizer.Next(0, MAX_CHANCE);
 
-			if (roll <= chance)
+			if (roll <= chance.Evaluate(board))
 				foreach (var actualReward in reward.EnumerateActual(board))
 					yield return actualReward;
 		}
