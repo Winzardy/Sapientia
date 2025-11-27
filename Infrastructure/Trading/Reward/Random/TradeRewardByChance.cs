@@ -5,7 +5,6 @@ using Sapientia.Deterministic;
 using Sapientia.Evaluators;
 #if CLIENT
 using Fusumity.Attributes;
-using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
 
@@ -16,8 +15,8 @@ namespace Trading
 	{
 		private static readonly Fix64 MAX_CHANCE = Fix64.One;
 
-		[Tooltip("Вероятность от 0 до 1")]
 #if CLIENT
+		[Tooltip("Вероятность от 0 до 1")]
 		[PropertyRangeParent(0, 1)]
 #endif
 		public EvaluatedValue<Blackboard, Fix64> chance;
