@@ -1,12 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Advertising;
 using Content;
 using Sapientia;
 using Sapientia.Evaluators;
-using Trading.Result;
 
 namespace Trading.Advertising
 {

@@ -6,6 +6,5 @@ namespace Content
 	[Conditional("UNITY_EDITOR")]
 	public class NotEmptyAttribute : Attribute
 	{
-
 	}
 }
