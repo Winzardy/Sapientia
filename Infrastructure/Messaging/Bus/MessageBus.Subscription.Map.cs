@@ -63,16 +63,22 @@ namespace Messaging
 			/// Используемая структура SimpleList применяет внутренний пул,
 			/// так что лишних аллокаций и утечек памяти не будет
 			/// </remarks>
-			internal static void Deliver(int hubIndex, ref TMessage msg, bool clear = false)
+			internal static bool Publish(int hubIndex, ref TMessage msg, bool clear = false)
 			{
 				if (!_hubIndexToGroup.TryGetValue(hubIndex, out var group))
-					return;
+					return false;
 
+				var published = false;
 				using var subscriptions = new SimpleList<IMessageSubscription>(group.Values);
 				if (clear)
 					Clear(hubIndex, false);
 				foreach (var subscription in subscriptions)
+				{
 					subscription.Deliver(ref msg);
+					published = true;
+				}
+
+				return published;
 			}
 		}
 	}

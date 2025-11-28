@@ -49,16 +49,16 @@ namespace Messaging
 			SubscriptionMap<TMessage>.Clear(_index);
 		}
 
-		private void SendInternal<TMessage>(ref TMessage msg) where TMessage : struct
+		private bool SendInternal<TMessage>(ref TMessage msg) where TMessage : struct
 		{
 			using var scope = GetBusyScope();
-			SubscriptionMap<TMessage>.Deliver(_index, ref msg);
+			return SubscriptionMap<TMessage>.Publish(_index, ref msg);
 		}
 
 		private void SendAndUnsubscribeAllInternal<TMessage>(ref TMessage msg) where TMessage : struct
 		{
 			using var scope = GetBusyScope();
-			SubscriptionMap<TMessage>.Deliver(_index, ref msg, true);
+			SubscriptionMap<TMessage>.Publish(_index, ref msg, true);
 		}
 	}
 }

@@ -26,8 +26,9 @@ namespace Messaging
 		/// "Разослать" сообщение подписчикам <see cref="Subscribe{TMessage}(Receiver{T})"/>
 		/// </summary>
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
+		/// <returns>Получил ли кто-то сообщение?</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Send<TMessage>(ref TMessage msg) where TMessage : struct
+		public static bool Send<TMessage>(ref TMessage msg) where TMessage : struct
 			=> bus.Send(ref msg);
 
 		/// <summary>
