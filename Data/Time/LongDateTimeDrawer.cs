@@ -5,6 +5,7 @@ using System;
 
 namespace Sapientia.Data.Time
 {
+	// todo re-implement with using UI Toolkit or Odin
 	[CustomPropertyDrawer(typeof(LongDateTimeAttribute))]
 	public class LongDateTimeDrawer : PropertyDrawer
 	{
