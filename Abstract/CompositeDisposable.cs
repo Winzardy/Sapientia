@@ -14,6 +14,7 @@ namespace Sapientia.Extensions
 		public virtual void Dispose()
 		{
 			OnDisposeInternal();
+
 			if (_disposables?.IsNullOrEmpty() ?? true)
 				return;
 

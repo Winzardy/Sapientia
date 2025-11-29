@@ -3,6 +3,7 @@ using Content;
 
 namespace Trading
 {
+	// TODO: перенести в Interop
 	[Serializable]
 	public struct TraderOfferReference
 	{

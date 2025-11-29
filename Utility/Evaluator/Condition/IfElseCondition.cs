@@ -5,15 +5,18 @@ using UnityEngine;
 namespace Sapientia.Evaluators
 {
 	[Serializable]
-	public class IfElseEvaluator<TContext, TValue> : Evaluator<TContext, TValue>
+	public class IfElseCondition<TContext> : Condition<TContext>
 	{
 		[SerializeReference]
 		public Condition<TContext> condition;
 
-		public EvaluatedValue<TContext, TValue> a= default(TValue);
-		public EvaluatedValue<TContext, TValue> b = default(TValue);
+		[SerializeReference]
+		public Condition<TContext> a;
 
-		protected override TValue OnEvaluate(TContext context)
+		[SerializeReference]
+		public Condition<TContext> b = true;
+
+		protected override bool OnEvaluate(TContext context)
 		{
 			if (condition.IsFulfilled(context))
 				return a.Evaluate(context);

@@ -11,6 +11,7 @@ namespace Sapientia
 		public const string ARITHMETIC_OPERATOR_SUBTRACT = "\u2212";
 		public const string ARITHMETIC_OPERATOR_DIVIDE = "\u00f7";
 		public const string ARITHMETIC_OPERATOR_MULTIPLY = "\u00d7";
+		public const string ARITHMETIC_OPERATOR_MODULUS = "%";
 	}
 
 	public interface IEvaluator<in TContext, out T> : IEvaluator

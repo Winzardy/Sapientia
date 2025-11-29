@@ -94,7 +94,7 @@ namespace Messaging
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		/// <param name="msg">Сообщение для доставки</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Send<TMessage>(ref TMessage msg) where TMessage : struct => SendInternal(ref msg);
+		public bool Send<TMessage>(ref TMessage msg) where TMessage : struct => SendInternal(ref msg);
 
 		/// <summary>
 		/// Публикует сообщение всем подписчикам и затем удаляет всех подписчиков этого типа.

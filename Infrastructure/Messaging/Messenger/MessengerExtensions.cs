@@ -5,7 +5,7 @@ namespace Messaging
 	public static class MessengerExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Send<TMessage>(this TMessage msg) where TMessage : struct
+		public static bool Send<TMessage>(this TMessage msg) where TMessage : struct
 			=> Messenger.Send(ref msg);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

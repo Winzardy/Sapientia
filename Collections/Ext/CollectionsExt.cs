@@ -370,6 +370,15 @@ namespace Sapientia.Collections
 				yield return (value, index++);
 		}
 
+		public static IEnumerable<T> Safe<T>(this T[] array)
+		{
+			if (array.IsNullOrEmpty())
+				yield break;
+
+			foreach (var value in array)
+				yield return value;
+		}
+
 		public static IEnumerable<(T, int)> WithIndex<T>(this IEnumerable<T> enumerable)
 		{
 			if (enumerable == null)

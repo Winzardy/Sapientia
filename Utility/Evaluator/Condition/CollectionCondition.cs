@@ -13,7 +13,6 @@ public enum ConditionGroupMode
 namespace Sapientia.Conditions
 {
 	[Serializable]
-
 	public abstract class CollectionCondition<T> : InvertableCondition<T>
 	{
 		public ConditionGroupMode mode;
