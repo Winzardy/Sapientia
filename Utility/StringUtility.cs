@@ -36,6 +36,28 @@ namespace Sapientia.Extensions
 			return str.Replace(substring, "");
 		}
 
+		public static string SlashSafe(this string source)
+		{
+			return source.Replace("\\", "/");
+		}
+
+		public static string EnsureTrailingSlash(this string source)
+		{
+			source = source.SlashSafe();
+
+			if (!source.EndsWith("/"))
+			{
+				source += "/";
+			}
+
+			return source;
+		}
+
+		public static string RemoveTrailingSlash(this string source)
+		{
+			return source.TrimEnd('\\', '/');
+		}
+
 		public static StringBuilder Prepend(this StringBuilder builder, string value)
 			=> builder.Insert(0, value);
 
