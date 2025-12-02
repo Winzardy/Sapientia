@@ -61,17 +61,17 @@ namespace Sapientia.Extensions
 		public static StringBuilder Prepend(this StringBuilder builder, string value)
 			=> builder.Insert(0, value);
 
-		public static string GetCompositeString<T>(this IEnumerable<T> collection, Func<T, string> getter = null, bool verticalOrHorizontal = true,
+		public static string GetCompositeString<T>(this IEnumerable<T> collection, Func<T, string> getter = null, bool vertical = true,
 			bool numerate = true,
 			string separator = "")
 		{
 			if (collection == null)
 				return string.Empty;
 
-			return GetCompositeString(new List<T>(collection), verticalOrHorizontal, getter, numerate, separator);
+			return GetCompositeString(new List<T>(collection), vertical, getter, numerate, separator);
 		}
 
-		public static string GetCompositeString<T>(this List<T> items, bool verticalOrHorizontal = true, Func<T, string> getter = null,
+		public static string GetCompositeString<T>(this List<T> items, bool vertical = true, Func<T, string> getter = null,
 			bool numerate = true,
 			string separator = "")
 		{
@@ -95,7 +95,7 @@ namespace Sapientia.Extensions
 						numerate ? $"{i + 1}. " :
 						null;
 
-					var next = verticalOrHorizontal ? $"\n{prefix}{value}" : $"{prefix}{value}";
+					var next = vertical ? $"\n{prefix}{value}" : $"{prefix}{value}";
 
 					sb.Append(next);
 				}
