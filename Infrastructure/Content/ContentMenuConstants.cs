@@ -3,6 +3,7 @@
 	public static class ContentMenuConstants
 	{
 		public const int DATABASE_PRIORITY = -201;
+		public const int ENTRY_PRIORITY = -200;
 
 		public const string GROUP_NAME = "Content";
 
