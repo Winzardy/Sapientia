@@ -219,7 +219,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveFast<TU>(WorldState worldState, TU obj) where TU : unmanaged, IEquatable<T>
+		public bool RemoveSwapBack<TU>(WorldState worldState, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			for (int i = 0, cnt = _count; i < cnt; ++i)
 			{
@@ -283,6 +283,12 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			return EnsureCapacity(worldState, newLength);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange(WorldState worldState, T[] collection)
+		{
+			AddRange(worldState, collection.AsSpan());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
