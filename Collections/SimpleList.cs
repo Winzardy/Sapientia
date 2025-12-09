@@ -474,6 +474,16 @@ namespace Sapientia.Collections
 			Dispose();
 		}
 
+		public Span<T> AsSpan()
+		{
+			return _array.AsSpan(_count);
+		}
+
+		public Span<T> AsSpan(int index, int length)
+		{
+			return _array.AsSpan(index, length);
+		}
+
 		public T[] ToArray()
 		{
 			var result = new T[_count];

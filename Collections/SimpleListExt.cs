@@ -29,26 +29,41 @@ namespace Sapientia.Collections
 			public int Compare(T x, T y) => x.CompareTo(y);
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему)
+		/// </summary>
 		public static void Sort<T>(this SimpleList<T> list, Comparison<T> comparison)
 		{
 			list.Sort(new LambdaComparer<T>(comparison));
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему)
+		/// </summary>
 		public static void Sort<T>(this SimpleList<T> list) where T: IComparable<T>
 		{
 			list.Sort(0, list.Count, new DefaultComparer<T>());
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему)
+		/// </summary>
 		public static void Sort<T>(this SimpleList<T> list, int index, int count) where T: IComparable<T>
 		{
 			list.Sort(index, count, new DefaultComparer<T>());
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему)
+		/// </summary>
 		public static void Sort<T, TComparer>(this SimpleList<T> list, TComparer comparer) where TComparer : IComparer<T>
 		{
 			list.Sort(0, list.Count, comparer);
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему)
+		/// </summary>
 		public static void Sort<T, TComparer>(this SimpleList<T> list, int index, int count, TComparer comparer) where TComparer : IComparer<T>
 		{
 			var array = list.GetInnerArray();

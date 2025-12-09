@@ -154,8 +154,12 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe float Abs(this float value)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.abs(value);
+#else
 			var uintValue = (*(uint*)&value) & 0x7FFFFFFF;
 			return *(float*)&uintValue;
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -185,7 +189,11 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Clamp(this float value, float min, float max)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.clamp(value, min, max);
+#else
 			return value < min ? min : (value > max ? max : value);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,29 +205,45 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Max(this float a, float b)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.max(a, b);
+#else
 			return a > b ? a : b;
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Max(this float a, float b, float c, float d)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.max(math.max(a, b), math.max(c, d));
+#else
 			var abMax = a > b ? a : b;
 			var cdMax = c > d ? c : d;
 			return abMax > cdMax ? abMax : cdMax;
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Min(this float a, float b)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.min(a, b);
+#else
 			return a < b ? a : b;
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Min(this float a, float b, float c, float d)
 		{
+#if UNITY_5_3_OR_NEWER
+			return math.min(math.min(a, b), math.min(c, d));
+#else
 			var abMin = a < b ? a : b;
 			var cdMin = c < d ? c : d;
 			return abMin < cdMin ? abMin : cdMin;
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
