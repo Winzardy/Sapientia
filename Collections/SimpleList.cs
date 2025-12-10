@@ -476,7 +476,7 @@ namespace Sapientia.Collections
 
 		public Span<T> AsSpan()
 		{
-			return _array.AsSpan(_count);
+			return _array.AsSpan(0, _count);
 		}
 
 		public Span<T> AsSpan(int index, int length)
