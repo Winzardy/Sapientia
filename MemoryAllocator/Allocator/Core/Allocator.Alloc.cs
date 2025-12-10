@@ -78,11 +78,11 @@ namespace Sapientia.MemoryAllocator
 		/// Не аллоцируем память, только показываем. Используется для ref default в случае возврата пустого значения.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private MemPtr MemShow<T>(out SafePtr<T> tValuePtr)
+		private MemPtr MemShow<T>(out SafePtr<T> valuePtr)
 			where T : unmanaged
 		{
-			var result = MemShow(TSize<T>.size, out var valuePtr);
-			tValuePtr = valuePtr;
+			var result = MemShow(TSize<T>.size, out var rawValuePtr);
+			valuePtr = rawValuePtr;
 
 			return result;
 		}
