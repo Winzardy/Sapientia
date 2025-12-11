@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using Sapientia;
 
@@ -26,6 +25,9 @@ namespace Content
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsEmpty<T>(this BaseContentEntry<T> entry) => entry == null || !entry.IsValid() || entry.Value == null;
+		public static bool IsEmpty<T>(this BaseContentEntry<T> entry)
+		{
+			return entry == null || !entry.IsValid() || entry.Value == null || entry.Value.Equals(null);
+		}
 	}
 }
