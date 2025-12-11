@@ -69,13 +69,6 @@ namespace Content
 		}
 	}
 
-	public partial class ContentEntry<T>
-	{
-		public ContentEntry()
-		{
-		}
-	}
-
 	public partial class BaseContentEntry<T>
 	{
 		// ReSharper disable once PublicConstructorInAbstractClass
