@@ -255,6 +255,7 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Obsolete("Use RemoveLast instead")]
 		public T ExtractLast()
 		{
 			_count--;
@@ -262,9 +263,10 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveLast()
+		public T RemoveLast()
 		{
 			_count--;
+			return _array[_count];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
