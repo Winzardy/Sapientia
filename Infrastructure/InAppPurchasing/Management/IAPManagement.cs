@@ -30,10 +30,9 @@ namespace InAppPurchasing
 		Unknown,
 	}
 
-	public class IAPManagement : IDisposable
+	public partial class IAPManagement : IDisposable
 	{
 		private IInAppPurchasingIntegration _integration;
-		private IInAppPurchasingGrantCenter _grantCenter;
 
 		private IInAppPurchasingService _service;
 
@@ -46,12 +45,11 @@ namespace InAppPurchasing
 		internal IInAppPurchasingIntegration Integration => _integration;
 		internal IInAppPurchasingGrantCenter GrantCenter => _grantCenter;
 
-		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingGrantCenter grantCenter)
+		public IAPManagement(IInAppPurchasingIntegration integration)
 		{
 			_relay = new InAppPurchasingRelay();
 
 			SetIntegration(integration);
-			_grantCenter = grantCenter;
 		}
 
 		public void Dispose() => _relay.Dispose();
@@ -374,9 +372,6 @@ namespace InAppPurchasing
 
 			return prev;
 		}
-
-		internal bool RegisterGranter<T>(T granter) where T : IIAPPurchaseGranter => _grantCenter.Register(granter);
-		internal bool UnregisterGranter<T>(T granter) where T : IIAPPurchaseGranter => _grantCenter.Unregister(granter);
 	}
 
 	public struct PurchaseResult

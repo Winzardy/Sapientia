@@ -9,7 +9,7 @@ using Sapientia;
 
 namespace InAppPurchasing
 {
-	public class IAPManager : StaticProvider<IAPManagement>
+	public partial class IAPManager : StaticProvider<IAPManagement>
 	{
 		private static IAPManagement management
 		{
@@ -128,11 +128,6 @@ namespace InAppPurchasing
 
 		#endregion
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool RegisterGranter<T>(T granter) where T : IIAPPurchaseGranter => management.RegisterGranter(granter);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool UnregisterGranter<T>(T granter) where T : IIAPPurchaseGranter => management.UnregisterGranter(granter);
 
 #if IAP_DEBUG
 		public static IInAppPurchasingIntegration Integration => management.Integration;
@@ -140,8 +135,6 @@ namespace InAppPurchasing
 		/// <returns>Предыдущий сервис</returns>
 		public static IInAppPurchasingIntegration SetService(IInAppPurchasingIntegration integration) =>
 			management.SetIntegration(integration);
-
-		public static IInAppPurchasingGrantCenter GrantCenter => management.GrantCenter;
 #endif
 	}
 }
