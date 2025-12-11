@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 
-namespace Targeting
+namespace ProjectInformation
 {
 	[Serializable]
-	public struct ProjectInfo
+	public struct ProjectInfoConfig
 	{
 		public int buildNumber;
 		public string identifier;

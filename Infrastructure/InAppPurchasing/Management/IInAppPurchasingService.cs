@@ -22,9 +22,4 @@ namespace InAppPurchasing
 		Pending, // Interop
 		// Failed
 	}
-
-	public interface IInAppPurchasingServiceFactory
-	{
-		IInAppPurchasingService Create();
-	}
 }

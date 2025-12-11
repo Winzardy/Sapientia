@@ -90,6 +90,7 @@ namespace Advertising
 
 		public static AdPlacementEntry GetEntry(AdPlacementType type, string placement)
 			=> management.GetEntry(type, placement);
+
 		public static bool TryGetEntry(AdPlacementType type, string placement, out AdPlacementEntry entry)
 			=> management.TryGetEntry(type, placement, out entry);
 
@@ -102,6 +103,9 @@ namespace Advertising
 		public static IAdvertisingIntegration SetIntegration(IAdvertisingIntegration integration) =>
 			management.SetIntegration(integration);
 #endif
+
+		public static void Bind(IAdvertisingService service) => management.Bind(service);
+		public static void Unbind() => management.Unbind();
 	}
 
 	public enum AdShowResult

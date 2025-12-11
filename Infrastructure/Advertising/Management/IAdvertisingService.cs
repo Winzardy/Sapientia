@@ -15,9 +15,4 @@ namespace Advertising
 		Pending, // Interop
 		// Failed
 	}
-
-	public interface IAdvertisingServiceFactory
-	{
-		IAdvertisingService Create();
-	}
 }

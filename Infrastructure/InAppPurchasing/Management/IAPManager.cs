@@ -1,6 +1,7 @@
 #if DebugLog
 #define IAP_DEBUG
 #endif
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -109,11 +110,29 @@ namespace InAppPurchasing
 			where T : IAPProductEntry
 			=> ref management.GetProductInfo(entry, forceUpdateCache);
 
+		public static void Bind(IInAppPurchasingService service) => management.Bind(service);
+		public static void Unbind() => management.Unbind();
+
+		#region Service
+
+		public static DateTime DateTime { get => management.DateTime; }
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static PurchaseReceipt? GetReceipt(string transactionId) => management.GetPurchaseReceipt(transactionId);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterReceipt(in PurchaseReceipt receipt) => management.RegisterReceipt(in receipt);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool ContainsReceipt(string transactionId) => management.ContainsReceipt(transactionId);
+
+		#endregion
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool RegisterGranter<T>(T granter) where T : IIAPPurchaseGranter => management.RegisterGranter(granter);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool UnregisterGranter<T>(T granter) where T : IIAPPurchaseGranter => management.UnregisterGranter(granter);
 
 #if IAP_DEBUG
 		public static IInAppPurchasingIntegration Integration => management.Integration;

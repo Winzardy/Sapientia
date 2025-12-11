@@ -6,6 +6,8 @@ namespace Advertising
 	{
 		None,
 
+		Service_NotBound,
+
 		NotFoundPlacementEntry,
 
 		NotInitialized,

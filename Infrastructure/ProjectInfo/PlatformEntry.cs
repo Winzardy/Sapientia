@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Sapientia.Extensions;
 
-namespace Targeting
+namespace ProjectInformation
 {
 	/// <summary>
 	/// Поддерживаемые платформы (supported)

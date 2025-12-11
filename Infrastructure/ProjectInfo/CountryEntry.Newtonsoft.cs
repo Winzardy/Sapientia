@@ -3,7 +3,7 @@ using System;
 using Newtonsoft.Json;
 using Sapientia.Extensions;
 
-namespace Targeting
+namespace ProjectInformation
 {
 	// ReSharper disable once StructLacksIEquatable.Global
 	[JsonConverter(typeof(CountryEntryJsonConverter))]

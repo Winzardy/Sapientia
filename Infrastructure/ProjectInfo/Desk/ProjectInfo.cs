@@ -1,14 +1,13 @@
-using System.Runtime.CompilerServices;
 using Sapientia;
 
-namespace Targeting
+namespace ProjectInformation
 {
 	/// <summary>
-	/// Стойка с информацией о проекте и его дистрибуции (платформа, страна)
+	/// Runtime информация о проекте и дистрибуции проекта (платформа, страна)
 	/// </summary>
-	public class ProjectDesk : StaticProvider<IProjectDeskAttendant>
+	public class ProjectInfo : StaticProvider<IProjectInfoAttendant>
 	{
-		private static IProjectDeskAttendant attendant => _instance;
+		private static IProjectInfoAttendant attendant => _instance;
 		public static bool IsInitialized => _instance != null;
 
 		public static string Version => attendant.GetVersion();
