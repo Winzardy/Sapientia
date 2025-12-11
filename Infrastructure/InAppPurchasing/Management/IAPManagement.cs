@@ -43,7 +43,6 @@ namespace InAppPurchasing
 
 		internal IInAppPurchasingEvents Events => _relay;
 		internal IInAppPurchasingIntegration Integration => _integration;
-		internal IInAppPurchasingGrantCenter GrantCenter => _grantCenter;
 
 		public IAPManagement(IInAppPurchasingIntegration integration)
 		{
