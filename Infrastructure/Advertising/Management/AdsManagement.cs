@@ -7,7 +7,7 @@ namespace Advertising
 {
 	public class AdManagement : IDisposable
 	{
-		private readonly IAdvertisingService _service;
+		private IAdvertisingService _service;
 		private IAdvertisingIntegration _integration;
 
 		private readonly AdvertisingIntegrationRelay _relay;
@@ -15,21 +15,31 @@ namespace Advertising
 		internal IAdEvents Events => _relay;
 		internal IAdvertisingIntegration Integration => _integration;
 
-		public AdManagement(IAdvertisingIntegration integration, IAdvertisingService service)
+		public AdManagement(IAdvertisingIntegration integration)
 		{
 			_relay = new AdvertisingIntegrationRelay();
-			if (service != null)
-				_relay.AdDisplayFinished += OnAdFinished;
+			_relay.AdDisplayFinished += OnAdFinished;
 
-			_service = service;
 			SetIntegration(integration);
 		}
 
 		public void Dispose()
 		{
-			if (_service != null)
-				_relay.AdDisplayFinished -= OnAdFinished;
+			_relay.AdDisplayFinished -= OnAdFinished;
 			_relay.Dispose();
+
+			Unbind();
+		}
+
+		internal void Bind(IAdvertisingService service)
+		{
+			Unbind();
+			_service = service;
+		}
+
+		internal void Unbind()
+		{
+			_service = null;
 		}
 
 		#region Can Show
@@ -66,9 +76,15 @@ namespace Advertising
 
 		internal bool CanShow(AdPlacementEntry entry, out AdShowError? error)
 		{
-			if (!_service.CanShow(entry, out var backendError))
+			if (_service == null)
 			{
-				error = backendError;
+				error = AdShowErrorCode.Service_NotBound;
+				return false;
+			}
+
+			if (!_service.CanShow(entry, out var serviceError))
+			{
+				error = serviceError;
 				return false;
 			}
 
@@ -225,7 +241,13 @@ namespace Advertising
 				void OnDisplayFailed(AdPlacementEntry _, string __, object ___) => tcs.TrySetResult(AdShowResult.Failed);
 
 				void OnRewardedClosed(AdPlacementEntry _, bool full, object __)
-					=> tcs.TrySetResult(full ? AdShowResult.Success : AdShowResult.Canceled);
+				{
+					if (full)
+						tcs.TrySetResult(AdShowResult.Success);
+					else
+						tcs.TrySetCanceled(cancellationToken);
+				}
+
 				void OnRewardedLoadFailed(string _, object __) => tcs.TrySetResult(AdShowResult.Failed);
 
 				void OnInterstitialClosed(AdPlacementEntry _, object __) => tcs.TrySetResult(AdShowResult.Success);

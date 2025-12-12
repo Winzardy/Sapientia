@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
-using Sapientia.Extensions;
 using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
@@ -53,22 +52,14 @@ namespace Sapientia.MemoryAllocator
 			return GetBlockSize(memPtr);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private int GetPtrSize(MemPtr memPtr)
-		{
-			return GetBlockSize(memPtr) - TSize<MemoryBlock>.size;
-		}
-
 		public MemPtr CopyPtrTo(ref Allocator dstAllocator, MemPtr srsMemPtr)
 		{
 			if (!srsMemPtr.IsValid())
 				return MemPtr.Invalid;
 			if (srsMemPtr.IsZeroSized())
-			{
 				return srsMemPtr;
-			}
 
-			var size = GetPtrSize(srsMemPtr);
+			var size = GetDataSize(srsMemPtr);
 			var dstMemPtr = dstAllocator.MemAlloc(size);
 
 			var srcData = GetSafePtr(srsMemPtr);

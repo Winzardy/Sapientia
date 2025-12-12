@@ -18,8 +18,9 @@ namespace Content
 			// Resolve происходит через рефлексию, самый быстрый вариант это code-gen (roslyn), есть идеи, но пока так
 			foreach (var reference in Nested.Values)
 			{
-				var uniqueContentEntry = reference.Resolve(this, true);
-				uniqueContentEntry.Register();
+				var entry = reference.Resolve(this, true);
+				entry.SetParent(this);
+				entry.Register();
 			}
 		}
 
@@ -35,16 +36,16 @@ namespace Content
 			// - Долго и муторно делать
 			foreach (var (key, reference) in Nested)
 			{
-				var resolvedEntry = reference.Resolve(this);
+				var entry = reference.Resolve(this);
 
 				if (ContentDebug.Logging.Nested.resolve)
 				{
-					if (resolvedEntry == null)
+					if (entry == null)
 						ContentDebug.LogError($"Nested entry by guid [ {key} ] is null! by path [ {reference.Path} ]", Context);
 				}
 
 				//IL2CPP может "strip" не нужное поле! поэтому проверка на Null
-				resolvedEntry?.Unregister();
+				entry?.Unregister();
 			}
 		}
 	}

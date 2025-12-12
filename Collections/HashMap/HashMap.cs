@@ -20,7 +20,13 @@ namespace Sapientia.Collections
 		public ref TValue this[TKey key]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _values[_keyToIndex[key]];
+			get
+			{
+				if (!Contains(key))
+					return ref GetOrAdd(key);
+
+				return ref _values[_keyToIndex[key]];
+			}
 		}
 
 		public ref TValue this[int index]
@@ -143,6 +149,18 @@ namespace Sapientia.Collections
 				return ref this[key];
 
 			return ref defaultValue;
+		}
+
+		public bool TryGetValue(in TKey key, out TValue value)
+		{
+			if (Contains(key))
+			{
+				value = this[key];
+				return true;
+			}
+
+			value = default;
+			return false;
 		}
 
 		public int GetIndexByKey(TKey key)

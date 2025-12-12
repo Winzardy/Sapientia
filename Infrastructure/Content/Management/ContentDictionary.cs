@@ -75,17 +75,16 @@ namespace Content.Management
 			_idToIndex = new Dictionary<string, int>(source.Count);
 
 			int index = 0;
-			foreach (var entry in source)
+			foreach (var (guid, value) in source)
 			{
-				_values[index] = entry.Value;
+				_values[index] = value;
 
-				_keyToIndex[entry.Key] = index;
+				_keyToIndex[guid] = index;
 
-				if (entry.Value is IIdentifiable identifiable)
-					_idToIndex[identifiable.Id] = index;
+				if (!value.Id.IsNullOrEmpty())
+					_idToIndex[value.Id] = index;
 
-				entry.Value.SetIndex(index);
-
+				value.SetIndex(index);
 				index++;
 			}
 		}
@@ -96,5 +95,16 @@ namespace Content.Management
 
 		public bool TryAdd(in SerializableGuid guid, TValue entry) => _temporary.TryAdd(guid, entry);
 		public bool Remove(in SerializableGuid guid) => _temporary.Remove(guid);
+
+		internal bool TryGet(in SerializableGuid guid, out TValue value)
+		{
+			if (IsFrozen && _keyToIndex.TryGetValue(guid, out var index))
+			{
+				value = _values[index];
+				return true;
+			}
+
+			return _temporary.TryGetValue(guid, out value);
+		}
 	}
 }

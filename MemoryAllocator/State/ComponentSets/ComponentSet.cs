@@ -32,6 +32,11 @@ namespace Sapientia.MemoryAllocator.State
 			this.entity = entity;
 			this.value = value;
 		}
+
+		public static implicit operator (Entity, TValue)(ComponentSetElement<TValue> element)
+		{
+			return (element.entity, element.value);
+		}
 	}
 
 	public struct ComponentSetElement
@@ -310,14 +315,14 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetElement<T>(WorldState worldState, Entity entity, out bool isCreated) where T : unmanaged
+		public ref T GetElement<T>(WorldState worldState, Entity entity, out bool isExist) where T : unmanaged
 		{
 			if (_elements.Has(worldState, entity.id))
 			{
 				ref var element = ref _elements.Get<ComponentSetElement<T>>(worldState, entity.id);
 				E.ASSERT(element.entity == entity);
 
-				isCreated = false;
+				isExist = true;
 				return ref element.value;
 			}
 			else
@@ -332,7 +337,7 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 				element = new ComponentSetElement<T>(entity, default);
 
-				isCreated = true;
+				isExist = false;
 				return ref element.value;
 			}
 		}
@@ -382,22 +387,11 @@ namespace Sapientia.MemoryAllocator.State
 				var valueArray = _elements.GetValuePtr<ComponentSetElement<T>>(worldState);
 				_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, valueArray.ptr, _elements.Count);
 			}
-			_elements.Clear(worldState);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ClearFast<T>(WorldState worldState) where T: unmanaged
-		{
-			if (_destroyHandlerProxy.IsCreated)
-			{
-				var valueArray = _elements.GetValuePtr<ComponentSetElement<T>>(worldState);
-				_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, valueArray.ptr, _elements.Count);
-			}
 			_elements.ClearFast();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBackElement(WorldState worldState, Entity entity)
+		public bool RemoveSwapBackElement(WorldState worldState, Entity entity)
 		{
 			if (_elements.TryGetDenseId(worldState, entity.id, out var denseId))
 			{
@@ -407,7 +401,11 @@ namespace Sapientia.MemoryAllocator.State
 					_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, safePtr.ptr, 1);
 				}
 				_elements.RemoveSwapBackByDenseId(worldState, denseId);
+
+				return true;
 			}
+
+			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

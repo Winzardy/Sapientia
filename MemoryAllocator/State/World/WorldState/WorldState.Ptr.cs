@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
+using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -60,6 +61,23 @@ namespace Sapientia.MemoryAllocator
 		public MemPtr CopyPtrTo(WorldState dstWorldState, in MemPtr srsPtr)
 		{
 			return GetAllocator().CopyPtrTo(ref dstWorldState.GetAllocator(), srsPtr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IndexedPtr CopyPtrTo(WorldState dstWorldState, in IndexedPtr srsPtr)
+		{
+			var memPtr = CopyPtrTo(dstWorldState, srsPtr.GetMemPtr());
+			var result = new IndexedPtr(memPtr, srsPtr.typeIndex);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ProxyPtr<T> CopyPtrTo<T>(WorldState dstWorldState, in ProxyPtr<T> srsPtr)
+			where T: unmanaged, IProxy
+		{
+			var indexedPtr = CopyPtrTo(dstWorldState, in srsPtr.indexedPtr);
+			var result = new ProxyPtr<T>(indexedPtr);
+			return result;
 		}
 	}
 }

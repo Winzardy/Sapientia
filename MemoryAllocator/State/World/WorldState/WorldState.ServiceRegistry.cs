@@ -34,14 +34,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T GetService<T>()
+		public T GetServiceClass<T>()
 			where T : class, IIndexedType
 		{
-			return GetServicePtr<T>().Value();
+			return GetServiceClassPtr<T>().Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ClassPtr<T> GetServicePtr<T>()
+		public ClassPtr<T> GetServiceClassPtr<T>()
 			where T : class, IIndexedType
 		{
 			var typeIndex = TypeIndex.Create<T>();

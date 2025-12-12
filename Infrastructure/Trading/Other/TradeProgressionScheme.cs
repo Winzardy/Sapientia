@@ -21,11 +21,6 @@ namespace Trading
 		/// Расписание при котором будет происходить сброс
 		/// </summary>
 		public ScheduleScheme schedule;
-
-		/// <summary>
-		/// Если <c>true</c>, то расписание будет опираться на настоящие время (без учета виртуального времени)
-		/// </summary>
-		public bool realTime;
 	}
 
 	public enum TradeProgressionResetType
@@ -55,16 +50,12 @@ namespace Trading
 	public static class TradeProgressionUtility
 	{
 		public static int GetCurrentProgress(this in TradeProgressionState state, in TradeProgressionScheme scheme,
-			DateTime now, DateTime? nowWithoutOffset = null)
+			DateTime dateTime)
 		{
 			if (scheme.type == TradeProgressionResetType.None)
 				return state.current;
 
 			var utcAt = new DateTime(state.firstIncrementTimestamp);
-			var dateTime = scheme.realTime
-				? nowWithoutOffset
-				?? now
-				: now;
 
 			switch (scheme.type)
 			{
@@ -76,8 +67,8 @@ namespace Trading
 					return state.current;
 
 				// case TradeProgressionResetType.Incremental:
-				// 	var passedPointCount = scheme.schedule.CalculatePassedPointCount(utcAt, dateTime);
-				// 	return state.current - passedPointCount;
+				// var passedPointCount = scheme.schedule.CalculatePassedPointCount(utcAt, dateTime);
+				// return state.current - passedPointCount;
 
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -85,13 +76,8 @@ namespace Trading
 		}
 
 		public static void IncrementProgress(this ref TradeProgressionState state, in TradeProgressionScheme scheme,
-			DateTime now, DateTime? nowWithoutOffset = null)
+			DateTime dateTime)
 		{
-			var dateTime = scheme.realTime
-				? nowWithoutOffset
-				?? now
-				: now;
-
 			DecrementProgress(ref state, in scheme, dateTime);
 
 			state.current++;
@@ -119,18 +105,7 @@ namespace Trading
 			}
 		}
 
-		public static void ResetProgress(this ref TradeProgressionState state, in TradeProgressionScheme scheme, DateTime now,
-			DateTime? nowWithoutOffset = null)
-		{
-			var dateTime = scheme.realTime
-				? nowWithoutOffset
-				?? now
-				: now;
-
-			ResetProgress(ref state, in scheme, dateTime);
-		}
-
-		public static void ResetProgress(this ref TradeProgressionState state, in TradeProgressionScheme scheme, DateTime now)
+		public static void ResetProgress(this ref TradeProgressionState state, in TradeProgressionScheme scheme, DateTime dateTime)
 		{
 			state.current = 0;
 			state.firstIncrementTimestamp = 0;

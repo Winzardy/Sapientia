@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Sapientia.Extensions;
@@ -15,16 +16,23 @@ namespace Sapientia
 	/// <remarks>
 	/// ⚠️ Важно: only-runtime
 	/// </remarks>
-	public abstract partial class Blackboard : IPoolable, IDisposable
+	public partial class Blackboard : IPoolable, IDisposable
 	{
-		private ConcurrentHashSet<IBlackboardToken>? _tokens;
+		private HashSet<IBlackboardToken>? _tokens;
+		public event Action Released;
 
-		protected Blackboard(Blackboard? source = null)
+		protected internal bool _active = true;
+
+		public Blackboard()
+		{
+		}
+
+		public Blackboard(Blackboard? source = null)
 		{
 			if (source?._tokens == null)
 				return;
 
-			_tokens ??= ConcurrentHashSetPool<IBlackboardToken>.Get();
+			_tokens ??= HashSetPool<IBlackboardToken>.Get();
 
 			foreach (var token in source._tokens)
 			{
@@ -62,19 +70,18 @@ namespace Sapientia
 
 		public BlackboardToken Register<T>(in T value, string? key = null)
 		{
-			_tokens ??= ConcurrentHashSetPool<IBlackboardToken>.Get();
+			_tokens ??= HashSetPool<IBlackboardToken>.Get();
 			var token = Blackboard<T>.Register(in value, this, key);
 			_tokens.Add(token);
 			return token;
 		}
 
-		protected virtual void OnRelease()
+		public void Overwrite<T>(in T value, string? key = null)
 		{
+			Blackboard<T>.Overwrite(in value, this, key);
 		}
 
-		protected virtual void OnDispose()
-		{
-		}
+		public void OnGet() => _active = true;
 
 		internal void ReleaseToken(IBlackboardToken token)
 		{
@@ -89,6 +96,8 @@ namespace Sapientia
 
 		private void ReleaseInternal()
 		{
+			_active = false;
+
 			if (_tokens != null)
 			{
 				foreach (var token in _tokens)
@@ -99,10 +108,20 @@ namespace Sapientia
 
 			OnReleaseDummyMode();
 
+			Released?.Invoke();
 			OnRelease();
 		}
 
+		protected virtual void OnRelease()
+		{
+		}
+
+		protected virtual void OnDispose()
+		{
+		}
+
 		protected virtual string Name => GetType().Name;
+
 		protected virtual Exception GetArgumentException(object msg) => new ArgumentException(msg.ToString());
 
 		internal string GetName() => Name;
@@ -111,7 +130,6 @@ namespace Sapientia
 		public sealed override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
 
 		public static implicit operator bool(Blackboard? bb) => bb != null;
-
 	}
 
 	internal static class Blackboard<T>
@@ -165,6 +183,19 @@ namespace Sapientia
 			var token = Pool<BlackboardToken<T>>.Get();
 			token.Bind(in hash);
 			return token;
+		}
+
+		internal static void Overwrite(in T value, Blackboard blackboard, string? key = null)
+		{
+			var hash = ToHash(blackboard, key);
+			if (_boardToEntry == null || !_boardToEntry.TryGetValue(hash, out var entry))
+			{
+				var msg = $"{blackboard.GetName()}: {typeof(T)} not registered" +
+					(!key.IsNullOrEmpty() ? $" with key [ {key} ]" : "");
+				throw blackboard.GetException(msg);
+			}
+
+			entry.value = value;
 		}
 
 		internal static void Unregister(BlackboardToken<T> token)

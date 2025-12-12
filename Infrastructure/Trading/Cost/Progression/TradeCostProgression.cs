@@ -5,6 +5,7 @@ using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Conditions;
 using Sapientia.Extensions;
+using Trading.Result;
 
 #if CLIENT
 using UnityEngine;
@@ -28,7 +29,7 @@ namespace Trading
 		/// Условие при котором цена прогрессирует, если 'None', то прогрессирует всегда
 		/// </summary>
 		[SerializeReference]
-		public BlackboardCondition condition;
+		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
 
 		/// <summary>
 		/// Если использовать группу, то прогрессия будет связана по выбранной группе,
@@ -119,6 +120,6 @@ namespace Trading
 		/// Условие при котором на данном этапе прогрессирует
 		/// </summary>
 		[SerializeReference]
-		public BlackboardCondition overrideCondition;
+		public Condition<Blackboard> overrideCondition;
 	}
 }

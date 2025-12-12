@@ -4,11 +4,19 @@ using System.Threading.Tasks;
 using Advertising;
 using Content;
 using Sapientia;
+using Sapientia.Evaluators;
 
 namespace Trading.Advertising
 {
+	public interface IRewardedAdvertisingTradeCost
+	{
+		public int Group { get; }
+		public int GetCount(Tradeboard board);
+		public int GetCountAndRegisterResult(Tradeboard board);
+	}
+
 	[Serializable]
-	public partial class RewardedAdTradeCost : TradeCostWithReceipt<AdTradeReceipt>
+	public partial class RewardedAdTradeCost : TradeCostWithReceipt<AdTradeReceipt>, IRewardedAdvertisingTradeCost
 	{
 		private const bool USE_AUTO_LOAD = true;
 		private const string ERROR_CATEGORY = "Advertising";
@@ -20,7 +28,7 @@ namespace Trading.Advertising
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
 
-		public int count = 1;
+		public EvaluatedValue<Blackboard, int> count = 1;
 
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
@@ -28,8 +36,8 @@ namespace Trading.Advertising
 
 			if (board.Contains<IAdvertisingNode>())
 			{
-				var backend = board.Get<IAdvertisingNode>();
-				if (backend.GetTokenCount(group) >= count)
+				var node = board.Get<IAdvertisingNode>();
+				if (node.GetTokenCount(group) >= GetCountInternal(board))
 					return true;
 			}
 
@@ -50,8 +58,8 @@ namespace Trading.Advertising
 		{
 			if (board.Contains<IAdvertisingNode>())
 			{
-				var model = board.Get<IAdvertisingNode>();
-				if (model.GetTokenCount(group) >= count)
+				var node = board.Get<IAdvertisingNode>();
+				if (node.GetTokenCount(group) >= GetCountInternal(board))
 					return AdTradeReceipt.Empty(group, placement);
 			}
 
@@ -64,8 +72,14 @@ namespace Trading.Advertising
 			if (result != AdShowResult.Success)
 				return null;
 
-			var dateTime = board.Get<IDateTimeProviderWithVirtual>().DateTimeWithoutOffset;
+			var dateTime = board.Get<IDateTimeProviderWithVirtual>()
+			   .DateTimeWithoutOffset;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
+		}
+
+		private int GetCountInternal(Tradeboard board)
+		{
+			return count.Evaluate(board);
 		}
 
 		protected override string GetReceiptKey(string _) => placement.ToReceiptKey(group);
@@ -89,9 +103,16 @@ namespace Trading.Advertising
 
 		private BlackboardToken _token;
 
-		protected override void OnBeforePayCheck(Tradeboard board) => _token = board.Register(this);
+		protected override void OnBeforePayCheck(Tradeboard board) => _token = board.Register<IRewardedAdvertisingTradeCost>(this);
 		protected override void OnAfterPayCheck(Tradeboard board) => _token.Release();
-		protected override void OnBeforePay(Tradeboard board) => _token = board.Register(this);
+		protected override void OnBeforePay(Tradeboard board) => _token = board.Register<IRewardedAdvertisingTradeCost>(this);
 		protected override void OnAfterPay(Tradeboard board) => _token.Release();
+
+		int IRewardedAdvertisingTradeCost.Group => group;
+
+		int IRewardedAdvertisingTradeCost.GetCount(Tradeboard board)
+		{
+			return count.Evaluate(board);
+		}
 	}
 }

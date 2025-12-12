@@ -9,12 +9,20 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public void Initialize(WorldState worldState){}
 
+		public void EarlyStart(WorldState worldState){}
+
+		public void Start(WorldState worldState){}
+
 		public void Dispose(WorldState worldState){}
 	}
 
 	public interface IWorldLocalStatePart : IIndexedType
 	{
 		public void Initialize(WorldState worldState){}
+
+		public void EarlyStart(WorldState worldState){}
+
+		public void Start(WorldState worldState){}
 
 		public void Dispose(WorldState worldState){}
 	}
@@ -63,6 +71,36 @@ namespace Sapientia.MemoryAllocator.State
 			foreach (var statePartPtr in service._unmanagedLocalStateParts)
 			{
 				statePartPtr.Initialize(worldState);
+			}
+		}
+
+		public static void EarlyStart(WorldState worldState)
+		{
+			var service = GetOrCreate(worldState);
+
+			foreach (var statePart in service._localStateParts)
+			{
+				statePart.Value().EarlyStart(worldState);
+			}
+
+			foreach (var statePartPtr in service._unmanagedLocalStateParts)
+			{
+				statePartPtr.EarlyStart(worldState);
+			}
+		}
+
+		public static void Start(WorldState worldState)
+		{
+			var service = GetOrCreate(worldState);
+
+			foreach (var statePart in service._localStateParts)
+			{
+				statePart.Value().Start(worldState);
+			}
+
+			foreach (var statePartPtr in service._unmanagedLocalStateParts)
+			{
+				statePartPtr.Start(worldState);
 			}
 		}
 

@@ -1,6 +1,7 @@
 #if DebugLog
 #define IAP_DEBUG
 #endif
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ using Sapientia;
 
 namespace InAppPurchasing
 {
-	public class IAPManager : StaticProvider<IAPManagement>
+	public partial class IAPManager : StaticProvider<IAPManagement>
 	{
 		private static IAPManagement management
 		{
@@ -109,11 +110,24 @@ namespace InAppPurchasing
 			where T : IAPProductEntry
 			=> ref management.GetProductInfo(entry, forceUpdateCache);
 
+		public static void Bind(IInAppPurchasingService service) => management.Bind(service);
+		public static void Unbind() => management.Unbind();
+
+		#region Service
+
+		public static DateTime DateTime { get => management.DateTime; }
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static PurchaseReceipt? GetReceipt(string transactionId) => management.GetPurchaseReceipt(transactionId);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterReceipt(in PurchaseReceipt receipt) => management.RegisterReceipt(in receipt);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool ContainsReceipt(string transactionId) => management.ContainsReceipt(transactionId);
+
+		#endregion
+
 
 #if IAP_DEBUG
 		public static IInAppPurchasingIntegration Integration => management.Integration;
@@ -121,8 +135,6 @@ namespace InAppPurchasing
 		/// <returns>Предыдущий сервис</returns>
 		public static IInAppPurchasingIntegration SetService(IInAppPurchasingIntegration integration) =>
 			management.SetIntegration(integration);
-
-		public static IInAppPurchasingGrantCenter GrantCenter => management.GrantCenter;
 #endif
 	}
 }

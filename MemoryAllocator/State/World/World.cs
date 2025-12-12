@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
+using Sapientia.Data;
 using Sapientia.MemoryAllocator.State;
 using Sapientia.TypeIndexer;
 
@@ -14,11 +16,15 @@ namespace Sapientia.MemoryAllocator
 
 		public bool IsStarted { get; private set; }
 
+		public WorldId Id => worldState.WorldId;
+
 		public bool IsValid
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => worldState.IsValid;
 		}
+
+		public float Time => worldState.Time;
 
 		public World(WorldState worldState, int elementsCapacity = 64)
 		{
@@ -41,6 +47,7 @@ namespace Sapientia.MemoryAllocator
 			{
 				elementsService.AddWorldElement(worldState, statePart.ToProxy<IWorldElementProxy>());
 			}
+
 			foreach (var system in systems)
 			{
 				elementsService.AddWorldSystem(worldState, system);
@@ -69,8 +76,17 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
+				element.EarlyStart(worldState, worldState, element);
+			}
+
+			LocalStatePartService.EarlyStart(worldState);
+
+			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
+			{
 				element.Start(worldState, worldState, element);
 			}
+
+			LocalStatePartService.Start(worldState);
 			IsStarted = true;
 
 			SendStartedMessage();
@@ -89,7 +105,17 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
+				system.BeforeUpdate(worldState, worldState, system);
+			}
+
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
 				system.Update(worldState, worldState, system, deltaTime);
+			}
+
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
+				system.AfterUpdate(worldState, worldState, system);
 			}
 
 			ScheduleLateUpdate = true;
@@ -107,7 +133,17 @@ namespace Sapientia.MemoryAllocator
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
 			{
+				system.BeforeLateUpdate(worldState, worldState, system);
+			}
+
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
 				system.LateUpdate(worldState, worldState, system);
+			}
+
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
+				system.AfterLateUpdate(worldState, worldState, system);
 			}
 
 			SendLateUpdateMessage();
@@ -130,6 +166,41 @@ namespace Sapientia.MemoryAllocator
 			SendDisposedMessage();
 
 			worldState.RemoveWorld();
+		}
+
+		public static implicit operator WorldState(World world) => world.worldState;
+	}
+
+	public static class WorldExtensions
+	{
+		public static T GetService<T>(this World world)
+			where T : class, IIndexedType
+			=> world.worldState.GetServiceClass<T>();
+
+		public static ref T Get<T>(this World world, ServiceType type = ServiceType.WorldState)
+			where T : unmanaged, IIndexedType
+			=> ref world.worldState.GetService<T>(type);
+
+		public static SafePtr<T> GetPtr<T>(this World world, ServiceType type = ServiceType.WorldState)
+			where T : unmanaged, IIndexedType
+			=> world.worldState.GetServicePtr<T>(type);
+
+		public static ref T GetOrCreate<T>(this World world, ServiceType type = ServiceType.WorldState)
+			where T : unmanaged, IInitializableService
+			=> ref world.worldState.GetOrCreateService<T>(type);
+
+		[CanBeNull]
+		public static World ToWorld(this Entity entity)
+		{
+			if (!entity.IsValid())
+				return null;
+
+			return WorldManager.GetWorld(entity.worldId);
+		}
+
+		public static bool IsValid(this Entity entity)
+		{
+			return entity.worldId.IsValid() && entity.IsExist(entity.GetWorldState());
 		}
 	}
 }

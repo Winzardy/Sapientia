@@ -43,7 +43,18 @@ namespace Trading
 
 			var node = board.Get<ITradingNode>();
 			var registry = node.GetRegistry<T>();
-			return registry.Issue(board, GetReceiptKey(board.Id));
+			var receiptKey = GetReceiptKey(board.Id);
+			if (registry.Issue(board, receiptKey))
+			{
+				OnIssue(board, receiptKey);
+				return true;
+			}
+
+			return false;
+		}
+
+		protected virtual void OnIssue(Tradeboard board, string receiptKey)
+		{
 		}
 
 		protected abstract string GetReceiptKey(string tradeId);
@@ -103,7 +114,7 @@ namespace Trading
 		public static void Register<T>(this ITradingNode node, T[] receipts, string tradeId)
 			where T : struct, ITradeReceipt
 		{
-			if(node == null)
+			if (node == null)
 				throw TradingDebug.NullException("Node can't be null!");
 
 			if (tradeId.IsNullOrEmpty())

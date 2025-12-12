@@ -161,6 +161,19 @@ namespace Content
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToId<T>(in SerializableGuid guid) => resolver != null ? resolver.ToId<T>(in guid) : guid.ToString();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGet<T>(string id, out T value)
+		{
+			if (Contains<T>(id))
+			{
+				value = Get<T>(id);
+				return true;
+			}
+
+			value = default;
+			return false;
+		}
+
 		/// <inheritdoc cref="ContentResolver.ToGuid{T}(string)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly SerializableGuid ToGuid<T>(string id)

@@ -13,6 +13,7 @@ namespace Trading
 		public const string ERROR_CATEGORY = "Collection";
 
 		[SerializeReference]
+		[TradeAccess(TradeAccessType.ByParent)]
 		// ReSharper disable once UseArrayEmptyMethod
 		// ReSharper disable once MemberInitializerValueIgnored
 		public TradeCost[] items = new TradeCost[0];

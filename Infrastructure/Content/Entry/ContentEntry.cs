@@ -28,6 +28,10 @@ namespace Content
 		public override ref readonly T Value => ref ContentUtility.GetContentValue<T>(in guid, ref _index);
 #endif
 
+		public ContentEntry() : this(default)
+		{
+		}
+
 		public ContentEntry(in T value) : base(in value, SerializableGuid.New())
 		{
 		}

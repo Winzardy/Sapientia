@@ -10,15 +10,10 @@ namespace Content.Management
 {
 	public class ContentJsonImporter : IContentImporter, IDisposable
 	{
-		public static readonly JsonSerializerSettings serializerSettings = new()
+		public static readonly JsonSerializerSettings serializerSettings = new(NewtonsoftJsonUtility.JSON_SETTINGS_AUTO_TYPED)
 		{
-			Converters = new JsonConverter[]
-			{
-				new DictionaryConverter()
-			},
 			DefaultValueHandling = DefaultValueHandling.Ignore,
-			TypeNameHandling = TypeNameHandling.Auto,
-			NullValueHandling = NullValueHandling.Ignore,
+			NullValueHandling = NullValueHandling.Ignore
 		};
 
 		public static readonly JsonSerializer defaultSerializer = CreateSerializer();
@@ -55,13 +50,6 @@ namespace Content.Management
 			_cache = null;
 		}
 
-		private static JsonSerializer CreateSerializer()
-		{
-			var serializer = JsonSerializer.Create(serializerSettings);
-#if !CLIENT
-			serializer.SerializationBinder = NewtonsoftJsonUtility.serializationBinder;
-#endif
-			return serializer;
-		}
+		private static JsonSerializer CreateSerializer() => JsonSerializer.Create(serializerSettings);
 	}
 }

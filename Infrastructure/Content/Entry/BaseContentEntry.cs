@@ -1,10 +1,14 @@
 using System;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace Content
 {
 	public abstract partial class BaseContentEntry<T> : IContentEntry<T>
 	{
+		[CanBeNull]
+		private IContentEntry _parent;
+
 #if !CLIENT
 		// ReSharper disable once InconsistentNaming
 		protected T value;
@@ -19,11 +23,15 @@ namespace Content
 		public virtual bool IsUnique() => false;
 		object IContentEntry.RawValue => Value;
 
-		public virtual object Context => null;
+		public virtual object Context => _parent?.Context;
 
 		protected BaseContentEntry(in T value)
 		{
+#if CLIENT
+			ContentEditValue = value;
+#else
 			this.value = value;
+#endif
 		}
 
 		public void Register()
@@ -44,6 +52,11 @@ namespace Content
 
 		protected virtual void OnUnregister()
 		{
+		}
+
+		void IContentEntry.SetParent(IContentEntry parent)
+		{
+			_parent = parent;
 		}
 
 		#region Operatiors
@@ -70,8 +83,10 @@ namespace Content
 		public void Unregister();
 		public bool IsUnique();
 
-		object RawValue { get; }
+		public object RawValue { get; }
 
 		public object Context { get; }
+
+		public void SetParent(IContentEntry parent);
 	}
 }

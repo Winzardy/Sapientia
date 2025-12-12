@@ -85,15 +85,15 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Remove<T>(this ref Entity entity) where T: unmanaged, IComponent
+		public static bool Remove<T>(this ref Entity entity) where T: unmanaged, IComponent
 		{
-			entity.Remove<T>(entity.GetWorldState());
+			return entity.Remove<T>(entity.GetWorldState());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Remove<T>(this ref Entity entity, WorldState worldState) where T: unmanaged, IComponent
+		public static bool Remove<T>(this ref Entity entity, WorldState worldState) where T: unmanaged, IComponent
 		{
-			worldState.GetComponentSet<T>().RemoveSwapBackElement(worldState, entity);
+			return worldState.GetComponentSet<T>().RemoveSwapBackElement(worldState, entity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

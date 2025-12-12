@@ -20,6 +20,16 @@ namespace Trading
 		/// Фильтрует типы только в инспекторе!
 		/// </summary>
 		public bool Filter(Type type) => !typeof(IEnumerable<TradeReward>).IsAssignableFrom(type) && type.HasAttribute<SerializableAttribute>();
+
+		public bool CanShowRollMode()
+		{
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+			if (count.evaluator != null)
+				return true;
+
+			return count.value > 1;
+		}
+
 	}
 }
 #endif

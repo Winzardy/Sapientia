@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Pooling;
+
 #nullable enable
 
 namespace Sapientia.Extensions
@@ -12,13 +13,21 @@ namespace Sapientia.Extensions
 
 		public virtual void Dispose()
 		{
+			OnDisposeInternal();
+
 			if (_disposables?.IsNullOrEmpty() ?? true)
 				return;
 
 			foreach (var disposable in _disposables)
 				disposable.Dispose();
 
-			_disposables.ReleaseToStaticPool();
+			StaticObjectPoolUtility.ReleaseAndSetNull(ref _disposables);
+		}
+
+		protected virtual void OnDisposeInternal() => OnDispose();
+
+		protected virtual void OnDispose()
+		{
 		}
 
 		public void AddDisposable(IDisposable disposable)

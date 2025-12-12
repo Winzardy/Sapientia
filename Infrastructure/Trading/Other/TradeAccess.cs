@@ -15,6 +15,20 @@ namespace Trading
 				return true;
 			}
 
+#if CLIENT
+			if (board.IsFetchMode)
+			{
+				if (cost is IInterceptableTradeCost interceptable)
+				{
+					if (interceptable.ShouldIntercept(board))
+					{
+						error = null;
+						return true;
+					}
+				}
+			}
+#endif
+
 			return cost.CanExecute(board, out error);
 		}
 
