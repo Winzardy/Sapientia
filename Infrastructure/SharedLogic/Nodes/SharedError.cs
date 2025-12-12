@@ -1,4 +1,6 @@
-﻿namespace SharedLogic
+﻿using System;
+
+namespace SharedLogic
 {
 	public struct SharedError<T>
 	{
@@ -12,6 +14,7 @@
 		}
 
 		public static implicit operator SharedError<T>((string message, T context) tuple) => new(tuple.message, tuple.context);
+		public static implicit operator Exception(SharedError<T> error) => new Exception(error.message);
 		public override string ToString() => message;
 	}
 }
