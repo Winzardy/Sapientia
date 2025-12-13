@@ -1,11 +1,11 @@
 using System;
+using UnityEngine;
 
 namespace Sapientia
 {
 	public interface IMinMax
 	{
 	}
-
 
 	[Serializable]
 	public partial struct Range<T> : IMinMax, IContainer<T>
@@ -21,6 +21,11 @@ namespace Sapientia
 
 		public static implicit operator Range<T>((T min, T max) tuple) => new(tuple.min, tuple.max);
 		public static implicit operator Range<T>(T max) => new Range<T>(default, max);
+
+		public override string ToString()
+		{
+			return $"[{min}, {max}]";
+		}
 	}
 
 	public static class RangeUtility
@@ -28,6 +33,12 @@ namespace Sapientia
 		public static bool Contains(this in Range<float> range, float value, bool maxInclusive = false)
 			=> value >= range.min &&
 				(maxInclusive ? value < range.max : value <= range.max);
+
+		public static bool Contains(this in Range<float> range, Vector3 vector, bool maxInclusive = false)
+			=> vector.sqrMagnitude >= range.min * range.min &&
+				(maxInclusive
+					? vector.sqrMagnitude < range.max * range.max
+					: vector.sqrMagnitude <= range.max * range.max);
 
 		public static bool Contains(this in Range<int> range, int value, bool maxInclusive = false)
 			=> value >= range.min &&
