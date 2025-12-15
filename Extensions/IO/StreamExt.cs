@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Sapientia.Collections;
 
 namespace Sapientia.Extensions
 {
@@ -10,6 +9,7 @@ namespace Sapientia.Extensions
 	/// </summary>
 	public static class StreamExt
 	{
+
 		public static async Task<string> ReadToEndAsync(this Stream stream)
 		{
 			using var reader = new StreamReader(stream);
@@ -17,29 +17,18 @@ namespace Sapientia.Extensions
 			return result;
 		}
 
-		public static async Task<SimpleList<string>?> ReadLinesAsync(this Stream stream)
+		public static async IAsyncEnumerable<string> ReadLinesAsync(this Stream stream)
 		{
 			using var reader = new StreamReader(stream);
-			return await reader.ReadLinesAsync();
+			await foreach (var line in reader.ReadLinesAsync().ConfigureAwait(false))
+				yield return line;
 		}
 
-		public static async Task<SimpleList<string>?> ReadLinesAsync(this StreamReader reader)
+		public static async IAsyncEnumerable<string> ReadLinesAsync(this StreamReader reader)
 		{
-			SimpleList<string>? result = null;
-
-			try
+			while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
 			{
-				while(await reader.ReadLineAsync() is { } line)
-				{
-					result ??= new SimpleList<string>();
-					result.Add(line);
-				}
-
-				return result;
-			}
-			catch (Exception e)
-			{
-				return default;
+				yield return line;
 			}
 		}
 	}

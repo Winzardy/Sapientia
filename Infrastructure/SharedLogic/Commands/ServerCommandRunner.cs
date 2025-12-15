@@ -10,8 +10,7 @@ namespace SharedLogic
 		private readonly ISharedRoot _root;
 		private readonly ILogger _logger;
 
-		public ServerCommandRunner(ISharedRoot root,
-			ILogger logger = null)
+		public ServerCommandRunner(ISharedRoot root, ILogger logger = null)
 		{
 			_root = root;
 			_logger = logger;
