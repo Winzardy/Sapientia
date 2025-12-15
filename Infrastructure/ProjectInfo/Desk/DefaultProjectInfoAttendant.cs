@@ -1,12 +1,12 @@
 using Sapientia;
 
-namespace Targeting
+namespace ProjectInformation
 {
-	public class DefaultProjectDeskAttendant : IProjectDeskAttendant
+	public class DefaultProjectInfoAttendant : IProjectInfoAttendant
 	{
 		private ReactiveField<string> _userId;
 
-		private readonly ProjectInfo _info;
+		private readonly ProjectInfoConfig _info;
 
 		private readonly PlatformEntry _platform;
 		private readonly DistributionEntry _store;
@@ -14,7 +14,7 @@ namespace Targeting
 		public IReactiveProperty<string> UserId => _userId;
 		public string Identifier => _info.identifier;
 
-		public DefaultProjectDeskAttendant(in ProjectInfo info, in PlatformEntry platform)
+		public DefaultProjectInfoAttendant(in ProjectInfoConfig info, in PlatformEntry platform)
 		{
 			_info = info;
 			if (!info.platformToDistribution.TryGetValue(platform, out var store))
@@ -36,6 +36,6 @@ namespace Targeting
 		public ref readonly PlatformEntry GetPlatform() => ref _platform;
 		public ref readonly DistributionEntry GetDistribution() => ref _store;
 
-		void IProjectDeskAttendant.SetUserId(string userId) => _userId.Set(userId, true);
+		void IProjectInfoAttendant.SetUserId(string userId) => _userId.Set(userId, true);
 	}
 }

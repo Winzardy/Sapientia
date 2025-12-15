@@ -30,10 +30,11 @@ namespace InAppPurchasing
 		Unknown,
 	}
 
-	public class IAPManagement : IDisposable
+	public partial class IAPManagement : IDisposable
 	{
 		private IInAppPurchasingIntegration _integration;
-		private readonly IInAppPurchasingService _service;
+
+		private IInAppPurchasingService _service;
 
 		private readonly ProductInfo _emptyProductInfo = default;
 		private readonly SubscriptionInfo _emptySubscriptionInfo = default;
@@ -43,26 +44,38 @@ namespace InAppPurchasing
 		internal IInAppPurchasingEvents Events => _relay;
 		internal IInAppPurchasingIntegration Integration => _integration;
 
-#if IAP_DEBUG
-		internal IInAppPurchasingGrantCenter GrantCenter { get; }
-#endif
-		public IAPManagement(IInAppPurchasingIntegration integration, IInAppPurchasingService service
-#if IAP_DEBUG
-			, IInAppPurchasingGrantCenter grantCenter
-#endif
-		)
+		public IAPManagement(IInAppPurchasingIntegration integration)
 		{
 			_relay = new InAppPurchasingRelay();
 
 			SetIntegration(integration);
-			_service = service;
-
-#if IAP_DEBUG
-			GrantCenter = grantCenter;
-#endif
 		}
 
 		public void Dispose() => _relay.Dispose();
+
+		#region Service
+
+		internal DateTime DateTime { get => _service.DateTime; }
+
+		internal void Bind(IInAppPurchasingService service)
+		{
+			Unbind();
+			_service = service;
+		}
+
+		internal void Unbind()
+		{
+			_service = null;
+		}
+
+		internal void RegisterReceipt(in PurchaseReceipt receipt) => _service.Register(in receipt);
+
+		internal bool ContainsReceipt(string transactionId)
+		{
+			return _service.Contains(transactionId);
+		}
+
+		#endregion
 
 		internal ref readonly ProductInfo GetProductInfo<T>(string product, bool forceUpdateCache = false)
 			where T : IAPProductEntry
@@ -338,11 +351,6 @@ namespace InAppPurchasing
 		internal PurchaseReceipt? GetPurchaseReceipt(string transactionId)
 		{
 			return _service.GetReceipt(transactionId);
-		}
-
-		internal bool ContainsReceipt(string transactionId)
-		{
-			return _service.Contains(transactionId);
 		}
 
 		internal IInAppPurchasingIntegration SetIntegration(IInAppPurchasingIntegration integration)

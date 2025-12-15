@@ -41,9 +41,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			this = default;
 			EnsureCapacity(worldState, capacity);
-
-			if (!_arr.IsCreated)
-				_arr = new MemArray<T>(worldState, capacity);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,11 +125,19 @@ namespace Sapientia.MemoryAllocator
 			return _arr.GetValuePtr(worldState, index);
 		}
 
+		/// <summary>
+		/// Возвращает true, если состояние изменилось
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool EnsureCapacity(WorldState worldState, int capacity)
 		{
 			if (capacity <= Capacity)
-				return false;
+			{
+				if (_arr.IsCreated)
+					return false;
+				_arr = new MemArray<T>(worldState, capacity, ClearOptions.UninitializedMemory);
+				return true;
+			}
 			capacity = capacity.NextPowerOfTwo();
 			return _arr.Resize(worldState, capacity, ClearOptions.UninitializedMemory);
 		}
@@ -219,7 +224,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveFast<TU>(WorldState worldState, TU obj) where TU : unmanaged, IEquatable<T>
+		public bool RemoveSwapBack<TU>(WorldState worldState, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			for (int i = 0, cnt = _count; i < cnt; ++i)
 			{
@@ -286,8 +291,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange(WorldState worldState, T[] collection)
+		{
+			AddRange(worldState, collection.AsSpan());
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void AddRange(WorldState worldState, Span<T> collection)
 		{
+			if (collection.Length == 0)
+				return;
+
 			EnsureCapacity(worldState, _count + collection.Length);
 			E.ASSERT(IsCreated);
 
@@ -335,7 +349,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new MemListEnumerator<T>(GetValuePtr(worldState),0 , Count);
+			return new MemListEnumerator<T>(IsCreated ? GetValuePtr(worldState) : default,0 , Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

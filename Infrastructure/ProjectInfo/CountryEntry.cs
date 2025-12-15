@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Sapientia.Extensions;
 
-namespace Targeting
+namespace ProjectInformation
 {
 	[Serializable]
 	public partial struct CountryEntry

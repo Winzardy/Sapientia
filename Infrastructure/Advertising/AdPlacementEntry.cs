@@ -3,8 +3,8 @@
 #endif
 using System;
 using System.Collections.Generic;
-using Targeting;
 using Content;
+using ProjectInformation;
 using Sapientia;
 #if ENABLE_AD_EMPTY_CHECK
 using Sapientia.Extensions;

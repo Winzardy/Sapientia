@@ -96,6 +96,10 @@ namespace Sapientia.MemoryAllocator
 
 				_world.Update(logicDeltaTime);
 			}
+			else if (_world.worldState.Tick == 0)
+			{
+				_world.Update(0f);
+			}
 		}
 
 		public void LateUpdate()

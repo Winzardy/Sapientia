@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 #endif
 
-namespace Targeting
+namespace ProjectInformation
 {
 	public static class ProjectDebug
 	{

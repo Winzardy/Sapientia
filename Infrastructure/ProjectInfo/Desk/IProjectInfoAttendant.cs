@@ -1,8 +1,8 @@
 using Sapientia;
 
-namespace Targeting
+namespace ProjectInformation
 {
-	public interface IProjectDeskAttendant
+	public interface IProjectInfoAttendant
 	{
 		public string Identifier { get; }
 

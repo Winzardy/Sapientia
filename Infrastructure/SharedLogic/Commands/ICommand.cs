@@ -32,7 +32,7 @@ namespace SharedLogic
 		public static Exception GetDefaultException<T>(this T command)
 			where T : struct, ICommand
 		{
-			return new Exception($"Invalid command by type [ {typeof(T)} ] ({command})");
+			return new Exception($"Validation failed! Command type [ {typeof(T)} ] ({command})");
 		}
 	}
 }

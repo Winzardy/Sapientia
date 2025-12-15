@@ -1,8 +1,10 @@
 {
-    "name": "Targeting",
+    "name": "ProjectInfo",
     "rootNamespace": "",
     "references": [
-        "Sapientia"
+        "Sapientia",
+        "UnityEditor.UI",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
