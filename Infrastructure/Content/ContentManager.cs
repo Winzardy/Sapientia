@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Sapientia;
 
 namespace Content
@@ -10,6 +13,7 @@ namespace Content
 	public sealed class ContentManager : StaticProvider<ContentResolver>
 	{
 #if UNITY_EDITOR
+
 		public static IContentEditorResolver editorResolver;
 		private static IContentEditorResolver resolver
 		{
@@ -24,6 +28,16 @@ namespace Content
 		}
 #endif
 		internal static bool IsInitialized => resolver != null;
+
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="importer"></param>
+		/// <param name="token"></param>
+		/// <returns></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
+			=> resolver.PopulateAsync(importer, token);
 
 		/// <inheritdoc cref="ContentResolver.Any{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

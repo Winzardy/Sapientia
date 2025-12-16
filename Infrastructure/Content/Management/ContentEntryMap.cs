@@ -5,38 +5,27 @@ using Sapientia;
 
 namespace Content.Management
 {
-	public enum ContentEntryState
-	{
-		None, //or Cleared
-
-		Building,
-		Built
-	}
-
 	public static class ContentEntryMap
 	{
-		public static ContentEntryState State { get; private set; }
-
-		public static Action Build;
-		public static Action Clear;
-
-		public static void SetState(ContentEntryState state) => State = state;
+		internal static Action<IList<IContentEntry>> Populated;
+		internal static Action Cleared;
 	}
 
 	public static class ContentEntryMap<T>
 	{
-		private static bool _building;
-		private static bool _clearing;
+		private static bool _populateSubscribe;
+		private static bool _clearSubscribe;
 
 		private static readonly ContentDictionary<UniqueContentEntry<T>> _dictionary = new();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void Register(UniqueContentEntry<T> entry)
 		{
-			if (!_building)
+			if (!_populateSubscribe)
 			{
-				ContentEntryMap.Build += OnBuilt;
-				_building = true;
+				ContentEntryMap.Populated += OnPopulated;
+				_dictionary.Unfreeze();
+				_populateSubscribe = true;
 			}
 
 			if (!_dictionary.TryAdd(in entry.Guid, entry))
@@ -59,32 +48,30 @@ namespace Content.Management
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void Unregister(UniqueContentEntry<T> entry)
 		{
-			if (!_clearing)
+			if (!_clearSubscribe)
 			{
-				ContentEntryMap.Clear += OnCleared;
-				_clearing = true;
+				ContentEntryMap.Cleared += OnCleared;
+				_clearSubscribe = true;
 			}
 
 			if (_dictionary.IsBuilding)
 				_dictionary.Remove(in entry.Guid);
 		}
 
-		private static void OnBuilt()
+		private static void OnPopulated(IList<IContentEntry> _)
 		{
-			ContentEntryMap.Build -= OnBuilt;
+			ContentEntryMap.Populated -= OnPopulated;
 
 			_dictionary.Freeze();
-
-			_building = false;
+			_populateSubscribe = false;
 		}
 
 		private static void OnCleared()
 		{
-			ContentEntryMap.Clear -= OnCleared;
+			ContentEntryMap.Cleared -= OnCleared;
 
 			_dictionary.Clear();
-
-			_clearing = false;
+			_clearSubscribe = false;
 		}
 
 		public static bool Any() => !_dictionary.IsEmpty;

@@ -48,31 +48,55 @@ namespace Content.Management
 
 		public ContentDictionary()
 		{
-			_temporary = new Dictionary<SerializableGuid, TValue>();
 		}
 
 		public ContentDictionary(Dictionary<SerializableGuid, TValue> source)
 		{
-			Freeze(source);
+			Fill(source);
+		}
+
+		internal void Unfreeze()
+		{
+			if (_temporary != null)
+				throw ContentDebug.Exception("Already building...");
+
+			_temporary = new Dictionary<SerializableGuid, TValue>();
 		}
 
 		internal void Freeze()
 		{
-			Freeze(_temporary);
+			if (_temporary == null)
+				throw ContentDebug.Exception("Already frozen...");
+
+			Fill(_temporary);
 			_temporary = null;
 		}
 
 		internal void Clear()
 		{
+			_idToIndex.Clear();
+			_idToIndex = null;
 			_keyToIndex.Clear();
+			_keyToIndex = null;
 			_values = null;
 		}
 
-		private void Freeze(Dictionary<SerializableGuid, TValue> source)
+		private void Fill(Dictionary<SerializableGuid, TValue> source)
 		{
-			_values = new TValue[source.Count];
-			_keyToIndex = new Dictionary<SerializableGuid, int>(source.Count);
-			_idToIndex = new Dictionary<string, int>(source.Count);
+			if (_values != null)
+			{
+				var array = new TValue[_values.Length + source.Count];
+				foreach (var (value, i) in _values.WithIndex())
+					array[i] = value;
+
+				_values = array;
+			}
+			else
+			{
+				_values = new TValue[source.Count];
+				_keyToIndex = new Dictionary<SerializableGuid, int>(source.Count);
+				_idToIndex = new Dictionary<string, int>(source.Count);
+			}
 
 			int index = 0;
 			foreach (var entry in source)
@@ -84,7 +108,8 @@ namespace Content.Management
 				if (entry.Value is IIdentifiable identifiable)
 					_idToIndex[identifiable.Id] = index;
 
-				entry.Value.SetIndex(index);
+				entry.Value
+					.SetIndex(index);
 
 				index++;
 			}
