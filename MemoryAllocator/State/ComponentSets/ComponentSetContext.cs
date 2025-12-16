@@ -110,6 +110,12 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int GetElementIndex(Entity entity)
+		{
+			return _innerArchetype.ptr->GetElementIndex<T>(WorldState, entity);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGetElementValue(Entity entity, out T value)
 		{
 			value = _innerArchetype.ptr->TryGetElement<T>(WorldState, entity, out var isExist);
