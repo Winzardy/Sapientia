@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Sapientia.Collections;
 using Sapientia.Reflection;
 #if ENABLE_CONTENT_CONTAINS_CHECK
 using Sapientia.Extensions;
@@ -24,34 +25,39 @@ namespace Content.Management
 	/// </remarks>
 	public sealed partial class ContentResolver : IDisposable
 	{
-		private readonly IContentImporter _importer;
+		private List<IContentEntry> _entries = new();
 
-		private IList<IContentEntry> _entries;
 
-		public ContentResolver(IContentImporter importer) => _importer = importer;
-
-		public async Task InitializeAsync(CancellationToken cancellationToken = default)
+		public void Dispose()
 		{
-			ContentEntryMap.SetState(ContentEntryState.Building);
-			_entries = await _importer.ImportAsync(cancellationToken);
+			Clear();
+		}
 
-			foreach (var entry in _entries)
+		internal async Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
+		{
+			var entries = await importer.ImportAsync(token);
+
+			if (token.IsCancellationRequested)
+				return;
+
+			_entries.AddRange(entries);
+
+			foreach (var entry in entries)
 				entry.Register();
 
-			ContentEntryMap.Build?.Invoke();
-			ContentEntryMap.SetState(ContentEntryState.Built);
+			ContentEntryMap.Populated?.Invoke(entries);
 
-			//Очищаем кеш, чтобы не забивать память лишними FieldInfo
+			// Очищаем кеш, чтобы не забивать память лишними FieldInfo
 			FastReflection.Clear();
 		}
 
-		public void Dispose()
+		private void Clear()
 		{
 			foreach (var entry in _entries)
 				entry.Unregister();
 
-			ContentEntryMap.Clear?.Invoke();
-			ContentEntryMap.SetState(ContentEntryState.None);
+			_entries = null;
+			ContentEntryMap.Cleared?.Invoke();
 		}
 
 		/// <summary>

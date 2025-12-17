@@ -1,4 +1,5 @@
 using System;
+using Sapientia.Extensions;
 
 namespace Content
 {
@@ -15,6 +16,8 @@ namespace Content
 		private ContentReference<T[]> _arrayReference;
 
 		public readonly ref readonly T Read() => ref _arrayReference.Read()[_pointer];
+
+		public readonly T1 ReadAs<T1>() where T1 : class, T => UnsafeExt.As<T, T1>(Read());
 
 		public ContentReferenceArrayPointer(in ArrayPointer point, in ContentReference<T[]> arrayReference)
 		{
