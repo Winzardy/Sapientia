@@ -297,6 +297,14 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int GetElementIndex<T>(WorldState worldState, Entity entity) where T : unmanaged
+		{
+			if (!_elements.TryGetDenseId(worldState, entity.id, out var index))
+				index = -1;
+			return index;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T TryGetElement<T>(WorldState worldState, Entity entity, out bool isExist) where T : unmanaged
 		{
 			if (_elements.Has(worldState, entity.id))
