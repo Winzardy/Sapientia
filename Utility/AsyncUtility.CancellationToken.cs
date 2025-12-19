@@ -4,7 +4,7 @@ namespace Sapientia.Utility
 {
 	public static partial class AsyncUtility
 	{
-		public static void Trigger(ref CancellationTokenSource? cts)
+		public static void TriggerAndSetNull(ref CancellationTokenSource? cts)
 			=> Release(ref cts, true);
 
 		public static void Release(ref CancellationTokenSource? cts, bool cancel = false)
