@@ -112,7 +112,7 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T1 As<T, T1>(T value)
+		public static T1 As<T, T1>(this T value)
 		{
 #if UNITY_5_3_OR_NEWER
 			return UnsafeUtility.As<T, T1>(ref value);
