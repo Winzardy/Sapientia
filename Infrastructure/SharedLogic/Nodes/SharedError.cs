@@ -14,7 +14,8 @@ namespace SharedLogic
 		}
 
 		public static implicit operator SharedError<T>((string message, T context) tuple) => new(tuple.message, tuple.context);
-		public static implicit operator Exception(SharedError<T> error) => new Exception(error.message);
+
 		public override string ToString() => message;
+		public Exception ToException() => new Exception(message);
 	}
 }
