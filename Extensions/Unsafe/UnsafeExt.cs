@@ -270,5 +270,15 @@ namespace Sapientia.Extensions
 			return ref Unsafe.As<T, T1>(ref value);
 #endif
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T1 As<T, T1>(this T value) where T : class
+		{
+#if UNITY_5_3_OR_NEWER
+			return UnsafeUtility.As<T, T1>(ref value);
+#else
+			return Unsafe.As<T, T1>(ref value);
+#endif
+		}
 	}
 }

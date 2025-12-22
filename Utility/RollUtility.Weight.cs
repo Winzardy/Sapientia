@@ -35,7 +35,7 @@ namespace Sapientia
 		{
 			var sum = 0;
 
-			for (int i = 0; i < elements.Count; i++)
+			for (var i = 0; i < elements.Count; i++)
 				sum += elements[i].Weight;
 
 			return sum;
@@ -46,7 +46,7 @@ namespace Sapientia
 			var index = 0;
 			var x = 0;
 
-			for (int i = 0; i < elements.Count; i++)
+			for (var i = 0; i < elements.Count; i++)
 			{
 				x += elements[i].Weight;
 
