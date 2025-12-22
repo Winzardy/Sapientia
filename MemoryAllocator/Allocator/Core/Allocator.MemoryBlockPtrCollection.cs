@@ -323,6 +323,9 @@ namespace Sapientia.MemoryAllocator
 			return blockRef;
 		}
 
+		/// <summary>
+		/// Пытается переаллочировать блок памяти на месте (Т.е. расширить память).
+		/// </summary>
 		private MemoryBlockRef ReAllocateBlock(MemoryBlockRef blockRef, int requiredBlockSize, out SafePtr<MemoryBlock> blockPtr)
 		{
 			var zone = _zonesList.ptr.Slice(blockRef.memoryZoneId);
@@ -334,7 +337,8 @@ namespace Sapientia.MemoryAllocator
 
 			E.ASSERT(blockPtr.ptr->blockSize > 0, $"{nameof(ReAllocateBlock)}. Размер блока <= 0");
 
-			// TODO: Добавить обработку предыдущего блока
+			// Обрабатываем только следующий блок, не обрабатываем предыдущий,
+			// т.к. копирование всё-равно потребуется (Выигрыша особого не будет) и предыдущий блок может быть слишком большим.
 			var nextBlockPtr = (MemoryBlock*)((byte*)blockPtr.ptr + blockPtr.ptr->blockSize);
 			if (nextBlockPtr < zone.ptr->zoneEnd && nextBlockPtr->id.IsFree)
 			{
