@@ -246,26 +246,6 @@ namespace Sapientia.Extensions
 			}
 		}
 
-		public static SimpleList<T>? ListFromJsonLines<T>(this SimpleList<string> lines)
-		{
-			var result = new SimpleList<T>();
-
-			try
-			{
-				for (var i = 0; i < lines.Count; i++)
-				{
-					var value = lines[i].FromJson<T>();
-					result.Add(value);
-				}
-
-				return result;
-			}
-			catch (Exception e)
-			{
-				return default;
-			}
-		}
-
 		public static void LogError(string message)
 		{
 #if UNITY_EDITOR

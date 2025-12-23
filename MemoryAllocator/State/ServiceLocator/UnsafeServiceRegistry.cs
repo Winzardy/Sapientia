@@ -118,7 +118,7 @@ namespace Sapientia.MemoryAllocator
 			if (isExist)
 				return value;
 
-			value = MemoryExt.MemAlloc<T>();
+			value = MemoryExt.MemAllocAndClear<T>();
 			_typeToPtr.Add(context, value);
 
 			return value;

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace Sapientia.Utility
@@ -17,6 +18,12 @@ namespace Sapientia.Utility
 
 			cts.Dispose();
 			cts = null;
+		}
+
+		public static void Renew([NotNull] ref CancellationTokenSource? cts, bool cancel = false)
+		{
+			Release(ref cts, cancel);
+			cts = new CancellationTokenSource();
 		}
 
 		public static bool AnyCancellation(CancellationToken a, CancellationToken b)

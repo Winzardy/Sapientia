@@ -103,6 +103,7 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Value<T>() where T : unmanaged
 		{
+			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю.");
 			return ref *(T*)ptr;
 		}
 
@@ -287,12 +288,14 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly ref T Value()
 		{
+			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю.");
 			return ref *ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly ref U Value<U>() where U : unmanaged
 		{
+			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю.");
 			return ref *(U*)ptr;
 		}
 

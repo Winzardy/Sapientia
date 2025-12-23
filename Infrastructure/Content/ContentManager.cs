@@ -188,6 +188,19 @@ namespace Content
 			return false;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGet<T>(SerializableGuid guid, out T value)
+		{
+			if (Contains<T>(guid))
+			{
+				value = Get<T>(guid);
+				return true;
+			}
+
+			value = default;
+			return false;
+		}
+
 		/// <inheritdoc cref="ContentResolver.ToGuid{T}(string)"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly SerializableGuid ToGuid<T>(string id)
