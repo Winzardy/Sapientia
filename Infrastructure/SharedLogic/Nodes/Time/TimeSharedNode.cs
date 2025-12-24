@@ -18,10 +18,10 @@ namespace SharedLogic
 		{
 			get
 			{
-#if !CLIENT
-				return _dateTime;
-#else
+#if CLIENT
 				return GetDateTime();
+#else
+				return _dateTime;
 #endif
 			}
 		}
@@ -88,7 +88,7 @@ namespace SharedLogic
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
-			_dateTime = data.timestamp == 0 ? new DateTime(data.timestamp) : _timeProvider.DateTimeWithoutOffset;
+			_dateTime = data.timestamp != 0 ? new DateTime(data.timestamp) : _timeProvider.DateTimeWithoutOffset;
 		}
 
 		protected override void OnSave(out SaveData data)
