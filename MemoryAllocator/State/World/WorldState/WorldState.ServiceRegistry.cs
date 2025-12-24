@@ -325,9 +325,17 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly bool HasService<T>() where T: unmanaged, IIndexedType
+		public readonly bool HasService<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
 		{
-			return GetServiceRegistry().HasService<T>(this);
+			switch (serviceType)
+			{
+				case ServiceType.WorldState:
+					return GetServiceRegistry().HasService<T>(this);
+				case ServiceType.NoState:
+					return GetNoStateServiceRegistry().Has<T>();
+				default:
+					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

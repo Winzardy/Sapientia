@@ -8,7 +8,7 @@ namespace Sapientia.Evaluators
 	/// хранить константное значение
 	/// </summary>
 	[Serializable]
-	public partial struct EvaluatedValue<TContext, TValue>
+	public partial struct EvaluatedValue<TContext, TValue> : IContainer<TValue>
 	{
 		public TValue value;
 
