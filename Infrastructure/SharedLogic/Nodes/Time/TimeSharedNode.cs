@@ -44,7 +44,16 @@ namespace SharedLogic
 		/// </summary>
 		internal void AddTimeOffset(TimeSpan offset)
 		{
-			_dateTimeOffset += offset;
+			SetTimeOffset(_dateTimeOffset + offset);
+		}
+
+		/// <summary>
+		/// Увеличивает смещение относительно серверного времени
+		/// </summary>
+		internal void SetTimeOffset(TimeSpan offset)
+		{
+			_dateTimeOffset = offset;
+			SLDebug.Log($"Update dateTime, new: {DateTime} (real: {DateTimeWithoutOffset}, offset: {_dateTimeOffset})");
 		}
 
 		/// <summary>
