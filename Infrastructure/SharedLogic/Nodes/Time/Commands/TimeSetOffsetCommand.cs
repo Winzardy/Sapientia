@@ -21,7 +21,7 @@ namespace SharedLogic.Commands
 		public void Execute(ISharedRoot root)
 		{
 			root.GetNode<TimeSharedNode>()
-			   .AddTimeOffset(offset);
+			   .SetTimeOffset(offset);
 		}
 	}
 }

@@ -28,6 +28,7 @@ namespace SharedLogic
 
 		public DateTime DateTime => DateTimeWithoutOffset + _dateTimeOffset;
 
+		public TimeSpan DateTimeOffset => _dateTimeOffset;
 #if CLIENT
 		private bool _timeProviderSuppress;
 #endif
@@ -43,7 +44,16 @@ namespace SharedLogic
 		/// </summary>
 		internal void AddTimeOffset(TimeSpan offset)
 		{
-			_dateTimeOffset += offset;
+			SetTimeOffset(_dateTimeOffset + offset);
+		}
+
+		/// <summary>
+		/// Увеличивает смещение относительно серверного времени
+		/// </summary>
+		internal void SetTimeOffset(TimeSpan offset)
+		{
+			_dateTimeOffset = offset;
+			SLDebug.Log($"Update dateTime, new: {DateTime} (real: {DateTimeWithoutOffset}, offset: {_dateTimeOffset})");
 		}
 
 		/// <summary>
@@ -132,11 +142,15 @@ namespace SharedLogic
 
 		public static DateTime GetDateTimeWithoutOffset(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
-			   .DateTimeWithoutOffset;
+				.DateTimeWithoutOffset;
 
 		public static DateTime GetDateTime(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
-			   .DateTime;
+				.DateTime;
+
+		public static TimeSpan GetDateTimeOffset(this ISharedRoot root)
+			=> root.GetNode<TimeSharedNode>()
+				.DateTimeOffset;
 
 		public static bool IsTimedCommand<T>(in T command) where T : struct, ICommand
 		{
