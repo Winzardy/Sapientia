@@ -28,6 +28,7 @@ namespace SharedLogic
 
 		public DateTime DateTime => DateTimeWithoutOffset + _dateTimeOffset;
 
+		public TimeSpan CurrentOffset => _dateTimeOffset;
 #if CLIENT
 		private bool _timeProviderSuppress;
 #endif
@@ -132,11 +133,15 @@ namespace SharedLogic
 
 		public static DateTime GetDateTimeWithoutOffset(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
-			   .DateTimeWithoutOffset;
+				.DateTimeWithoutOffset;
 
 		public static DateTime GetDateTime(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
-			   .DateTime;
+				.DateTime;
+
+		public static TimeSpan GetCurrentOffset(this ISharedRoot root)
+			=> root.GetNode<TimeSharedNode>()
+				.CurrentOffset;
 
 		public static bool IsTimedCommand<T>(in T command) where T : struct, ICommand
 		{
