@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using Sapientia.Evaluators;
 
@@ -7,16 +8,21 @@ namespace Sapientia.Conditions
 	public abstract partial class Condition<TContext> : Evaluator<TContext, bool>, ICondition<TContext>
 	{
 		bool IEvaluator<TContext, bool>.Evaluate(TContext context)
-			=> IsFulfilled(context);
+			=> EvaluateInternal(context);
 
-		public virtual bool IsFulfilled(TContext context) =>
-			OnEvaluate(context);
+		bool ICondition<TContext>.IsFulfilled(TContext context)
+			=> EvaluateInternal(context);
+
+		protected virtual bool EvaluateInternal(TContext context) => OnEvaluate(context);
 
 		public static implicit operator Condition<TContext>(bool value) => value
-			? new TrueCondition<TContext>()
+			? null
 			: new FalseCondition<TContext>();
 	}
 
+	/// <summary>
+	/// Используется в основном для инспектора, так как <c>condition == null</c> и так <c>true</c>
+	/// </summary>
 	[Serializable]
 	public class TrueCondition<TContext> : Condition<TContext>
 	{
@@ -27,5 +33,11 @@ namespace Sapientia.Conditions
 	public class FalseCondition<TContext> : Condition<TContext>
 	{
 		protected override bool OnEvaluate(TContext _) => false;
+	}
+
+	public static class ConditionUtility
+	{
+		public static bool IsFulfilled<TContext>(this ICondition<TContext> condition, TContext context)
+			=> condition == null || condition.Evaluate(context);
 	}
 }
