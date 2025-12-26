@@ -392,7 +392,8 @@ namespace Sapientia.Collections
 
 		public static bool WithinBounds<T>(this ICollection<T> source, int index)
 		{
-			if (source == null) return false;
+			if (source == null)
+				return false;
 			return index >= 0 && index < source.Count;
 		}
 
@@ -402,6 +403,17 @@ namespace Sapientia.Collections
 				return null!;
 
 			return list.ToArray();
+		}
+
+		public static bool TryRemoveFirstMatching<T>(this List<T> list, System.Predicate<T> predicate)
+		{
+			var matchingIndex = list.FindIndex(predicate);
+
+			if (matchingIndex < 0)
+				return false;
+
+			list.RemoveAt(matchingIndex);
+			return true;
 		}
 
 		public delegate bool Predicate<T>(in T value);
