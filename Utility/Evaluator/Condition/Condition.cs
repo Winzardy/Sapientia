@@ -17,19 +17,19 @@ namespace Sapientia.Conditions
 
 		public static implicit operator Condition<TContext>(bool value) => value
 			? null
-			: new FalseCondition<TContext>();
+			: new RejectCondition<TContext>();
 	}
 
 	/// <summary>
 	/// Используется в основном для инспектора, так как <c>condition == null</c> и так <c>true</c>
 	/// </summary>
-	public class TrueCondition<TContext> : Condition<TContext>
+	public class NoneCondition<TContext> : Condition<TContext>
 	{
 		protected override bool OnEvaluate(TContext _) => true;
 	}
 
 	[Serializable]
-	public class FalseCondition<TContext> : Condition<TContext>
+	public class RejectCondition<TContext> : Condition<TContext>
 	{
 		protected override bool OnEvaluate(TContext _) => false;
 	}
