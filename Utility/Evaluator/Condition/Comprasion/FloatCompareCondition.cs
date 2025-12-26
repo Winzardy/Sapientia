@@ -1,6 +1,7 @@
 using System;
 using Sapientia.Deterministic;
 using Sapientia.Evaluators;
+using Sapientia.Extensions;
 #if CLIENT
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -40,8 +41,8 @@ namespace Sapientia.Conditions.Comparison
 				ComparisonOperator.LessOrEqual => a.Evaluate(context) <= b.Evaluate(context),
 				ComparisonOperator.Greater => a.Evaluate(context) > b.Evaluate(context),
 				ComparisonOperator.Less => a.Evaluate(context) < b.Evaluate(context),
-				ComparisonOperator.Equal => Mathf.Approximately(a.Evaluate(context), b.Evaluate(context)),
-				ComparisonOperator.NotEqual => !Mathf.Approximately(a.Evaluate(context), b.Evaluate(context)),
+				ComparisonOperator.Equal => a.Evaluate(context).IsApproximatelyEqual(b.Evaluate(context)),
+				ComparisonOperator.NotEqual => !a.Evaluate(context).IsApproximatelyEqual(b.Evaluate(context)),
 				_ => throw new ArgumentOutOfRangeException()
 			};
 		}

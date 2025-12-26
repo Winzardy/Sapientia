@@ -23,7 +23,6 @@ namespace Sapientia.Conditions
 	/// <summary>
 	/// Используется в основном для инспектора, так как <c>condition == null</c> и так <c>true</c>
 	/// </summary>
-	[Serializable]
 	public class TrueCondition<TContext> : Condition<TContext>
 	{
 		protected override bool OnEvaluate(TContext _) => true;
