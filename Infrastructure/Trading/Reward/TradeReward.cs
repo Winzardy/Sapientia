@@ -16,7 +16,11 @@ namespace Trading
 		/// <summary>
 		/// Доступно ли для получения? пример: нет места в инвентаре
 		/// </summary>
-		protected abstract bool CanReceive(Tradeboard board, out TradeReceiveError? error);
+		protected virtual bool CanReceive(Tradeboard board, out TradeReceiveError? error)
+		{
+			error = null;
+			return true;
+		}
 
 		/// <summary>
 		/// Выдать

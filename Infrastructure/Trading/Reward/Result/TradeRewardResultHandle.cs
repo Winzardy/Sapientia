@@ -4,11 +4,9 @@ namespace Trading.Result
 	public abstract class TradeRewardResultHandle<T> : ITradeRewardResultHandle<T>
 		where T : TradeReward
 	{
-		private T _source;
+		protected T _source;
 
 		TradeReward ITradeRewardResultHandle.Source => _source;
-
-		public T Source => _source;
 
 		void ITradeRewardResultHandle<T>.Bind(T source)
 		{
