@@ -241,7 +241,7 @@ namespace Sapientia.Data
 		public byte* HiBound => (byte*)ptr;
 		public byte* LowBound => (byte*)ptr;
 #endif
-		
+
 		public readonly ref T Ref
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
