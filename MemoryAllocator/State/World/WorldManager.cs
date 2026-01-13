@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
@@ -63,6 +64,12 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IEnumerable<World> GetAllWorld()
+		{
+			return _worlds;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetCurrentWorld(this ref WorldId worldId)
 		{
 			SetCurrentWorld(worldId.GetWorld(), worldId.GetWorldState());
@@ -107,7 +114,7 @@ namespace Sapientia.MemoryAllocator
 
 			Prewarm(_count);
 
-			worldId.index = (ushort)_count++;
+			worldId.index = (ushort) _count++;
 
 			_worldsStates[worldId.index] = world;
 			_currentId = _currentId.Max(worldId.id + 1);
@@ -119,7 +126,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			Prewarm(_count);
 
-			var worldId = new WorldId((ushort)_count++, (ushort)++_currentId);
+			var worldId = new WorldId((ushort) _count++, (ushort) ++_currentId);
 			ref var worldState = ref _worldsStates[worldId.index];
 			ref var world = ref _worlds[worldId.index];
 
@@ -169,6 +176,7 @@ namespace Sapientia.MemoryAllocator
 
 				_worlds[_count - 1] = null;
 			}
+
 			_count--;
 		}
 
@@ -217,6 +225,7 @@ namespace Sapientia.MemoryAllocator
 				worldId.index = i;
 				return true;
 			}
+
 			return false;
 		}
 
