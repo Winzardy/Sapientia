@@ -66,7 +66,13 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IEnumerable<World> GetAllWorlds()
 		{
-			return _worlds;
+			foreach (var world in _worlds)
+			{
+				if (world == null)
+					continue;
+
+				yield return world;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
