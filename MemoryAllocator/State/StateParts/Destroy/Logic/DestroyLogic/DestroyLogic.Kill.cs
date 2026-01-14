@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.TypeIndexer;
@@ -6,6 +7,23 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public partial struct DestroyLogic
 	{
+		/// <summary>
+		/// Вызывает <see cref="RequestKill(Entity)"/> для группы <see cref="Entity"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RequestKill(Span<Entity> entities)
+		{
+			foreach (var entity in entities)
+			{
+				RequestKill(entity);
+			}
+		}
+
+		/// <summary>
+		/// Уничтожает <see cref="Entity"/> в конце следующего апдейта мира.
+		/// <see cref="Entity"/> будет существовать ещё один тик, все события, связанные с <see cref="DestroyRequest"/>
+		/// и <see cref="DestroyComponent"/> также будут обработаны в конце следующего тика.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RequestKill(Entity entity)
 		{
@@ -13,6 +31,9 @@ namespace Sapientia.MemoryAllocator.State
 			_killRequestSet.GetElement(entity);
 		}
 
+		/// <summary>
+		/// Вызывает <see cref="RequestKill(Entity)"/> для <see cref="Entity"/> через <see cref="delay"/> времени.
+		/// </summary>
 		public void RequestKill(Entity entity, float delay)
 		{
 			E.ASSERT(IsAlive(entity), "Попытка запросить уничтожение entity, которая уже отправлена на уничтожение.");
@@ -33,10 +54,10 @@ namespace Sapientia.MemoryAllocator.State
 			return _killRequestSet.HasElement(entity) || _destroyRequestSet.HasElement(entity);
 		}
 
-		public void AddKillParent(Entity child, Entity parent)
+		public void AddKillParent(Entity child, Entity parent, bool duplicateCheck = false)
 		{
 			E.ASSERT(IsAlive(child));
-			E.ASSERT(_entityStatePart.Value().IsEntityExist(_worldState, parent));
+			E.ASSERT(IsExist(parent));
 
 			if (_destroyRequestSet.HasElement(parent))
 			{
@@ -45,12 +66,9 @@ namespace Sapientia.MemoryAllocator.State
 			}
 
 			ref var childElement = ref _killCallbackSet.GetElement(child);
+			if (duplicateCheck && childElement.parents.Contains(_worldState, parent))
+				return;
 			ref var parentElement = ref _killCallbackSet.GetElement(parent);
-
-			if (!childElement.parents.IsCreated)
-				childElement.parents = new MemList<Entity>(_worldState);
-			if (!childElement.children.IsCreated)
-				childElement.children = new MemList<Entity>(_worldState);
 
 			childElement.parents.Add(_worldState, parent);
 			parentElement.children.Add(_worldState, child);
@@ -76,9 +94,34 @@ namespace Sapientia.MemoryAllocator.State
 			{
 				E.ASSERT(IsAlive(child));
 				ref var childElement = ref _killCallbackSet.GetElement(child);
-				if (!childElement.parents.IsCreated)
-					childElement.parents = new MemList<Entity>(_worldState);
 				childElement.parents.Add(_worldState, parent);
+			}
+		}
+
+		public bool HasKillParent(Entity child, Entity parent)
+		{
+			ref var childComponent = ref _killCallbackSet.TryGetElement(child, out var success);
+			if (!success)
+				return false;
+
+			return childComponent.parents.Contains(_worldState, parent);
+		}
+
+		public bool HasKillCallback(Entity child)
+		{
+			return _killCallbackSet.HasElement(child);
+		}
+
+		public void RemoveKillParents(Entity child)
+		{
+			ref var childComponent = ref _killCallbackSet.TryGetElement(child, out var success);
+			if (!success)
+				return;
+
+			foreach (var parent in childComponent.parents.GetEnumerable(_worldState))
+			{
+				ref var parentComponent = ref _killCallbackSet.GetElement(parent);
+				parentComponent.children.RemoveSwapBack(_worldState, child);
 			}
 		}
 

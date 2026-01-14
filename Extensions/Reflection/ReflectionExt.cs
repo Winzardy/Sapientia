@@ -102,9 +102,9 @@ namespace Sapientia.Extensions.Reflection
 				var genericDef = type.GetGenericTypeDefinition();
 
 				if (genericDef == typeof(List<>) ||
-				    genericDef == typeof(IEnumerable<>) ||
-				    genericDef == typeof(IList<>) ||
-				    genericDef == typeof(ICollection<>))
+					genericDef == typeof(IEnumerable<>) ||
+					genericDef == typeof(IList<>) ||
+					genericDef == typeof(ICollection<>))
 				{
 					return type.GetGenericArguments()[0];
 				}
@@ -113,6 +113,34 @@ namespace Sapientia.Extensions.Reflection
 				{
 					if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
 						return interfaceType.GetGenericArguments()[0];
+				}
+			}
+
+			return type;
+		}
+
+		/// <returns>Возвращает тип элемента коллекции рекурсивно!, если данный тип не коллекция вернет себя</returns>
+		public static Type GetFinalCollectionElementType(this Type type)
+		{
+			if (type.IsArray)
+				return GetFinalCollectionElementType(type.GetElementType());
+
+			if (type.IsGenericType)
+			{
+				var genericDef = type.GetGenericTypeDefinition();
+
+				if (genericDef == typeof(List<>) ||
+					genericDef == typeof(IEnumerable<>) ||
+					genericDef == typeof(IList<>) ||
+					genericDef == typeof(ICollection<>))
+				{
+					return GetFinalCollectionElementType(type.GetGenericArguments()[0]);
+				}
+
+				foreach (var interfaceType in type.GetInterfaces())
+				{
+					if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+						return GetFinalCollectionElementType(interfaceType.GetGenericArguments()[0]);
 				}
 			}
 
@@ -144,8 +172,8 @@ namespace Sapientia.Extensions.Reflection
 					}
 
 					if ((interfacesOnly && types[t].IsInterface) ||
-					    (!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
-						    !types[t].IsGenericType))
+						(!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
+							!types[t].IsGenericType))
 					{
 						typeList.Add(types[t]);
 					}
@@ -209,8 +237,8 @@ namespace Sapientia.Extensions.Reflection
 						continue;
 
 					if ((interfacesOnly && types[t].IsInterface) ||
-					    (!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
-						    !types[t].IsGenericType))
+						(!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
+							!types[t].IsGenericType))
 					{
 						typeList.Add(types[t]);
 					}
@@ -359,7 +387,7 @@ namespace Sapientia.Extensions.Reflection
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "")
-						   .Replace($"{ARRAY_DATA_TERMINATOR}", ""));
+							.Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 
 						if (p + 1 == pathComponents.Length)
 						{
@@ -401,7 +429,7 @@ namespace Sapientia.Extensions.Reflection
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "")
-						   .Replace($"{ARRAY_DATA_TERMINATOR}", ""));
+							.Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 						target = array.GetValue(index);
 					}
 				}

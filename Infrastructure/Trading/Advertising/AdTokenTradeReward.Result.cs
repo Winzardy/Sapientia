@@ -28,7 +28,7 @@ namespace Trading.Advertising
 		{
 			return new AdTokenTradeRewardResult
 			{
-				group = Source.group,
+				group = _source.group,
 				count = count
 			};
 		}

@@ -36,6 +36,14 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Has<T>() where T : unmanaged, IIndexedType
+		{
+			var context = ServiceRegistryContext.Create<T>();
+			var result = _typeToPtr.TryGetValue(context, out var ptr);
+			return result;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGetPtr<T>(out SafePtr<T> value) where T : unmanaged, IIndexedType
 		{
 			var context = ServiceRegistryContext.Create<T>();

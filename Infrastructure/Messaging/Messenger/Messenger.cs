@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Sapientia;
 
 namespace Messaging
@@ -38,6 +39,7 @@ namespace Messaging
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		/// <returns>Возвращает токен по которому нужно отписаться</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MustUseReturnValue("Возвращает токен по которому нужно отписаться")]
 		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver)
 			where TMessage : struct
 			=> bus.Subscribe(receiver);
@@ -50,6 +52,7 @@ namespace Messaging
 		/// <typeparam name="TMessage">Тип сообщения</typeparam>
 		/// <returns>Возвращает токен по которому нужно отписаться</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MustUseReturnValue("Возвращает токен по которому нужно отписаться")]
 		public static IMessageSubscriptionToken Subscribe<TMessage>(Receiver<TMessage> receiver, Filter<TMessage> filter)
 			where TMessage : struct
 			=> bus.Subscribe(receiver, filter);

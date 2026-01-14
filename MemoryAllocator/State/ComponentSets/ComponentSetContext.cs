@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Data;
+using Submodules.Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {
@@ -94,6 +95,7 @@ namespace Sapientia.MemoryAllocator.State
 		/// <summary>
 		/// Возвращает элемент если он существует, если нет - создаёт новый
 		/// </summary>
+		/// <param name="isExist"> true - если элемент уже существует, false - если элемент был только что создан </param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement(Entity entity, out bool isExist)
 		{
@@ -104,9 +106,9 @@ namespace Sapientia.MemoryAllocator.State
 		/// Возвращает элемент только если он существует
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T TryGetElement(Entity entity, out bool isExist)
+		public ref T TryGetElement(Entity entity, out bool success)
 		{
-			return ref _innerArchetype.ptr->TryGetElement<T>(WorldState, entity, out isExist);
+			return ref _innerArchetype.ptr->TryGetElement<T>(WorldState, entity, out success);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -127,6 +129,13 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			_innerArchetype.ptr->Clear<T>(WorldState);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBackElements(Span<Entity> entities, bool ignoreDestroyHandler = false)
+		{
+			_innerArchetype.ptr->RemoveSwapBackElements(WorldState, entities, ignoreDestroyHandler);
+		}
+
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveSwapBackElement(Entity entity)

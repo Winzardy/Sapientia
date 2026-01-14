@@ -6,7 +6,6 @@ namespace Sapientia
 	{
 	}
 
-
 	[Serializable]
 	public partial struct Range<T> : IMinMax, IContainer<T>
 	{
@@ -21,6 +20,11 @@ namespace Sapientia
 
 		public static implicit operator Range<T>((T min, T max) tuple) => new(tuple.min, tuple.max);
 		public static implicit operator Range<T>(T max) => new Range<T>(default, max);
+
+		public override string ToString()
+		{
+			return $"[{min}, {max}]";
+		}
 	}
 
 	public static class RangeUtility
