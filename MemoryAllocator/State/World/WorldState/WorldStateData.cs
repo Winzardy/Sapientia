@@ -6,14 +6,23 @@ namespace Sapientia.MemoryAllocator
 	internal struct WorldStateData : IDisposable
 	{
 		public WorldId worldId;
-
 		public Allocator allocator;
-		public ServiceRegistry serviceRegistry; // Работает с состоянием мира
 
-		public UnsafeServiceRegistry noStateServiceRegistry; // Работает с локальными данными (Вне мира)
+		/// <summary>
+		/// Работает с состоянием мира
+		/// </summary>
+		public ServiceRegistry serviceRegistry;
+		/// <summary>
+		/// Работает с локальными данными (Вне мира)
+		/// </summary>
+		public UnsafeServiceRegistry noStateServiceRegistry;
 
 		public ushort version;
 
+		/// <summary>
+		/// По сути своей является количиством обновлений мира.
+		/// Из этого значения нельзя вычислить время напрямую, т.к. время может идти с разной скоростью в каждый апдейт.
+		/// </summary>
 		public uint tick;
 		public float time;
 

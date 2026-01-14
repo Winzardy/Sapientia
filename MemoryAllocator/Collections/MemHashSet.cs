@@ -245,29 +245,29 @@ namespace Sapientia.MemoryAllocator
 			if (!buckets.IsCreated)
 				return false;
 
-			var slotsPtr = slots.GetValuePtr(worldState);
-			var bucketsPtr = buckets.GetValuePtr(worldState);
+			var slotsSpan = slots.GetSpan(worldState);
+			var bucketsSpan = buckets.GetSpan(worldState);
 
 			var hashCode = item.GetHashCode() & _hashCodeMask;
 			var bucket = hashCode % buckets.Length;
 			var last = -1;
-			for (var i = bucketsPtr[bucket] - 1; i >= 0; last = i, i = slotsPtr[i].next)
+			for (var i = bucketsSpan[bucket] - 1; i >= 0; last = i, i = slotsSpan[i].next)
 			{
-				if (slotsPtr[i].hashCode == hashCode && slotsPtr[i].value.Equals(item))
+				if (slotsSpan[i].hashCode == hashCode && slotsSpan[i].value.Equals(item))
 				{
 					if (last < 0)
 					{
 						// first iteration; update buckets
-						bucketsPtr[bucket] = slotsPtr[i].next + 1;
+						bucketsSpan[bucket] = slotsSpan[i].next + 1;
 					}
 					else
 					{
 						// subsequent iterations; update 'next' pointers
-						slotsPtr[last].next = slotsPtr[i].next;
+						slotsSpan[last].next = slotsSpan[i].next;
 					}
-					slotsPtr[i].hashCode = -1;
-					slotsPtr[i].value = default(T);
-					slotsPtr[i].next = freeList;
+					slotsSpan[i].hashCode = -1;
+					slotsSpan[i].value = default(T);
+					slotsSpan[i].next = freeList;
 
 					count--;
 					if (count == 0)

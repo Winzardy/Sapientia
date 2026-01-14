@@ -7,6 +7,7 @@ using Sapientia.Collections.FixedString;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
+using Submodules.Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {
@@ -305,7 +306,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T TryGetElement<T>(WorldState worldState, Entity entity, out bool isExist) where T : unmanaged
+		public ref T TryGetElement<T>(WorldState worldState, Entity entity, out bool success) where T : unmanaged
 		{
 			if (_elements.Has(worldState, entity.id))
 			{
@@ -314,11 +315,11 @@ namespace Sapientia.MemoryAllocator.State
 				{
 					E.ASSERT(element.entity == entity);
 
-					isExist = true;
+					success = true;
 					return ref element.value;
 				}
 			}
-			isExist = false;
+			success = false;
 			return ref _elements.GetValuePtr<T>(worldState)[0];
 		}
 
@@ -396,6 +397,30 @@ namespace Sapientia.MemoryAllocator.State
 				_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, valueArray.ptr, _elements.Count);
 			}
 			_elements.ClearFast();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBackElements(WorldState worldState, Span<Entity> entities, bool ignoreDestroyHandler = false)
+		{
+			if (!ignoreDestroyHandler && _destroyHandlerProxy.IsCreated)
+			{
+				var componentSetEntities = stackalloc void*[_elements.Count.Min(entities.Length)];
+				var componentSetEntitiesCount = 0;
+
+				foreach (var entity in entities)
+				{
+					if (!_elements.Has(worldState, entity.id))
+						continue;
+					componentSetEntities[componentSetEntitiesCount++] = _elements.GetValuePtr(worldState, entity.id).ptr;
+				}
+
+				_destroyHandlerProxy.EntityPtrArrayDestroyed(worldState, worldState, componentSetEntities, componentSetEntitiesCount);
+			}
+
+			foreach (var entity in entities)
+			{
+				_elements.RemoveSwapBack(worldState, entity.id);
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

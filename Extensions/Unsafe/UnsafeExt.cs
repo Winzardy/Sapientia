@@ -204,7 +204,7 @@ namespace Sapientia.Extensions
 			return (byte*) to.AsPointer() - (byte*) from.AsPointer();
 		}
 
-		public static unsafe uint Hash(void* ptr, int bytes)
+		public static uint Hash(void* ptr, int bytes)
 		{
 			// djb2 - Dan Bernstein hash function
 			// http://web.archive.org/web/20190508211657/http://www.cse.yorku.ca/~oz/hash.html
@@ -227,31 +227,34 @@ namespace Sapientia.Extensions
 		public static bool HasFlags<T>(this T value, T flag)
 			where T : struct, Enum
 		{
-			if (UnsafeUtility.SizeOf<T>() == 8)
+			switch (TSize<T>.size)
 			{
-				var v = UnsafeUtility.As<T, ulong>(ref value);
-				var f = UnsafeUtility.As<T, ulong>(ref flag);
-				return (v & f) == f;
-			}
-
-			if (UnsafeUtility.SizeOf<T>() == 4)
-			{
-				var v = UnsafeUtility.As<T, uint>(ref value);
-				var f = UnsafeUtility.As<T, uint>(ref flag);
-				return (v & f) == f;
-			}
-
-			if (UnsafeUtility.SizeOf<T>() == 2)
-			{
-				var v = UnsafeUtility.As<T, ushort>(ref value);
-				var f = UnsafeUtility.As<T, ushort>(ref flag);
-				return (v & f) == f;
-			}
-			else
-			{
-				var v = UnsafeUtility.As<T, byte>(ref value);
-				var f = UnsafeUtility.As<T, byte>(ref flag);
-				return (v & f) == f;
+				case 1:
+				{
+					var v = UnsafeUtility.As<T, byte>(ref value);
+					var f = UnsafeUtility.As<T, byte>(ref flag);
+					return (v & f) == f;
+				}
+				case 2:
+				{
+					var v = UnsafeUtility.As<T, ushort>(ref value);
+					var f = UnsafeUtility.As<T, ushort>(ref flag);
+					return (v & f) == f;
+				}
+				case 4:
+				{
+					var v = UnsafeUtility.As<T, uint>(ref value);
+					var f = UnsafeUtility.As<T, uint>(ref flag);
+					return (v & f) == f;
+				}
+				case 8:
+				{
+					var v = UnsafeUtility.As<T, ulong>(ref value);
+					var f = UnsafeUtility.As<T, ulong>(ref flag);
+					return (v & f) == f;
+				}
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 		}
 	}
