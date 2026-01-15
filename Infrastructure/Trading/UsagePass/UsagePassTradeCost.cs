@@ -51,12 +51,6 @@ namespace Trading.UsagePass
 
 		protected override string GetReceiptKey(string tradeId) => UsagePassTradeReceiptUtility.ToRecipeKey(tradeId);
 
-		protected override bool CanRefund(Tradeboard board, out TradeCostRefundError? error)
-		{
-			error = null;
-			return true;
-		}
-
 		private BlackboardToken _token;
 
 		protected override void OnBeforePayCheck(Tradeboard board) => _token = board.Register(this);

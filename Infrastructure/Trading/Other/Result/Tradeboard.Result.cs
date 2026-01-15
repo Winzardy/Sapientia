@@ -73,6 +73,18 @@ namespace Trading
 
 		public TradeResultSnapshot SnapshotResult() => new(Id, in _rawResult);
 
+		internal void RefundResult(bool clear = true)
+		{
+			var snapshot = SnapshotResult();
+			foreach (var costResult in snapshot.costs)
+				costResult.Refund(this);
+
+			if(clear)
+				ClearResult();
+		}
+
+		internal void ClearResult() => _rawResult = default;
+
 		private void OnReleaseResultHandle()
 		{
 			if (_resultHandleTokens != null)

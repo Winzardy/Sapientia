@@ -33,7 +33,7 @@ namespace Trading
 
 			// Если что-то пошло не по плану возвращаем
 			if (!success)
-				trade.cost.ExecuteRefund(tradeboard);
+				tradeboard.RefundResult();
 
 			return success;
 		}

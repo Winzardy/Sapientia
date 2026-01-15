@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Content;
 using Trading.Result;
 
 namespace Trading
@@ -16,6 +18,12 @@ namespace Trading
 			where THandle : class, ITradeCostResultHandle<TCost>, new()
 		{
 			return board.RegisterCostHandle<TCost, THandle>(source);
+		}
+
+		/// <inheritdoc cref="TradeCost.EnumerateActual"/>
+		public static IEnumerable<TradeCost> EnumerateActual(this ContentEntry<TradeCost> entry, Tradeboard board)
+		{
+			return entry.Value.EnumerateActual(board);
 		}
 	}
 }
