@@ -18,6 +18,11 @@ namespace Trading.Advertising
 			count += result.count;
 			return true;
 		}
+
+		public void Return(Tradeboard board)
+		{
+			board.Get<IAdvertisingNode>().RemoveToken(group, count);
+		}
 	}
 
 	public class AdTokenTradeRewardResultHandle : TradeRewardResultHandle<AdTokenTradeReward>

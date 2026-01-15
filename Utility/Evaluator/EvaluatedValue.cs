@@ -15,6 +15,8 @@ namespace Sapientia.Evaluators
 		[SerializeReference]
 		public Evaluator<TContext, TValue> evaluator;
 
+		public bool IsConstant { get => evaluator == null; }
+
 		public static implicit operator EvaluatedValue<TContext, TValue>(TValue value)
 			=> new() {value = value};
 

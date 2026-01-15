@@ -7,5 +7,7 @@ namespace Trading.Result
 	public interface ITradeRewardResult
 	{
 		public bool Merge(ITradeRewardResult other) => false;
+
+		public void Return(Tradeboard board);
 	}
 }

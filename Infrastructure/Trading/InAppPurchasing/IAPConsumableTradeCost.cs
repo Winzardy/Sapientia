@@ -105,19 +105,5 @@ namespace Trading.InAppPurchasing
 		#endregion
 	}
 
-	public class IAPConsumableTradeCostResult : ITradeCostResult
-	{
-		public ContentReference<IAPConsumableProductEntry> productRef;
-	}
 
-	public class IAPConsumableTradeCostResultHandle : TradeCostResultHandle<IAPConsumableTradeCost>
-	{
-		public override ITradeCostResult Bake()
-		{
-			return new IAPConsumableTradeCostResult
-			{
-				productRef = Source.product
-			};
-		}
-	}
 }

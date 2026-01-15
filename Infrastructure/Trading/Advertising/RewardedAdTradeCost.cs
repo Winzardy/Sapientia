@@ -84,16 +84,6 @@ namespace Trading.Advertising
 
 		protected override string GetReceiptKey(string _) => placement.ToReceiptKey(group);
 
-		/// <summary>
-		/// <para>Никто не в силах вернуть потраченное время от рекламы T_T...</para>
-		/// Если только не запомнить что игрок полностью просмотрел рекламу и при следующем воспроизведении пропустить...
-		/// Но есть вопросики конечно
-		/// </summary>
-		protected override bool CanRefund(Tradeboard board, out TradeCostRefundError? error)
-		{
-			error = null;
-			return false;
-		}
 
 		public int GetAvailableCount(Tradeboard tradeboard)
 		{

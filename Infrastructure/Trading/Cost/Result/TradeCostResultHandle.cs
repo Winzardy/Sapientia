@@ -4,7 +4,7 @@ namespace Trading.Result
 	public abstract class TradeCostResultHandle<TCost> : ITradeCostResultHandle<TCost>
 		where TCost : TradeCost
 	{
-		private TCost _source;
+		protected TCost _source;
 
 		TradeCost ITradeCostResultHandle.Source => _source;
 

@@ -6,5 +6,6 @@ namespace Trading.Result
 	/// </summary>
 	public interface ITradeCostResult
 	{
+		public void Refund(Tradeboard board);
 	}
 }
