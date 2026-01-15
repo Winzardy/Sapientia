@@ -5,9 +5,16 @@ namespace Sapientia.MemoryAllocator
 {
 	public struct WorldId : IEquatable<WorldId>
 	{
-		// Always more then 0
-		public readonly ushort id;
+		public readonly ushort id; // Всегда > 0, иначе невалидно
+		/// <summary>
+		/// Индекс может быть любым, он выступает лишь в качестве кеша для упрощения поиска мира в <see cref="WorldManager"/>.
+		/// </summary>
 		public ushort index;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public WorldId(int index, int id) : this((ushort)index, (ushort)id)
+		{
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public WorldId(ushort index, ushort id)

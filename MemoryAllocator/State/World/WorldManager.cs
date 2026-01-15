@@ -132,7 +132,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			Prewarm(_count);
 
-			var worldId = new WorldId((ushort) _count++, (ushort) ++_currentId);
+			var worldId = new WorldId(_count++, ++_currentId);
 			ref var worldState = ref _worldsStates[worldId.index];
 			ref var world = ref _worlds[worldId.index];
 

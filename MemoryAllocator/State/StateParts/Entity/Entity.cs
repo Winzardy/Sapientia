@@ -1,16 +1,28 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Sapientia.MemoryAllocator.State
 {
+	[StructLayout(LayoutKind.Explicit)]
 	public struct Entity : IEquatable<Entity>
 	{
+		/// <summary>
+		/// Все <see cref="Entity"/> c <see cref="Entity.generation"/> == <see cref="Entity.GENERATION_ZERO"/> являются пустыми и не валидными.
+		/// </summary>
 		public const ushort GENERATION_ZERO = 0;
 
-		public static readonly Entity EMPTY = new (0, GENERATION_ZERO, default);
+		public static readonly Entity EMPTY = new (default, GENERATION_ZERO, default);
 
+		[FieldOffset(0)]
+		// Для операций сравнения + HashCode
+		private readonly int _idGeneration;
+
+		[FieldOffset(0)]
 		public readonly ushort id;
+		[FieldOffset(2)]
 		public readonly ushort generation;
+		[FieldOffset(4)]
 		public WorldId worldId;
 
 		public string Name
@@ -41,8 +53,15 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal Entity(int id, int generation, WorldId worldId) : this((ushort)id, (ushort)generation, worldId)
+		{
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal Entity(ushort id, ushort generation, WorldId worldId)
 		{
+			this._idGeneration = 0;
+
 			this.id = id;
 			this.generation = generation;
 			this.worldId = worldId;
@@ -109,7 +128,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Entity a, Entity b)
 		{
-			return a.id == b.id && a.generation == b.generation && a.worldId.id == b.worldId.id;
+			return a._idGeneration == b._idGeneration && a.worldId == b.worldId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,6 +154,7 @@ namespace Sapientia.MemoryAllocator.State
 			return false;
 		}
 
+		[Obsolete("Убрать, т.к. работает не корректно, а в местах использования нужно сравнивать Entity.id")]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int CompareTo(Entity other)
 		{
@@ -144,7 +164,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
-			return id;
+			return _idGeneration;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

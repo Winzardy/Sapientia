@@ -4,10 +4,17 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public partial struct DestroyLogic
 	{
+		/// <summary>
+		/// Уничтожает <see cref="Entity"/> в конце текущего апдейта мира.
+		/// При этом не будет обработан <see cref="KillCallbackComponent"/>.
+		/// Перед вызовом убедитесь, что не было работы с Kill логикой (<see cref="HasKillParent"/>, <see cref="AddKillCallback"/> и пр.).
+		/// Иначе используйте <see cref="RequestKill(Entity)"/>.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RequestDestroy(Entity entity)
 		{
 			E.ASSERT(IsAlive(entity), "Попытка запросить уничтожение entity, которая уже отправлена на уничтожение.");
+			//E.ASSERT(!HasKillCallback(entity), $"Попытка запросить уничтожение entity, у которой есть {nameof(KillCallbackComponent)}. Вызовите {nameof(RequestKill)} вместо {nameof(RequestDestroy)}");
 
 			// Если сущность была включена, то отключаем её перед уничтожением.
 			Disable(entity);
