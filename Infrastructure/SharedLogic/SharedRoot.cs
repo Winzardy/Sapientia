@@ -87,6 +87,18 @@ namespace SharedLogic
 				_logger?.Log($"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})");
 		}
 
+		public void OnExecuted(ICommand command)
+		{
+			var commandType = command.GetType();
+			if (SharedTimeUtility.IsTimedCommand(commandType))
+				return;
+
+			_revision++;
+
+			if (SLDebug.Logging.Command.execute)
+				_logger?.Log($"Executed command by type [ {commandType.Name} ] (rev: {_revision})");
+		}
+
 		public void Load(ISharedDataStreamer streamer)
 		{
 			foreach (var node in _registry.FilterBy<IPersistentNode>())
