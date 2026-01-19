@@ -23,7 +23,12 @@ namespace Trading.Advertising
 
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
-		public ContentReference<RewardedAdPlacementEntry> placement = "Default";
+		public ContentReference<RewardedAdPlacementEntry> placement
+#if CLIENT
+			= "Default";
+#else
+			;
+#endif
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
