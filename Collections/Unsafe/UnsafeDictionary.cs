@@ -18,14 +18,14 @@ namespace Sapientia.Collections
 	}
 
 	[DebuggerTypeProxy(typeof(UnsafeDictionary<,>.EquatableDictionaryProxy))]
-	public struct UnsafeDictionary<TKey, TValue> : IEnumerable<UnsafeDictionary<TKey, TValue>.Entry>, IEnumerable<SafePtr<UnsafeDictionary<TKey, TValue>.Entry>>
+	public struct UnsafeDictionary<TKey, TValue> : IDisposable
 		where TKey : unmanaged, IEquatable<TKey>
 		where TValue : unmanaged
 	{
 		public struct Entry
 		{
-			public int hashCode; // Lower 31 bits of hash code, -1 if unused
-			public int next; // Index of next entry, -1 if last
+			internal int hashCode; // Lower 31 bits of hash code, -1 if unused
+			internal int next; // Index of next entry, -1 if last
 			public TKey key; // Key of entry
 			public TValue value; // Value of entry
 		}
@@ -436,24 +436,6 @@ namespace Sapientia.Collections
 			return new Enumerator(GetEntryPtr(), LastIndex);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<SafePtr<Entry>> IEnumerable<SafePtr<Entry>>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<Entry> IEnumerable<Entry>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
 		private class EquatableDictionaryProxy
 		{
 			private UnsafeDictionary<TKey, TValue> _dictionary;
@@ -490,9 +472,7 @@ namespace Sapientia.Collections
 			}
 		}
 
-		public struct Enumerator :
-			IEnumerator<Entry>,
-			IEnumerator<SafePtr<Entry>>
+		public struct Enumerator
 		{
 			private readonly SafePtr<Entry> _entries;
 			private readonly int _count;
@@ -525,22 +505,10 @@ namespace Sapientia.Collections
 				_index = -1;
 			}
 
-			object IEnumerator.Current
+			public ref Entry Current
 			{
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => Current;
-			}
-
-			SafePtr<Entry> IEnumerator<SafePtr<Entry>>.Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => _entries + _index;
-			}
-
-			public Entry Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => (_entries + _index).Value();
+				get => ref (_entries + _index).Value();
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -5,27 +5,39 @@ namespace Sapientia.Collections
 {
 	public static class SpanExt
 	{
-		public static void RemoveSwapBack<T>(this Span<T> span, int index)
+		public static void RemoveAtSwapBack<T>(this ref Span<T> span, int index)
 		{
 			(span[index], span[^1]) = (span[^1], span[index]);
 			span = span[..^1];
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему).
+		/// </summary>
 		public static void Sort<T>(this Span<T> span, Comparison<T> comparison) where T: unmanaged
 		{
 			span.Sort(new LambdaComparer<T>(comparison));
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему).
+		/// </summary>
 		public static void Sort<T>(this Span<T> span) where T: unmanaged, IComparable<T>
 		{
 			span.Sort(0, span.Length, new DefaultComparer<T>());
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему).
+		/// </summary>
 		public static void Sort<T>(this Span<T> span, int index, int count) where T: unmanaged, IComparable<T>
 		{
 			span.Sort(index, count, new DefaultComparer<T>());
 		}
 
+		/// <summary>
+		/// Сортировка по возрастанию (От меньшего к большему).
+		/// </summary>
 		public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
 		{
 			span.Sort(0, span.Length, comparer);

@@ -400,9 +400,9 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBackElements(WorldState worldState, Span<Entity> entities, bool ignoreDestroyHandler = false)
+		public void RemoveSwapBackElements(WorldState worldState, Span<Entity> entities, bool handleDestroy = true)
 		{
-			if (!ignoreDestroyHandler && _destroyHandlerProxy.IsCreated)
+			if (handleDestroy && _destroyHandlerProxy.IsCreated)
 			{
 				var componentSetEntities = stackalloc void*[_elements.Count.Min(entities.Length)];
 				var componentSetEntitiesCount = 0;
@@ -424,11 +424,11 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveSwapBackElement(WorldState worldState, Entity entity)
+		public bool RemoveSwapBackElement(WorldState worldState, Entity entity, bool handleDestroy = true)
 		{
 			if (_elements.TryGetDenseId(worldState, entity.id, out var denseId))
 			{
-				if (_destroyHandlerProxy.IsCreated)
+				if (handleDestroy && _destroyHandlerProxy.IsCreated)
 				{
 					var safePtr = _elements.GetValuePtrByDenseId(worldState, denseId);
 					_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, safePtr.ptr, 1);
