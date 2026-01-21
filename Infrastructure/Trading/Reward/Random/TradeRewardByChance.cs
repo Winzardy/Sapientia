@@ -40,7 +40,7 @@ namespace Trading
 
 		#region Enumerate
 
-		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			var randomizer = board.Get<IRandomizer<Fix64>>();
 			var roll = randomizer.Next(0, MAX_CHANCE);

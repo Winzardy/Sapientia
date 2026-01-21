@@ -23,7 +23,12 @@ namespace Trading.Advertising
 
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
-		public ContentReference<RewardedAdPlacementEntry> placement = "Default";
+		public ContentReference<RewardedAdPlacementEntry> placement
+#if CLIENT
+			= "Default";
+#else
+		;
+#endif
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
@@ -73,7 +78,7 @@ namespace Trading.Advertising
 				return null;
 
 			var dateTime = board.Get<IDateTimeProviderWithVirtual>()
-			   .DateTimeWithoutOffset;
+				.DateTimeWithoutOffset;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
 
@@ -84,11 +89,10 @@ namespace Trading.Advertising
 
 		protected override string GetReceiptKey(string _) => placement.ToReceiptKey(group);
 
-
 		public int GetAvailableCount(Tradeboard tradeboard)
 		{
 			return tradeboard.Get<IAdvertisingNode>()
-			   .GetTokenCount(group);
+				.GetTokenCount(group);
 		}
 
 		private BlackboardToken _token;

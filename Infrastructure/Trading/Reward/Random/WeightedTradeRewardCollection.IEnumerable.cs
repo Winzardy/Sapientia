@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Sapientia;
-using Trading.Result;
 
 namespace Trading
 {
@@ -19,7 +18,7 @@ namespace Trading
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			var randomizer = board.Get<IRandomizer<int>>();
 			items.Roll<WeightedReward, Blackboard>(board, randomizer, out var index);

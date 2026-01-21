@@ -17,7 +17,7 @@ namespace Trading
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			foreach (var reward in GetCurrentStage(board)
 				        .reward

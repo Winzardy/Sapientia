@@ -24,7 +24,7 @@ namespace Trading
 		protected override bool Receive(Tradeboard board)
 			=> !condition.IsFulfilled(board) || reward.Execute(board);
 
-		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			if (!condition.IsFulfilled(board))
 				yield break;

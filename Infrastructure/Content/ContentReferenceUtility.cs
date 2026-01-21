@@ -15,10 +15,6 @@ namespace Content
 		public static ref readonly T Get<T>(this ref ContentReference<T> reference)
 			=> ref ContentUtility.GetContentValue<T>(in reference.guid, ref reference.index);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string GetId<T>(this in ContentReference<T> reference) =>
-			ContentManager.ToId<T>(in reference.guid);
-
 		/// <inheritdoc cref="ContentUtility.ReadContentValue{T}"/>
 		/// <param name="defaultEntryId">Идентификатор записи по умолчанию, используемый если <paramref name="reference"/> пустой.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -37,7 +33,7 @@ namespace Content
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToId<T>(this in ContentReference<T> reference)
-			=> GetId(in reference);
+			=> ContentManager.ToId<T>(in reference.guid);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IContentEntry<T> GetEntry<T>(this in ContentReference reference)
@@ -46,10 +42,6 @@ namespace Content
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref readonly T Get<T>(this ref ContentReference reference)
 			=> ref ContentUtility.GetContentValue<T>(in reference.guid, ref reference.index);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string GetId<T>(this in ContentReference reference) =>
-			ContentManager.ToId<T>(in reference.guid);
 
 		/// <summary>
 		/// Разница между <see cref="Get{T}(ref Content.ContentReference)"/>, тем что он не восстанавливает Index
@@ -60,7 +52,7 @@ namespace Content
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToId<T>(this in ContentReference reference)
-			=> GetId<T>(in reference);
+			=> ContentManager.ToId<T>(in reference.guid);
 
 		/// <param name="str">Либо Id, либо Guid</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
