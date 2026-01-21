@@ -309,7 +309,7 @@ namespace Sapientia.Data
 		public readonly ref U Value<U>() where U : unmanaged
 		{
 			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю.");
-			return ref *(U*) ptr;
+			return ref *(U*)ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
