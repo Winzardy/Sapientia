@@ -27,7 +27,7 @@ namespace Trading.Advertising
 #if CLIENT
 			= "Default";
 #else
-		;
+			;
 #endif
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
@@ -78,7 +78,7 @@ namespace Trading.Advertising
 				return null;
 
 			var dateTime = board.Get<IDateTimeProviderWithVirtual>()
-				.DateTimeWithoutOffset;
+			   .DateTimeWithoutOffset;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
 
@@ -89,10 +89,11 @@ namespace Trading.Advertising
 
 		protected override string GetReceiptKey(string _) => placement.ToReceiptKey(group);
 
+
 		public int GetAvailableCount(Tradeboard tradeboard)
 		{
 			return tradeboard.Get<IAdvertisingNode>()
-				.GetTokenCount(group);
+			   .GetTokenCount(group);
 		}
 
 		private BlackboardToken _token;

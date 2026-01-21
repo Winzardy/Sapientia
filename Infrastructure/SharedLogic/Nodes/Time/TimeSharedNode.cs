@@ -154,7 +154,12 @@ namespace SharedLogic
 
 		public static bool IsTimedCommand<T>(in T command) where T : struct, ICommand
 		{
-			return typeof(T) == typeof(TimeSetCommand);
+			return IsTimedCommand(typeof(T));
+		}
+
+		public static bool IsTimedCommand(Type commandType)
+		{
+			return commandType == typeof(TimeSetCommand);
 		}
 	}
 
