@@ -9,25 +9,25 @@ namespace Sapientia.MemoryAllocator
 		public static void Sort<T>(this MemList<T> list, WorldState worldState, Comparison<T> comparison) where T: unmanaged
 		{
 			var span = list.GetSpan(worldState);
-			span.Sort(comparison);
+			span.QuickSort(comparison);
 		}
 
 		public static void Sort<T>(this MemList<T> list, WorldState worldState) where T: unmanaged, IComparable<T>
 		{
 			var span = list.GetSpan(worldState);
-			span.Sort();
+			span.QuickSort();
 		}
 
 		public static void Sort<T>(this MemList<T> list, WorldState worldState, int index, int count) where T: unmanaged, IComparable<T>
 		{
 			var span = list.GetSpan(worldState);
-			span.Sort(index, count);
+			span.QuickSort(index, count);
 		}
 
 		public static void Sort<T, TComparer>(this MemList<T> list, WorldState worldState, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
 		{
 			var span = list.GetSpan(worldState);
-			span.Sort(comparer);
+			span.QuickSort(comparer);
 		}
 
 		public static void Sort<T, TComparer>(this MemList<T> list, WorldState worldState, int index, int count, TComparer comparer)
@@ -35,7 +35,7 @@ namespace Sapientia.MemoryAllocator
 			where T: unmanaged
 		{
 			var span = list.GetSpan(worldState);
-			span.Sort<T, TComparer>(index, count, comparer);
+			span.QuickSort<T, TComparer>(index, count, comparer);
 		}
 
 		public static void BinaryRemove<T>(this MemList<T> list, WorldState worldState, T value) where T: unmanaged, IComparable<T>

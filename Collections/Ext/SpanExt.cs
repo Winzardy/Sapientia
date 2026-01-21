@@ -14,39 +14,39 @@ namespace Sapientia.Collections
 		/// <summary>
 		/// Сортировка по возрастанию (От меньшего к большему).
 		/// </summary>
-		public static void Sort<T>(this Span<T> span, Comparison<T> comparison) where T: unmanaged
+		public static void QuickSort<T>(this Span<T> span, Comparison<T> comparison) where T: unmanaged
 		{
-			span.Sort(new LambdaComparer<T>(comparison));
+			span.QuickSort(new LambdaComparer<T>(comparison));
 		}
 
 		/// <summary>
 		/// Сортировка по возрастанию (От меньшего к большему).
 		/// </summary>
-		public static void Sort<T>(this Span<T> span) where T: unmanaged, IComparable<T>
+		public static void QuickSort<T>(this Span<T> span) where T: unmanaged, IComparable<T>
 		{
-			span.Sort(0, span.Length, new DefaultComparer<T>());
+			span.QuickSort(0, span.Length, new DefaultComparer<T>());
 		}
 
 		/// <summary>
 		/// Сортировка по возрастанию (От меньшего к большему).
 		/// </summary>
-		public static void Sort<T>(this Span<T> span, int index, int count) where T: unmanaged, IComparable<T>
+		public static void QuickSort<T>(this Span<T> span, int index, int count) where T: unmanaged, IComparable<T>
 		{
-			span.Sort(index, count, new DefaultComparer<T>());
+			span.QuickSort(index, count, new DefaultComparer<T>());
 		}
 
 		/// <summary>
 		/// Сортировка по возрастанию (От меньшего к большему).
 		/// </summary>
-		public static void Sort<T, TComparer>(this Span<T> span, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
+		public static void QuickSort<T, TComparer>(this Span<T> span, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
 		{
-			span.Sort(0, span.Length, comparer);
+			span.QuickSort(0, span.Length, comparer);
 		}
 
 		/// <summary>
 		/// Сортировка по возрастанию (От меньшего к большему).
 		/// </summary>
-		public static unsafe void Sort<T, TComparer>(this Span<T> span, int index, int count, TComparer comparer)
+		public static unsafe void QuickSort<T, TComparer>(this Span<T> span, int index, int count, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T : unmanaged
 		{
