@@ -9,4 +9,9 @@ namespace Sapientia
 		public void RequestClose();
 	}
 
+	public interface ICloseRequestor
+	{
+		event Action CloseRequested;
+	}
+
 }
