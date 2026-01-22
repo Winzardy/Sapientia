@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Sapientia;
 
 namespace Messaging
@@ -7,35 +8,6 @@ namespace Messaging
 	{
 		public int HubIndex { get; }
 		public void Unsubscribe() => Dispose();
-	}
-
-	public struct MessageSubscriptionToken : IDisposable
-	{
-		private IMessageSubscriptionToken _token;
-
-		public int HubIndex => _token.HubIndex;
-
-		public bool TrySubscribe<TMessage>(Receiver<TMessage> receiver)
-			where TMessage : struct
-		{
-			var result = _token == null;
-			if (result)
-				_token = Messenger.Subscribe<TMessage>(receiver);
-			return result;
-		}
-
-		public void Subscribe<TMessage>(Receiver<TMessage> receiver)
-			where TMessage : struct
-		{
-			E.ASSERT(_token == null);
-			_token = Messenger.Subscribe<TMessage>(receiver);
-		}
-
-		public void Dispose()
-		{
-			_token?.Unsubscribe();
-			_token = null;
-		}
 	}
 
 	/// <summary>
