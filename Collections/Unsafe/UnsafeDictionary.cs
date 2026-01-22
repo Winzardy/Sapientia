@@ -12,7 +12,7 @@ namespace Sapientia.Collections
 {
 	public enum InsertionBehavior
 	{
-		None = 0,
+		None,
 		OverwriteExisting,
 		ThrowOnExisting,
 	}
@@ -129,7 +129,7 @@ namespace Sapientia.Collections
 
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public ref TValue this[in TKey key]
+		public ref TValue this[TKey key]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
@@ -174,6 +174,19 @@ namespace Sapientia.Collections
 
 			value = UnsafeExt.DefaultRefReadonly<TValue>();
 			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref TValue GetOrCreateValue(TKey key, TValue defaultValue = default)
+		{
+			var entry = FindEntry(key);
+			if (entry >= 0)
+			{
+				return ref entries[entry].value;
+			}
+
+			Add(key, defaultValue);
+			return ref this[key];
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
@@ -264,13 +277,16 @@ namespace Sapientia.Collections
 				{
 					switch (behavior)
 					{
+						case InsertionBehavior.None:
+							break;
 						case InsertionBehavior.OverwriteExisting:
 							rawEntries[i].value = value;
 							return true;
-
 						case InsertionBehavior.ThrowOnExisting:
 							E.ADDING_DUPLICATE();
 							break;
+						default:
+							throw new ArgumentOutOfRangeException(nameof(behavior), behavior, null);
 					}
 
 					return false;
