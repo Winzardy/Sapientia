@@ -14,32 +14,35 @@ namespace Content
 	{
 		public Type Type { get; }
 		public string TypeName { get; }
-		public bool Foldout { get; }
+		public bool InlineEditor { get; }
 
 		public bool Dropdown { get; }
 
-		public ContentReferenceAttribute(Type type, bool foldout = true, bool dropdown = false)
+		public ContentReferenceAttribute(Type type, bool inlineEditor = true, bool dropdown = false)
 		{
 			Type = type;
-			Foldout = foldout;
+			InlineEditor = inlineEditor;
 			Dropdown = dropdown;
 		}
 
-		public ContentReferenceAttribute(string typeName, bool foldout = true, bool dropdown = false)
+		public ContentReferenceAttribute(string typeName, bool inlineEditor = true, bool dropdown = false)
 		{
 			TypeName = typeName;
-			Foldout = foldout;
+			InlineEditor = inlineEditor;
 			Dropdown = dropdown;
 		}
 	}
 
 	[Conditional("UNITY_EDITOR")]
-	public class ContentReferenceHideFoldoutAttribute : Attribute
+	public class ContentReferenceDrawerSettingsAttribute : Attribute
 	{
-	}
+		public bool InlineEditor { get; }
+		public bool Dropdown { get; }
 
-	[Conditional("UNITY_EDITOR")]
-	public class ContentReferenceDropdownAttribute : Attribute
-	{
+		public ContentReferenceDrawerSettingsAttribute(bool inlineEditor = true, bool dropdown = false)
+		{
+			InlineEditor = inlineEditor;
+			Dropdown = dropdown;
+		}
 	}
 }
