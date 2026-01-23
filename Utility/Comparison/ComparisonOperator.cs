@@ -3,7 +3,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
 
-namespace Sapientia.Conditions.Comparison
+namespace Sapientia.Comparison
 {
 	public enum ComparisonOperator
 	{

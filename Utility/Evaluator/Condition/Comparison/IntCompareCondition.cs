@@ -1,6 +1,9 @@
 using System;
+using Sapientia.Comparison;
 using Sapientia.Evaluators;
+
 #if CLIENT
+using UnityEngine.Serialization;
 using Sirenix.OdinInspector;
 using UnityEngine;
 #endif
@@ -22,9 +25,10 @@ namespace Sapientia.Conditions.Comparison
 		public Evaluator<TContext, int> a;
 
 #if CLIENT
+		[FormerlySerializedAs("logicOperator")]
 		[HorizontalGroup(GROUP + "/group", OPERATOR_WIDTH), HideLabel]
 #endif
-		public ComparisonOperator logicOperator;
+		public ComparisonOperator @operator;
 
 #if CLIENT
 		[HorizontalGroup(GROUP + "/group"), HideLabel]
@@ -33,16 +37,8 @@ namespace Sapientia.Conditions.Comparison
 
 		protected override bool OnEvaluate(TContext context)
 		{
-			return logicOperator switch
-			{
-				ComparisonOperator.GreaterOrEqual => a.Evaluate(context) >= b.Evaluate(context),
-				ComparisonOperator.LessOrEqual => a.Evaluate(context) <= b.Evaluate(context),
-				ComparisonOperator.Greater => a.Evaluate(context) > b.Evaluate(context),
-				ComparisonOperator.Less => a.Evaluate(context) < b.Evaluate(context),
-				ComparisonOperator.Equal => a.Evaluate(context) == b.Evaluate(context),
-				ComparisonOperator.NotEqual => a.Evaluate(context) != b.Evaluate(context),
-				_ => throw new NotImplementedException(),
-			};
+			return a.Evaluate(context)
+				.Compare(@operator, b.Evaluate(context));
 		}
 	}
 }
