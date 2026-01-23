@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Unity.Burst",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
