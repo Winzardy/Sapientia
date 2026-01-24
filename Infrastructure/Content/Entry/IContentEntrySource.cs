@@ -10,6 +10,8 @@ namespace Content
 	public interface IUniqueContentEntrySource : IContentEntrySource, IIdentifiable
 	{
 		public IUniqueContentEntry UniqueContentEntry { get; }
+
+		public ref readonly SerializableGuid Guid { get => ref UniqueContentEntry.Guid; }
 	}
 
 	public interface IContentEntrySource<T> : IContentEntrySource

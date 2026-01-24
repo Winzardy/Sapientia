@@ -5,6 +5,7 @@ namespace Content
 	{
 		public const string CUSTOM_CONSTANT_SEPARATOR = ";";
 
+		public bool UseGuid { get; set; }
 		public (string from, string to)? ReplaceForClassName { get; private set; }
 		public string[] CustomConstants { get; private set; }
 

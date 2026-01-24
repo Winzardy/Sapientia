@@ -13,14 +13,14 @@ using Sapientia.Extensions;
 namespace Advertising
 {
 	[Serializable]
-	[Constants]
+	[Constants(UseGuid = true)]
 	public class InterstitialAdPlacementEntry : AdPlacementEntry
 	{
 		public override AdPlacementType Type => AdPlacementType.Interstitial;
 	}
 
 	[Serializable]
-	[Constants]
+	[Constants(UseGuid = true)]
 	public class RewardedAdPlacementEntry : AdPlacementEntry
 	{
 		public override AdPlacementType Type => AdPlacementType.Rewarded;
@@ -53,7 +53,6 @@ namespace Advertising
 
 		// TODO: добавить Dictionary<Condition, UsageLimitEntry>
 		// нужно для случаев если хотим переопределить лимит по условиям
-
 
 		public string GetName(in PlatformEntry platform)
 		{
