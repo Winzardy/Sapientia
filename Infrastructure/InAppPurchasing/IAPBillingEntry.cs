@@ -16,10 +16,6 @@ namespace InAppPurchasing
 	}
 
 	[Serializable]
-	[Constants(customConstants: new[]
-	{
-		"Undefined"
-	})]
 	public partial struct IAPBillingEntry
 	{
 		public string platform;
