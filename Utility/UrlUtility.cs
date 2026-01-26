@@ -11,7 +11,7 @@ namespace Sapientia.Utility
 
 			var normalizedParts = parts
 				.Where(p => !string.IsNullOrWhiteSpace(p))
-				.Select(p => p.Trim('/'))
+				.Select(p => p.Trim(' ', '/'))
 				.Where(p => !string.IsNullOrEmpty(p));
 
 			return string.Join("/", normalizedParts);
