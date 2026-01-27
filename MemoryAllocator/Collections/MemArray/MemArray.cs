@@ -86,7 +86,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void CopyFrom(WorldState worldState, in MemArray other)
 		{
-			if (other.ptr.memPtr == ptr.memPtr) return;
+			if (other.ptr.memPtr == ptr.memPtr)
+				return;
 			if (!ptr.memPtr.IsValid() && !other.ptr.memPtr.IsValid())
 				return;
 			if (ptr.memPtr.IsValid() && !other.ptr.memPtr.IsValid())
