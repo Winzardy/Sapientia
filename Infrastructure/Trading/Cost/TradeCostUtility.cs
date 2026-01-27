@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Content;
+using Sapientia.Collections;
 using Trading.Result;
 
 namespace Trading
@@ -23,7 +24,29 @@ namespace Trading
 		/// <inheritdoc cref="TradeCost.EnumerateActual"/>
 		public static IEnumerable<TradeCost> EnumerateActual(this ContentEntry<TradeCost> entry, Tradeboard board)
 		{
-			return entry.Value.EnumerateActual(board);
+			return EnumerateActual(entry.Value, board);
+		}
+
+		public static IEnumerable<TradeCost> EnumerateActual(this TradeCost cost, Tradeboard board)
+		{
+			return cost.EnumerateActual(board);
+		}
+
+		public static bool IsEmpty(this ContentEntry<TradeCost> entry, Tradeboard board)
+		{
+			if (entry.IsEmpty())
+				return true;
+
+			return IsEmpty(entry.Value, board);
+		}
+
+		public static bool IsEmpty(this TradeCost cost, Tradeboard board)
+		{
+			if (cost == null)
+				return true;
+
+			return cost.EnumerateActual(board)
+				.IsNullOrEmpty();
 		}
 	}
 }

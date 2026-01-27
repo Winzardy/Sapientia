@@ -56,7 +56,7 @@ namespace Trading
 		{
 			ref readonly var stage = ref GetCurrentStage(board);
 			var success = stage.cost
-			   .Execute(board);
+				.Execute(board);
 
 			if (success)
 				TryIncrementStage(in stage, board);
@@ -96,7 +96,7 @@ namespace Trading
 				group ? KEY_FORMAT.Format(group) : GUID_KEY_FORMAT.Format(tradeId, stages.Guid);
 		}
 
-		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
 		{
 			var stage = GetCurrentStage(board);
 			foreach (var cost in stage.cost.EnumerateActual(board))

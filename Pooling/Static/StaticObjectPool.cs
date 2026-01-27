@@ -3,7 +3,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Pooling
 {
-	public sealed class StaticObjectPool<T> : StaticProvider<ObjectPool<T>>
+	public sealed class StaticObjectPool<T> : StaticAccessor<ObjectPool<T>>
 		where T : class
 	{
 		private static ObjectPool<T> pool
@@ -30,7 +30,7 @@ namespace Sapientia.Pooling
 		internal static void Initialize<T>(IObjectPoolPolicy<T> policy) where T : class
 		{
 			if (!StaticObjectPool<T>.IsInitialized)
-				StaticObjectPool<T>.Initialize(new(policy));
+				StaticObjectPool<T>.Set(new(policy));
 		}
 
 		internal static PooledObject<T> Get<T>(out T result) where T : class

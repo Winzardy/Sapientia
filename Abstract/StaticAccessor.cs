@@ -3,7 +3,7 @@
 namespace Sapientia
 {
 	/// <summary>
-	/// Статический доступ к инстансу, смесь паттернов Provider и Strategy.
+	/// Статический доступ к инстансу
 	/// Используется для инфраструктурных сервисов, минуя ServiceLocator/DI.
 	/// </summary>
 	/// <remarks>
@@ -13,7 +13,7 @@ namespace Sapientia
 	/// отдельные инстансы вместо глобальных (статических) объектов.
 	/// </para>
 	/// <para>
-	/// Например, MessageBus может быть реализован через статический провайдер на клиенте — это удобно и работает.
+	/// Например, MessageBus может быть реализован через статический доступ на клиенте — это удобно и работает.
 	/// Но на сервере потребуется использовать отдельные экземпляры (MessageHub),
 	/// чтобы каждый поток или пользовательский контекст работал с изолированными данными
 	/// </para>
@@ -23,25 +23,26 @@ namespace Sapientia
 	/// (если не учитывать возможность наличия разных версий контента у пользователей)
 	/// </para>
 	/// </remarks>
-	public abstract class StaticProvider<T> where T : class
+	public abstract class StaticAccessor<T> where T : class
 	{
 		protected static T? _instance;
 
-		public static void Initialize(T instance)
+		public static void Set(T instance, bool disposePrevious = true)
 		{
-			Terminate();
+			Clear(disposePrevious);
 
 			_instance = instance;
 		}
 
-		public static void Terminate()
+		public static void Clear(bool dispose = true)
 		{
 			switch (_instance)
 			{
 				case null:
 					return;
 				case IDisposable disposable:
-					disposable.Dispose();
+					if (dispose)
+						disposable.Dispose();
 					break;
 			}
 

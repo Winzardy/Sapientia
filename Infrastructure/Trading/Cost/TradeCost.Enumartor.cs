@@ -12,7 +12,7 @@ namespace Trading
 		/// <summary>
 		/// Перебирает актуальный список цен, формируемый по условиям (на момент вызова метода)
 		/// </summary>
-		public virtual IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		protected internal virtual IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
 		{
 			yield return this;
 		}

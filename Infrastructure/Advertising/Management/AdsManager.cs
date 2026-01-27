@@ -5,7 +5,7 @@ using Sapientia;
 
 namespace Advertising
 {
-	public class AdManager : StaticProvider<AdManagement>
+	public class AdManager : StaticAccessor<AdManagement>
 	{
 		private static AdManagement management
 		{
