@@ -12,20 +12,20 @@ namespace Sapientia.Collections
 {
 	public enum InsertionBehavior
 	{
-		None = 0,
+		None,
 		OverwriteExisting,
 		ThrowOnExisting,
 	}
 
 	[DebuggerTypeProxy(typeof(UnsafeDictionary<,>.EquatableDictionaryProxy))]
-	public struct UnsafeDictionary<TKey, TValue> : IEnumerable<UnsafeDictionary<TKey, TValue>.Entry>, IEnumerable<SafePtr<UnsafeDictionary<TKey, TValue>.Entry>>
+	public struct UnsafeDictionary<TKey, TValue> : IDisposable
 		where TKey : unmanaged, IEquatable<TKey>
 		where TValue : unmanaged
 	{
 		public struct Entry
 		{
-			public int hashCode; // Lower 31 bits of hash code, -1 if unused
-			public int next; // Index of next entry, -1 if last
+			internal int hashCode; // Lower 31 bits of hash code, -1 if unused
+			internal int next; // Index of next entry, -1 if last
 			public TKey key; // Key of entry
 			public TValue value; // Value of entry
 		}
@@ -129,7 +129,7 @@ namespace Sapientia.Collections
 
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
 		/// <param name="key">The key whose value is to be gotten or set.</param>
-		public ref TValue this[in TKey key]
+		public ref TValue this[TKey key]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
@@ -174,6 +174,19 @@ namespace Sapientia.Collections
 
 			value = UnsafeExt.DefaultRefReadonly<TValue>();
 			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref TValue GetOrCreateValue(TKey key, TValue defaultValue = default)
+		{
+			var entry = FindEntry(key);
+			if (entry >= 0)
+			{
+				return ref entries[entry].value;
+			}
+
+			Add(key, defaultValue);
+			return ref this[key];
 		}
 
 		/// <summary><para>Adds an element with the specified key and value to the dictionary.</para></summary>
@@ -264,13 +277,16 @@ namespace Sapientia.Collections
 				{
 					switch (behavior)
 					{
+						case InsertionBehavior.None:
+							break;
 						case InsertionBehavior.OverwriteExisting:
 							rawEntries[i].value = value;
 							return true;
-
 						case InsertionBehavior.ThrowOnExisting:
 							E.ADDING_DUPLICATE();
 							break;
+						default:
+							throw new ArgumentOutOfRangeException(nameof(behavior), behavior, null);
 					}
 
 					return false;
@@ -436,24 +452,6 @@ namespace Sapientia.Collections
 			return new Enumerator(GetEntryPtr(), LastIndex);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<SafePtr<Entry>> IEnumerable<SafePtr<Entry>>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<Entry> IEnumerable<Entry>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
 		private class EquatableDictionaryProxy
 		{
 			private UnsafeDictionary<TKey, TValue> _dictionary;
@@ -490,9 +488,7 @@ namespace Sapientia.Collections
 			}
 		}
 
-		public struct Enumerator :
-			IEnumerator<Entry>,
-			IEnumerator<SafePtr<Entry>>
+		public struct Enumerator
 		{
 			private readonly SafePtr<Entry> _entries;
 			private readonly int _count;
@@ -525,22 +521,10 @@ namespace Sapientia.Collections
 				_index = -1;
 			}
 
-			object IEnumerator.Current
+			public ref Entry Current
 			{
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => Current;
-			}
-
-			SafePtr<Entry> IEnumerator<SafePtr<Entry>>.Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => _entries + _index;
-			}
-
-			public Entry Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => (_entries + _index).Value();
+				get => ref (_entries + _index).Value();
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

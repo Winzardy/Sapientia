@@ -1,104 +1,41 @@
 using System;
 using System.Collections.Generic;
+using Sapientia.Collections;
 
 namespace Sapientia.MemoryAllocator
 {
-	public static unsafe class MemListExt
+	public static class MemListExt
 	{
-		public struct LambdaComparer<T> : IComparer<T>
-		{
-			private Comparison<T> _comparison;
-
-			public LambdaComparer(Comparison<T> comparison)
-			{
-				_comparison = comparison;
-			}
-
-			public int Compare(T x, T y) => _comparison.Invoke(x, y);
-		}
-
-		public struct DefaultComparer<T> : IComparer<T> where T : IComparable<T>
-		{
-			/// <summary>
-			/// Compares two values.
-			/// </summary>
-			/// <param name="x">First value to compare.</param>
-			/// <param name="y">Second value to compare.</param>
-			/// <returns>A signed integer that denotes the relative values of `x` and `y`:
-			/// 0 if they're equal, negative if `x &lt; y`, and positive if `x &gt; y`.</returns>
-			public int Compare(T x, T y) => x.CompareTo(y);
-		}
-
 		public static void Sort<T>(this MemList<T> list, WorldState worldState, Comparison<T> comparison) where T: unmanaged
 		{
-			list.Sort(worldState, new LambdaComparer<T>(comparison));
+			var span = list.GetSpan(worldState);
+			span.QuickSort(comparison);
 		}
 
 		public static void Sort<T>(this MemList<T> list, WorldState worldState) where T: unmanaged, IComparable<T>
 		{
-			list.Sort(worldState, 0, list.Count, new DefaultComparer<T>());
+			var span = list.GetSpan(worldState);
+			span.QuickSort();
 		}
 
 		public static void Sort<T>(this MemList<T> list, WorldState worldState, int index, int count) where T: unmanaged, IComparable<T>
 		{
-			list.Sort(worldState, index, count, new DefaultComparer<T>());
+			var span = list.GetSpan(worldState);
+			span.QuickSort(index, count);
 		}
 
 		public static void Sort<T, TComparer>(this MemList<T> list, WorldState worldState, TComparer comparer) where TComparer : IComparer<T> where T: unmanaged
 		{
-			list.Sort(worldState, 0, list.Count, comparer);
+			var span = list.GetSpan(worldState);
+			span.QuickSort(comparer);
 		}
 
 		public static void Sort<T, TComparer>(this MemList<T> list, WorldState worldState, int index, int count, TComparer comparer)
 			where TComparer : IComparer<T>
 			where T: unmanaged
 		{
-			if (count <= 1)
-				return;
-			var array = list.GetValuePtr(worldState);
-
-			// Используем алгоритм быстрой сортировки
-			var stack = stackalloc int[2 * 32];
-			var sp = 0;
-
-			stack[sp++] = index;
-			stack[sp++] = index + count - 1;
-
-			while (sp > 0)
-			{
-				var right = stack[--sp];
-				var left = stack[--sp];
-
-				var i = left;
-				var j = right;
-				var pivot = array[(left + right) / 2];
-
-				while (i <= j)
-				{
-					while (comparer.Compare(array[i], pivot) < 0)
-						i++;
-					while (comparer.Compare(array[j], pivot) > 0)
-						j--;
-
-					if (i <= j)
-					{
-						(array[i], array[j]) = (array[j], array[i]);
-						i++;
-						j--;
-					}
-				}
-
-				if (left < j)
-				{
-					stack[sp++] = left;
-					stack[sp++] = j;
-				}
-				if (i < right)
-				{
-					stack[sp++] = i;
-					stack[sp++] = right;
-				}
-			}
+			var span = list.GetSpan(worldState);
+			span.QuickSort<T, TComparer>(index, count, comparer);
 		}
 
 		public static void BinaryRemove<T>(this MemList<T> list, WorldState worldState, T value) where T: unmanaged, IComparable<T>

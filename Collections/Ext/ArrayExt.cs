@@ -195,6 +195,20 @@ namespace Sapientia.Collections
 			array = newArray;
 		}
 
+		public static T[] RemoveAt<T>(this T[] array, int index)
+		{
+			var newArray = new T[array.Length - 1];
+			if (index != newArray.Length)
+			{
+				Array.Copy(array, index + 1, newArray, index, newArray.Length - index);
+			}
+			if (index != 0)
+			{
+				Array.Copy(array, 0, newArray, 0, index);
+			}
+			return newArray;
+		}
+
 		public static ref T GetValueByIndex<T>(this T[] array, Index index)
 		{
 			var i = index.GetOffset(array.Length);
@@ -205,6 +219,13 @@ namespace Sapientia.Collections
 		{
 			Expand(ref array, array.Length + 1);
 			array[^1] = value;
+		}
+
+		public static T[] Add<T>(this T[] array, T value)
+		{
+			Expand(ref array, array.Length + 1);
+			array[^1] = value;
+			return array;
 		}
 
 		public static void AddRange<T>(ref T[] array, T[] values)

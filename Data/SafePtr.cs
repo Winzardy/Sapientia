@@ -105,7 +105,7 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Value<T>() where T : unmanaged
 		{
-			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю.");
+			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю. Возможно, значение не было задано.");
 			return ref *(T*) ptr;
 		}
 
@@ -247,7 +247,7 @@ namespace Sapientia.Data
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
 			{
-				E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю.");
+				E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю. Возможно, значение не было задано.");
 				return ref *ptr;
 			}
 		}
@@ -301,15 +301,15 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly ref T Value()
 		{
-			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю.");
+			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю. Возможно, значение не было задано.");
 			return ref *ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly ref U Value<U>() where U : unmanaged
 		{
-			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю.");
-			return ref *(U*) ptr;
+			E.ASSERT(ptr != null, "[SafePtr] Попытка обратиться к нулевому указателю. Возможно, значение не было задано.");
+			return ref *(U*)ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

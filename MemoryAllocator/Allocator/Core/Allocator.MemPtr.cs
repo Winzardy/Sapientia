@@ -32,7 +32,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetSafePtr(in MemPtr memPtr)
 		{
-			if (memPtr.IsZeroSized())
+			if (!memPtr.IsSized())
 				return default;
 			var memory = _zonesList[memPtr.zoneId].memory;
 			var safePtr = memory + memPtr.zoneOffset;
