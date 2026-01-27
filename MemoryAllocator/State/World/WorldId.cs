@@ -5,7 +5,10 @@ namespace Sapientia.MemoryAllocator
 {
 	public struct WorldId : IEquatable<WorldId>
 	{
-		public readonly ushort id; // Всегда > 0, иначе невалидно
+		/// <summary>
+		/// Всегда > 0, иначе невалидно.
+		/// </summary>
+		public readonly ushort id;
 		/// <summary>
 		/// Индекс может быть любым, он выступает лишь в качестве кеша для упрощения поиска мира в <see cref="WorldManager"/>.
 		/// </summary>

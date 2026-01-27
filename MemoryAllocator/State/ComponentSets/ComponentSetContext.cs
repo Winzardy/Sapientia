@@ -131,16 +131,16 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveSwapBackElements(Span<Entity> entities, bool ignoreDestroyHandler = false)
+		public void RemoveSwapBackElements(Span<Entity> entities, bool handleDestroy = true)
 		{
-			_innerArchetype.ptr->RemoveSwapBackElements(WorldState, entities, ignoreDestroyHandler);
+			_innerArchetype.ptr->RemoveSwapBackElements(WorldState, entities, handleDestroy);
 		}
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveSwapBackElement(Entity entity)
+		public bool RemoveSwapBackElement(Entity entity, bool handleDestroy = true)
 		{
-			return _innerArchetype.ptr->RemoveSwapBackElement(WorldState, entity);
+			return _innerArchetype.ptr->RemoveSwapBackElement(WorldState, entity, handleDestroy);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
