@@ -17,12 +17,6 @@ namespace Sapientia.Evaluators
 
 		public bool IsConstant { get => evaluator == null; }
 
-		public static implicit operator EvaluatedValue<TContext, TValue>(TValue value)
-			=> new() {value = value};
-
-		public static implicit operator EvaluatedValue<TContext, TValue>(Evaluator<TContext, TValue> evaluator)
-			=> new() {evaluator = evaluator};
-
 		/// <inheritdoc cref="Evaluator{TContext, TValue}.Evaluate(TContext)"/>
 		public readonly TValue Evaluate(TContext context) => evaluator ? evaluator.Evaluate(context) : value;
 
@@ -33,5 +27,15 @@ namespace Sapientia.Evaluators
 
 			return value?.ToString() ?? string.Empty;
 		}
+
+		#region Operators
+
+		public static implicit operator EvaluatedValue<TContext, TValue>(TValue value)
+			=> new() {value = value};
+
+		public static implicit operator EvaluatedValue<TContext, TValue>(Evaluator<TContext, TValue> evaluator)
+			=> new() {evaluator = evaluator};
+
+		#endregion
 	}
 }

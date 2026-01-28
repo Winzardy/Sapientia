@@ -76,10 +76,13 @@ namespace Trading
 		internal void RefundResult(bool clear = true)
 		{
 			var snapshot = SnapshotResult();
-			foreach (var costResult in snapshot.costs)
-				costResult.Refund(this);
 
-			if(clear)
+			foreach (var reward in snapshot.rewards)
+				reward.Return(this);
+			foreach (var cost in snapshot.costs)
+				cost.Refund(this);
+
+			if (clear)
 				ClearResult();
 		}
 

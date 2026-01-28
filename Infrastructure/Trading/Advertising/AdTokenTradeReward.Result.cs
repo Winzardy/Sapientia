@@ -5,9 +5,6 @@ namespace Trading.Advertising
 {
 	public class AdTokenTradeRewardResult : ITradeRewardResult
 	{
-		[NonSerialized]
-		public AdTokenTradeReward reward;
-
 		public int group;
 		public int count;
 
@@ -37,8 +34,6 @@ namespace Trading.Advertising
 		{
 			return new AdTokenTradeRewardResult
 			{
-				reward = _source,
-
 				group = _source.group,
 				count = count
 			};
