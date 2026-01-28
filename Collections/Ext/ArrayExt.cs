@@ -196,20 +196,6 @@ namespace Sapientia.Collections
 			array = newArray;
 		}
 
-		public static T[] RemoveAt<T>(this T[] array, int index)
-		{
-			var newArray = new T[array.Length - 1];
-			if (index != newArray.Length)
-			{
-				Array.Copy(array, index + 1, newArray, index, newArray.Length - index);
-			}
-			if (index != 0)
-			{
-				Array.Copy(array, 0, newArray, 0, index);
-			}
-			return newArray;
-		}
-
 		public static ref T GetValueByIndex<T>(this T[] array, Index index)
 		{
 			var i = index.GetOffset(array.Length);
