@@ -16,7 +16,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		[FieldOffset(0)]
 		// Для операций сравнения + HashCode
-		private readonly int _idGeneration;
+		private readonly int _raw;
 
 		[FieldOffset(0)]
 		public readonly ushort id;
@@ -60,7 +60,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal Entity(ushort id, ushort generation, WorldId worldId)
 		{
-			this._idGeneration = 0;
+			this._raw = 0;
 
 			this.id = id;
 			this.generation = generation;
@@ -128,7 +128,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(Entity a, Entity b)
 		{
-			return a._idGeneration == b._idGeneration && a.worldId == b.worldId;
+			return a._raw == b._raw && a.worldId == b.worldId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -164,7 +164,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
-			return _idGeneration;
+			return _raw;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

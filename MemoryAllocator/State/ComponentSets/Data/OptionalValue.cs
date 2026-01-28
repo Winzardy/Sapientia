@@ -50,5 +50,13 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			return new OptionalValue<TValue>(value);
 		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = value.GetHashCode();
+			if (_isEnabled == 0)
+				hashCode = ~hashCode;
+			return hashCode;
+		}
 	}
 }

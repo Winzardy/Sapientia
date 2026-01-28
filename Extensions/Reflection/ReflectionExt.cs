@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -52,7 +54,7 @@ namespace Sapientia.Extensions.Reflection
 
 		public static bool HasAttribute<T>(this Type type) where T : Attribute
 		{
-			return type.GetCustomAttribute<T>(true) != null;
+			return CustomAttributeExtensions.GetCustomAttribute<T>(type, true) != null;
 		}
 
 		public static bool IsProperty(this MethodInfo methodInfo)
@@ -563,5 +565,37 @@ namespace Sapientia.Extensions.Reflection
 		}
 
 		public static bool IsPolymorphic(this Type type) => type.IsInterface || type.IsAbstract;
+
+		public static IEnumerable<T> GetObjectsByType<T>(this object obj)
+		{
+			if (obj is T t)
+				yield return t;
+
+			var type = obj.GetType();
+			foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+			{
+				var value = field.GetValue(obj);
+				if (value == null)
+					continue;
+
+				if (value == obj)
+					continue;
+
+				if (value is IEnumerable enumerable and not string)
+				{
+					foreach (var item in enumerable)
+						foreach (var i in GetObjectsByType<T>(item))
+							yield return i;
+				}
+				else
+				{
+					foreach (var i in GetObjectsByType<T>(value)
+						.Skip(1))
+					{
+						yield return i;
+					}
+				}
+			}
+		}
 	}
 }

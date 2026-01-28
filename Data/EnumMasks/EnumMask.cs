@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Sapientia.Extensions;
 
 namespace Sapientia.Data
@@ -9,6 +10,7 @@ namespace Sapientia.Data
 	}
 #endif
 
+	[DebuggerTypeProxy(typeof(EnumMask<>.EnumMaskProxy))]
 	[Serializable]
 	public struct EnumMask<T>
 #if UNITY_EDITOR
@@ -159,6 +161,36 @@ namespace Sapientia.Data
 			{
 				mask = value.mask,
 			};
+		}
+
+		private class EnumMaskProxy
+		{
+			private EnumMask<T> _mask;
+
+			public EnumMaskProxy(EnumMask<T> mask)
+			{
+				_mask = mask;
+			}
+
+			public (T value, bool has)[] Items
+			{
+				get
+				{
+#if DEBUG
+					var arr = new (T value, bool has)[EnumValues<T>.ENUM_LENGHT];
+					for (var i = 0; i < arr.Length; ++i)
+					{
+						var value = EnumValues<T>.VALUES[i];
+						var has = _mask.Has(EnumValues<T>.VALUES[i]);
+						arr[i] = (value, has);
+					}
+
+					return arr;
+#else
+					return Array.Empty<(T value, bool has)>();
+#endif
+				}
+			}
 		}
 	}
 }
