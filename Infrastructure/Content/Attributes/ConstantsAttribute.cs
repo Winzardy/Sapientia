@@ -1,3 +1,6 @@
+using Sapientia.Extensions;
+using System;
+
 namespace Content
 {
 	//TODO: перенести в ScriptableObject (там выдавать ConstantsGenerationData)
@@ -7,8 +10,21 @@ namespace Content
 
 		public (string from, string to)? ReplaceForClassName { get; private set; }
 		public string[] CustomConstants { get; private set; }
-
 		public string[] FilterOut { get; private set; }
+
+		public string OutputPath { get; set; }
+		public bool RespectExistingOutputPath { get; set; }
+		public bool UseAppliedTypeOutputPath { get; set; }
+		public Type TypeOutputPath { get; set; }
+
+		public bool HasCustomizedOutputPath
+		{
+			get =>
+				!OutputPath.IsNullOrEmpty() ||
+				TypeOutputPath != null ||
+				RespectExistingOutputPath ||
+				UseAppliedTypeOutputPath;
+		}
 
 		public ConstantsAttribute()
 		{
