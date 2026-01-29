@@ -7,7 +7,10 @@ namespace Trading
 	/// <summary>
 	/// Защита от дурака: только через этот класс можно вызывать Execute
 	/// </summary>
-	public class TradeManager : StaticAccessor<ITradeGateway>
+	public class TradeManager
+#if CLIENT
+		: StaticAccessor<ITradeGateway>
+#endif
 	{
 		public static bool CanPay([CanBeNull] TradeCost cost, Tradeboard board, out TradePayError? error)
 		{
