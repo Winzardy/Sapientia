@@ -48,7 +48,7 @@ namespace Trading
 					return;
 
 				_tradeboard.SetFetchMode(value);
-				_tradeboard.SetDummyMode(value);
+				_tradeboard.SetSimulationMode(value);
 			}
 
 			public void Dispose()
@@ -57,7 +57,7 @@ namespace Trading
 					return;
 
 				_tradeboard.SetFetchMode(false);
-				_tradeboard.SetDummyMode(false);
+				_tradeboard.SetSimulationMode(false);
 			}
 		}
 	}

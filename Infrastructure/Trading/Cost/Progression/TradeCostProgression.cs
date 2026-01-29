@@ -96,7 +96,7 @@ namespace Trading
 				group ? KEY_FORMAT.Format(group) : GUID_KEY_FORMAT.Format(tradeId, stages.Guid);
 		}
 
-		protected internal override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeCost> EnumerateActualInternal(Tradeboard board)
 		{
 			var stage = GetCurrentStage(board);
 			foreach (var cost in stage.cost.EnumerateActual(board))

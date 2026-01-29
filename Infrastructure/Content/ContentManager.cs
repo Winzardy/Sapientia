@@ -29,12 +29,6 @@ namespace Content
 #endif
 		internal static bool IsInitialized => resolver != null;
 
-		/// <summary>
-		///
-		/// </summary>
-		/// <param name="importer"></param>
-		/// <param name="token"></param>
-		/// <returns></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
 			=> resolver.PopulateAsync(importer, token);

@@ -2,7 +2,7 @@ using Sapientia.Pooling;
 
 namespace Trading
 {
-	public static partial class TradeUtility
+	public static partial class TradingUtility
 	{
 		internal static bool CanExecute(this TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{

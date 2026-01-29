@@ -1,7 +1,9 @@
 using System;
+using JetBrains.Annotations;
 
 namespace Sapientia.Pooling
 {
+	[MustDisposeResource]
 	public struct PooledObject<T> : IDisposable
 	{
 		private readonly IObjectPool<T> _pool;

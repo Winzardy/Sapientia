@@ -41,7 +41,7 @@ namespace Trading
 
 		#region Enumerate
 
-		protected internal override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeCost> EnumerateActualInternal(Tradeboard board)
 		{
 			if (condition.IsFulfilled(board))
 			{

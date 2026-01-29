@@ -418,32 +418,4 @@ namespace Sapientia.Collections
 
 		public delegate bool Predicate<T>(in T value);
 	}
-
-	public ref struct RefEnumerator<T>
-		where T : struct
-	{
-		private readonly T[] _array;
-		private int _index;
-
-		public ref T Current => ref _array[_index];
-
-		public RefEnumerator(T[] array)
-		{
-			_array = array;
-			_index = -1;
-		}
-
-		public bool MoveNext()
-		{
-			_index++;
-			return _index < _array.Length;
-		}
-
-		public void Reset()
-		{
-			_index = -1;
-		}
-
-		public RefEnumerator<T> GetEnumerator() => this;
-	}
 }

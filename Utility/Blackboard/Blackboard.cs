@@ -48,10 +48,28 @@ namespace Sapientia
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Contains<T>(string? key = null) => Blackboard<T>.Contains(this, key);
+		public bool Contains<T>(string? key = null)
+		{
+			if (!_active)
+			{
+				var keyLabel = key != null ? $" ({key})" : string.Empty;
+				throw GetArgumentException($"Attempt to get {typeof(T).Name}{keyLabel} from an inactive Blackboard");
+			}
+
+			return Blackboard<T>.Contains(this, key);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Get<T>(string? key = null) => Blackboard<T>.Get(this, key);
+		public T Get<T>(string? key = null)
+		{
+			if (!_active)
+			{
+				var keyLabel = key != null ? $" ({key})" : string.Empty;
+				throw GetArgumentException($"Attempt to get {typeof(T).Name}{keyLabel} from an inactive Blackboard");
+			}
+
+			return Blackboard<T>.Get(this, key);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGet<T>(out T value) => TryGet(null, out value);
@@ -81,8 +99,6 @@ namespace Sapientia
 			Blackboard<T>.Overwrite(in value, this, key);
 		}
 
-		public void OnGet() => _active = true;
-
 		internal void ReleaseToken(IBlackboardToken token)
 		{
 			if (_tokens != null && _tokens.Remove(token))
@@ -91,6 +107,8 @@ namespace Sapientia
 			var msg = $"{Name}: ${token.ValueType} not registered";
 			throw GetArgumentException(msg);
 		}
+
+		void IPoolable.OnGet() => _active = true;
 
 		void IPoolable.Release() => ReleaseInternal();
 
@@ -106,7 +124,7 @@ namespace Sapientia
 				StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _tokens);
 			}
 
-			OnReleaseDummyMode();
+			OnReleaseSimulationMode();
 
 			Released?.Invoke();
 			OnRelease();

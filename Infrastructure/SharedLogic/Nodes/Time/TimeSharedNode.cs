@@ -4,7 +4,7 @@ using static SharedLogic.TimeSharedNode;
 
 namespace SharedLogic
 {
-	public class TimeSharedNode : SharedNode<SaveData>
+	public partial class TimeSharedNode : SharedNode<SaveData>
 	{
 		private readonly IDateTimeProvider _timeProvider;
 
@@ -29,9 +29,6 @@ namespace SharedLogic
 		public DateTime DateTime => DateTimeWithoutOffset + _dateTimeOffset;
 
 		public TimeSpan DateTimeOffset => _dateTimeOffset;
-#if CLIENT
-		private bool _timeProviderSuppress;
-#endif
 
 		public TimeSharedNode(IDateTimeProvider timeProvider)
 		{
@@ -81,19 +78,6 @@ namespace SharedLogic
 			_dateTime = new DateTime(timestamp);
 		}
 
-#if CLIENT
-		private DateTime GetDateTime()
-		{
-			if (_timeProvider == null || _timeProviderSuppress)
-				return _dateTime;
-
-			return _timeProvider.DateTimeWithoutOffset;
-		}
-
-		public TimeProviderSuppressFlow ProviderSuppressScope() => new(this);
-		internal void SuppressTimeProvider(bool value) => _timeProviderSuppress = value;
-#endif
-
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
@@ -113,24 +97,6 @@ namespace SharedLogic
 			public long timestampOffset;
 		}
 	}
-
-#if CLIENT
-	public readonly ref struct TimeProviderSuppressFlow
-	{
-		private readonly TimeSharedNode _node;
-
-		public TimeProviderSuppressFlow(TimeSharedNode node)
-		{
-			_node = node;
-			_node.SuppressTimeProvider(true);
-		}
-
-		public void Dispose()
-		{
-			_node.SuppressTimeProvider(false);
-		}
-	}
-#endif
 
 	public static class SharedTimeUtility
 	{

@@ -1,14 +1,19 @@
+using Content;
 using JetBrains.Annotations;
+using Sapientia;
 
 namespace Trading
 {
 	/// <summary>
 	/// Защита от дурака: только через этот класс можно вызывать Execute
 	/// </summary>
-	public static class TradeAccess
+	public class TradeManager : StaticAccessor<ITradeGateway>
 	{
 		public static bool CanPay([CanBeNull] TradeCost cost, Tradeboard board, out TradePayError? error)
 		{
+			if (!board.IsSimulationMode)
+				throw TradingDebug.Exception($"CanPay check requires simulation mode (board [ {board.Id} ])");
+
 			if (cost == null)
 			{
 				error = null;
@@ -48,5 +53,19 @@ namespace Trading
 
 		public static bool Execute(in TradeConfig config, Tradeboard board)
 			=> config.Execute(board);
+
+#if CLIENT
+		public static bool CanFetch(in ContentReference<TradeCost> costRef, out TradePayError? error)
+			=> CanFetch(costRef, costRef.GetTradeId(), out error);
+
+		public static bool CanFetch(TradeCost cost, string tradeId, out TradePayError? error)
+			=> _instance!.CanFetch(cost, tradeId, out error);
+
+		public static bool CanFetch(TradeConfig trade, out TradeExecuteError? error)
+			=> _instance!.CanFetch(trade, out error);
+
+		public static void PushReceipts(Tradeboard tradeboard)
+			=> _instance!.PushReceipts(tradeboard);
+#endif
 	}
 }

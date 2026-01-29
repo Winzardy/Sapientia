@@ -24,7 +24,7 @@ namespace Trading
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-		protected internal  override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		protected internal  override IEnumerable<TradeCost> EnumerateActualInternal(Tradeboard board)
 		{
 			foreach (var cost in items)
 				foreach (var actualCost in cost.EnumerateActual(board))
