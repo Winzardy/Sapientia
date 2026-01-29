@@ -121,6 +121,11 @@ namespace Sapientia.Extensions
 #endif
 		}
 
+		public static T As<T>(this object value) where T: class
+		{
+			return UnsafeExt.As<object, T>(ref value);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void* AsPointer<T>(this ref T value) where T : struct
 		{
@@ -271,16 +276,6 @@ namespace Sapientia.Extensions
 			return ref UnsafeUtility.As<T, T1>(ref value);
 #else
 			return ref Unsafe.As<T, T1>(ref value);
-#endif
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T1 As<T, T1>(this T value) where T : class
-		{
-#if UNITY_5_3_OR_NEWER
-			return UnsafeUtility.As<T, T1>(ref value);
-#else
-			return Unsafe.As<T, T1>(ref value);
 #endif
 		}
 	}
