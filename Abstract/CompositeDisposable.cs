@@ -158,8 +158,11 @@ namespace Sapientia.Extensions
 
 	public static class DisposeUtility
 	{
-		public static void DisposeAndSetNull<T>(ref T obj) where T : class, IDisposable
+		public static void DisposeAndSetNull<T>(ref T? obj) where T : class, IDisposable
 		{
+			if(obj == null)
+				return;
+
 			obj.Dispose();
 			obj = null!;
 		}
