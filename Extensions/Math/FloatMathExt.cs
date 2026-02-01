@@ -187,6 +187,16 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float Exp(this float value)
+		{
+#if UNITY_5_3_OR_NEWER
+			return math.exp(value);
+#else
+			return MathF.Exp(value);
+#endif
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float Clamp(this float value, float min, float max)
 		{
 #if UNITY_5_3_OR_NEWER
