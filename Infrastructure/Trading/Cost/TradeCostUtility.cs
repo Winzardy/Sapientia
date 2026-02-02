@@ -32,7 +32,7 @@ namespace Trading
 			if (!board.IsSimulationMode)
 				throw TradingDebug.Exception($"Actual trade costs can only be enumerated in simulation mode (board [ {board.Id} ])");
 
-			return cost.EnumerateActualInternal(board);
+			return cost?.EnumerateActualInternal(board);
 		}
 
 		public static bool IsEmpty(this ContentEntry<TradeCost> entry, Tradeboard board)

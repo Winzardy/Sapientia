@@ -35,12 +35,19 @@ namespace Sapientia.Reflection
 
 		public static object CreateInstanceSafe(this Type type)
 		{
+			return CreateInstanceSafe(type, out _);
+		}
+
+		public static object CreateInstanceSafe(this Type type, out Exception? exception)
+		{
 			try
 			{
+				exception = null;
 				return Activator.CreateInstance(type);
 			}
-			catch
+			catch (Exception e)
 			{
+				exception = e;
 				return FormatterServices.GetUninitializedObject(type);
 			}
 		}
