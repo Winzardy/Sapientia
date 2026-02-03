@@ -84,6 +84,20 @@ namespace Sapientia.Data
 			return (value.mask & mask) != 0;
 		}
 
+		public void Set(T value, bool add)
+		{
+			Set(value.ToInt(), add);
+		}
+
+		public void Set(int value, bool add)
+		{
+			AssertValue(value);
+			if (add)
+				Add(value);
+			else
+				Remove(value);
+		}
+
 		public void Add(T value)
 		{
 			Add(value.ToInt());
@@ -102,7 +116,7 @@ namespace Sapientia.Data
 
 		public void Remove(int value)
 		{
-			E.ASSERT(value is < BitsCount and >= 0);
+			AssertValue(value);
 			mask &= ~(1 << value);
 		}
 
