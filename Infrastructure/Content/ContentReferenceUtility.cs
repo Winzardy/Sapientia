@@ -101,5 +101,28 @@ namespace Content
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToLabel<T>(this in ContentReference<T> reference, bool verbose = false) =>
 			ContentManager.ToLabel<T>(in reference.guid, verbose);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNullOrEmpty<T>(this in ContentReference<T> reference)
+			where T : class
+		{
+			if (reference.IsEmpty())
+				return true;
+
+			return reference.Read() == null;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNullOrValid<T>(this in ContentReference<T> reference)
+			where T : class
+		{
+			if (reference.IsEmpty())
+				return true;
+
+			if (reference.IsValid())
+				return true;
+
+			return reference.Read() == null;
+		}
 	}
 }

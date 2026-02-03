@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 
@@ -17,6 +18,12 @@ namespace Sapientia
 			return rawType.ToEnum<SchedulePointKind>();
 		}
 
+		public static SchedulePointDecode Decode<T>(this ref T point)
+			where T : struct, ISchedulePoint
+		{
+			return point.Code;
+		}
+
 		/// <inheritdoc cref="GetKind(long)"/>
 		public static SchedulePointKind GetKind<T>(this T point)
 			where T : struct, ISchedulePoint
@@ -28,8 +35,10 @@ namespace Sapientia
 		public static bool IsEmpty(this ScheduleScheme scheme)
 			=> scheme.points.IsNullOrEmpty();
 
-		public static int CalculatePassedPointCount(this ScheduleScheme schedule, DateTime utcAt, DateTime utcNow)
-			=> CalculatePassedPointCount(schedule.points, utcAt, utcNow);
+		public static int CalculatePassedPointCount(this in ScheduleScheme schedule, DateTime utcAt, DateTime utcNow)
+		{
+			return CalculatePassedPointCount(schedule.points, utcAt, utcNow);
+		}
 
 		public static int CalculatePassedPointCount<T>(this T[] points, DateTime utcAt, DateTime utcNow)
 			where T : struct, ISchedulePoint
@@ -37,8 +46,38 @@ namespace Sapientia
 			var count = 0;
 			for (var i = 0; i < points.Length; i++)
 			{
-				if (IsPassed(ref points[i], utcAt, utcNow))
-					count++;
+				count += CalculatePassedPointCount(ref points[i], utcAt, utcNow);
+			}
+
+			return count;
+		}
+
+		public static int CalculatePassedPointCount<T>(this ref T point, DateTime utcAt, DateTime utcNow)
+			where T : struct, ISchedulePoint
+		{
+			if (point.Kind == SchedulePointKind.Interval)
+			{
+				var decode = point.Decode();
+				var timeSpan = utcNow - utcAt;
+				if (timeSpan.TotalSeconds <= 0)
+					return 0;
+				return (int) (timeSpan.TotalSeconds / decode.sec);
+			}
+
+			var nextData = ToDateTime(ref point, utcAt);
+			var count = 0;
+			while (utcNow > nextData)
+			{
+				count++;
+				var dateTime = ToDateTime(ref point, nextData);
+				if (dateTime <= nextData)
+					throw new InvalidOperationException(
+						"Invalid SchedulePoint progression. " +
+						$"Next DateTime [ {dateTime:O} ] is not greater than previous [ {nextData:O} ] " +
+						$"(code: {point.Code}, utcAt: {utcAt:0}, utcNow: {utcNow:0})"
+					);
+
+				nextData = dateTime;
 			}
 
 			return count;
