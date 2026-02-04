@@ -40,7 +40,8 @@ namespace Sapientia.Collections
 			{
 				Array.Copy(array, from + 1, array, from, to - from);
 			}
-			else return;
+			else
+				return;
 
 			array[to] = value;
 		}
@@ -195,20 +196,6 @@ namespace Sapientia.Collections
 			array = newArray;
 		}
 
-		public static T[] RemoveAt<T>(this T[] array, int index)
-		{
-			var newArray = new T[array.Length - 1];
-			if (index != newArray.Length)
-			{
-				Array.Copy(array, index + 1, newArray, index, newArray.Length - index);
-			}
-			if (index != 0)
-			{
-				Array.Copy(array, 0, newArray, 0, index);
-			}
-			return newArray;
-		}
-
 		public static ref T GetValueByIndex<T>(this T[] array, Index index)
 		{
 			var i = index.GetOffset(array.Length);
@@ -233,6 +220,24 @@ namespace Sapientia.Collections
 			var destinationIndex = array.Length;
 			Expand(ref array, array.Length + values.Length);
 			Array.Copy(values, 0, array, destinationIndex, values.Length);
+		}
+
+		public static T[] RemoveAt<T>(this T[] source, int index)
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+			if (index < 0 || index >= source.Length)
+				throw new ArgumentOutOfRangeException(nameof(index));
+
+			var updated = new T[source.Length - 1];
+
+			if (index > 0)
+				Array.Copy(source, 0, updated, 0, index);
+
+			if (index < source.Length - 1)
+				Array.Copy(source, index + 1, updated, index, source.Length - index - 1);
+
+			return updated;
 		}
 
 		public static int IndexOf<T>(this T[] array, T element) => Array.IndexOf(array, element);
