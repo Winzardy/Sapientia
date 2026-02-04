@@ -54,7 +54,13 @@ namespace Sapientia.Extensions.Reflection
 
 		public static bool HasAttribute<T>(this Type type) where T : Attribute
 		{
-			return CustomAttributeExtensions.GetCustomAttribute<T>(type, true) != null;
+			return HasAttribute<T>(type, out _);
+		}
+
+		public static bool HasAttribute<T>(this Type type, out T attribute) where T : Attribute
+		{
+			attribute = CustomAttributeExtensions.GetCustomAttribute<T>(type, true);
+			return attribute != null;
 		}
 
 		public static bool IsProperty(this MethodInfo methodInfo)

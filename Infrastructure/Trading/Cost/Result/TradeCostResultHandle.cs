@@ -13,6 +13,11 @@ namespace Trading.Result
 		void ITradeCostResultHandle<TCost>.Bind(TCost source)
 		{
 			_source = source;
+			OnBind();
+		}
+
+		protected virtual void OnBind()
+		{
 		}
 
 		public abstract ITradeCostResult Bake();

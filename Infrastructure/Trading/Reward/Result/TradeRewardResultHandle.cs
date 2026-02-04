@@ -11,9 +11,14 @@ namespace Trading.Result
 		void ITradeRewardResultHandle<T>.Bind(T source)
 		{
 			_source = source;
+			OnBind();
 		}
 
 		public abstract ITradeRewardResult Bake();
+
+		protected virtual void OnBind()
+		{
+		}
 
 		public void Release()
 		{

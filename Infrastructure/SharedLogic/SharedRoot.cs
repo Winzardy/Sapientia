@@ -83,7 +83,7 @@ namespace SharedLogic
 
 			_revision++;
 
-			if (SLDebug.Logging.Command.execute)
+			if (SLDebug.Logging.Command.execute && SLDebug.Logging.Command.ShouldLog(command.GetType(), LogKind.Execute))
 				_logger?.Log($"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})");
 		}
 

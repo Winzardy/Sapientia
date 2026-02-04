@@ -1,6 +1,10 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Sapientia.Extensions;
+using Sapientia.Extensions.Reflection;
 #if CLIENT
+using Content;
 using UnityEngine;
 #endif
 
@@ -58,7 +62,35 @@ namespace SharedLogic
 			public static class Command
 			{
 				public static bool execute = true;
+
+				public static bool ShouldLog(Type commandType, LogKind kind)
+				{
+#if CLIENT
+					if (commandType.HasAttribute<SuppressLogAttribute>(out var attribute)
+						&& attribute.Kind.HasFlags(kind))
+						return false;
+#endif
+
+					return true;
+				}
 			}
 		}
+	}
+
+	[Conditional("CLIENT")]
+	public class SuppressLogAttribute : Attribute
+	{
+		public LogKind Kind { get; }
+
+		public SuppressLogAttribute(LogKind kind)
+		{
+			Kind = kind;
+		}
+	}
+
+	[Flags]
+	public enum LogKind
+	{
+		Execute = 1 << 0,
 	}
 }
