@@ -5,7 +5,7 @@ namespace ProjectInformation
 	/// <summary>
 	/// Runtime информация о проекте и дистрибуции проекта (платформа, страна)
 	/// </summary>
-	public class ProjectInfo : StaticAccessor<IProjectInfoAttendant>
+	public class ProjectInfo : StaticWrapper<IProjectInfoAttendant>
 	{
 		private static IProjectInfoAttendant attendant => _instance;
 		public static bool IsInitialized => _instance != null;

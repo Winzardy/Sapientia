@@ -9,7 +9,7 @@ namespace Trading
 	/// </summary>
 	public class TradeManager
 #if CLIENT
-		: StaticAccessor<ITradeGateway>
+		: StaticWrapper<ITradeGateway>
 #endif
 	{
 		public static bool CanPay([CanBeNull] TradeCost cost, Tradeboard board, out TradePayError? error)

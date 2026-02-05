@@ -10,7 +10,7 @@ namespace Content
 	using Management;
 
 	// ReSharper disable once ClassNeverInstantiated.Global
-	public sealed class ContentManager : StaticAccessor<ContentResolver>
+	public sealed class ContentManager : StaticWrapper<ContentResolver>
 	{
 #if UNITY_EDITOR
 

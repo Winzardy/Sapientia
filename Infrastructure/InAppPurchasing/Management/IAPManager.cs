@@ -9,7 +9,7 @@ using Sapientia;
 
 namespace InAppPurchasing
 {
-	public partial class IAPManager : StaticAccessor<IAPManagement>
+	public partial class IAPManager : StaticWrapper<IAPManagement>
 	{
 		private static IAPManagement management
 		{

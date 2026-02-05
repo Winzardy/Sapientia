@@ -3,7 +3,7 @@ using Sapientia.Extensions;
 
 namespace Sapientia.Pooling
 {
-	public sealed class StaticObjectPool<T> : StaticAccessor<ObjectPool<T>>
+	public sealed class StaticObjectPool<T> : StaticWrapper<ObjectPool<T>>
 		where T : class
 	{
 		private static ObjectPool<T> pool

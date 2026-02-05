@@ -3,8 +3,7 @@
 namespace Sapientia
 {
 	/// <summary>
-	/// Статический доступ к инстансу
-	/// Используется для инфраструктурных сервисов, минуя ServiceLocator/DI.
+	/// Статический обертка для инфраструктурных сервисов, минуя ServiceLocator/DI.
 	/// </summary>
 	/// <remarks>
 	/// <para>
@@ -23,7 +22,7 @@ namespace Sapientia
 	/// (если не учитывать возможность наличия разных версий контента у пользователей)
 	/// </para>
 	/// </remarks>
-	public abstract class StaticAccessor<T> where T : class
+	public abstract class StaticWrapper<T> where T : class
 	{
 		protected static T? _instance;
 

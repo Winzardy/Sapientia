@@ -7,7 +7,7 @@ namespace Messaging
 	// TODO: этим можно пользоваться только на клиенте, на сервере многопоток...
 	// Нужно вынести это в reference assembly для клиента, на сервере нужно напрямую с Bus
 	// работать если вообще будет такая логика
-	public class Messenger : StaticAccessor<MessageBus>
+	public class Messenger : StaticWrapper<MessageBus>
 	{
 		private static MessageBus bus
 		{
