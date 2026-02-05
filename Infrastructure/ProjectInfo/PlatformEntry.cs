@@ -25,11 +25,10 @@ namespace ProjectInformation
 
 		public PlatformEntry(string platform) => this.platform = platform;
 
+		public readonly bool IsDefined() => !platform.IsNullOrEmpty() || platform == PlatformType.UNDEFINED;
+
 		public static implicit operator string(PlatformEntry platform) => platform.platform;
 		public static implicit operator PlatformEntry(string name) => new(name);
-
-		public static implicit operator bool(PlatformEntry platform) =>
-			!platform.platform.IsNullOrEmpty() || platform.platform == PlatformType.UNDEFINED;
 
 		public override int GetHashCode() => platform?.GetHashCode() ?? 0;
 

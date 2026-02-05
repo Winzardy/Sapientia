@@ -61,7 +61,7 @@ namespace Advertising
 			if (id.IsNullOrEmpty())
 				throw new Exception("AdPlacementEntry name is empty!");
 #endif
-			if (platform && platformToName.TryGetValue(platform, out var name))
+			if (platform.IsDefined() && platformToName.TryGetValue(platform, out var name))
 				return name;
 
 			return useCustomName ? customName : id;
