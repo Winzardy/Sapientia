@@ -3,7 +3,7 @@
 namespace Sapientia
 {
 	/// <summary>
-	/// Статический обертка для инфраструктурных сервисов, минуя ServiceLocator/DI.
+	/// Статическая обертка для инфраструктурных сервисов, минуя ServiceLocator/DI.
 	/// </summary>
 	/// <remarks>
 	/// <para>
