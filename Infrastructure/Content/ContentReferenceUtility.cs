@@ -113,13 +113,13 @@ namespace Content
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsNullOrValid<T>(this in ContentReference<T> reference)
+		public static bool IsNullOrInvalid<T>(this in ContentReference<T> reference)
 			where T : class
 		{
 			if (reference.IsEmpty())
 				return true;
 
-			if (reference.IsValid())
+			if (!reference.IsValid())
 				return true;
 
 			return reference.Read() == null;
