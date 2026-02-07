@@ -27,8 +27,15 @@ namespace Trading
 		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			foreach (var raw in items)
+			{
+				if (raw == null)
+				{
+					TradingDebug.LogError($"Null reward in collection (tradeId: {board.Id})");
+					continue;
+				}
+
 				foreach (var reward in raw.EnumerateActual(board))
-					yield return reward;
+					yield return reward;}
 		}
 	}
 }
