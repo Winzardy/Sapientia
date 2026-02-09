@@ -35,10 +35,23 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemLinkedList(WorldState worldState)
 		{
+			this = default;
+			Initialize(worldState);
+		}
+
+		private void Initialize(WorldState worldState)
+		{
 			_data = CachedPtr<MemLinkedListData>.Create(worldState);
 #if DEBUG
 			_worldId = worldState.WorldId;
 #endif
+		}
+
+		private void EnsureInitialize(WorldState worldState)
+		{
+			if (IsValid())
+				return;
+			Initialize(worldState);
 		}
 
 		public MemLinkedListNode<T> GetFirst(WorldState worldState)
@@ -54,6 +67,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemLinkedListNode<T> AddAfter(WorldState worldState, MemLinkedListNode<T> node, T value)
 		{
+			EnsureInitialize(worldState);
 			ValidateNode(worldState, node);
 
 			var result = MemLinkedListNodeData<T>.Create(worldState, this, value);
@@ -63,6 +77,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemLinkedListNode<T> AddBefore(WorldState worldState, MemLinkedListNode<T> node, T value)
 		{
+			EnsureInitialize(worldState);
 			ref var data = ref _data.GetValue(worldState);
 
 			ValidateNode(worldState, node);
@@ -77,6 +92,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemLinkedListNode<T> AddFirst(WorldState worldState, T value)
 		{
+			EnsureInitialize(worldState);
 			ref var data = ref _data.GetValue(worldState);
 
 			var result = MemLinkedListNodeData<T>.Create(worldState, this, value);
@@ -95,6 +111,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemLinkedListNode<T> AddLast(WorldState worldState, T value)
 		{
+			EnsureInitialize(worldState);
 			ref var data = ref _data.GetValue(worldState);
 
 			var result = MemLinkedListNodeData<T>.Create(worldState, this, value);
@@ -112,6 +129,9 @@ namespace Sapientia.MemoryAllocator
 
 		public void Clear(WorldState worldState)
 		{
+			if (!IsValid())
+				return;
+
 			ref var data = ref _data.GetValue(worldState);
 
 			var current = data.head;
@@ -130,6 +150,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			Clear(worldState);
 			_data.Dispose(worldState);
+			this = default;
 		}
 
 		public bool Contains(WorldState worldState, T value)
