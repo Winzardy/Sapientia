@@ -58,14 +58,14 @@ namespace Trading
 			=> config.Execute(board);
 
 #if CLIENT
-		public static bool CanFetch(in ContentReference<TradeCost> costRef, out TradePayError? error)
-			=> CanFetch(costRef, costRef.GetTradeId(), out error);
+		public static bool CanFetch(in ContentReference<TradeCost> costRef, Tradeboard tradeboard, out TradePayError? error)
+			=> CanFetch(costRef, costRef.GetTradeId(), tradeboard, out error);
 
-		public static bool CanFetch(TradeCost cost, string tradeId, out TradePayError? error)
-			=> _instance!.CanFetch(cost, tradeId, out error);
+		public static bool CanFetch(TradeCost cost, string tradeId, Tradeboard tradeboard, out TradePayError? error)
+			=> _instance!.CanFetch(cost, tradeId, tradeboard, out error);
 
-		public static bool CanFetch(TradeConfig trade, out TradeExecuteError? error)
-			=> _instance!.CanFetch(trade, out error);
+		public static bool CanFetch(TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
+			=> _instance!.CanFetch(trade, tradeboard, out error);
 
 		public static void PushReceipts(Tradeboard tradeboard)
 			=> _instance!.PushReceipts(tradeboard);
