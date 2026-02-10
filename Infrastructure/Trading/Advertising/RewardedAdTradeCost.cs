@@ -43,14 +43,14 @@ namespace Trading.Advertising
 					return true;
 			}
 
-			var success = AdManager.CanShow(placement, out var adError);
+			var success = AdManager.CanShow(placement, out var adErrorOrNull);
 
-			if (adError.HasValue)
+			if (adErrorOrNull.TryGetValue(out var adError))
 			{
-				if (adError.Value.code == AdShowErrorCode.NotLoaded && USE_AUTO_LOAD)
+				if (adError.code == AdShowErrorCode.NotLoaded && USE_AUTO_LOAD)
 					return true;
 
-				error = new TradePayError(ERROR_CATEGORY, (int) adError.Value.code, adError);
+				error = new TradePayError(ERROR_CATEGORY, (int) adError.code, adErrorOrNull);
 			}
 
 			return success;
@@ -75,7 +75,7 @@ namespace Trading.Advertising
 				return null;
 
 			var dateTime = board.Get<IDateTimeProviderWithVirtual>()
-			   .DateTimeWithoutOffset;
+				.DateTimeWithoutOffset;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
 
@@ -86,11 +86,10 @@ namespace Trading.Advertising
 
 		protected override string GetReceiptKey(string _) => placement.ToReceiptKey(group);
 
-
 		public int GetAvailableCount(Tradeboard tradeboard)
 		{
 			return tradeboard.Get<IAdvertisingNode>()
-			   .GetTokenCount(group);
+				.GetTokenCount(group);
 		}
 
 		private BlackboardToken _token;
