@@ -368,7 +368,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (_elements.Has(worldState, entity.id))
 			{
 				ref var element = ref _elements.Get<ComponentSetElement<T>>(worldState, entity.id);
-				E.ASSERT(element.entity == entity);
+				E.ASSERT(element.entity == entity, "Попытка получить компонент для entity, который не соответствует сохранённому.");
 
 				return ref element.value;
 			}
