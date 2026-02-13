@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Text;
 using Sapientia.Extensions;
 
 namespace Sapientia.Data
@@ -175,6 +176,19 @@ namespace Sapientia.Data
 			{
 				mask = value.mask,
 			};
+		}
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.Append($"{typeof(T).Name}: ");
+			for (var i = 0; i < EnumValues<T>.ENUM_LENGHT; i++)
+			{
+				var has = Has(EnumValues<T>.VALUES[i]);
+				var name = EnumNames<T>.NAMES[i];
+				sb.Append($"{name}-{has}; ");
+			}
+			return sb.ToString();
 		}
 
 		private class EnumMaskProxy
