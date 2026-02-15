@@ -1,11 +1,9 @@
 using System;
-using System.ComponentModel;
 using Content;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Conditions;
 using Sapientia.Extensions;
-
 #if CLIENT
 using UnityEngine;
 #endif
@@ -58,7 +56,7 @@ namespace Trading
 		{
 			ref readonly var stage = ref GetCurrentStage(board);
 			var success = stage.reward
-			   .Execute(board);
+				.Execute(board);
 
 			if (success)
 				TryIncrementStage(in stage, board);
