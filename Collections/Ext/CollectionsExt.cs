@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sapientia.Extensions;
-using Sapientia.Pooling;
 #if UNITY_5_3_OR_NEWER
 using Random = UnityEngine.Random;
 #endif
@@ -321,6 +320,27 @@ namespace Sapientia.Collections
 				return defaultValue;
 
 			return Last(list);
+		}
+
+		public static bool TryGetFirst<T>(this IEnumerable<T> collection, Func<T, bool> predicate, out T found)
+		{
+			if (collection == null)
+				throw new ArgumentNullException(nameof(collection));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			foreach (var item in collection)
+			{
+				if (predicate.Invoke(item))
+				{
+					found = item;
+					return true;
+				}
+			}
+
+			found = default;
+			return false;
 		}
 
 		public static bool IsEmpty<T>(this IEnumerable<T> enumerable) => !enumerable.Any();
