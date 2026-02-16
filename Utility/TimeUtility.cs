@@ -112,7 +112,7 @@ namespace Sapientia.Extensions
 					sb.Prepend($"{ts.Days}{space}{DAY_LABEL}{SEPARATOR}");
 
 				return sb.ToString()
-				   .Trim();
+					.Trim();
 			}
 		}
 
@@ -123,5 +123,9 @@ namespace Sapientia.Extensions
 		}
 
 		public static DateTime ToDateTime(this long ticks) => new(ticks, DateTimeKind.Utc);
+
+		public static DateTime? ToDateTimeOrNull(this long timestamp) => timestamp > 0
+			? new DateTime(timestamp, DateTimeKind.Utc)
+			: null;
 	}
 }
