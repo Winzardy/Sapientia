@@ -10,10 +10,12 @@ namespace SharedLogic
 	public struct TimeSetCommand : ICommand
 	{
 		public long timestamp;
+		public int revisionBefore;
 
-		public TimeSetCommand(long timestamp)
+		public TimeSetCommand(long timestamp, int revision)
 		{
 			this.timestamp = timestamp;
+			revisionBefore = revision;
 		}
 
 		public bool Validate(ISharedRoot root, out Exception exception)

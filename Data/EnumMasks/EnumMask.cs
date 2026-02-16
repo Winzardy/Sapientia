@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Sapientia.Extensions;
 
 namespace Sapientia.Data
@@ -175,6 +177,85 @@ namespace Sapientia.Data
 			{
 				mask = value.mask,
 			};
+		}
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.Append($"{typeof(T).Name}: ");
+			for (var i = 0; i < EnumValues<T>.ENUM_LENGHT; i++)
+			{
+				var has = Has(EnumValues<T>.VALUES[i]);
+				var name = EnumNames<T>.NAMES[i];
+				sb.Append($"{name}-{has}; ");
+			}
+			return sb.ToString();
+		}
+
+		public Enumerator GetEnumerator()
+		{
+			return new Enumerator(this);
+		}
+
+		public readonly ref struct Enumerable
+		{
+			private readonly Enumerator _enumerator;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			internal Enumerable(Enumerator enumerator)
+			{
+				_enumerator = enumerator;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public Enumerator GetEnumerator()
+			{
+				return _enumerator;
+			}
+		}
+
+		public ref struct Enumerator
+		{
+			private readonly EnumMask<T> _mask;
+			private int _index;
+
+			public T Current
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => EnumValues<T>.VALUES[_index];
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public Enumerator(EnumMask<T> mask)
+			{
+				_mask = mask;
+				_index = -1;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public bool MoveNext()
+			{
+				do
+				{
+					if (++_index >= EnumValues<T>.ENUM_LENGHT)
+						return false;
+				}
+				while (!_mask.Has(EnumValues<T>.VALUES[_index]));
+
+				return true;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Reset()
+			{
+				_index = -1;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Dispose()
+			{
+				this = default;
+			}
 		}
 
 		private class EnumMaskProxy

@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Diagnostics;
+using UnityEngine;
 
 namespace Content
 {
 	[Conditional("UNITY_EDITOR")]
-	[AttributeUsage(AttributeTargets.Field)]
 	public class ContentReferenceAttribute :
 #if CLIENT
-		UnityEngine.PropertyAttribute
+		PropertyAttribute
 #else
 		Attribute
 #endif
 	{
-		public Type Type { get; }
-		public string TypeName { get; }
-		public bool InlineEditor { get; }
+		public Type Type { get; private set; }
+		public string TypeName { get; internal set;}
+		public bool InlineEditor { get; private set;}
 
-		public bool Dropdown { get; }
+		public bool Dropdown { get; private set;}
 
 		public ContentReferenceAttribute(Type type, bool inlineEditor = true, bool dropdown = false)
 		{

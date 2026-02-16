@@ -10,6 +10,10 @@ namespace Sapientia.MemoryAllocator
 {
 	public partial class World : IDisposable
 	{
+#if CLIENT
+		public UnityEngine.SceneManagement.Scene? scene;
+#endif
+
 		public bool ScheduleLateUpdate { get; private set; }
 
 		public WorldState worldState;
@@ -196,6 +200,15 @@ namespace Sapientia.MemoryAllocator
 				return null;
 
 			return WorldManager.GetWorld(entity.worldId);
+		}
+
+		[CanBeNull]
+		public static World ToWorld(this WorldState worldState)
+		{
+			if (!worldState.IsValid)
+				return null;
+
+			return WorldManager.GetWorld(worldState.WorldId);
 		}
 
 		public static bool IsValid(this Entity entity)

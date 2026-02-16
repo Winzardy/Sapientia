@@ -13,6 +13,7 @@ namespace ProjectInformation
 
 		public const string IOS = "iOS";
 		public const string ANDROID = "Android";
+		public const string WINDOWS_DEBUG = "Windows debug";
 	}
 
 	/// <summary>
@@ -41,6 +42,7 @@ namespace ProjectInformation
 		{
 			yield return PlatformType.ANDROID;
 			yield return PlatformType.IOS;
+			yield return PlatformType.WINDOWS_DEBUG;
 		}
 
 		public static string ToLabel(this in PlatformEntry entry) => GetLabel(entry);
