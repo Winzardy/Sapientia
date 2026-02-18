@@ -129,7 +129,7 @@ namespace Sapientia.Collections
 		public static bool Any<T>(this ICollection<T> collection)
 			=> !collection.IsNullOrEmpty();
 
-		public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
+		public static bool IsNullOrEmpty<T>(this IEnumerable<T>? enumerable)
 		{
 			return enumerable == null || IsEmpty(enumerable);
 		}
@@ -345,6 +345,14 @@ namespace Sapientia.Collections
 
 		public static bool IsEmpty<T>(this IEnumerable<T> enumerable) => !enumerable.Any();
 
+		public static bool HasSingle<T>(this IEnumerable<T>? source)
+		{
+			if (source == null)
+				return false;
+
+			using var e = source.GetEnumerator();
+			return e.MoveNext() && !e.MoveNext();
+		}
 		public static List<T> AddRangeRepeated<T>(this List<T> list, T repeatedItem, int count)
 		{
 			list.AddRange(Enumerable.Repeat(repeatedItem, count));
