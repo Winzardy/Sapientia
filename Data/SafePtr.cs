@@ -134,7 +134,7 @@ namespace Sapientia.Data
 		[Conditional(E.DEBUG)]
 		public void AssertValidLength(int length)
 		{
-			E.ASSERT(IsValidLength(length));
+			E.ASSERT(IsValidLength(length), "[SafePtr] AssertValidLength.");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -149,7 +149,7 @@ namespace Sapientia.Data
 		{
 			var newPtr = safePtr.ptr + index;
 #if DEBUG
-			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
+			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0), "[SafePtr] Выход за границы выделенной памяти (+ long operator).");
 
 			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
@@ -162,7 +162,7 @@ namespace Sapientia.Data
 		{
 			var newPtr = safePtr.ptr + index;
 #if DEBUG
-			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
+			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0), "[SafePtr] Выход за границы выделенной памяти (+ int operator).");
 
 			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
@@ -175,7 +175,7 @@ namespace Sapientia.Data
 		{
 			var newPtr = safePtr.ptr - index;
 #if DEBUG
-			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
+			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0), "[SafePtr] Выход за границы выделенной памяти (- long operator).");
 
 			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
@@ -188,7 +188,7 @@ namespace Sapientia.Data
 		{
 			var newPtr = safePtr.ptr - index;
 #if DEBUG
-			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0));
+			E.ASSERT((newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - newPtr > 0), "[SafePtr] Выход за границы выделенной памяти (- int operator).");
 
 			return new SafePtr(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
@@ -337,7 +337,7 @@ namespace Sapientia.Data
 		[Conditional(E.DEBUG)]
 		public void AssertValidLength(int length)
 		{
-			E.ASSERT(IsValidLength(length));
+			E.ASSERT(IsValidLength(length), "[SafePtr] AssertValidLength.");
 		}
 
 		public ref T this[int index]
@@ -347,7 +347,7 @@ namespace Sapientia.Data
 			{
 #if DEBUG
 				var result = (byte*) (ptr + index);
-				E.ASSERT((result - lowBound >= 0) && (hiBound - result > 0));
+				E.ASSERT((result - lowBound >= 0) && (hiBound - result > 0), "[SafePtr] Выход за границы выделенной памяти (this[]).");
 #endif
 				return ref ptr[index];
 			}
@@ -358,7 +358,7 @@ namespace Sapientia.Data
 		{
 #if DEBUG
 			var result = (byte*) (ptr + index);
-			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0));
+			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0), "[SafePtr] Выход за границы выделенной памяти (Slice).");
 #endif
 			return new SafePtr<T>(ptr + index, length);
 		}
@@ -374,7 +374,7 @@ namespace Sapientia.Data
 		{
 #if DEBUG
 			var result = (byte*) (ptr + index);
-			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0));
+			E.ASSERT((result - lowBound >= 0) && (hiBound - (result + length) >= 0), "[SafePtr] Выход за границы выделенной памяти (GetSpan).");
 #endif
 			return new Span<T>(ptr + index, length);
 		}
@@ -443,7 +443,7 @@ namespace Sapientia.Data
 		{
 			var newPtr = safePtr.ptr + index;
 #if DEBUG
-			E.ASSERT(((byte*) newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - (byte*) newPtr > 0));
+			E.ASSERT(((byte*) newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - (byte*) newPtr > 0), "[SafePtr] Выход за границы выделенной памяти (+ operator).");
 			return new SafePtr<T>(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
 			return new SafePtr<T>(safePtr.ptr + index);
@@ -455,7 +455,7 @@ namespace Sapientia.Data
 		{
 			var newPtr = safePtr.ptr - index;
 #if DEBUG
-			E.ASSERT(((byte*) newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - (byte*) newPtr > 0));
+			E.ASSERT(((byte*) newPtr - safePtr.lowBound >= 0) && (safePtr.hiBound - (byte*) newPtr > 0), "[SafePtr] Выход за границы выделенной памяти (- operator).");
 			return new SafePtr<T>(newPtr, safePtr.lowBound, safePtr.hiBound);
 #else
 			return new SafePtr<T>(safePtr.ptr - index);
