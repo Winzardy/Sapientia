@@ -175,7 +175,10 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Resize(WorldState worldState, int newLength, ClearOptions options = ClearOptions.ClearMemory)
 		{
-			return innerArray.Resize<T>(worldState, newLength, options);
+			if (IsCreated)
+				return innerArray.Resize<T>(worldState, newLength, options);
+			this = new MemArray<T>(worldState, newLength, options);
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
