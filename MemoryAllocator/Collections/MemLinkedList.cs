@@ -135,7 +135,7 @@ namespace Sapientia.MemoryAllocator
 			ref var data = ref _data.GetValue(worldState);
 
 			var current = data.head;
-			while (current.IsValid())
+			for (var i = 0; i < data.count; i++)
 			{
 				var temp = current;
 				current = temp.GetNext(worldState); // use Next the instead of "next", otherwise it will loop forever
@@ -344,21 +344,10 @@ namespace Sapientia.MemoryAllocator
 
 		private void ValidateNode(WorldState worldState, CachedPtr<MemLinkedListNodeData<T>> node)
 		{
-			if (node.IsValid())
-			{
-				throw new ArgumentNullException("node");
-			}
-
-			if (node.GetValue(worldState).list.GetFirst(worldState) == GetFirst(worldState))
-			{
-				throw new InvalidOperationException("В MemLinkedList Была передана некорректная нода.");
-			}
-
+			E.ASSERT(node.IsValid(), "Невалидная нода! Возможно, она уже была удалена или никогда не была добавлена в список.");
+			E.ASSERT(node.GetValue(worldState).list.GetFirst(worldState) == GetFirst(worldState), "Нода принадлежит другому MemLinkedList.");
 #if DEBUG
-			if (_worldId.IsValid() && _worldId != worldState.WorldId)
-			{
-				throw new InvalidOperationException("Попытка использовать MemLinkedList, используя другой WorldState.");
-			}
+			E.ASSERT(_worldId.IsValid() && _worldId == worldState.WorldId, "Попытка использовать MemLinkedList в другом WorldState.");
 #endif
 		}
 
