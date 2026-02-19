@@ -28,8 +28,12 @@ namespace Sapientia.Conditions
 		protected override bool OnEvaluate(TContext _) => true;
 	}
 
+	public interface IRejectCondition
+	{
+	}
+
 	[Serializable]
-	public class RejectCondition<TContext> : Condition<TContext>
+	public class RejectCondition<TContext> : Condition<TContext>, IRejectCondition
 	{
 		protected override bool OnEvaluate(TContext _) => false;
 	}

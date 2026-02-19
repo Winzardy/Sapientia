@@ -353,6 +353,7 @@ namespace Sapientia.Collections
 			using var e = source.GetEnumerator();
 			return e.MoveNext() && !e.MoveNext();
 		}
+
 		public static List<T> AddRangeRepeated<T>(this List<T> list, T repeatedItem, int count)
 		{
 			list.AddRange(Enumerable.Repeat(repeatedItem, count));
@@ -431,6 +432,26 @@ namespace Sapientia.Collections
 				return null!;
 
 			return list.ToArray();
+		}
+
+		public static void DisposeElements<T>(this List<T>? list, Action<T>? onDispose = null)
+			where T : IDisposable
+		{
+			if (list == null)
+				return;
+
+			foreach (var item in list)
+			{
+				item.Dispose();
+				onDispose?.Invoke(item);
+			}
+		}
+
+		public static void DisposeElementsAndClear<T>(this List<T> list, Action<T>? onDispose = null)
+			where T : IDisposable
+		{
+			DisposeElements(list, onDispose);
+			list.Clear();
 		}
 
 		public static bool TryRemoveFirstMatching<T>(this List<T> list, System.Predicate<T> predicate)

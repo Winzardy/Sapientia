@@ -1,4 +1,8 @@
 using System;
+using UnityEngine.Serialization;
+#if CLIENT
+using Sirenix.OdinInspector;
+#endif
 
 namespace Sapientia
 {
@@ -13,16 +17,32 @@ namespace Sapientia
 	}
 
 
+#if CLIENT
+	[InlineProperty(LabelWidth = 28)]
+#endif
+	[Serializable]
+	public struct OptionalRange<T>
+	{
+#if CLIENT
+		[HorizontalGroup(0.5f)]
+#endif
+		public Toggle<T> min;
+#if CLIENT
+		[HorizontalGroup(0.5f)]
+#endif
+		public Toggle<T> max;
+	}
+
 	[Serializable]
 	public partial struct Toggle<T> : IToggle<T>
 	{
 #if CLIENT
-		[UnityEngine.Serialization.FormerlySerializedAs("use")]
+		[FormerlySerializedAs("use")]
 #endif
 		public bool enable;
 
 #if CLIENT
-		[UnityEngine.Serialization.FormerlySerializedAs("duration")]
+		[FormerlySerializedAs("duration")]
 #endif
 		public T value;
 
