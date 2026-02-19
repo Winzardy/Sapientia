@@ -82,6 +82,12 @@ namespace Sapientia.ServiceManagement
 			ServiceLocator<TService>.UnRegister(service);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TService ReplaceService<TService>(this TService service)
+		{
+			return ServiceLocator<TService>.ReplaceService(service);
+		}
+
 		private static bool TryGetFromSupplier<TService>(out TService service)
 		{
 			if (_supplier != null &&
