@@ -1,6 +1,7 @@
 using System;
-using UnityEngine.Serialization;
+
 #if CLIENT
+using UnityEngine.Serialization;
 using Sirenix.OdinInspector;
 #endif
 
@@ -15,7 +16,6 @@ namespace Sapientia
 	{
 		public T Value { get; }
 	}
-
 
 #if CLIENT
 	[InlineProperty(LabelWidth = 28)]
