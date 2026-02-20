@@ -434,13 +434,13 @@ namespace Sapientia.Collections
 			return list.ToArray();
 		}
 
-		public static void DisposeElements<T>(this List<T>? list, Action<T>? onDispose = null)
+		public static void DisposeElements<T>(this IEnumerable<T>? enumerable, Action<T>? onDispose = null)
 			where T : IDisposable
 		{
-			if (list == null)
+			if (enumerable == null)
 				return;
 
-			foreach (var item in list)
+			foreach (var item in enumerable)
 			{
 				item.Dispose();
 				onDispose?.Invoke(item);

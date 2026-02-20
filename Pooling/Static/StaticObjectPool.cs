@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace Sapientia.Pooling
@@ -65,6 +68,14 @@ namespace Sapientia.Pooling
 				return;
 
 			ReleaseAndSetNull(ref obj);
+		}
+
+		public static void ReleaseDisposableListAndSetNull<T>(ref List<T> list, Action<T>? onDispose = null)
+			where T : IDisposable
+		{
+			list.DisposeElements(onDispose);
+			StaticObjectPool<List<T>>.Release(list);
+			list = null!;
 		}
 	}
 }
