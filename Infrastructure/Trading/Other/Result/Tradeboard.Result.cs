@@ -54,21 +54,37 @@ namespace Trading
 		/// <summary>
 		/// Перенос обработку (handle) результата на другую сделку (tradeboard)
 		/// </summary>
+		/// <param name="onlyHandle">Нужно ли результат переносить? если <c>false</c> то переносим</param>
 		/// <returns>Как Tradeboard отпустят, TradeRawResult становится не актуальным!</returns>
-		public TradeRawResult TransferResultHandlesTo(Tradeboard newBoard)
+		public TradeRawResult TransferResultHandlesTo(Tradeboard newBoard, bool onlyHandle = false)
 		{
-			newBoard.ApplyTransfer(_resultHandleTokens);
+			newBoard.ApplyTransfer(_resultHandleTokens, in _rawResult, onlyHandle);
 			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _resultHandleTokens);
 			return _rawResult;
 		}
 
-		private void ApplyTransfer(List<ITradeResultHandleToken> handles)
+		private void ApplyTransfer(List<ITradeResultHandleToken> handles, in TradeRawResult rawResult, bool onlyHandle)
 		{
-			if (handles.IsNullOrEmpty())
+			if (!handles.IsNullOrEmpty())
+			{
+				_resultHandleTokens ??= ListPool<ITradeResultHandleToken>.Get();
+				_resultHandleTokens.AddRange(handles);
+			}
+
+			if (onlyHandle)
 				return;
 
-			_resultHandleTokens ??= ListPool<ITradeResultHandleToken>.Get();
-			_resultHandleTokens.AddRange(handles);
+			if (!rawResult.costs.IsNullOrEmpty())
+			{
+				_rawResult.costs ??= ListPool<ITradeCostResultHandle>.Get();
+				_rawResult.costs.AddRange(rawResult.costs);
+			}
+
+			if (!rawResult.rewards.IsNullOrEmpty())
+			{
+				_rawResult.rewards ??= ListPool<ITradeRewardResultHandle>.Get();
+				_rawResult.rewards.AddRange(rawResult.rewards);
+			}
 		}
 
 		public TradeResultSnapshot SnapshotResult() => new(Id, in _rawResult);
