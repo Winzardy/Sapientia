@@ -65,7 +65,11 @@ namespace SharedLogic
 		{
 			if (_dateTime.Ticks > timestamp)
 			{
-				error = TimeSetError.Code.TimestampLessThanCurrent;
+				error = new(TimeSetError.Code.TimestampLessThanCurrent)
+				{
+					previousTimestamp = _dateTime.Ticks,
+					nextTimestamp = timestamp
+				};
 				return false;
 			}
 
@@ -81,7 +85,7 @@ namespace SharedLogic
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
-			_dateTime = data.timestamp != 0 ? new DateTime(data.timestamp) : _timeProvider.DateTimeWithoutOffset;
+			_dateTime = data.timestamp != 0 ? new DateTime(data.timestamp, DateTimeKind.Utc) : _timeProvider.DateTimeWithoutOffset;
 		}
 
 		protected override void OnSave(out SaveData data)
@@ -140,6 +144,9 @@ namespace SharedLogic
 
 		public readonly Code code;
 
+		public long previousTimestamp;
+		public long nextTimestamp;
+
 		public TimeSetError(Code code) : this()
 		{
 			this.code = code;
@@ -147,6 +154,7 @@ namespace SharedLogic
 
 		public static implicit operator TimeSetError(Code code) => new(code);
 
-		public override string ToString() => $"Can't set timestamp with code [ {code} ]";
+		public override string ToString() =>
+			$"Can't set timestamp with code [ {code} ] (previous: {previousTimestamp}, next: {nextTimestamp})";
 	}
 }
