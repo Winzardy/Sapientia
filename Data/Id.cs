@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Submodules.Sapientia.Data
 {
-	public struct Id : IEquatable<Id>
+	public struct Id : IEquatable<Id>, IComparable<Id>
 	{
 		public static readonly Id Invalid = new Id
 		{
@@ -55,6 +55,11 @@ namespace Submodules.Sapientia.Data
 			{
 				id = a.id + b,
 			};
+		}
+
+		public int CompareTo(Id other)
+		{
+			return id.CompareTo(other.id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
