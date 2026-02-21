@@ -22,19 +22,9 @@ namespace SharedLogic
 		internal void SuppressTimeProvider(bool suppress)
 		{
 			if (suppress)
-			{
 				_timeProviderSuppressRequest++;
-
-				if (_timeProviderSuppressRequest > 1)
-					SLDebug.LogError(
-						"Suppress requested multiple times... \n" +
-						$"Current suppress count: {_timeProviderSuppressRequest}"
-					);
-			}
 			else
-			{
 				_timeProviderSuppressRequest--;
-			}
 		}
 	}
 
