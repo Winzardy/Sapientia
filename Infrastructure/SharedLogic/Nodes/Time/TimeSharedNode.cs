@@ -67,7 +67,7 @@ namespace SharedLogic
 			{
 				error = new(TimeSetError.Code.TimestampLessThanCurrent)
 				{
-					previousTimestamp = _dateTime.Ticks,
+					prevTimestamp = _dateTime.Ticks,
 					nextTimestamp = timestamp
 				};
 				return false;
@@ -144,7 +144,7 @@ namespace SharedLogic
 
 		public readonly Code code;
 
-		public long previousTimestamp;
+		public long prevTimestamp;
 		public long nextTimestamp;
 
 		public TimeSetError(Code code) : this()
@@ -155,6 +155,6 @@ namespace SharedLogic
 		public static implicit operator TimeSetError(Code code) => new(code);
 
 		public override string ToString() =>
-			$"Can't set timestamp with code [ {code} ] (previous: {previousTimestamp}, next: {nextTimestamp})";
+			$"Can't set timestamp with code [ {code} ] (prev: {prevTimestamp}, -> next: {nextTimestamp})";
 	}
 }

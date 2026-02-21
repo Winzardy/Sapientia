@@ -24,6 +24,12 @@ namespace SharedLogic
 			if (suppress)
 			{
 				_timeProviderSuppressRequest++;
+
+				if (_timeProviderSuppressRequest > 1)
+					SLDebug.LogError(
+						"Suppress requested multiple times... \n" +
+						$"Current suppress count: {_timeProviderSuppressRequest}"
+					);
 			}
 			else
 			{
