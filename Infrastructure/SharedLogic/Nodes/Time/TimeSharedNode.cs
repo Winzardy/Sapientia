@@ -85,6 +85,16 @@ namespace SharedLogic
 					};
 					return false;
 				}
+
+				if (delta > 0)
+				{
+					var deltaMs = TimeSpan.FromTicks(delta).TotalMilliseconds;
+
+					SLDebug.LogWarning(
+						"Timestamp regression within tolerance. " +
+						$"Delta: {deltaMs:F2} ms | Current: {currentTimestamp} | Incoming: {timestamp}"
+					);
+				}
 			}
 
 			error = null;
