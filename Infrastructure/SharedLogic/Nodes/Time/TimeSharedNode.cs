@@ -91,6 +91,10 @@ namespace SharedLogic
 			return true;
 		}
 
+		/// <summary>
+		/// Устанавливает timestamp, гарантируя монотонность.
+		/// Если переданное значение меньше текущего, используется текущее
+		/// </summary>
 		internal void SetTimestampSafe(long timestamp)
 		{
 			var clamp = Math.Max(_dateTime.Ticks, timestamp);
