@@ -56,8 +56,16 @@ namespace SharedLogic
 
 			_initialized = true;
 
-			foreach (var node in _registry.FilterBy<IInitializableNode>())
-				node.Initialize(this);
+#if CLIENT
+			var timeNode = _registry.GetNode<TimeSharedNode>();
+			using (timeNode.ProviderSuppressScope())
+			{
+#endif
+				foreach (var node in _registry.FilterBy<IInitializableNode>())
+					node.Initialize(this);
+#if CLIENT
+			}
+#endif
 		}
 
 		public T GetNode<T>() where T : class, ISharedNode
@@ -101,8 +109,16 @@ namespace SharedLogic
 
 		public void Load(ISharedDataStreamer streamer)
 		{
-			foreach (var node in _registry.FilterBy<IPersistentNode>())
-				node.Load(streamer);
+#if CLIENT
+			var timeNode = _registry.GetNode<TimeSharedNode>();
+			using (timeNode.ProviderSuppressScope())
+			{
+#endif
+				foreach (var node in _registry.FilterBy<IPersistentNode>())
+					node.Load(streamer);
+#if CLIENT
+			}
+#endif
 
 			_revision = streamer.Read<int>(REVISION_KEY);
 
