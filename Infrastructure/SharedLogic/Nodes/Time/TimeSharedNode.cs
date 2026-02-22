@@ -4,17 +4,17 @@ using static SharedLogic.TimeSharedNode;
 
 namespace SharedLogic
 {
-	public partial class TimeSharedNode : SharedNode<SaveData>
+	public partial class TimeSharedNode : SharedNode<SaveData>, IVirtualTimeProvider
 	{
-		private readonly IDateTimeProvider _timeProvider;
+		private readonly ISystemTimeProvider _timeProvider;
 
 		private TimeSpan _dateTimeOffset;
 		private DateTime _dateTime;
 
 		/// <summary>
-		/// Время без учета смещения!
+		/// Реальное системное время (без игрового смещения)
 		/// </summary>
-		public DateTime DateTimeWithoutOffset
+		public DateTime SystemTime
 		{
 			get
 			{
@@ -26,14 +26,20 @@ namespace SharedLogic
 			}
 		}
 
-		public DateTime DateTime => DateTimeWithoutOffset + _dateTimeOffset;
+		/// <summary>
+		/// Игровое время (с учетом игрового смещения)
+		/// </summary>
+		public DateTime DateTime { get => SystemTime + Offset; }
 
-		public TimeSpan DateTimeOffset => _dateTimeOffset;
+		/// <summary>
+		/// Игровое смещение
+		/// </summary>
+		public TimeSpan Offset { get => _dateTimeOffset; }
 
-		public TimeSharedNode(IDateTimeProvider timeProvider)
+		public TimeSharedNode(ISystemTimeProvider timeProvider)
 		{
 			_timeProvider = timeProvider;
-			_dateTime = _timeProvider.DateTimeWithoutOffset;
+			_dateTime = _timeProvider.SystemTime;
 		}
 
 		/// <summary>
@@ -50,7 +56,7 @@ namespace SharedLogic
 		internal void SetTimeOffset(TimeSpan offset)
 		{
 			_dateTimeOffset = offset;
-			SLDebug.Log($"Update dateTime, new: {DateTime} (real: {DateTimeWithoutOffset}, offset: {_dateTimeOffset})");
+			SLDebug.Log($"Update dateTime, new: {DateTime} (real: {SystemTime}, offset: {_dateTimeOffset})");
 		}
 
 		/// <summary>
@@ -85,7 +91,9 @@ namespace SharedLogic
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
-			_dateTime = data.timestamp != 0 ? new DateTime(data.timestamp, DateTimeKind.Utc) : _timeProvider.DateTimeWithoutOffset;
+			_dateTime = data.timestamp != 0
+				? new DateTime(data.timestamp, DateTimeKind.Utc)
+				: _timeProvider.SystemTime;
 		}
 
 		protected override void OnSave(out SaveData data)
@@ -112,7 +120,7 @@ namespace SharedLogic
 
 		public static DateTime GetDateTimeWithoutOffset(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
-				.DateTimeWithoutOffset;
+				.SystemTime;
 
 		public static DateTime GetDateTime(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
@@ -120,7 +128,7 @@ namespace SharedLogic
 
 		public static TimeSpan GetDateTimeOffset(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
-				.DateTimeOffset;
+				.Offset;
 
 		public static bool IsTimedCommand<T>(in T command) where T : struct, ICommand
 		{

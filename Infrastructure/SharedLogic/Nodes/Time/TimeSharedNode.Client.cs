@@ -14,7 +14,7 @@ namespace SharedLogic
 			if (_timeProvider == null || TimeProviderSuppress)
 				return _dateTime;
 
-			return _timeProvider.DateTimeWithoutOffset;
+			return _timeProvider.SystemTime;
 		}
 
 		public TimeProviderSuppressFlow ProviderSuppressScope() => new(this);
