@@ -5,20 +5,27 @@ namespace SharedLogic
 {
 	public partial class TimeSharedNode
 	{
-		private bool _timeProviderSuppress;
+		private int _timeProviderSuppressRequest;
 
-		public bool TimeProviderSuppress { get => _timeProviderSuppress; }
+		public bool TimeProviderSuppress { get => _timeProviderSuppressRequest > 0; }
 
 		private DateTime GetDateTime()
 		{
-			if (_timeProvider == null || _timeProviderSuppress)
+			if (_timeProvider == null || TimeProviderSuppress)
 				return _dateTime;
 
-			return _timeProvider.DateTimeWithoutOffset;
+			return _timeProvider.SystemTime;
 		}
 
 		public TimeProviderSuppressFlow ProviderSuppressScope() => new(this);
-		internal void SuppressTimeProvider(bool value) => _timeProviderSuppress = value;
+
+		internal void SuppressTimeProvider(bool suppress)
+		{
+			if (suppress)
+				_timeProviderSuppressRequest++;
+			else
+				_timeProviderSuppressRequest--;
+		}
 	}
 
 	public readonly ref struct TimeProviderSuppressFlow

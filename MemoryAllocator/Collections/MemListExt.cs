@@ -87,7 +87,7 @@ namespace Sapientia.MemoryAllocator
 
 		public static void BinaryInsert<T, TComparer>(this MemList<T> list, WorldState worldState, T value, TComparer comparer)
 			where TComparer : IComparer<T>
-			where T: unmanaged
+			where T : unmanaged
 		{
 			var index = BinarySearch(list, worldState, list.Count, value, comparer);
 			if (index < 0)

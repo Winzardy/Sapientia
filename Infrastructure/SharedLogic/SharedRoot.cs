@@ -27,7 +27,7 @@ namespace SharedLogic
 
 		public int Revision => _revision;
 
-		public SharedRoot(ISharedNodesRegistrar registrar, IDateTimeProvider dateTimeProvider, ILogger logger = null)
+		public SharedRoot(ISharedNodesRegistrar registrar, ISystemTimeProvider dateTimeProvider, ILogger logger = null)
 		{
 			_registrar = registrar;
 			_logger = logger;

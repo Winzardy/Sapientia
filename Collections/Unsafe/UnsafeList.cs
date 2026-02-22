@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
@@ -170,6 +172,11 @@ namespace Sapientia.Collections
 					return arr;
 				}
 			}
+		}
+
+		public Span<T>.Enumerator GetEnumerator()
+		{
+			return GetSpan().GetEnumerator();
 		}
 	}
 }
