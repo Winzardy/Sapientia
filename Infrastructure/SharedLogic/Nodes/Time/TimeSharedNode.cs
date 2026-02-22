@@ -6,6 +6,8 @@ namespace SharedLogic
 {
 	public partial class TimeSharedNode : SharedNode<SaveData>, IVirtualTimeProvider
 	{
+		private const long TIMESTAMP_TOLERANCE_TICKS = TimeSpan.TicksPerMillisecond * 500;
+
 		private readonly ISystemTimeProvider _timeProvider;
 
 		private TimeSpan _dateTimeOffset;
@@ -69,23 +71,35 @@ namespace SharedLogic
 
 		public bool CanSetTimestamp(long timestamp, out TimeSetError? error)
 		{
-			if (_dateTime.Ticks > timestamp)
+			var currentTimestamp = _dateTime.Ticks;
+
+			if (currentTimestamp > timestamp)
 			{
-				error = new(TimeSetError.Code.TimestampLessThanCurrent)
+				var delta = currentTimestamp - timestamp;
+				if (delta > TIMESTAMP_TOLERANCE_TICKS)
 				{
-					prevTimestamp = _dateTime.Ticks,
-					nextTimestamp = timestamp
-				};
-				return false;
+					error = new(TimeSetError.Code.TimestampLessThanCurrent)
+					{
+						prevTimestamp = currentTimestamp,
+						nextTimestamp = timestamp
+					};
+					return false;
+				}
 			}
 
 			error = null;
 			return true;
 		}
 
+		internal void SetTimestampSafe(long timestamp)
+		{
+			var clamp = Math.Max(_dateTime.Ticks, timestamp);
+			SetTimestamp(clamp);
+		}
+
 		internal void SetTimestamp(long timestamp)
 		{
-			_dateTime = new DateTime(timestamp);
+			_dateTime = new DateTime(timestamp, DateTimeKind.Utc);
 		}
 
 		protected override void OnLoad(in SaveData data)

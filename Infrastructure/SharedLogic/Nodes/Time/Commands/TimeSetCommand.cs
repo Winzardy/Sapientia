@@ -38,7 +38,7 @@ namespace SharedLogic
 		public void Execute(ISharedRoot root)
 		{
 			root.GetNode<TimeSharedNode>()
-			   .SetTimestamp(timestamp);
+				.SetTimestampSafe(timestamp);
 		}
 	}
 }
