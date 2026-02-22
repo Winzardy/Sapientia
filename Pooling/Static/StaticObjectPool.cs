@@ -77,5 +77,12 @@ namespace Sapientia.Pooling
 			StaticObjectPool<List<T>>.Release(list);
 			list = null!;
 		}
+
+		public static void ReleaseListWithTryDisposeAndSetNull<T>(ref List<T> list, Action<T>? onDispose = null)
+		{
+			list.TryDisposeElements(onDispose);
+			StaticObjectPool<List<T>>.Release(list);
+			list = null!;
+		}
 	}
 }

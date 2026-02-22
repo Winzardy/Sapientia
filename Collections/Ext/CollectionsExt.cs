@@ -447,6 +447,21 @@ namespace Sapientia.Collections
 			}
 		}
 
+		public static void TryDisposeElements<T>(this IEnumerable<T>? enumerable, Action<T>? onDispose = null)
+		{
+			if (enumerable == null)
+				return;
+
+			foreach (var item in enumerable)
+			{
+				if (item is IDisposable disposable)
+				{
+					disposable.Dispose();
+					onDispose?.Invoke(item);
+				}
+			}
+		}
+
 		public static void DisposeElementsAndClear<T>(this List<T> list, Action<T>? onDispose = null)
 			where T : IDisposable
 		{
