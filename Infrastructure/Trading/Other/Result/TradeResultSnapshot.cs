@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Pooling;
@@ -5,15 +6,16 @@ using Trading.Result;
 
 namespace Trading
 {
+	[Serializable]
 	public struct TradeResultSnapshot
 	{
-		public readonly string tradeId;
+		public string tradeId;
 
 		[CanBeNull]
-		public readonly ITradeRewardResult[] rewards;
+		public ITradeRewardResult[] rewards;
 
 		[CanBeNull]
-		public readonly ITradeCostResult[] costs;
+		public ITradeCostResult[] costs;
 
 		internal TradeResultSnapshot(string tradeId, in TradeRawResult raw)
 		{

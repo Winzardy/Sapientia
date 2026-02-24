@@ -56,7 +56,7 @@ namespace Trading
 		/// </summary>
 		/// <param name="onlyHandle">Нужно ли результат переносить? если <c>false</c> то переносим</param>
 		/// <returns>Как Tradeboard отпустят, TradeRawResult становится не актуальным!</returns>
-		public TradeRawResult TransferResultHandlesTo(Tradeboard newBoard, bool onlyHandle = false)
+		public TradeRawResult TransferResultHandlesTo(Tradeboard newBoard, bool onlyHandle = true)
 		{
 			newBoard.ApplyTransfer(_resultHandleTokens, in _rawResult, onlyHandle);
 			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _resultHandleTokens);
