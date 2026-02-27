@@ -281,6 +281,12 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasElementId(WorldState worldState, int entityId)
+		{
+			return _elements.Has(worldState, entityId);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool SetElement(WorldState worldState, Entity entity)
 		{
 			if (_elements.Has(worldState, entity.id))
@@ -396,6 +402,12 @@ namespace Sapientia.MemoryAllocator.State
 				var valueArray = _elements.GetValuePtr<ComponentSetElement<T>>(worldState);
 				_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, valueArray.ptr, _elements.Count);
 			}
+			_elements.ClearFast();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ClearFast()
+		{
 			_elements.ClearFast();
 		}
 
