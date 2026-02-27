@@ -8,7 +8,7 @@ namespace Trading
 		/// <summary>
 		/// Участвует в сортировке в <see cref="TradeRewardCollection"/>
 		/// </summary>
-		protected internal virtual int Priority => TradeCostPriority.NORMAL;
+		protected internal virtual int Priority => TradeRewardPriority.NORMAL;
 
 		internal bool CanExecute(Tradeboard board, out TradeReceiveError? error) => CanReceive(board, out error);
 		internal bool Execute(Tradeboard board) => Receive(board);
@@ -49,5 +49,14 @@ namespace Trading
 		public static TradeReceiveError? NotError => null;
 
 		public override string ToString() => $"TradeReceiveError: category: {category}, code: {code}, rawData: {rawData}";
+	}
+
+	public static class TradeRewardPriority
+	{
+		public const int VERY_HIGH = 1000;
+		public const int HIGH = 100;
+		public const int NORMAL = 0;
+		public const int LOW = -100;
+		public const int VERY_LOW = -1000;
 	}
 }

@@ -64,7 +64,7 @@ namespace Trading
 			return success;
 		}
 
-		private ref readonly TradeRewardProgressionStage GetCurrentStage(Tradeboard board)
+		public ref readonly TradeRewardProgressionStage GetCurrentStage(Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
 			var progressPoint = node.GetCurrentProgress(GetProgressKey(board.Id), autoReset);

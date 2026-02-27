@@ -141,7 +141,7 @@ namespace Sapientia
 			}
 		}
 
-		private static void Fill<T, TContext>(this IList<T> elements, TContext context, List<float> fill)
+		public static void Fill<T, TContext>(this IList<T> elements, TContext context, List<float> fill)
 			where T : IFloatWeightableWithEvaluator<TContext>
 		{
 			for (var i = 0; i < elements.Count; i++)
