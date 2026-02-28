@@ -140,5 +140,7 @@ namespace Trading
 		public TradeReward reward;
 
 		public EvaluatedValue<Blackboard, int> Weight => weight;
+
+		int IWeightable.Weight { get => weight.value; }
 	}
 }
