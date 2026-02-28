@@ -24,12 +24,12 @@ namespace Trading
 		protected override bool Receive(Tradeboard board)
 			=> !condition.IsFulfilled(board) || reward.Execute(board);
 
-		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> OnEnumerateActual(Tradeboard board)
 		{
 			if (!condition.IsFulfilled(board))
 				yield break;
 
-			foreach (var actualReward in reward.EnumerateActual(board))
+			foreach (var actualReward in reward.OnEnumerateActual(board))
 				yield return actualReward;
 		}
 	}

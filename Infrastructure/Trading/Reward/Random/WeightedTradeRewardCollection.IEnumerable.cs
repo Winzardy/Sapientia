@@ -12,7 +12,7 @@ namespace Trading
 		{
 			var randomizer = board.Get<IRandomizer<int>>();
 			items.Roll<WeightedReward, Blackboard>(board, randomizer, out var index);
-			foreach (var reward in items[index].reward.EnumerateActual(board))
+			foreach (var reward in items[index].reward.OnEnumerateActual(board))
 				yield return reward;
 		}
 	}

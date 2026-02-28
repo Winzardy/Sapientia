@@ -24,7 +24,7 @@ namespace Trading
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-		protected internal override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> OnEnumerateActual(Tradeboard board)
 		{
 			foreach (var raw in items)
 			{
@@ -34,7 +34,7 @@ namespace Trading
 					continue;
 				}
 
-				foreach (var reward in raw.EnumerateActual(board))
+				foreach (var reward in raw.OnEnumerateActual(board))
 					yield return reward;}
 		}
 	}

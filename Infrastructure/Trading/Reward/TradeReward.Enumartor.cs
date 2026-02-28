@@ -9,7 +9,7 @@ namespace Trading
 			yield return this;
 		}
 
-		protected internal virtual IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal virtual IEnumerable<TradeReward> OnEnumerateActual(Tradeboard board)
 		{
 			yield return this;
 		}
