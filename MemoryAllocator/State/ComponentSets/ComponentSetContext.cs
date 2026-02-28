@@ -87,6 +87,12 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasElementId(int entityId)
+		{
+			return _innerArchetype.ptr->HasElementId(WorldState, entityId);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetElement(Entity entity)
 		{
 			return ref _innerArchetype.ptr->GetElement<T>(WorldState, entity);
@@ -128,6 +134,12 @@ namespace Sapientia.MemoryAllocator.State
 		public void Clear()
 		{
 			_innerArchetype.ptr->Clear<T>(WorldState);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ClearFast()
+		{
+			_innerArchetype.ptr->ClearFast();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
