@@ -182,6 +182,19 @@ namespace Submodules.Sapientia.Memory
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> MakeArray<T>(int length, int align, ClearOptions clearMemory = ClearOptions.ClearMemory) where T : unmanaged
+		{
+			E.ASSERT(length > 0, "Попытка аллокации массива нулевой или отрицательной длины");
+
+			var size = TSize<T>.size * length;
+			var ptr = MemAlloc(size, align);
+			if (clearMemory == ClearOptions.ClearMemory)
+				MemoryExt.MemClear(ptr, size);
+
+			return (SafePtr<T>)ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> MakeArray<T>(int length, ClearOptions clearMemory = ClearOptions.ClearMemory) where T : unmanaged
 		{
 			E.ASSERT(length > 0, "Попытка аллокации массива нулевой или отрицательной длины");

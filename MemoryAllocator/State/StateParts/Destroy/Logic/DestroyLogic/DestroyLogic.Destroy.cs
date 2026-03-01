@@ -13,7 +13,7 @@ namespace Sapientia.MemoryAllocator.State
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RequestDestroy(Entity entity)
 		{
-			E.ASSERT(IsAlive(entity), "Попытка запросить уничтожение entity, которая уже отправлена на уничтожение.");
+			E.ASSERT(IsAlive(entity), "[RequestDestroy] Попытка запросить уничтожение entity, которая уже отправлена на уничтожение.");
 			//E.ASSERT(!HasKillCallback(entity), $"Попытка запросить уничтожение entity, у которой есть {nameof(KillCallbackComponent)}. Вызовите {nameof(RequestKill)} вместо {nameof(RequestDestroy)}");
 
 			// Если сущность была включена, то отключаем её перед уничтожением.

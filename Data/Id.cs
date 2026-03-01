@@ -63,15 +63,14 @@ namespace Submodules.Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object obj)
-		{
-			return obj is Id other && Equals(other);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return id;
+		}
+
+		public override string ToString()
+		{
+			return ((int)this).ToString();
 		}
 	}
 }

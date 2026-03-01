@@ -23,14 +23,14 @@ namespace Sapientia.Collections
 		where T : unmanaged
 	{
 		public SafePtr<T> ptr;
-		public int length;
+		private int _length;
 
 		public readonly Id<MemoryManager> memoryId;
 
 		public int Length
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => length;
+			get => _length;
 		}
 
 		public bool IsCreated => ptr != default;
@@ -42,7 +42,7 @@ namespace Sapientia.Collections
 		public UnsafeArray(Id<MemoryManager> memoryId, int length = 8, ClearOptions clearMemory = ClearOptions.ClearMemory)
 		{
 			this.ptr = memoryId.GetManager().MakeArray<T>(length, clearMemory);
-			this.length = length;
+			this._length = length;
 			this.memoryId = memoryId;
 		}
 
@@ -78,13 +78,13 @@ namespace Sapientia.Collections
 
 		public void CopyFrom(UnsafeArray<T> other)
 		{
-			Resize(other.length, ResizeSettings.UninitializedMemory);
+			Resize(other._length, ResizeSettings.UninitializedMemory);
 			MemoryExt.MemCopy(other.ptr, ptr, Length);
 		}
 
 		public void Resize(int newLength, ResizeSettings settings = ResizeSettings.CopyOldValues)
 		{
-			if (length == newLength)
+			if (_length == newLength)
 			{
 				if (settings == ResizeSettings.ClearMemory)
 					Clear();
@@ -137,14 +137,14 @@ namespace Sapientia.Collections
 				_arr = arr;
 			}
 
-			public int Length => _arr.length;
+			public int Length => _arr._length;
 
 			public T[] Items
 			{
 				get
 				{
-					var arr = new T[_arr.length];
-					for (var i = 0; i < _arr.length; ++i)
+					var arr = new T[_arr._length];
+					for (var i = 0; i < _arr._length; ++i)
 					{
 						arr[i] = _arr[i];
 					}
