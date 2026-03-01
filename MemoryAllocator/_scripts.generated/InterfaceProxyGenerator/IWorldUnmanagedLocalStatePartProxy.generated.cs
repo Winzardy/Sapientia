@@ -50,11 +50,20 @@ namespace Sapientia.TypeIndexer
 			__method.Invoke(__executorPtr, worldState);
 		}
 
+		public delegate void BeforeDisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState);
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public readonly void BeforeDispose(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
+		{
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 3);
+			var __method = UnsafeExt.As<Delegate, BeforeDisposeDelegate>(__delegate);
+			__method.Invoke(__executorPtr, worldState);
+		}
+
 		public delegate void DisposeDelegate(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState);
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void Dispose(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 3);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 4);
 			var __method = UnsafeExt.As<Delegate, DisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState);
 		}
@@ -63,7 +72,7 @@ namespace Sapientia.TypeIndexer
 		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
 		public readonly void ProxyDispose(void* __executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
 		{
-			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 4);
+			var __delegate = IndexedTypes.GetDelegate(this._firstDelegateIndex + 5);
 			var __method = UnsafeExt.As<Delegate, ProxyDisposeDelegate>(__delegate);
 			__method.Invoke(__executorPtr, worldState);
 		}
@@ -132,6 +141,27 @@ namespace Sapientia.TypeIndexer
 			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
 			{
 				__proxyPtr.proxy.Start(__proxyPtr.GetPtr(__worldState).ptr, worldState);
+			}
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeDispose(this in UnsafeProxyPtr<IWorldUnmanagedLocalStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState worldState)
+		{
+			__proxyPtr.proxy.BeforeDispose(__proxyPtr.GetPtr().ptr, worldState);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeDispose(this ref ProxyPtr<IWorldUnmanagedLocalStatePartProxy> __proxyPtr, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState)
+		{
+			__proxyPtr.proxy.BeforeDispose(__proxyPtr.GetPtr(__worldState).ptr, worldState);
+		}
+
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static void BeforeDispose(this ref ProxyEvent<IWorldUnmanagedLocalStatePartProxy> __proxyEvent, Sapientia.MemoryAllocator.WorldState __worldState, Sapientia.MemoryAllocator.WorldState worldState)
+		{
+			foreach (ref var __proxyPtr in __proxyEvent.GetEnumerable(__worldState))
+			{
+				__proxyPtr.proxy.BeforeDispose(__proxyPtr.GetPtr(__worldState).ptr, worldState);
 			}
 		}
 
@@ -243,6 +273,27 @@ namespace Sapientia.TypeIndexer
 		public static Delegate CreateStartDelegate()
 		{
 			return new IWorldUnmanagedLocalStatePartProxy.StartDelegate(Start);
+		}
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		// Чтобы найти дальнейшие `usages` метода - выше в классе `IWorldUnmanagedLocalStatePartProxyExt` найдите `usages` методов `BeforeDispose`
+		private static void BeforeDispose(void* executorPtr, Sapientia.MemoryAllocator.WorldState worldState)
+		{
+			ref var __source = ref Sapientia.Extensions.UnsafeExt.AsRef<TSource>(executorPtr);
+#if PROXY_REFACTORING
+#else
+			__source.BeforeDispose(worldState);
+#endif
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.Scripting.Preserve]
+#endif
+		[System.Runtime.CompilerServices.MethodImplAttribute(256)]
+		public static Delegate CreateBeforeDisposeDelegate()
+		{
+			return new IWorldUnmanagedLocalStatePartProxy.BeforeDisposeDelegate(BeforeDispose);
 		}
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.Scripting.Preserve]

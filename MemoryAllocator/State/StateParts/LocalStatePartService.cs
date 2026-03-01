@@ -13,6 +13,8 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void Start(WorldState worldState){}
 
+		public void BeforeDispose(WorldState worldState){}
+
 		public void Dispose(WorldState worldState){}
 	}
 
@@ -23,6 +25,8 @@ namespace Sapientia.MemoryAllocator.State
 		public void EarlyStart(WorldState worldState){}
 
 		public void Start(WorldState worldState){}
+
+		public void BeforeDispose(WorldState worldState){}
 
 		public void Dispose(WorldState worldState){}
 	}
@@ -101,6 +105,21 @@ namespace Sapientia.MemoryAllocator.State
 			foreach (var statePartPtr in service._unmanagedLocalStateParts)
 			{
 				statePartPtr.Start(worldState);
+			}
+		}
+
+		public static void BeforeDispose(WorldState worldState)
+		{
+			var service = GetOrCreate(worldState);
+
+			foreach (var statePart in service._localStateParts)
+			{
+				statePart.Value().BeforeDispose(worldState);
+			}
+
+			foreach (var statePartPtr in service._unmanagedLocalStateParts)
+			{
+				statePartPtr.BeforeDispose(worldState);
 			}
 		}
 

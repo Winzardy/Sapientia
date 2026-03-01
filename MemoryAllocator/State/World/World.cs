@@ -158,10 +158,17 @@ namespace Sapientia.MemoryAllocator
 			using var scope = worldState.GetWorldScope();
 			using var updateScope = worldState.GetUpdateScope();
 
-			LocalStatePartService.Dispose(worldState);
 			SendBeginDisposeMessage();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
+
+			LocalStatePartService.BeforeDispose(worldState);
+			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
+			{
+				element.BeforeDispose(worldState, worldState, element);
+			}
+
+			LocalStatePartService.Dispose(worldState);
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
 				element.Dispose(worldState, worldState, element);
