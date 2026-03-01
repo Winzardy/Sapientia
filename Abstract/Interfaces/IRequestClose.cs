@@ -13,6 +13,12 @@ namespace Sapientia
 
 	public interface ICloseRequestor
 	{
+
 		event Action CloseRequested;
+	}
+
+	public interface ICloseAvailability
+	{
+		bool CloseAvailable { get; }
 	}
 }
