@@ -23,6 +23,8 @@ namespace ProjectInformation
 			_platform = platform;
 			_store = store;
 
+			_userId = new();
+
 			ProjectDebug.Log($"OS: {_platform}");
 			ProjectDebug.Log($"Distribution: {_store}");
 		}

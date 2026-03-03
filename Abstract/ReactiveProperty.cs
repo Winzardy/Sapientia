@@ -10,7 +10,7 @@ namespace Sapientia
 	/// Поддерживает опциональный вызов подписчика при подписке.
 	/// </summary>
 	[Serializable]
-	public struct ReactiveField<T> : IReactiveProperty<T>
+	public class ReactiveField<T> : IReactiveProperty<T>
 	{
 		private T _value;
 		public T Value { get => _value; internal set => Set(in value); }
@@ -85,7 +85,7 @@ namespace Sapientia
 	public static class ReactivePropertyExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Increment(this ref ReactiveField<int> field) =>
+		public static int Increment(this ReactiveField<int> field) =>
 			field.Value++;
 	}
 }
