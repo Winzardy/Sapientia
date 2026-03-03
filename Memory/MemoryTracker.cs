@@ -1,6 +1,7 @@
 using System;
 using Sapientia;
 using Sapientia.Collections;
+using UnityEngine;
 
 namespace Submodules.Sapientia.Memory
 {
@@ -54,13 +55,16 @@ namespace Submodules.Sapientia.Memory
 
 		public void Track(void* ptr, int size)
 		{
-			if (_trackingType == TrackingType.DeepTracking)
+			switch (_trackingType)
 			{
-				InsertMemorySpace(ptr, size);
-				_allocationCount++;
+				case TrackingType.DeepTracking:
+					InsertMemorySpace(ptr, size);
+					_allocationCount++;
+					break;
+				case TrackingType.CountTracking:
+					_allocationCount++;
+					break;
 			}
-			else if (_trackingType == TrackingType.CountTracking)
-				_allocationCount++;
 		}
 
 		public void Untrack(void* ptr)
@@ -71,13 +75,16 @@ namespace Submodules.Sapientia.Memory
 		public void Untrack(void* ptr, out int size)
 		{
 			size = 0;
-			if (_trackingType == TrackingType.DeepTracking)
+			switch (_trackingType)
 			{
-				RemoveMemorySpace(ptr, out size);
-				_allocationCount--;
+				case TrackingType.DeepTracking:
+					RemoveMemorySpace(ptr, out size);
+					_allocationCount--;
+					break;
+				case TrackingType.CountTracking:
+					_allocationCount--;
+					break;
 			}
-			else if (_trackingType == TrackingType.CountTracking)
-				_allocationCount--;
 		}
 
 		private void RemoveMemorySpace(void* ptr, out int size)

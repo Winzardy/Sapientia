@@ -65,6 +65,12 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly Span<T> GetSpan()
+		{
+			return ptr.GetSpan(0, _length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Fill(T value)
 		{
 			MemoryExt.MemFill<T>(value, ptr, Length);
@@ -126,6 +132,11 @@ namespace Sapientia.Collections
 
 			memoryId.GetManager().MemFree(ptr);
 			this = default;
+		}
+
+		public Span<T>.Enumerator GetEnumerator()
+		{
+			return GetSpan().GetEnumerator();
 		}
 
 		public class UnsafeArrayProxy

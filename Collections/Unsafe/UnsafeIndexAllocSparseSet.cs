@@ -138,5 +138,10 @@ namespace Sapientia.Collections
 			_sparseSet.ClearFast();
 			_nextIdToAllocate = 0;
 		}
+
+		public Span<T>.Enumerator GetEnumerator()
+		{
+			return GetValuesSpan().GetEnumerator();
+		}
 	}
 }
