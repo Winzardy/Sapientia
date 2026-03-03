@@ -17,6 +17,8 @@ namespace Sapientia.MemoryAllocator
 		/// </summary>
 		public virtual void Start(WorldState worldState, IndexedPtr self) {}
 
+		public virtual void BeforeDispose(WorldState worldState, IndexedPtr self) {}
+
 		public virtual void Dispose(WorldState worldState, IndexedPtr self) {}
 	}
 }
