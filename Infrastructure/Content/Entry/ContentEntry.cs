@@ -34,6 +34,16 @@ namespace Content
 
 		public ContentEntry(in T value) : base(in value, SerializableGuid.New())
 		{
+#if !UNITY_EDITOR && CLIENT
+			ContentManager.Register(this);
+#endif
+		}
+
+		~ContentEntry()
+		{
+#if !UNITY_EDITOR && CLIENT
+			ContentManager.Unregister(this);
+#endif
 		}
 	}
 

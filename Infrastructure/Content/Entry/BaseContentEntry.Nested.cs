@@ -10,6 +10,9 @@ namespace Content
 
 		private void OnNestedRegister()
 		{
+#if !UNITY_EDITOR && CLIENT
+			return;
+#endif
 			var isNullOrEmpty = Nested.IsNullOrEmpty();
 
 			if (isNullOrEmpty)
@@ -26,6 +29,9 @@ namespace Content
 
 		private void OnNestedUnregister()
 		{
+#if !UNITY_EDITOR && CLIENT
+			return;
+#endif
 			if (Nested.IsNullOrEmpty())
 				return;
 
