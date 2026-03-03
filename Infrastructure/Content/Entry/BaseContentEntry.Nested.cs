@@ -1,3 +1,6 @@
+#if !UNITY_EDITOR && CLIENT
+#define CONTENT_ENTRY_AUTO_REGISTER
+#endif
 using System.Collections.Generic;
 using Sapientia.Collections;
 using Sapientia.Reflection;
@@ -10,7 +13,7 @@ namespace Content
 
 		private void OnNestedRegister()
 		{
-#if !UNITY_EDITOR && CLIENT
+#if CONTENT_ENTRY_AUTO_REGISTER
 			return;
 #endif
 			var isNullOrEmpty = Nested.IsNullOrEmpty();
@@ -29,7 +32,7 @@ namespace Content
 
 		private void OnNestedUnregister()
 		{
-#if !UNITY_EDITOR && CLIENT
+#if CONTENT_ENTRY_AUTO_REGISTER
 			return;
 #endif
 			if (Nested.IsNullOrEmpty())
