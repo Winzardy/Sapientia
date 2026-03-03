@@ -211,6 +211,19 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool ContainsAny<TU>(WorldState worldState, Span<TU> objs) where TU : unmanaged, IEquatable<T>
+		{
+			E.ASSERT(IsCreated);
+			foreach (ref var obj in objs)
+			{
+				if (Contains(worldState, obj))
+					return true;
+			}
+
+			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove<TU>(WorldState worldState, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			E.ASSERT(IsCreated);

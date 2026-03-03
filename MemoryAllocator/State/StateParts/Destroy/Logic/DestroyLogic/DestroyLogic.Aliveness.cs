@@ -44,6 +44,27 @@ namespace Sapientia.MemoryAllocator.State
 			return _entityStatePart.Value().IsEntityExist(_worldState, entity);
 		}
 
+		public bool CheckAliveStatus(Entity entity, AliveStatus aliveStatus)
+		{
+			if (_destroyRequestSet.HasElement(entity))
+				return aliveStatus <= AliveStatus.Destroyed;
+			if (_killRequestSet.HasElement(entity))
+				return aliveStatus <= AliveStatus.Killed;
+			var isExist = _entityStatePart.Value().IsEntityExist(_worldState, entity);;
+			return isExist == (aliveStatus > AliveStatus.NotExist);
+		}
+
+		public AliveStatus GetAliveStatus(Entity entity)
+		{
+			if (_destroyRequestSet.HasElement(entity))
+				return AliveStatus.Destroyed;
+			if (_killRequestSet.HasElement(entity))
+				return AliveStatus.Killed;
+			if (_entityStatePart.Value().IsEntityExist(_worldState, entity))
+				return AliveStatus.Alive;
+			return AliveStatus.NotExist;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsExist(Entity entity)
 		{
