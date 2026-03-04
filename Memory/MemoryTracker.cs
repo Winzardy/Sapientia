@@ -2,7 +2,6 @@ using System;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Data;
-using UnityEngine;
 
 namespace Submodules.Sapientia.Memory
 {
@@ -176,8 +175,9 @@ namespace Submodules.Sapientia.Memory
 		{
 			E.ASSERT(_allocationCount == 0, $"Попытка удалить трекер с не освобожденной памятью. [Количество аллокаций: {_allocationCount}, Количество сохранённых указателей: {_allocations.Count}, Количество сохранённых границ: {_memorySpaces.count}, Тип трекинга: {_trackingType}], ");
 
+#if UNITY_5_3_OR_NEWER
 			if (_memorySpaces.count > 0)
-				Debug.LogError($"{nameof(MemoryTracker)} обнаружил, что {_memorySpaces.count / 2} аллокации не были освобождены мануально. Возможна утечка памяти. Включите MEMORY_TRACKER_DEBUG, чтобы увидеть подробный лог и найти аллокации.");
+				UnityEngine.Debug.LogError($"{nameof(MemoryTracker)} обнаружил, что {_memorySpaces.count / 2} аллокации не были освобождены мануально. Возможна утечка памяти. Включите MEMORY_TRACKER_DEBUG, чтобы увидеть подробный лог и найти аллокации.");
 #if MEMORY_TRACKER_DEBUG
 			for (var i = 0; i < _memorySpaces.count / 2; i++)
 			{
@@ -186,6 +186,7 @@ namespace Submodules.Sapientia.Memory
 
 				Debug.LogWarning($"{nameof(MemoryTracker)}. Не освобождённая область памяти: {hi}-{low}");
 			}
+#endif
 #endif
 
 			_allocations.Dispose();
