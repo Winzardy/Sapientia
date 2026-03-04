@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -7,7 +6,6 @@ using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
 using Submodules.Sapientia.Memory;
-using Debug = UnityEngine.Debug;
 
 namespace Sapientia.Collections
 {
