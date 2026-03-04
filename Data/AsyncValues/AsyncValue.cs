@@ -36,7 +36,7 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TrySetBusy(bool ignoreThreadId = false)
 		{
-			var currentThreadId = Environment.CurrentManagedThreadId;
+			var currentThreadId = GetThreadId();
 			if (ignoreThreadId)
 			{
 				if (_count != 0)
@@ -95,14 +95,14 @@ namespace Sapientia.Data
 		{
 			var spin = new SpinWait();
 
-			var currentThreadId = Environment.CurrentManagedThreadId;
+			var currentThreadId = GetThreadId();
 			if (ignoreThreadId)
 			{
 				while (true)
 				{
 					if (_count == 0 && CompareExchange(currentThreadId, 1, 0))
 						break;
-					spin.SpinOnce();
+					SpinOnce(ref spin);
 				}
 			}
 			else
@@ -117,7 +117,7 @@ namespace Sapientia.Data
 					else if (_threadId == currentThreadId && CompareExchange(currentThreadId, _count + 1, currentThreadId, _count))
 						break;
 
-					spin.SpinOnce();
+					SpinOnce(ref spin);
 				}
 			}
 		}
@@ -125,10 +125,36 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetFree(bool ignoreThreadId = false)
 		{
-			if (!ignoreThreadId)
-				E.ASSERT(_threadId == Environment.CurrentManagedThreadId);
+			E.ASSERT(ignoreThreadId || _threadId == GetThreadId());
 			E.ASSERT(_count > 0);
 			Interlocked.Decrement(ref _count);
+		}
+
+		private static int GetThreadId()
+		{
+			GetSystemThreadId(out var result);
+#if UNITY_5_3_OR_NEWER
+			if (result == 0)
+				return -Unity.Jobs.LowLevel.Unsafe.JobsUtility.ThreadIndex;
+#endif
+			return result;
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[Unity.Burst.BurstDiscard]
+#endif
+		private static void GetSystemThreadId(out int threadId)
+		{
+			threadId = Environment.CurrentManagedThreadId;
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[Unity.Burst.BurstDiscard]
+#endif
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void SpinOnce(ref SpinWait spinWait)
+		{
+			spinWait.SpinOnce();
 		}
 	}
 
