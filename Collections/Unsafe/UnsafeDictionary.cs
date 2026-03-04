@@ -7,14 +7,15 @@ using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
 using Submodules.Sapientia.Memory;
+using Debug = UnityEngine.Debug;
 
 namespace Sapientia.Collections
 {
 	public enum InsertionBehavior
 	{
-		None,
-		OverwriteExisting,
-		ThrowOnExisting,
+		none,
+		overwriteExisting,
+		throwOnExisting,
 	}
 
 	[DebuggerTypeProxy(typeof(UnsafeDictionary<,>.EquatableDictionaryProxy))]
@@ -32,30 +33,30 @@ namespace Sapientia.Collections
 
 		private const int _hashCodeMask = 0x7FFFFFFF;
 
-		internal UnsafeArray<int> buckets;
-		internal UnsafeArray<Entry> entries;
-		internal int count;
-		internal int freeList;
-		internal int freeCount;
+		private UnsafeArray<int> _buckets;
+		private UnsafeArray<Entry> _entries;
+		private int _count;
+		private int _freeList;
+		private int _freeCount;
 
 		public bool IsCreated
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => buckets.IsCreated;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _buckets.IsCreated;
 		}
 
 		public readonly int Count
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => count - freeCount;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _count - _freeCount;
 		}
 
 		public readonly int Capacity
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => buckets.Length;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _buckets.Length;
 		}
 
 		public readonly int LastIndex
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => count;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => _count;
 		}
 
 		public UnsafeDictionary(int capacity) : this(default, capacity)
@@ -73,24 +74,24 @@ namespace Sapientia.Collections
 		private void Initialize(Id<MemoryManager> memoryId, int capacity)
 		{
 			var prime = capacity.GetPrime();
-			freeList = -1;
-			buckets = new UnsafeArray<int>(memoryId, prime);
-			buckets.Fill(-1);
-			entries = new UnsafeArray<Entry>(memoryId, prime);
+			_freeList = -1;
+			_buckets = new UnsafeArray<int>(memoryId, prime);
+			_buckets.Fill(-1);
+			_entries = new UnsafeArray<Entry>(memoryId, prime);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
 		{
-			buckets.Dispose();
-			entries.Dispose();
+			_buckets.Dispose();
+			_entries.Dispose();
 			this = default;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly SafePtr<Entry> GetEntryPtr()
 		{
-			return entries.ptr;
+			return _entries.ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,12 +120,12 @@ namespace Sapientia.Collections
 			if (!GetEntryPtr().IsValid)
 				this = new UnsafeDictionary<TKey, TValue>(other.Count);
 
-			buckets.CopyFrom(other.buckets);
-			entries.CopyFrom(other.entries);
+			_buckets.CopyFrom(other._buckets);
+			_entries.CopyFrom(other._entries);
 
-			count = other.count;
-			freeCount = other.freeCount;
-			freeList = other.freeList;
+			_count = other._count;
+			_freeCount = other._freeCount;
+			_freeList = other._freeList;
 		}
 
 		/// <summary><para>Gets or sets the value associated with the specified key.</para></summary>
@@ -137,7 +138,7 @@ namespace Sapientia.Collections
 				var entry = FindEntry(key);
 				if (entry >= 0)
 				{
-					return ref entries[entry].value;
+					return ref _entries[entry].value;
 				}
 
 				throw new KeyNotFoundException();
@@ -151,15 +152,15 @@ namespace Sapientia.Collections
 			if (entry >= 0)
 			{
 				success = true;
-				return ref entries[entry].value;
+				return ref _entries[entry].value;
 			}
 
 			success = false;
-			if (!buckets.IsCreated)
+			if (!_buckets.IsCreated)
 			{
 				Initialize(default, 0);
 			}
-			return ref entries[0].value;
+			return ref _entries[0].value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -168,7 +169,7 @@ namespace Sapientia.Collections
 			var entry = FindEntry(key);
 			if (entry >= 0)
 			{
-				value = entries[entry].value;
+				value = _entries[entry].value;
 				return true;
 			}
 
@@ -182,7 +183,7 @@ namespace Sapientia.Collections
 			var entry = FindEntry(key);
 			if (entry >= 0)
 			{
-				return ref entries[entry].value;
+				return ref _entries[entry].value;
 			}
 
 			Add(key, defaultValue);
@@ -196,21 +197,21 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(TKey key, TValue value)
 		{
-			TryInsert(key, value, InsertionBehavior.ThrowOnExisting);
+			TryInsert(key, value, InsertionBehavior.throwOnExisting);
 		}
 
 		/// <summary><para>Removes all elements from the dictionary.</para></summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
 		{
-			var clearCount = count;
+			var clearCount = _count;
 			if (clearCount > 0)
 			{
-				buckets.Fill(-1);
-				count = 0;
-				freeList = -1;
-				freeCount = 0;
-				entries.Clear(0, clearCount);
+				_buckets.Fill(-1);
+				_count = 0;
+				_freeList = -1;
+				_freeCount = 0;
+				_entries.Clear(0, clearCount);
 			}
 		}
 
@@ -229,8 +230,8 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool ContainsValue(TValue value)
 		{
-			var rawEntries = entries.ptr;
-			for (var i = 0; i < count; i++)
+			var rawEntries = _entries.ptr;
+			for (var i = 0; i < _count; i++)
 			{
 				if (rawEntries[i].hashCode >= 0 && value.Equals(rawEntries[i].value))
 					return true;
@@ -242,13 +243,13 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private int FindEntry(in TKey key)
 		{
-			if (buckets.IsCreated)
+			if (_buckets.IsCreated)
 			{
 				var hashCode = key.GetHashCode() & _hashCodeMask;
-				var rawBuckets = buckets.ptr;
-				var rawEntries = entries.ptr;
+				var rawBuckets = _buckets.ptr;
+				var rawEntries = _entries.ptr;
 
-				for (var i = rawBuckets[hashCode % buckets.Length]; i >= 0; i = rawEntries[i].next)
+				for (var i = rawBuckets[hashCode % _buckets.Length]; i >= 0; i = rawEntries[i].next)
 				{
 					if (rawEntries[i].hashCode == hashCode && rawEntries[i].key.Equals(key))
 						return i;
@@ -260,16 +261,16 @@ namespace Sapientia.Collections
 
 		private bool TryInsert(TKey key, TValue value, InsertionBehavior behavior)
 		{
-			if (!buckets.IsCreated)
+			if (!_buckets.IsCreated)
 			{
 				Initialize(default, 0);
 			}
 
 			var hashCode = key.GetHashCode() & _hashCodeMask;
-			var targetBucket = hashCode % buckets.Length;
+			var targetBucket = hashCode % _buckets.Length;
 
-			var rawBuckets = buckets.ptr;
-			var rawEntries = entries.ptr;
+			var rawBuckets = _buckets.ptr;
+			var rawEntries = _entries.ptr;
 
 			for (var i = rawBuckets[targetBucket]; i >= 0; i = rawEntries[i].next)
 			{
@@ -277,12 +278,12 @@ namespace Sapientia.Collections
 				{
 					switch (behavior)
 					{
-						case InsertionBehavior.None:
+						case InsertionBehavior.none:
 							break;
-						case InsertionBehavior.OverwriteExisting:
+						case InsertionBehavior.overwriteExisting:
 							rawEntries[i].value = value;
 							return true;
-						case InsertionBehavior.ThrowOnExisting:
+						case InsertionBehavior.throwOnExisting:
 							E.ADDING_DUPLICATE();
 							break;
 						default:
@@ -294,29 +295,29 @@ namespace Sapientia.Collections
 			}
 
 			int index;
-			if (freeCount > 0)
+			if (_freeCount > 0)
 			{
-				index = freeList;
-				freeList = rawEntries[index].next;
-				freeCount--;
+				index = _freeList;
+				_freeList = rawEntries[index].next;
+				_freeCount--;
 			}
 			else
 			{
-				if (count == entries.Length)
+				if (_count == _entries.Length)
 				{
 					IncreaseCapacity();
-					targetBucket = hashCode % buckets.Length;
+					targetBucket = hashCode % _buckets.Length;
 
-					rawBuckets = buckets.ptr;
-					rawEntries = entries.ptr;
+					rawBuckets = _buckets.ptr;
+					rawEntries = _entries.ptr;
 				}
 
-				index = count;
-				count++;
+				index = _count;
+				_count++;
 			}
 
 			rawEntries[index].hashCode = hashCode;
-			rawEntries[index].next = buckets[targetBucket];
+			rawEntries[index].next = _buckets[targetBucket];
 			rawEntries[index].key = key;
 			rawEntries[index].value = value;
 			rawBuckets[targetBucket] = index;
@@ -327,22 +328,22 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity()
 		{
-			IncreaseCapacity(count.ExpandPrime());
+			IncreaseCapacity(_count.ExpandPrime());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void IncreaseCapacity(int newSize)
 		{
-			var bucketsArray = new UnsafeArray<int>(buckets.memoryId, newSize, ClearOptions.UninitializedMemory);
+			var bucketsArray = new UnsafeArray<int>(_buckets.memoryId, newSize, ClearOptions.UninitializedMemory);
 			bucketsArray.Fill(-1);
-			var entryArray = new UnsafeArray<Entry>(entries.memoryId, newSize, ClearOptions.ClearMemory);
+			var entryArray = new UnsafeArray<Entry>(_entries.memoryId, newSize, ClearOptions.ClearMemory);
 
-			MemoryExt.MemCopy(entries.ptr, entryArray.ptr, count);
+			MemoryExt.MemCopy(_entries.ptr, entryArray.ptr, _count);
 
 			var rawBuckets = bucketsArray.ptr;
 			var rawEntries = entryArray.ptr;
 
-			for (var i = 0; i < count; i++)
+			for (var i = 0; i < _count; i++)
 			{
 				if (rawEntries[i].hashCode >= 0)
 				{
@@ -352,11 +353,11 @@ namespace Sapientia.Collections
 				}
 			}
 
-			buckets.Dispose();
-			entries.Dispose();
+			_buckets.Dispose();
+			_entries.Dispose();
 
-			buckets = bucketsArray;
-			entries = entryArray;
+			_buckets = bucketsArray;
+			_entries = entryArray;
 		}
 
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
@@ -378,15 +379,15 @@ namespace Sapientia.Collections
 		{
 			value = default;
 
-			if (!buckets.IsCreated)
+			if (!_buckets.IsCreated)
 				return false;
 
 			var hashCode = key.GetHashCode() & _hashCodeMask;
-			var bucket = hashCode % buckets.Length;
+			var bucket = hashCode % _buckets.Length;
 			var last = -1;
 
-			var rawBuckets = buckets.ptr;
-			var rawEntries = entries.ptr;
+			var rawBuckets = _buckets.ptr;
+			var rawEntries = _entries.ptr;
 
 			for (var i = rawBuckets[bucket]; i >= 0; last = i, i = rawEntries[i].next)
 			{
@@ -398,18 +399,18 @@ namespace Sapientia.Collections
 					}
 					else
 					{
-						entries[last].next = rawEntries[i].next;
+						_entries[last].next = rawEntries[i].next;
 					}
 
 					value = rawEntries[i].value;
 
 					rawEntries[i].hashCode = -1;
-					rawEntries[i].next = freeList;
+					rawEntries[i].next = _freeList;
 					rawEntries[i].key = default(TKey);
 					rawEntries[i].value = default(TValue);
 
-					freeList = i;
-					freeCount++;
+					_freeList = i;
+					_freeCount++;
 
 					return true;
 				}
@@ -421,7 +422,7 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryAdd(TKey key, TValue value)
 		{
-			return TryInsert(key, value, InsertionBehavior.None);
+			return TryInsert(key, value, InsertionBehavior.none);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -429,13 +430,13 @@ namespace Sapientia.Collections
 		{
 			E.ASSERT(IsCreated);
 
-			var num = entries.Length;
+			var num = _entries.Length;
 			if (num >= capacity)
 			{
 				return num;
 			}
 
-			if (!buckets.IsCreated)
+			if (!_buckets.IsCreated)
 			{
 				Initialize(default, capacity);
 				return Capacity;
@@ -461,11 +462,11 @@ namespace Sapientia.Collections
 				_dictionary = dictionary;
 			}
 
-			public UnsafeArray<int> Buckets => _dictionary.buckets;
-			public UnsafeArray<Entry> Entries => _dictionary.entries;
-			public int Count => _dictionary.count;
-			public int FreeList => _dictionary.freeList;
-			public int FreeCount => _dictionary.freeCount;
+			public UnsafeArray<int> Buckets => _dictionary._buckets;
+			public UnsafeArray<Entry> Entries => _dictionary._entries;
+			public int Count => _dictionary._count;
+			public int FreeList => _dictionary._freeList;
+			public int FreeCount => _dictionary._freeCount;
 
 			public KeyValuePair<TKey, TValue>[] Items
 			{

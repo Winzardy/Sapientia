@@ -1,6 +1,7 @@
 using System;
 using Sapientia;
 using Sapientia.Collections;
+using Sapientia.Data;
 using UnityEngine;
 
 namespace Submodules.Sapientia.Memory
@@ -30,6 +31,8 @@ namespace Submodules.Sapientia.Memory
 
 		private TrackingType _trackingType;
 
+		private AsyncValue _spinner;
+
 		public bool IsValid => _trackingType != TrackingType.Invalid;
 
 		public int AllocationCount => _allocationCount;
@@ -45,10 +48,12 @@ namespace Submodules.Sapientia.Memory
 				_memorySpaces = new UnsafeList<long>(MemoryManager.InnerMemoryId, initialCapacity);
 			}
 			_trackingType = trackingType;
+			_spinner = AsyncValue.Create();
 		}
 
 		public void StartDisposeTrackingType()
 		{
+			_spinner.SetBusy(false);
 			if (_trackingType == TrackingType.DeepTracking)
 				_trackingType = TrackingType.CountTracking;
 		}
@@ -58,12 +63,22 @@ namespace Submodules.Sapientia.Memory
 			switch (_trackingType)
 			{
 				case TrackingType.DeepTracking:
+				{
+					_spinner.SetBusy(false);
 					InsertMemorySpace(ptr, size);
 					_allocationCount++;
+
+					E.ASSERT(_allocations.Count == _allocationCount);
+					_spinner.SetFree(false);
 					break;
+				}
 				case TrackingType.CountTracking:
+				{
+					_spinner.SetBusy(false);
 					_allocationCount++;
+					_spinner.SetFree(false);
 					break;
+				}
 			}
 		}
 
@@ -78,12 +93,22 @@ namespace Submodules.Sapientia.Memory
 			switch (_trackingType)
 			{
 				case TrackingType.DeepTracking:
+				{
+					_spinner.SetBusy(false);
 					RemoveMemorySpace(ptr, out size);
 					_allocationCount--;
+
+					E.ASSERT(_allocations.Count == _allocationCount);
+					_spinner.SetFree(false);
 					break;
+				}
 				case TrackingType.CountTracking:
+				{
+					_spinner.SetBusy(false);
 					_allocationCount--;
+					_spinner.SetFree(false);
 					break;
+				}
 			}
 		}
 
@@ -119,6 +144,9 @@ namespace Submodules.Sapientia.Memory
 			// Сначала добавляем верхний предел, т.к. при добавлении нижнего `hiIndex` станет не валидным
 			_memorySpaces.Insert(hiIndex, hi.ToInt64());
 			_memorySpaces.Insert(lowIndex, low.ToInt64());
+#if MEMORY_TRACKER_DEBUG
+			Debug.LogWarning($"{{nameof(MemoryTracker)}}. Аллоцирована область памяти: {hi.ToInt64()}-{low.ToInt64()}");
+#endif
 
 			_allocations.Add(intPtr, size);
 		}
@@ -146,11 +174,24 @@ namespace Submodules.Sapientia.Memory
 
 		public void Dispose()
 		{
-			E.ASSERT(_allocationCount == 0, $"Попытка удалить трекер с не освобожденной памятью. [Количество аллокаций: {_allocationCount}]");
+			E.ASSERT(_allocationCount == 0, $"Попытка удалить трекер с не освобожденной памятью. [Количество аллокаций: {_allocationCount}, Количество сохранённых указателей: {_allocations.Count}, Количество сохранённых границ: {_memorySpaces.count}, Тип трекинга: {_trackingType}], ");
+
+			if (_memorySpaces.count > 0)
+				Debug.LogError($"{nameof(MemoryTracker)} обнаружил, что {_memorySpaces.count / 2} аллокации не были освобождены мануально. Возможна утечка памяти. Включите MEMORY_TRACKER_DEBUG, чтобы увидеть подробный лог и найти аллокации.");
+#if MEMORY_TRACKER_DEBUG
+			for (var i = 0; i < _memorySpaces.count / 2; i++)
+			{
+				var low = _memorySpaces[i * 2];
+				var hi = _memorySpaces[(i * 2) + 1];
+
+				Debug.LogWarning($"{nameof(MemoryTracker)}. Не освобождённая область памяти: {hi}-{low}");
+			}
+#endif
 
 			_allocations.Dispose();
 			_memorySpaces.Dispose();
 
+			_spinner.SetFree(false);
 			this = default;
 		}
 	}

@@ -1,9 +1,8 @@
-using System;
 using Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {
-	internal struct WorldStateData : IDisposable
+	internal struct WorldStateData
 	{
 		public WorldId worldId;
 		public Allocator allocator;

@@ -1,6 +1,7 @@
 using Sapientia;
 using Sapientia.Collections;
 using Submodules.Sapientia.Data;
+using UnityEngine;
 
 namespace Submodules.Sapientia.Memory
 {
@@ -25,7 +26,7 @@ namespace Submodules.Sapientia.Memory
 		private static ref MemoryManager NoTrackTemp => ref _tempParallel.Data;
 		private static ref MemoryManager NoTrack => ref _parallel.Data;
 		private static ref MemoryManager Default => ref _default.Data;
-		private static ref UnsafeIndexAllocSparseSet<MemoryManager> Managers => ref _managers.Data;
+		private static ref UnsafeIndexAllocSparseSet<MemoryManager> CustomManagers => ref _managers.Data;
 #else
 		private static MemoryManager Inner;
 		private static MemoryManager Temp;
@@ -49,7 +50,7 @@ namespace Submodules.Sapientia.Memory
 #endif
 
 #if UNITY_5_3_OR_NEWER
-		[UnityEngine.RuntimeInitializeOnLoadMethod]
+		[UnityEngine.RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 #endif
 		public static void Initialize()
 		{
@@ -72,7 +73,7 @@ namespace Submodules.Sapientia.Memory
 			Default = new MemoryManager(MemoryManager.DefaultMemoryId);
 			Default.SetTracker(DefaultTrackingType);
 
-			Managers = new UnsafeIndexAllocSparseSet<MemoryManager>(8, 8);
+			CustomManagers = new UnsafeIndexAllocSparseSet<MemoryManager>(8, 8);
 
 #if UNITY_EDITOR
 			UnityEditor.EditorApplication.playModeStateChanged += PlayModeStateChanged;
@@ -81,8 +82,8 @@ namespace Submodules.Sapientia.Memory
 
 		public static Id<MemoryManager> CreateMemoryManager(TrackingType trackingType = TrackingType.DeepTracking)
 		{
-			var result = (Id<MemoryManager>)Managers.AllocateId();
-			ref var manager = ref Managers.Get(result);
+			var result = (Id<MemoryManager>)CustomManagers.AllocateId();
+			ref var manager = ref CustomManagers.Get(result);
 			manager = new MemoryManager(result);
 			manager.SetTracker(trackingType);
 
@@ -109,17 +110,17 @@ namespace Submodules.Sapientia.Memory
 					break;
 			}
 
-			return ref Managers.Get(id);
+			return ref CustomManagers.Get(id);
 		}
 
 		public static void DisposeMemoryManager(Id<MemoryManager> id)
 		{
 			E.ASSERT(id.ToMemoryType() == MemoryType.Invalid);
 
-			ref var manager = ref Managers.Get(id);
+			ref var manager = ref CustomManagers.Get(id);
 			manager.Dispose();
 
-			Managers.ReleaseId(id);
+			CustomManagers.ReleaseId(id);
 		}
 
 #if UNITY_EDITOR
@@ -128,6 +129,8 @@ namespace Submodules.Sapientia.Memory
 			if (state != UnityEditor.PlayModeStateChange.EnteredEditMode)
 				return;
 
+			Debug.LogWarning($"{nameof(PlayModeStateChanged)}: {state.ToString()}");
+
 			UnityEditor.EditorApplication.playModeStateChanged -= PlayModeStateChanged;
 			DisposeAll();
 		}
@@ -135,12 +138,12 @@ namespace Submodules.Sapientia.Memory
 
 		public static void DisposeAll()
 		{
-			foreach (ref var manager in Managers.GetValuesSpan())
+			foreach (ref var manager in CustomManagers.GetValuesSpan())
 			{
 				manager.Dispose();
 			}
+			CustomManagers.Dispose();
 
-			Managers.Dispose();
 			Default.Dispose();
 			Temp.Dispose();
 			NoTrackTemp.Dispose();

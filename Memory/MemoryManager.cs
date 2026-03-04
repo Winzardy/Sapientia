@@ -7,6 +7,7 @@ using Sapientia;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
+using UnityEngine;
 
 namespace Submodules.Sapientia.Memory
 {
@@ -89,7 +90,10 @@ namespace Submodules.Sapientia.Memory
 		internal void Dispose()
 		{
 			_tracker.StartDisposeTrackingType();
+
 			var allocations = _tracker.GetAllocations();
+			Debug.LogWarning($"{nameof(MemoryManager)}.Dispose [id: {_id}({(MemoryType)(-_id)}), Allocations Count: {_tracker.AllocationCount}, Pointers to free: {allocations.Count}]");
+
 			foreach (var entry in allocations)
 			{
 				var ptr = new SafePtr((void*)entry.key);
@@ -172,13 +176,12 @@ namespace Submodules.Sapientia.Memory
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void MemFree(SafePtr memory)
 		{
-			_tracker.Untrack(memory.ptr);
-
 #if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, _unityAllocator);
 #else
 			Marshal.FreeHGlobal((IntPtr)memory.ptr);
 #endif
+			_tracker.Untrack(memory.ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

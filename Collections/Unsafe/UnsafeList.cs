@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
@@ -30,6 +28,7 @@ namespace Sapientia.Collections
 			if (capacity <= 0)
 			{
 				this = default;
+				this.memoryId = memoryId;
 				return;
 			}
 
