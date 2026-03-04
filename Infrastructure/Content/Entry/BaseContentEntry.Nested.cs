@@ -1,66 +1,59 @@
 #if !UNITY_EDITOR && CLIENT
-#define CONTENT_ENTRY_AUTO_REGISTER
+#define CONTENT_ENTRY_BUFFER
 #endif
 using System.Collections.Generic;
+using Content.Management;
 using Sapientia.Collections;
+using Sapientia.Pooling;
 using Sapientia.Reflection;
 
 namespace Content
 {
 	public partial class BaseContentEntry<T>
 	{
+		private IUniqueContentEntry[] _registeredNestedEntries;
+
 		public virtual IReadOnlyDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> Nested => null;
 
 		private void OnNestedRegister()
 		{
-#if CONTENT_ENTRY_AUTO_REGISTER
-			return;
-#endif
 			var isNullOrEmpty = Nested.IsNullOrEmpty();
 
 			if (isNullOrEmpty)
 				return;
 
-			// Resolve происходит через рефлексию, самый быстрый вариант это code-gen (roslyn), есть идеи, но пока так
-			foreach (var reference in Nested.Values)
+			using (ListPool<IUniqueContentEntry>.Get(out var list))
 			{
-				var entry = reference.Resolve(this, true);
-				entry.SetParent(this);
-				entry.Register();
+				foreach (var (guid, reference) in Nested)
+				{
+#if CONTENT_ENTRY_BUFFER
+					var entry = ContentEntryBuffer.Get(guid);
+#else
+					// Resolve происходит через рефлексию
+					var entry = reference.Resolve(this, true);
+#endif
+					entry.SetParent(this);
+					entry.Register();
+
+					list.Add(entry);
+				}
+
+				_registeredNestedEntries = list.ToArray();
 			}
 		}
 
 		private void OnNestedUnregister()
 		{
-#if CONTENT_ENTRY_AUTO_REGISTER
-			return;
-#endif
-			if (Nested.IsNullOrEmpty())
+			if (_registeredNestedEntries.IsNullOrEmpty())
 				return;
 
-			// Resolve происходит через рефлексию, самый быстрый вариант это code-gen (roslyn), есть идеи, но пока так
-			// Проблемы кодоген:
-			// - Доступ к вложенным приватным ContentEntry, была идея решать это через дерево NestedEntries, но вариант:
-			//   (field -> privateField1 -> privateField2 -> contentEntry) она не решит.
-			// - Долго и муторно делать
-			foreach (var (key, reference) in Nested)
-			{
-				var entry = reference.Resolve(this);
-
-				if (ContentDebug.Logging.Nested.resolve)
-				{
-					if (entry == null)
-						ContentDebug.LogError($"Nested entry by guid [ {key} ] is null! by path [ {reference.Path} ]", Context);
-				}
-
-				//IL2CPP может "strip" не нужное поле! поэтому проверка на Null
-				entry?.Unregister();
-			}
+			foreach (var entry in _registeredNestedEntries)
+				entry.Unregister();
 		}
 	}
 
 	public partial interface IContentEntry
 	{
-		public IReadOnlyDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> Nested { get; }
+		IReadOnlyDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> Nested { get; }
 	}
 }

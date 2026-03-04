@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -8,7 +7,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial class World : IDisposable
+	public partial class World
 	{
 #if CLIENT
 		public UnityEngine.SceneManagement.Scene? scene;

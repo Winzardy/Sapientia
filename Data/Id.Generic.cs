@@ -89,5 +89,10 @@ namespace Submodules.Sapientia.Data
 		{
 			return id.GetHashCode();
 		}
+
+		public override string ToString()
+		{
+			return id.ToString();
+		}
 	}
 }

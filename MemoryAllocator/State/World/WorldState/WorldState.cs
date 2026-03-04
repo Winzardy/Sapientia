@@ -7,7 +7,7 @@ using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial struct WorldState : IEquatable<WorldState>, IDisposable
+	public partial struct WorldState : IEquatable<WorldState>
 	{
 		private SentinelPtr<WorldStateData> _worldStateData;
 		private bool _checkNullRef;
