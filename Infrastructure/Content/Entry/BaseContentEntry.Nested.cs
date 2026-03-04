@@ -11,9 +11,9 @@ namespace Content
 {
 	public partial class BaseContentEntry<T>
 	{
-		public virtual IReadOnlyDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> Nested => null;
+		private IUniqueContentEntry[] _registeredNestedEntries;
 
-		private List<IUniqueContentEntry> _registeredNestedEntries;
+		public virtual IReadOnlyDictionary<SerializableGuid, MemberReflectionReference<IUniqueContentEntry>> Nested => null;
 
 		private void OnNestedRegister()
 		{
@@ -22,19 +22,23 @@ namespace Content
 			if (isNullOrEmpty)
 				return;
 
-			_registeredNestedEntries = ListPool<IUniqueContentEntry>.Get();
-			foreach (var (guid, reference) in Nested)
+			using (ListPool<IUniqueContentEntry>.Get(out var list))
 			{
+				foreach (var (guid, reference) in Nested)
+				{
 #if CONTENT_ENTRY_BUFFER
-				var entry = ContentEntryBuffer.Pop(guid, false);
+					var entry = ContentEntryBuffer.Get(guid);
 #else
-				// Resolve происходит через рефлексию
-				var entry = reference.Resolve(this, true);
+					// Resolve происходит через рефлексию
+					var entry = reference.Resolve(this, true);
 #endif
-				entry.SetParent(this);
-				entry.Register();
+					entry.SetParent(this);
+					entry.Register();
 
-				_registeredNestedEntries.Add(entry);
+					list.Add(entry);
+				}
+
+				_registeredNestedEntries = list.ToArray();
 			}
 		}
 
@@ -45,8 +49,6 @@ namespace Content
 
 			foreach (var entry in _registeredNestedEntries)
 				entry.Unregister();
-
-			StaticObjectPoolUtility.ReleaseAndSetNull(ref _registeredNestedEntries);
 		}
 	}
 
