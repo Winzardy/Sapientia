@@ -19,6 +19,7 @@ namespace Trading.UsagePass
 			backend.ForceReset(recipeKey);
 		}
 
+#if CLIENT
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
@@ -48,6 +49,7 @@ namespace Trading.UsagePass
 			UsagePassTradeReceipt? receipt = new UsagePassTradeReceipt(dateTime.Ticks);
 			return Task.FromResult(receipt);
 		}
+#endif
 
 		protected override string GetReceiptKey(string tradeId) => UsagePassTradeReceiptUtility.ToRecipeKey(tradeId);
 
