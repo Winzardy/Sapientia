@@ -1,3 +1,6 @@
+#if !UNITY_EDITOR && CLIENT
+#define CONTENT_ENTRY_BUFFER
+#endif
 #if CONTENT_ENTRY_BUFFER
 using System.Collections.Generic;
 
