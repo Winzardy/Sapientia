@@ -32,7 +32,7 @@ namespace Submodules.Sapientia.Memory
 		private static MemoryManager NoTrackTemp;
 		private static MemoryManager NoTrack;
 		private static MemoryManager Default;
-		private static UnsafeIndexAllocSparseSet<MemoryManager> Managers;
+		private static UnsafeIndexAllocSparseSet<MemoryManager> CustomManagers;
 #endif
 #if DEEP_MEMORY_TRACKING
 		private const TrackingType InnerTrackingType = TrackingType.NoTracking;
