@@ -7,7 +7,6 @@ using Sapientia;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
-using UnityEngine;
 
 namespace Submodules.Sapientia.Memory
 {
@@ -92,7 +91,9 @@ namespace Submodules.Sapientia.Memory
 			_tracker.StartDisposeTrackingType();
 
 			var allocations = _tracker.GetAllocations();
-			Debug.LogWarning($"{nameof(MemoryManager)}.Dispose [id: {_id}({(MemoryType)(-_id)}), Allocations Count: {_tracker.AllocationCount}, Pointers to free: {allocations.Count}]");
+#if UNITY_5_3_OR_NEWER
+			UnityEngine.Debug.LogWarning($"{nameof(MemoryManager)}.Dispose [id: {_id}({(MemoryType)(-_id)}), Allocations Count: {_tracker.AllocationCount}, Pointers to free: {allocations.Count}]");
+#endif
 
 			foreach (var entry in allocations)
 			{
