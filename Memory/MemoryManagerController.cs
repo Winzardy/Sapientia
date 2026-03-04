@@ -1,7 +1,6 @@
 using Sapientia;
 using Sapientia.Collections;
 using Submodules.Sapientia.Data;
-using UnityEngine;
 
 namespace Submodules.Sapientia.Memory
 {
@@ -50,7 +49,7 @@ namespace Submodules.Sapientia.Memory
 #endif
 
 #if UNITY_5_3_OR_NEWER
-		[UnityEngine.RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.AfterSceneLoad)]
 #endif
 		public static void Initialize()
 		{
@@ -129,7 +128,7 @@ namespace Submodules.Sapientia.Memory
 			if (state != UnityEditor.PlayModeStateChange.EnteredEditMode)
 				return;
 
-			Debug.LogWarning($"{nameof(PlayModeStateChanged)}: {state.ToString()}");
+			UnityEngine.Debug.LogWarning($"{nameof(PlayModeStateChanged)}: {state.ToString()}");
 
 			UnityEditor.EditorApplication.playModeStateChanged -= PlayModeStateChanged;
 			DisposeAll();

@@ -5,7 +5,6 @@ using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Memory;
 using Sapientia.ServiceManagement;
-using UnityEngine;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -38,7 +37,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 #if UNITY_5_3_OR_NEWER
-		[UnityEngine.RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSceneLoad)]
 #endif
 		public static void Initialize()
 		{
