@@ -18,6 +18,7 @@ namespace Trading.InAppPurchasing
 
 		public override int Priority => TradeCostPriority.HIGH;
 
+#if CLIENT
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
@@ -54,6 +55,7 @@ namespace Trading.InAppPurchasing
 
 			return new IAPTradeReceipt(receipt.Value);
 		}
+#endif
 
 		protected override void OnIssue(Tradeboard board, string receiptKey)
 		{
@@ -104,6 +106,4 @@ namespace Trading.InAppPurchasing
 
 		#endregion
 	}
-
-
 }

@@ -11,7 +11,7 @@ namespace Sapientia.MemoryAllocator
 	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
-		public readonly struct MemoryZone : IDisposable
+		public readonly struct MemoryZone
 		{
 			public readonly SafePtr memory;
 			public readonly byte* zoneEnd;

@@ -32,6 +32,7 @@ namespace Trading.Advertising
 
 		public EvaluatedValue<Blackboard, int> count = 1;
 
+#if CLIENT
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
@@ -78,6 +79,7 @@ namespace Trading.Advertising
 				.SystemTime;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
+#endif
 
 		private int GetCountInternal(Tradeboard board)
 		{

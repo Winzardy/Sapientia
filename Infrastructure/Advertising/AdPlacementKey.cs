@@ -9,7 +9,7 @@ namespace Advertising
 
 		public AdPlacementKey(AdPlacementType type, string placement)
 		{
-			this.type = type;
+			this.type      = type;
 			this.placement = placement;
 		}
 
@@ -30,8 +30,9 @@ namespace Advertising
 	{
 		public static AdPlacementKey ToKey(this AdPlacementType type, string placement) => new(type, placement);
 
-		public static AdPlacementEntry GetEntry(this AdPlacementKey key) => AdManager.GetEntry(key.type, key.placement);
+		public static AdPlacementEntry GetEntry(this AdPlacementKey key) => AdPlacementEntryUtility.GetEntry(key.type, key.placement);
+
 		public static bool TryGetEntry(this AdPlacementKey key, out AdPlacementEntry entry)
-			=> AdManager.TryGetEntry(key.type, key.placement, out entry);
+			=> AdPlacementEntryUtility.TryGetEntry(key.type, key.placement, out entry);
 	}
 }

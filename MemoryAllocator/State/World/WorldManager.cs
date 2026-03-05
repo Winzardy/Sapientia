@@ -36,6 +36,45 @@ namespace Sapientia.MemoryAllocator
 			get => _currentWorldState.WorldId;
 		}
 
+#if UNITY_5_3_OR_NEWER
+		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSceneLoad)]
+#endif
+		public static void Initialize()
+		{
+#if UNITY_EDITOR
+			UnityEditor.EditorApplication.playModeStateChanged += PlayModeStateChanged;
+#endif
+		}
+
+#if UNITY_EDITOR
+		private static void PlayModeStateChanged(UnityEditor.PlayModeStateChange state)
+		{
+			if (state != UnityEditor.PlayModeStateChange.EnteredEditMode)
+				return;
+
+			UnityEditor.EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+			Dispose();
+		}
+#endif
+
+		public static void Dispose()
+		{
+			while (_count > 0)
+			{
+				if (!_worlds[0].IsValid)
+					continue;
+				_worlds[0].Dispose();
+			}
+
+			foreach (var worldState in _worldsStates)
+			{
+				worldState.Dispose();
+			}
+
+			_worlds = Array.Empty<World>();
+			_worldsStates = Array.Empty<WorldState>();
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static WorldScope GetWorldScope(this World world)
 		{
@@ -179,10 +218,9 @@ namespace Sapientia.MemoryAllocator
 				// !!! Если её освободить, по непонятной причине происходит краш !!!
 				ValuesExt.Swap(ref _worlds[worldId.index], ref _worlds[_count - 1]);
 				_worldsStates[worldId.index].Swap(ref _worldsStates[_count - 1]);
-
-				_worlds[_count - 1] = null;
 			}
 
+			_worlds[_count - 1] = null;
 			_count--;
 		}
 
