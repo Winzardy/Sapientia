@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Sapientia.Pooling.Concurrent;
@@ -57,6 +58,20 @@ namespace Sapientia
 			}
 
 			return Blackboard<T>.Contains(this, key);
+		}
+
+		public bool Any<T>()
+		{
+			if (_tokens.IsNullOrEmpty())
+				return false;
+
+			foreach (var rawToken in _tokens)
+			{
+				if (rawToken is BlackboardToken<T> token)
+					return true;
+			}
+
+			return false;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -199,7 +214,7 @@ namespace Sapientia
 			}
 
 			var token = Pool<BlackboardToken<T>>.Get();
-			token.Bind(in hash);
+			token.Bind(in hash, key);
 			return token;
 		}
 
@@ -263,7 +278,7 @@ namespace Sapientia
 
 		internal BlackboardToken(IBlackboardToken token, int generation)
 		{
-			_token = token;
+			_token      = token;
 			_generation = generation;
 		}
 
