@@ -1,8 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using Sapientia;
-using Sapientia.Extensions;
+using UnityEngine;
 
 namespace Content
 {
@@ -11,9 +10,11 @@ namespace Content
 		// ReSharper disable once MemberInitializerValueIgnored
 		// ReSharper disable once InconsistentNaming
 #if CLIENT
-		[UnityEngine.SerializeField]
+		[SerializeField]
 #endif
 		protected SerializableGuid guid;
+
+		private string _id;
 
 		/// <summary>
 		/// Индексация (only runtime)
@@ -25,8 +26,6 @@ namespace Content
 		public int Index => _index;
 
 		public ref readonly SerializableGuid Guid { get => ref guid; }
-
-		private string _id;
 
 		public virtual string Id { get => _id; }
 
