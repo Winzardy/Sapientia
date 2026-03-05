@@ -2,7 +2,6 @@
 #define CONTENT_ENTRY_BUFFER
 #endif
 using System.Collections.Generic;
-using Content.Management;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
@@ -29,7 +28,7 @@ namespace Content
 #if CONTENT_ENTRY_BUFFER
 					var entry = ContentEntryBuffer.Get(guid);
 #else
-					// Resolve происходит через рефлексию
+					// Resolve происходит через рефлексию (only editor)
 					var entry = reference.Resolve(this, true);
 #endif
 					entry.SetParent(this);
@@ -49,6 +48,8 @@ namespace Content
 
 			foreach (var entry in _registeredNestedEntries)
 				entry.Unregister();
+
+			_registeredNestedEntries = null;
 		}
 	}
 
