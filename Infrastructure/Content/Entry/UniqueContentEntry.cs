@@ -24,17 +24,18 @@ namespace Content
 		/// <inheritdoc cref="UniqueContentEntry{T}._index"/>
 		public int Index => _index;
 
-		public ref readonly SerializableGuid Guid => ref guid;
+		public ref readonly SerializableGuid Guid { get => ref guid; }
 
 		private string _id;
 
-		public virtual string Id => _id.IsNullOrEmpty() ? guid.ToString() : _id;
+		public virtual string Id { get => _id; }
 
 		public sealed override bool IsUnique() => true;
 
 		protected UniqueContentEntry(in T value, in SerializableGuid guid, string id = null) : base(in value)
 		{
 			this.guid = guid;
+
 			_id = id;
 		}
 
