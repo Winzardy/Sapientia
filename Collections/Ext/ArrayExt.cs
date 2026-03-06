@@ -23,7 +23,7 @@ namespace Sapientia.Collections
 					if (!equatable.Equals(b[i]))
 						return false;
 				}
-				else if (!a[i].Equals(b[i]))
+				else if (!Equals(a[i], b[i]))
 					return false;
 			}
 			return true;
