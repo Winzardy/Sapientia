@@ -35,7 +35,7 @@ namespace SharedLogic
 			_registry = new SharedNodeRegistry();
 
 			// Системные ноды
-			_registry.Register(new MigrationSharedNode());
+			//_registry.Register(new MigrationSharedNode());
 			_registry.Register(new TimeSharedNode(dateTimeProvider));
 
 			_registrar.Register(_registry);
