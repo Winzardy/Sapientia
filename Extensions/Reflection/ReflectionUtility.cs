@@ -31,7 +31,9 @@ namespace Sapientia.Utility
 			"Notifications",
 			"Trading",
 			"Booting",
-			"Generic"
+			"Generic",
+			"SharedLogic",
+			"Survivor.Interop"
 		};
 
 		private static readonly string _editorAssemblyTag = "Editor";
