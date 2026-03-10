@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Sapientia.Pooling;
 
 namespace Sapientia.Collections
 {
-	public class BidirectionalMap<TFirst, TSecond> : IDisposable
+	public class BidirectionalMap<TFirst, TSecond> : IDisposable, IEnumerable<(TFirst, TSecond)>
 	{
 		private Dictionary<TFirst, TSecond> _firstToSecond;
 		private Dictionary<TSecond, TFirst> _secondToFirst;
@@ -117,5 +118,15 @@ namespace Sapientia.Collections
 			_firstToSecond.Remove(first);
 			_secondToFirst.Remove(second);
 		}
+
+		public IEnumerator<(TFirst, TSecond)> GetEnumerator()
+		{
+			foreach (var kvp in _firstToSecond)
+			{
+				yield return (kvp.Key, kvp.Value);
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }
