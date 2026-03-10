@@ -98,6 +98,7 @@ namespace Content.Management
 				_values     = new TValue[source.Count];
 				_keyToIndex = new Dictionary<SerializableGuid, int>(source.Count);
 				_idToIndex  = new Dictionary<string, int>(source.Count);
+				_keyToId    = new Dictionary<SerializableGuid, string>();
 			}
 
 			int index = 0;
@@ -108,7 +109,10 @@ namespace Content.Management
 				_keyToIndex[guid] = index;
 
 				if (!value.Id.IsNullOrEmpty())
+				{
+					_keyToId[guid]       = value.Id;
 					_idToIndex[value.Id] = index;
+				}
 
 				value.SetIndex(index);
 				index++;
@@ -137,7 +141,6 @@ namespace Content.Management
 		{
 			if (!_keyToId.TryGetValue(guid, out var id))
 				_keyToId[guid] = id = guid.ToString();
-
 			return id;
 		}
 
@@ -146,7 +149,6 @@ namespace Content.Management
 			ref readonly var guid = ref _values[index].Guid;
 			if (!_keyToId.TryGetValue(guid, out var id))
 				_keyToId[guid] = id = guid.ToString();
-
 			return id;
 		}
 	}
