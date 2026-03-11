@@ -31,7 +31,9 @@ namespace Sapientia.Utility
 			"Notifications",
 			"Trading",
 			"Booting",
-			"Generic"
+			"Generic",
+			"SharedLogic",
+			"Survivor.Interop"
 		};
 
 		private static readonly string _editorAssemblyTag = "Editor";
@@ -214,6 +216,55 @@ namespace Sapientia.Utility
 							!type.IsAbstract)
 						{
 							list.Add(type);
+						}
+					}
+				}
+				catch (ReflectionTypeLoadException e)
+				{
+#if UNITY_EDITOR
+					UnityEngine.Debug.LogException(e);
+
+					foreach (var loaderException in e.LoaderExceptions)
+					{
+						UnityEngine.Debug.LogException(e);
+					}
+#endif
+				}
+			}
+
+			return list;
+		}
+
+		/// <summary>
+		/// Assumes that the class only has 1 generic argument.
+		/// Only accepts generic type definitions.
+		/// Only checks nearest inheritance level, ignores the rest of the hierarchy.
+		/// </summary>
+		/// <returns></returns>
+		public static List<(Type originType, Type argumentType)> GetAllGenericArgumentTypes(this Type baseType, bool editor = false)
+		{
+			if (!baseType.IsGenericTypeDefinition)
+				throw new ArgumentException($"{baseType.Name} is not a generic type definition.");
+
+			var list = new List<(Type originType, Type argumentType)>();
+
+			foreach (Assembly assembly in GetAssemblies(_allowedAssemblyTags, editor))
+			{
+				try
+				{
+					foreach (Type type in assembly.GetTypes())
+					{
+						if (type.IsInterface || type.IsAbstract)
+							continue;
+
+						var parent = type.BaseType;
+
+						if (parent != null &&
+						   parent.IsGenericType &&
+						   parent.GetGenericTypeDefinition() == baseType)
+						{
+							var argument = parent.GetGenericArguments()[0];
+							list.Add((type, argument));
 						}
 					}
 				}
