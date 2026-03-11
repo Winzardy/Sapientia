@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
@@ -15,6 +16,9 @@ namespace Sapientia.MemoryAllocator
 		public CachedPtr ptr;
 		public int Length { get; private set; }
 		public int ElementSize { get; private set; }
+#if DEBUG
+		private WorldId _worldId;
+#endif
 
 		public int Count
 		{
@@ -24,6 +28,14 @@ namespace Sapientia.MemoryAllocator
 		public readonly bool IsCreated
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)] get => ptr.IsValid();
+		}
+
+		[Conditional(E.DEBUG)]
+		private void AssertWorldState(WorldState worldState)
+		{
+#if DEBUG
+			E.ASSERT(_worldId == worldState.WorldId);
+#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,6 +53,9 @@ namespace Sapientia.MemoryAllocator
 			ptr = new CachedPtr(worldState, tPtr, memPtr);
 			ElementSize = elementSize;
 			Length = length;
+#if DEBUG
+			_worldId = worldState.WorldId;
+#endif
 
 			if (clearOptions == ClearOptions.ClearMemory)
 			{
@@ -65,6 +80,9 @@ namespace Sapientia.MemoryAllocator
 			ptr = default;
 			Length = arr.Length;
 			ElementSize = arr.ElementSize;
+#if DEBUG
+			_worldId = worldState.WorldId;
+#endif
 
 			var memPtr = worldState.MemAlloc(arr.ElementSize * arr.Length, out var tPtr);
 			ptr = new CachedPtr(worldState, tPtr, memPtr);
@@ -107,6 +125,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (ptr.memPtr.IsValid())
 			{
+				AssertWorldState(worldState);
 				worldState.MemFree(ptr.memPtr);
 			}
 
@@ -116,6 +135,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr GetPtr(WorldState worldState)
 		{
+			AssertWorldState(worldState);
 			return ptr.GetPtr(worldState);
 		}
 
@@ -174,6 +194,7 @@ namespace Sapientia.MemoryAllocator
 				return false;
 			}
 
+			AssertWorldState(worldState);
 			E.ASSERT(elementSize == ElementSize);
 
 			var prevLength = Length;
@@ -200,6 +221,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Fill<T>(WorldState worldState, in T value, int fromIndex, int count) where T: unmanaged
 		{
+			AssertWorldState(worldState);
 			worldState.MemFill<T>(ptr.memPtr, value, fromIndex, count);
 		}
 
@@ -212,6 +234,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState, int index, int length)
 		{
+			AssertWorldState(worldState);
 			var size = ElementSize;
 			worldState.MemClear(ptr.memPtr, index * size, length * size);
 		}
