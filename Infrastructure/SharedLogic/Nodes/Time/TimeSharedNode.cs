@@ -190,7 +190,11 @@ namespace SharedLogic
 
 		public static implicit operator TimeSetError(Code code) => new(code);
 
-		public override string ToString() =>
-			$"Can't set timestamp with code [ {code} ] (prev: {prevTimestamp}, -> next: {nextTimestamp})";
+		public override string ToString()
+		{
+			var prev = new DateTime(prevTimestamp, DateTimeKind.Utc);
+			var next = new DateTime(nextTimestamp, DateTimeKind.Utc);
+			return $"Can't set timestamp with code [ {code} ] (prev: {prev:HH:mm:ss yyyy-MM-dd} [ {prevTimestamp} ], -> next: {next:HH:mm:ss yyyy-MM-dd} [ {nextTimestamp} ])";
+		}
 	}
 }
