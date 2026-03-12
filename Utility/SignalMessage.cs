@@ -13,6 +13,8 @@ namespace Sapientia.Utility
 		{
 			this.name = name;
 		}
+
+		public static implicit operator string(in SignalMessage signalMessage) => signalMessage.name;
 	}
 
 	public struct SignalMessage<TArgs>
