@@ -9,7 +9,7 @@ using Submodules.Sapientia.Memory;
 namespace Sapientia.MemoryAllocator
 {
 	[DebuggerTypeProxy(typeof(MemList<>.ListProxy))]
-	public struct MemList<T> : IMemListEnumerable<T> where T : unmanaged
+	public struct MemList<T> where T : unmanaged
 	{
 		private MemArray<T> _arr;
 		private int _count;
@@ -394,7 +394,9 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new MemListEnumerator<T>(IsCreated ? GetValuePtr(worldState) : default,0 , Count);
+			if (Count == 0)
+				return default;
+			return new MemListEnumerator<T>(GetValuePtr(worldState),0 , Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,27 +1,7 @@
 using System.Runtime.CompilerServices;
-using Sapientia.Data;
-using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IMemLinkedListEnumerable<T>
-		where T: unmanaged
-	{
-		protected MemLinkedList<T> GetList(WorldState worldState);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemLinkedListEnumerator<T> GetEnumerator(WorldState worldState)
-		{
-			return new MemLinkedListEnumerator<T>(worldState, GetList(worldState));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemLinkedListEnumerable<T> GetEnumerable(WorldState worldState)
-		{
-			return new (GetEnumerator(worldState));
-		}
-	}
-
 	public readonly ref struct MemLinkedListEnumerable<T>
 		where T : unmanaged
 	{

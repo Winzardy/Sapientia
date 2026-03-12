@@ -3,27 +3,6 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IMemCircularBufferEnumerable<T>
-		where T: unmanaged
-	{
-		public int HeadIndex { get; }
-		public int Count { get; }
-		public int Capacity { get; }
-		public SafePtr<T> GetValuePtr(WorldState worldState);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemCircularBufferEnumerator<T> GetEnumerator(WorldState worldState)
-		{
-			return new MemCircularBufferEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemCircularBufferEnumerable<T> GetEnumerable(WorldState worldState)
-		{
-			return new (GetEnumerator(worldState));
-		}
-	}
-
 	public readonly ref struct MemCircularBufferEnumerable<T>
 		where T: unmanaged
 	{

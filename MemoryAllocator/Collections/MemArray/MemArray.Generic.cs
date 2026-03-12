@@ -9,7 +9,7 @@ namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemArray<>.MemArrayProxy))]
-	public unsafe struct MemArray<T> : IMemListEnumerable<T> where T : unmanaged
+	public unsafe struct MemArray<T> where T : unmanaged
 	{
 		public static readonly MemArray<T> Empty = new () { innerArray = MemArray.Empty };
 
@@ -220,6 +220,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
+			if (Count == 0)
+				return default;
 			return new MemListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 

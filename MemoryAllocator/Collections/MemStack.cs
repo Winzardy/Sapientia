@@ -5,7 +5,7 @@ using Sapientia.Data;
 namespace Sapientia.MemoryAllocator
 {
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemStack<>.StackProxy))]
-	public unsafe struct MemStack<T> : IMemListEnumerable<T> where T : unmanaged
+	public unsafe struct MemStack<T> where T : unmanaged
 	{
 		private const int _defaultCapacity = 4;
 
@@ -114,6 +114,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
+			if (Count == 0)
+				return default;
 			return new MemListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 
