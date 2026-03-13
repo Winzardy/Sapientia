@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
-using Sapientia.Extensions;
+using Sapientia.Data;
 using Sapientia.Memory;
 using Sapientia.ServiceManagement;
-using Unity.Burst;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -256,10 +255,19 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		[BurstDiscard]
 		public static bool IsValid(this WorldId worldId)
 		{
-			return worldId.id < _versions.Length && _versions[worldId.id] == worldId.version;
+			var result = true;
+			NoBurstIsValid(worldId, ref result);
+			return result;
+		}
+
+#if UNITY_5_3_OR_NEWER
+		[Unity.Burst.BurstDiscard]
+#endif
+		private static void NoBurstIsValid(WorldId worldId, ref bool result)
+		{
+			result = worldId.id < _versions.Length && _versions[worldId.id] == worldId.version;
 		}
 	}
 
