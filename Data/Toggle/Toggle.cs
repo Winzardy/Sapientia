@@ -2,7 +2,6 @@ using System;
 
 #if CLIENT
 using UnityEngine.Serialization;
-using Sirenix.OdinInspector;
 #endif
 
 namespace Sapientia
@@ -15,22 +14,6 @@ namespace Sapientia
 	public interface IToggle<T> : IToggle
 	{
 		public T Value { get; }
-	}
-
-#if CLIENT
-	[InlineProperty(LabelWidth = 28)]
-#endif
-	[Serializable]
-	public struct OptionalRange<T>
-	{
-#if CLIENT
-		[HorizontalGroup(0.5f)]
-#endif
-		public Toggle<T> min;
-#if CLIENT
-		[HorizontalGroup(0.5f)]
-#endif
-		public Toggle<T> max;
 	}
 
 	[Serializable]
@@ -49,7 +32,7 @@ namespace Sapientia
 		public Toggle(T value, bool enable = true)
 		{
 			this.enable = enable;
-			this.value = value;
+			this.value  = value;
 		}
 
 		public static implicit operator T(Toggle<T> toggle) => toggle.enable ? toggle.value : default;
@@ -62,7 +45,7 @@ namespace Sapientia
 			return new Toggle<T>()
 			{
 				enable = true,
-				value = value
+				value  = value
 			};
 		}
 
