@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Extensions;
@@ -66,6 +67,7 @@ namespace Sapientia.Data
 		}
 	}
 
+	[DebuggerTypeProxy(typeof(ClassPtr<>.ClassPtrProxy))]
 	public unsafe struct ClassPtr<T> : IEquatable<ClassPtr<T>>, IDisposable
 		where T : class
 	{
@@ -131,6 +133,18 @@ namespace Sapientia.Data
 		public static implicit operator ClassPtr<T>(ClassPtr value)
 		{
 			return new ClassPtr<T>(value.Ptr, value.GcHandle);
+		}
+
+		public class ClassPtrProxy
+		{
+			private ClassPtr<T> _ptr;
+
+			public ClassPtrProxy(ClassPtr<T> ptr)
+			{
+				_ptr = ptr;
+			}
+
+			public T Value => _ptr.Value();
 		}
 	}
 }

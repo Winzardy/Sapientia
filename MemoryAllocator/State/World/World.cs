@@ -42,7 +42,6 @@ namespace Sapientia.MemoryAllocator
 		public void Initialize(IEnumerable<ProxyPtr<IWorldStatePartProxy>> stateParts, IEnumerable<ProxyPtr<IWorldSystemProxy>> systems)
 		{
 			using var scope = worldState.GetWorldScope();
-			using var updateScope = worldState.GetUpdateScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
@@ -74,7 +73,6 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(!IsStarted);
 
 			using var scope = worldState.GetWorldScope();
-			using var updateScope = worldState.GetUpdateScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
@@ -101,7 +99,6 @@ namespace Sapientia.MemoryAllocator
 
 			using var scope = worldState.GetWorldScope();
 
-			using var updateScope = worldState.GetUpdateScope();
 			worldState.Tick++;
 			worldState.Time += deltaTime;
 
@@ -131,7 +128,6 @@ namespace Sapientia.MemoryAllocator
 			ScheduleLateUpdate = false;
 
 			using var scope = worldState.GetWorldScope();
-			using var updateScope = worldState.GetUpdateScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
@@ -155,7 +151,6 @@ namespace Sapientia.MemoryAllocator
 		public void Dispose()
 		{
 			using var scope = worldState.GetWorldScope();
-			using var updateScope = worldState.GetUpdateScope();
 
 			SendBeginDisposeMessage();
 
