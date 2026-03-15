@@ -204,7 +204,7 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		[Conditional("DEBUG")]
+		[Conditional(E.DEBUG)]
 		private readonly void CheckNullRef()
 		{
 			if (!_disposeSentinel.IsValid())

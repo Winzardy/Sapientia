@@ -281,6 +281,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator<T>(WorldState worldState) where T: unmanaged
 		{
+			if (Count == 0)
+				return default;
 			return new MemListEnumerator<T>(GetValuePtr<T>(worldState), Count);
 		}
 

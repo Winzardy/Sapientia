@@ -144,7 +144,7 @@ namespace Submodules.Sapientia.Memory
 			_memorySpaces.Insert(hiIndex, hi.ToInt64());
 			_memorySpaces.Insert(lowIndex, low.ToInt64());
 #if MEMORY_TRACKER_DEBUG
-			Debug.LogWarning($"{{nameof(MemoryTracker)}}. Аллоцирована область памяти: {hi.ToInt64()}-{low.ToInt64()}");
+			UnityEngine.Debug.LogWarning($"{nameof(MemoryTracker)}. Аллоцирована область памяти: {hi.ToInt64()}-{low.ToInt64()}");
 #endif
 
 			_allocations.Add(intPtr, size);
@@ -184,7 +184,7 @@ namespace Submodules.Sapientia.Memory
 				var low = _memorySpaces[i * 2];
 				var hi = _memorySpaces[(i * 2) + 1];
 
-				Debug.LogWarning($"{nameof(MemoryTracker)}. Не освобождённая область памяти: {hi}-{low}");
+				UnityEngine.Debug.LogWarning($"{nameof(MemoryTracker)}. Не освобождённая область памяти: {hi}-{low}");
 			}
 #endif
 #endif

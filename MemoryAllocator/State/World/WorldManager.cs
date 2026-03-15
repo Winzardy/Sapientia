@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
-using Sapientia.Extensions;
+using Sapientia.Data;
 using Sapientia.Memory;
 using Sapientia.ServiceManagement;
 
@@ -10,12 +10,17 @@ namespace Sapientia.MemoryAllocator
 {
 	public static class WorldManager
 	{
+		private const ushort FIRST_VERSION = 1;
+
 		private static WorldState _currentWorldState = default;
 		private static World _currentWorld = null;
 
+		private static ushort[] _versions = Array.Empty<ushort>();
 		private static WorldState[] _worldsStates = Array.Empty<WorldState>();
 		private static World[] _worlds = Array.Empty<World>();
-		private static int _count = 0;
+
+		private static SimpleList<int> _freeIndexes = new SimpleList<int>();
+
 		private static int _currentId = 0;
 
 		public static WorldState CurrentWorldState
@@ -59,11 +64,11 @@ namespace Sapientia.MemoryAllocator
 
 		public static void Dispose()
 		{
-			while (_count > 0)
+			for (var i = 0; i < _worlds.Length; i++)
 			{
-				if (!_worlds[0].IsValid)
+				if (_worlds[i] == null || !_worlds[i].IsValid)
 					continue;
-				_worlds[0].Dispose();
+				_worlds[i].Dispose();
 			}
 
 			foreach (var worldState in _worldsStates)
@@ -71,8 +76,10 @@ namespace Sapientia.MemoryAllocator
 				worldState.Dispose();
 			}
 
-			_worlds = Array.Empty<World>();
+			_versions = Array.Empty<ushort>();
 			_worldsStates = Array.Empty<WorldState>();
+			_worlds = Array.Empty<World>();
+			_freeIndexes.Clear();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,19 +89,19 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static WorldScope GetWorldScope(this ref WorldState worldState)
+		public static WorldScope GetWorldScope(this WorldState worldState)
 		{
 			return worldState.WorldId.GetWorldScope(out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static WorldScope GetWorldScope(this ref WorldId worldId)
+		public static WorldScope GetWorldScope(this WorldId worldId)
 		{
 			return worldId.GetWorldScope(out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static WorldScope GetWorldScope(this ref WorldId worldId, out WorldState worldState)
+		public static WorldScope GetWorldScope(this WorldId worldId, out WorldState worldState)
 		{
 			var scope = new WorldScope(_currentWorldState.IsValid && _currentWorldState.WorldId.IsValid() ? CurrentWorldId : default);
 			worldId.SetCurrentWorld();
@@ -149,31 +156,17 @@ namespace Sapientia.MemoryAllocator
 
 		public static WorldState DeserializeWorld(ref StreamBufferReader stream)
 		{
+			throw new NotImplementedException();
 			var world = WorldState.Deserialize(ref stream);
-
-			ref var worldId = ref world.WorldId;
-
-			// На момент создания не должно существовать мира с таким же Id
-			if (worldId.IsValid())
-				throw new System.Exception("World with such Id already exists.");
-
-			Prewarm(_count);
-
-			worldId.index = (ushort) _count++;
-
-			_worldsStates[worldId.index] = world;
-			_currentId = _currentId.Max(worldId.id + 1);
-
 			return world;
 		}
 
 		public static World CreateWorld(int initialSize = -1)
 		{
-			Prewarm(_count);
+			var worldId = AllocateWorldId();
 
-			var worldId = new WorldId(_count++, ++_currentId);
-			ref var worldState = ref _worldsStates[worldId.index];
-			ref var world = ref _worlds[worldId.index];
+			ref var worldState = ref _worldsStates[worldId.id];
+			ref var world = ref _worlds[worldId.id];
 
 			if (worldState.IsValid)
 			{
@@ -189,39 +182,44 @@ namespace Sapientia.MemoryAllocator
 			return world;
 		}
 
-		private static void Prewarm(int index)
+		private static WorldId AllocateWorldId()
 		{
-			if (index >= _worlds.Length)
-				ArrayExt.Expand(ref _worlds, index + 1);
-			if (index >= _worldsStates.Length)
-				ArrayExt.Expand(ref _worldsStates, index + 1);
+			if (_freeIndexes.Count == 0)
+			{
+				_freeIndexes.Add(_versions.Length);
+
+				ArrayExt.Expand(ref _versions, _versions.Length + 1, FIRST_VERSION);
+				ArrayExt.Expand(ref _worldsStates, _worldsStates.Length + 1);
+				ArrayExt.Expand(ref _worlds, _worlds.Length + 1);
+			}
+
+			var id = _freeIndexes.RemoveLast();
+			var version = ++_versions[id];
+			return new WorldId(id, version);
 		}
 
-		public static void RemoveWorld(this ref WorldState world)
+		public static void RemoveWorld(this WorldState world)
 		{
 			world.WorldId.RemoveWorld();
 		}
 
-		public static void RemoveWorld(this ref WorldId worldId)
+		public static void RemoveWorld(this WorldId worldId)
 		{
 			if (!worldId.IsValid())
-				throw new ArgumentException($"{nameof(WorldId)} with such Id [id: {worldId.id}] doesn't exist.");
+				throw new ArgumentException($"{nameof(WorldId)} with such Id [id: {worldId.version}] doesn't exist.");
 
-			_worldsStates[worldId.index].Reset();
+			_worldsStates[worldId.id].Reset();
+			_worlds[worldId.id] = null;
+			_versions[worldId.id]++;
+			_freeIndexes.Add(worldId.id);
 
-			if (_currentWorldState == _worldsStates[worldId.index])
+			if (_currentWorldState == _worldsStates[worldId.id])
 				SetCurrentWorld(null, default(WorldState));
 
-			if (_count > 1)
-			{
-				// Не освобождаем память, будем её переиспользовать
-				// !!! Если её освободить, по непонятной причине происходит краш !!!
-				ValuesExt.Swap(ref _worlds[worldId.index], ref _worlds[_count - 1]);
-				_worldsStates[worldId.index].Swap(ref _worldsStates[_count - 1]);
-			}
+			ServiceContext<WorldId>.RemoveContext(worldId);
 
-			_worlds[_count - 1] = null;
-			_count--;
+			worldId.version = _versions[worldId.id];
+			_worldsStates[worldId.id].SetupNewWorldId(worldId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -229,7 +227,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!worldId.IsValid())
 				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
-			return _worldsStates[worldId.index];
+			return _worldsStates[worldId.id];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -237,7 +235,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!worldId.IsValid())
 				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
-			return _worldsStates[worldId.index];
+			return _worldsStates[worldId.id];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -245,7 +243,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!worldId.IsValid())
 				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
-			return _worlds[worldId.index];
+			return _worlds[worldId.id];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -253,39 +251,38 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!worldId.IsValid())
 				throw new Exception($"World with such Id [id: {worldId}] is invalid.");
-			return _worlds[worldId.index];
+			return _worlds[worldId.id];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsValid(this ref WorldId worldId)
+		public static bool IsValid(this WorldId worldId)
 		{
-			if (worldId.index < _count && _worldsStates[worldId.index].IsValid && _worldsStates[worldId.index].WorldId.id == worldId.id)
-				return true;
-
-			for (ushort i = 0; i < _count; i++)
-			{
-				if (_worldsStates[i].WorldId.id != worldId.id)
-					continue;
-				worldId.index = i;
-				return true;
-			}
-
-			return false;
+			var result = true;
+			NoBurstIsValid(worldId, ref result);
+			return result;
 		}
 
-		public readonly ref struct WorldScope
+#if UNITY_5_3_OR_NEWER
+		[Unity.Burst.BurstDiscard]
+#endif
+		private static void NoBurstIsValid(WorldId worldId, ref bool result)
 		{
-			private readonly WorldId _previousWorld;
+			result = worldId.id < _versions.Length && _versions[worldId.id] == worldId.version;
+		}
+	}
 
-			public WorldScope(WorldId previousWorld)
-			{
-				_previousWorld = previousWorld;
-			}
+	public readonly ref struct WorldScope
+	{
+		private readonly WorldId _previousWorld;
 
-			public void Dispose()
-			{
-				SetCurrentWorld(_previousWorld);
-			}
+		public WorldScope(WorldId previousWorld)
+		{
+			_previousWorld = previousWorld;
+		}
+
+		public void Dispose()
+		{
+			WorldManager.SetCurrentWorld(_previousWorld);
 		}
 	}
 }
