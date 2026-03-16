@@ -4,26 +4,6 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IMemDictionaryEnumerable<TKey, TValue>
-		where TKey: unmanaged, IEquatable<TKey>
-		where TValue: unmanaged
-	{
-		public int LastIndex { get; }
-		public SafePtr<MemDictionary<TKey, TValue>.Entry> GetEntryPtr(WorldState worldState);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemDictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
-		{
-			return new MemDictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemDictionaryEnumerable<TKey, TValue> GetEnumerable(WorldState worldState)
-		{
-			return new (GetEnumerator(worldState));
-		}
-	}
-
 	public readonly ref struct MemDictionaryEnumerable<TKey, TValue>
 		where TKey: unmanaged, IEquatable<TKey>
 		where TValue: unmanaged

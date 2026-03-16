@@ -4,7 +4,6 @@ namespace Sapientia.MemoryAllocator
 {
 	internal struct WorldStateData
 	{
-		public WorldId worldId;
 		public Allocator allocator;
 
 		/// <summary>
@@ -25,9 +24,8 @@ namespace Sapientia.MemoryAllocator
 		public uint tick;
 		public float time;
 
-		public WorldStateData(WorldId worldId, int initialSize)
+		public WorldStateData(int initialSize)
 		{
-			this.worldId = worldId;
 			version = 1;
 			tick = 0u;
 			time = 0f;
@@ -45,7 +43,6 @@ namespace Sapientia.MemoryAllocator
 		{
 			var world = new WorldStateData();
 
-			stream.Read(ref world.worldId);
 			world.allocator = Allocator.Deserialize(ref stream);
 			stream.Read(ref world.serviceRegistry);
 			stream.Read(ref world.version);
@@ -57,11 +54,6 @@ namespace Sapientia.MemoryAllocator
 			world.noStateServiceRegistry = default;
 
 			return world;
-		}
-
-		public void SetupNewWorldId(WorldId newWorldId)
-		{
-			worldId = newWorldId;
 		}
 
 		public void Reset()

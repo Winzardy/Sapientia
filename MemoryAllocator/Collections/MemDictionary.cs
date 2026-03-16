@@ -15,7 +15,7 @@ namespace Sapientia.MemoryAllocator
 	}
 
 	[DebuggerTypeProxy(typeof(MemDictionary<,>.EquatableDictionaryProxy))]
-	public struct MemDictionary<TKey, TValue> : IMemDictionaryEnumerable<TKey, TValue>
+	public struct MemDictionary<TKey, TValue>
 		where TKey : unmanaged, IEquatable<TKey>
 		where TValue : unmanaged
 	{
@@ -480,6 +480,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemDictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
 		{
+			if (Count == 0)
+				return default;
 			return new MemDictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 

@@ -21,14 +21,16 @@ namespace Sapientia
 	{
 		private int _generation;
 		private RegisteredTokenHash _hash;
+		private string? _key;
 
 		public Type ValueType => typeof(T);
 
 		int IBlackboardToken.Generation => _generation;
 
-		internal void Bind(in RegisteredTokenHash hash)
+		internal void Bind(in RegisteredTokenHash hash, string? key)
 		{
 			_hash = hash;
+			_key  = key;
 		}
 
 		public void Dispose() => Release(true);
@@ -53,6 +55,7 @@ namespace Sapientia
 		{
 			_hash = default;
 			_generation++;
+			_key = null;
 		}
 
 		IBlackboardToken IBlackboardToken.Clone(Blackboard blackboard)
@@ -75,7 +78,7 @@ namespace Sapientia
 		internal RegisteredTokenHash(Blackboard blackboard, string? key)
 		{
 			this.blackboard = blackboard;
-			this.key = key;
+			this.key        = key;
 		}
 
 		public bool Equals(RegisteredTokenHash other)

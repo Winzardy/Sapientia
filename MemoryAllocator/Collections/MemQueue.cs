@@ -4,7 +4,7 @@ using Sapientia.Data;
 namespace Sapientia.MemoryAllocator
 {
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemQueue<>.QueueProxy))]
-	public struct MemQueue<T> : IMemCircularBufferEnumerable<T> where T : unmanaged
+	public struct MemQueue<T> where T : unmanaged
 	{
 		private const int _minimumGrow = 4;
 		private const int _growFactor = 200;
@@ -136,6 +136,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemCircularBufferEnumerator<T> GetEnumerator(WorldState worldState)
 		{
+			if (Count == 0)
+				return default;
 			return new MemCircularBufferEnumerator<T>(GetValuePtr(worldState), HeadIndex, Count, Capacity);
 		}
 
