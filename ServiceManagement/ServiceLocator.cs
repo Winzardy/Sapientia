@@ -13,23 +13,6 @@ namespace Sapientia.ServiceManagement
 			_supplier = supplier;
 		}
 
-		[Obsolete("Низя")]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService GetOrCreate<TService>() where TService : new()
-		{
-			if (TryGetFromSupplier(out TService service))
-				return service;
-
-			return ServiceLocator<TService>.GetOrCreate<TService>();
-		}
-
-		[Obsolete("Низя")]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void GetOrCreate<TService>(out TService service) where TService : new()
-		{
-			service = GetOrCreate<TService>();
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Get<TService>()
 		{

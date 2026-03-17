@@ -30,14 +30,6 @@ namespace Sapientia.ServiceManagement
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TService GetOrCreate<T>() where T : TService, new()
-		{
-			if (Instance == null)
-				return Create<T>();
-			return Instance;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGet(out TService service)
 		{
 			service = Instance;
