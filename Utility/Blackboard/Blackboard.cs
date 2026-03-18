@@ -20,6 +20,7 @@ namespace Sapientia
 	public partial class Blackboard : IPoolable, IDisposable
 	{
 		private HashSet<IBlackboardToken>? _tokens;
+
 		public event Action Released;
 
 		protected internal bool _active = true;
@@ -104,7 +105,7 @@ namespace Sapientia
 		public BlackboardToken Register<T>(in T value, string? key = null)
 		{
 			_tokens ??= HashSetPool<IBlackboardToken>.Get();
-			var token = Blackboard<T>.Register(in value, this, key);
+			var token = Blackboard<T>.Register(this, in value, key);
 			_tokens.Add(token);
 			return token;
 		}
@@ -196,7 +197,7 @@ namespace Sapientia
 			}
 		}
 
-		internal static BlackboardToken<T> Register(in T value, Blackboard blackboard, string? key = null)
+		internal static BlackboardToken<T> Register(Blackboard blackboard, in T value, string? key = null)
 		{
 			var map = EnsureMap();
 			var hash = ToHash(blackboard, key);

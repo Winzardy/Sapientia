@@ -130,7 +130,6 @@ namespace SharedLogic
 			data.timestamp = _dateTime.Ticks;
 		}
 
-		[Serializable]
 		public struct SaveData
 		{
 			public long timestamp;

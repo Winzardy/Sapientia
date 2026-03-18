@@ -4,7 +4,7 @@ using Sapientia.Pooling;
 
 namespace Sapientia
 {
-	public static class RollUtility
+	public static class WeightRollUtility
 	{
 		/// <summary>
 		/// Возвращает index чтобы не было боксинга
@@ -60,7 +60,7 @@ namespace Sapientia
 		}
 
 		public static bool Roll<T, TContext>(this IList<T> elements, TContext context, IRandomizer<int> random, out int index)
-			where T : IWeightableWithEvaluator<TContext>
+			where T : IWeightable<TContext>
 		{
 			index = 0;
 
@@ -89,10 +89,10 @@ namespace Sapientia
 		}
 
 		public static void Fill<T, TContext>(this IList<T> elements, TContext context, List<int> fill)
-			where T : IWeightableWithEvaluator<TContext>
+			where T : IWeightable<TContext>
 		{
 			for (int i = 0; i < elements.Count; i++)
-				fill.Add(elements[i].Weight.Evaluate(context));
+				fill.Add(elements[i].EvaluatedWeight.Evaluate(context));
 		}
 
 		// Cтоило ли использовать Sum() из LINQ?

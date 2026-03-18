@@ -11,7 +11,7 @@ namespace Trading
 		protected internal IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
 		{
 			var randomizer = board.Get<IRandomizer<int>>();
-			items.Roll<WeightedReward, Blackboard>(board, randomizer, out var index);
+			items.Roll<TradeWeightedRewardOption, Blackboard>(board, randomizer, out var index);
 			foreach (var reward in items[index].reward.OnEnumerateActual(board))
 				yield return reward;
 		}

@@ -61,7 +61,7 @@ namespace Sapientia
 		IBlackboardToken IBlackboardToken.Clone(Blackboard blackboard)
 		{
 			var value = Blackboard<T>.Get(_hash.blackboard);
-			return Blackboard<T>.Register(in value, blackboard, _hash.key);
+			return Blackboard<T>.Register(blackboard, in value, _hash.key);
 		}
 
 		public static implicit operator BlackboardToken(BlackboardToken<T> token) => new(token, token._generation);
