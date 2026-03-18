@@ -1,9 +1,10 @@
 using System;
 using Sapientia;
 using Sapientia.Evaluators;
-using Sapientia.Pooling;
-using Sirenix.OdinInspector;
 using UnityEngine;
+#if CLIENT
+using Sirenix.OdinInspector;
+#endif
 
 namespace Trading
 {
