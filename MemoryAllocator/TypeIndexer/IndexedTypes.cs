@@ -38,6 +38,19 @@ namespace Sapientia.TypeIndexer
 		/// </summary>
 		private static System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> _typeToDelegateIndex;
 
+		/// <summary>
+		/// Количество дочерних типов для каждого контекста (интерфейса). Индексируется по TypeIndex контекста.
+		/// </summary>
+		private static int[] _contextCounts = Array.Empty<int>();
+		/// <summary>
+		/// (contextTypeIndex, childTypeIndex) → последовательный 0-based индекс внутри контекста.
+		/// </summary>
+		private static System.Collections.Generic.Dictionary<(TypeIndex, TypeIndex), ContextTypeIndex> _contextTypeIndices = new();
+		/// <summary>
+		/// Все дочерние TypeIndex для каждого контекста, упорядоченные по ContextTypeIndex.
+		/// </summary>
+		private static TypeIndex[][] _contextChildren = Array.Empty<TypeIndex[]>();
+
 		public static void Initialize(System.Collections.Generic.Dictionary<Type, TypeIndex> typeToIndex,
 			Type[] types,
 			Delegate[] delegates, System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> typeToDelegateIndex)
@@ -46,6 +59,16 @@ namespace Sapientia.TypeIndexer
 			_types = types;
 			_delegates = delegates;
 			_typeToDelegateIndex = typeToDelegateIndex;
+		}
+
+		public static void InitializeContextIndices(
+			int[] contextCounts,
+			System.Collections.Generic.Dictionary<(TypeIndex, TypeIndex), ContextTypeIndex> contextTypeIndices,
+			TypeIndex[][] contextChildren)
+		{
+			_contextCounts = contextCounts;
+			_contextTypeIndices = contextTypeIndices;
+			_contextChildren = contextChildren;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -102,6 +125,37 @@ namespace Sapientia.TypeIndexer
 		public static Type GetType(TypeIndex typeIndex)
 		{
 			return _types[typeIndex.index];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int GetContextCount(TypeIndex contextTypeIndex)
+		{
+			var index = contextTypeIndex.index;
+			if (index < 0 || index >= _contextCounts.Length)
+			{
+				return 0;
+			}
+			return _contextCounts[index];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void GetContextTypeIndex(TypeIndex contextTypeIndex, TypeIndex typeIndex, out ContextTypeIndex contextIndex)
+		{
+			if (!_contextTypeIndices.TryGetValue((contextTypeIndex, typeIndex), out contextIndex))
+			{
+				contextIndex = ContextTypeIndex.Empty;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TypeIndex[] GetContextChildren(TypeIndex contextTypeIndex)
+		{
+			var index = contextTypeIndex.index;
+			if (index < 0 || index >= _contextChildren.Length)
+			{
+				return Array.Empty<TypeIndex>();
+			}
+			return _contextChildren[index] ?? Array.Empty<TypeIndex>();
 		}
 	}
 }

@@ -59,7 +59,7 @@ namespace Sapientia.TypeIndexer
 				}
 			}
 
-			return types.ToArray();
+			return types.OrderBy(t => t.FullName).ToArray();
 		}
 
 		private static string CreateTypeIndexProvider()
@@ -105,7 +105,12 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine();
 			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.Initialize)}(types, indexToType, delegateIndexToDelegate, delegates);");
 			sourceBuilder.AppendLine();
+			var contextMappings = BuildContextMappings(types);
+			sourceBuilder.Append(GenerateContextIndicesBody(types, contextMappings));
+			sourceBuilder.AppendLine();
 			sourceBuilder.Append(GenerateTypeIndexInitialization(types));
+			sourceBuilder.AppendLine();
+			sourceBuilder.Append(GenerateContextTypeIndexInitialization(types, contextMappings));
 			sourceBuilder.AppendLine("		}");
 			sourceBuilder.AppendLine("	}");
 			sourceBuilder.AppendLine("#endif");
@@ -182,6 +187,81 @@ namespace Sapientia.TypeIndexer
 			foreach (var type in types)
 			{
 				sourceBuilder.AppendLine($"			_ = {nameof(TypeIndex)}<{type.GetFullName()}>.typeIndex;");
+			}
+
+			return sourceBuilder.ToString();
+		}
+
+		private static Dictionary<int, List<int>> BuildContextMappings(Type[] types)
+		{
+			var contextToChildren = new Dictionary<int, List<int>>();
+
+			for (var contextIndex = 0; contextIndex < types.Length; contextIndex++)
+			{
+				var contextType = types[contextIndex];
+				if (!contextType.IsInterface)
+					continue;
+
+				var children = new List<int>();
+				for (var childIndex = 0; childIndex < types.Length; childIndex++)
+				{
+					if (childIndex == contextIndex)
+						continue;
+					var childType = types[childIndex];
+					if (childType.IsInterface || childType.IsAbstract)
+						continue;
+					if (contextType.IsAssignableFrom(childType))
+					{
+						children.Add(childIndex);
+					}
+				}
+
+				if (children.Count > 0)
+				{
+					contextToChildren[contextIndex] = children;
+				}
+			}
+
+			return contextToChildren;
+		}
+
+		private static string GenerateContextIndicesBody(Type[] types, Dictionary<int, List<int>> contextMappings)
+		{
+			var sourceBuilder = new StringBuilder();
+			sourceBuilder.AppendLine($"			var contextCounts = new int[indexToType.Length];");
+			sourceBuilder.AppendLine($"			var contextTypeIndices = new Dictionary<({nameof(TypeIndex)}, {nameof(TypeIndex)}), {nameof(ContextTypeIndex)}>();");
+			sourceBuilder.AppendLine($"			var contextChildren = new {nameof(TypeIndex)}[indexToType.Length][];");
+			sourceBuilder.AppendLine();
+
+			foreach (var (contextIndex, children) in contextMappings)
+			{
+				sourceBuilder.AppendLine($"			contextCounts[{contextIndex}] = {children.Count};");
+				sourceBuilder.Append($"			contextChildren[{contextIndex}] = new {nameof(TypeIndex)}[] {{ ");
+				sourceBuilder.Append(string.Join(", ", children));
+				sourceBuilder.AppendLine(" };");
+				for (var i = 0; i < children.Count; i++)
+				{
+					sourceBuilder.AppendLine($"			contextTypeIndices.Add(({contextIndex}, {children[i]}), {i});");
+				}
+				sourceBuilder.AppendLine();
+			}
+
+			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.InitializeContextIndices)}(contextCounts, contextTypeIndices, contextChildren);");
+
+			return sourceBuilder.ToString();
+		}
+
+		private static string GenerateContextTypeIndexInitialization(Type[] types, Dictionary<int, List<int>> contextMappings)
+		{
+			var sourceBuilder = new StringBuilder();
+			foreach (var (contextIndex, children) in contextMappings)
+			{
+				var contextTypeName = types[contextIndex].GetFullName();
+				foreach (var childIndex in children)
+				{
+					var childTypeName = types[childIndex].GetFullName();
+					sourceBuilder.AppendLine($"			_ = {nameof(TypeIndex)}<{contextTypeName}, {childTypeName}>.typeIndex;");
+				}
 			}
 
 			return sourceBuilder.ToString();

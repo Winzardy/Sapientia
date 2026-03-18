@@ -6,10 +6,27 @@ namespace Sapientia.TypeIndexer
 	public static class TypeIndex<T>
 	{
 		public static readonly TypeIndex typeIndex;
+		public static readonly int Count;
 
 		static TypeIndex()
 		{
 			IndexedTypes.GetTypeIndex(typeof(T), out typeIndex);
+			Count = IndexedTypes.GetContextCount(typeIndex);
+		}
+	}
+
+	public static class TypeIndex<TContext, TType>
+		where TContext : IIndexedType
+		where TType : IIndexedType
+	{
+		public static readonly ContextTypeIndex typeIndex;
+
+		static TypeIndex()
+		{
+			IndexedTypes.GetContextTypeIndex(
+				TypeIndex<TContext>.typeIndex,
+				TypeIndex<TType>.typeIndex,
+				out typeIndex);
 		}
 	}
 
