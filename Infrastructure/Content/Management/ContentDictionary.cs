@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Sapientia;
 using Sapientia.Collections;
 
 namespace Content.Management
@@ -15,6 +14,9 @@ namespace Content.Management
 
 		// Можно будет переделать на FrozenDictionary, когда его завезут в Unity
 		private Dictionary<string, int> _idToIndex;
+
+		// Постепенно прогревается при запросе Id для объекта!
+		private Dictionary<SerializableGuid, string> _keyToId;
 
 		private TValue[] _values;
 
@@ -78,7 +80,7 @@ namespace Content.Management
 			_idToIndex = null;
 			_keyToIndex.Clear();
 			_keyToIndex = null;
-			_values = null;
+			_values     = null;
 		}
 
 		private void Fill(Dictionary<SerializableGuid, TValue> source)
@@ -93,9 +95,10 @@ namespace Content.Management
 			}
 			else
 			{
-				_values = new TValue[source.Count];
+				_values     = new TValue[source.Count];
 				_keyToIndex = new Dictionary<SerializableGuid, int>(source.Count);
-				_idToIndex = new Dictionary<string, int>(source.Count);
+				_idToIndex  = new Dictionary<string, int>(source.Count);
+				_keyToId    = new Dictionary<SerializableGuid, string>();
 			}
 
 			int index = 0;
@@ -106,7 +109,10 @@ namespace Content.Management
 				_keyToIndex[guid] = index;
 
 				if (!value.Id.IsNullOrEmpty())
+				{
+					_keyToId[guid]       = value.Id;
 					_idToIndex[value.Id] = index;
+				}
 
 				value.SetIndex(index);
 				index++;
@@ -129,6 +135,21 @@ namespace Content.Management
 			}
 
 			return _temporary.TryGetValue(guid, out value);
+		}
+
+		internal string GetId(in SerializableGuid guid)
+		{
+			if (!_keyToId.TryGetValue(guid, out var id))
+				_keyToId[guid] = id = guid.ToString();
+			return id;
+		}
+
+		internal string GetId(int index)
+		{
+			ref readonly var guid = ref _values[index].Guid;
+			if (!_keyToId.TryGetValue(guid, out var id))
+				_keyToId[guid] = id = guid.ToString();
+			return id;
 		}
 	}
 }

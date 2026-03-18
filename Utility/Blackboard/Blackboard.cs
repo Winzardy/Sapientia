@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using Sapientia.Collections;
-using Sapientia.Extensions;
 using Sapientia.Pooling;
-using Sapientia.Pooling.Concurrent;
 
 namespace Sapientia
 {
@@ -20,6 +16,7 @@ namespace Sapientia
 	public partial class Blackboard : IPoolable, IDisposable
 	{
 		private HashSet<IBlackboardToken>? _tokens;
+		private Dictionary<Type, IBlackboardStorage> _typeToStorage;
 
 		public event Action Released;
 
@@ -27,9 +24,10 @@ namespace Sapientia
 
 		public Blackboard()
 		{
+			_typeToStorage = new Dictionary<Type, IBlackboardStorage>();
 		}
 
-		public Blackboard(Blackboard? source = null)
+		public Blackboard(Blackboard? source = null) : this()
 		{
 			if (source?._tokens == null)
 				return;
@@ -49,16 +47,39 @@ namespace Sapientia
 			OnDispose();
 		}
 
+		private void ReleaseInternal()
+		{
+			_active = false;
+
+			if (_tokens != null)
+			{
+				foreach (var token in _tokens)
+					token.Release(false);
+
+				StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _tokens);
+			}
+
+			OnReleaseSimulationMode();
+
+			foreach (var storage in _typeToStorage.Values)
+				storage.ReleaseToPool();
+
+			_typeToStorage.Clear();
+
+			Released?.Invoke();
+			OnRelease();
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Contains<T>(string? key = null)
 		{
 			if (!_active)
 			{
 				var keyLabel = key != null ? $" ({key})" : string.Empty;
-				throw GetArgumentException($"Attempt to get {typeof(T).Name}{keyLabel} from an inactive Blackboard");
+				throw new BlackboardException($"Attempt to get {typeof(T).Name}{keyLabel} from an inactive Blackboard");
 			}
 
-			return Blackboard<T>.Contains(this, key);
+			return TryGetStorage<T>(out var storage) && storage!.Contains(key);
 		}
 
 		public bool Any<T>()
@@ -81,10 +102,16 @@ namespace Sapientia
 			if (!_active)
 			{
 				var keyLabel = key != null ? $" ({key})" : string.Empty;
-				throw GetArgumentException($"Attempt to get {typeof(T).Name}{keyLabel} from an inactive Blackboard");
+				throw new BlackboardException($"Attempt to get {typeof(T).Name}{keyLabel} from an inactive Blackboard");
 			}
 
-			return Blackboard<T>.Get(this, key);
+			if (!TryGetStorage<T>(out var storage))
+			{
+				var keyLabel = key != null ? $" with key [{key}]" : string.Empty;
+				throw new BlackboardException($"Attempt to get value of type '{typeof(T).Name}'{keyLabel}, but it is not registered");
+			}
+
+			return storage!.Get(key);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -105,14 +132,22 @@ namespace Sapientia
 		public BlackboardToken Register<T>(in T value, string? key = null)
 		{
 			_tokens ??= HashSetPool<IBlackboardToken>.Get();
-			var token = Blackboard<T>.Register(this, in value, key);
+
+			var storage = GetOrCreateStorage<T>();
+			var token = storage.Register(in value, key);
 			_tokens.Add(token);
 			return token;
 		}
 
 		public void Overwrite<T>(in T value, string? key = null)
 		{
-			Blackboard<T>.Overwrite(in value, this, key);
+			if (!TryGetStorage<T>(out var storage))
+			{
+				var keyLabel = key != null ? $" with key [{key}]" : string.Empty;
+				throw new BlackboardException($"Attempt to get value of type '{typeof(T).Name}'{keyLabel}, but it is not registered");
+			}
+
+			storage.Overwrite(in value, key);
 		}
 
 		internal void ReleaseToken(IBlackboardToken token)
@@ -121,30 +156,11 @@ namespace Sapientia
 				return;
 
 			var msg = $"{Name}: ${token.ValueType} not registered";
-			throw GetArgumentException(msg);
+			throw new BlackboardException(msg);
 		}
 
 		void IPoolable.OnGet() => _active = true;
-
 		void IPoolable.Release() => ReleaseInternal();
-
-		private void ReleaseInternal()
-		{
-			_active = false;
-
-			if (_tokens != null)
-			{
-				foreach (var token in _tokens)
-					token.Release(false);
-
-				StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _tokens);
-			}
-
-			OnReleaseSimulationMode();
-
-			Released?.Invoke();
-			OnRelease();
-		}
 
 		protected virtual void OnRelease()
 		{
@@ -154,119 +170,43 @@ namespace Sapientia
 		{
 		}
 
+		private bool TryGetStorage<T>(out IBlackboardStorage<T>? storage)
+		{
+			if (_typeToStorage.TryGetValue(typeof(T), out var rawStorage))
+			{
+				storage = (IBlackboardStorage<T>) rawStorage;
+				return true;
+			}
+
+			storage = null;
+			return false;
+		}
+
+		private IBlackboardStorage<T> GetOrCreateStorage<T>()
+		{
+			if (_typeToStorage.TryGetValue(typeof(T), out var rawStorage))
+				return (IBlackboardStorage<T>) rawStorage;
+
+			var newStorage = Pool<BlackboardStorage<T>>.Get();
+			newStorage.Bind(this);
+			_typeToStorage.Add(typeof(T), newStorage);
+
+			return newStorage;
+		}
+
 		protected virtual string Name => GetType().Name;
 
-		protected virtual Exception GetArgumentException(object msg) => new ArgumentException(msg.ToString());
-
 		internal string GetName() => Name;
-		internal Exception GetException(object msg) => GetArgumentException(msg);
 
 		public sealed override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
 
 		public static implicit operator bool(Blackboard? bb) => bb != null;
 	}
 
-	internal static class Blackboard<T>
+	public class BlackboardException : ArgumentException
 	{
-		private static ConcurrentDictionary<RegisteredTokenHash, Entry>? _boardToEntry;
-
-		internal static bool Contains(Blackboard blackboard, string? key = null)
+		public BlackboardException(string msg) : base(msg)
 		{
-			var hash = ToHash(blackboard, key);
-			return _boardToEntry != null && _boardToEntry.ContainsKey(hash);
-		}
-
-		internal static T Get(Blackboard blackboard, string? key = null)
-		{
-			// CollectionsMarshal.GetValueRefOrNullRef
-			var map = EnsureMap();
-			if (map == null)
-				throw GetException();
-
-			var hash = ToHash(blackboard, key);
-			if (!map.TryGetValue(hash, out var entry))
-				throw GetException();
-
-			return entry.value;
-
-			Exception GetException()
-			{
-				var msg = $"{blackboard.GetName()}: ${typeof(T)} not found" +
-					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
-				return blackboard.GetException(msg);
-			}
-		}
-
-		internal static BlackboardToken<T> Register(Blackboard blackboard, in T value, string? key = null)
-		{
-			var map = EnsureMap();
-			var hash = ToHash(blackboard, key);
-			var newEntry = Pool<Entry>.Get();
-			{
-				newEntry.value = value;
-			}
-			if (!map.TryAdd(hash, newEntry))
-			{
-				Pool<Entry>.Release(newEntry);
-
-				var msg = $"{blackboard.GetName()}: {typeof(T)} already registered" +
-					(!key.IsNullOrEmpty() ? $" with key [ {key} ]" : "");
-				throw blackboard.GetException(msg);
-			}
-
-			var token = Pool<BlackboardToken<T>>.Get();
-			token.Bind(in hash, key);
-			return token;
-		}
-
-		internal static void Overwrite(in T value, Blackboard blackboard, string? key = null)
-		{
-			var hash = ToHash(blackboard, key);
-			if (_boardToEntry == null || !_boardToEntry.TryGetValue(hash, out var entry))
-			{
-				var msg = $"{blackboard.GetName()}: {typeof(T)} not registered" +
-					(!key.IsNullOrEmpty() ? $" with key [ {key} ]" : "");
-				throw blackboard.GetException(msg);
-			}
-
-			entry.value = value;
-		}
-
-		internal static void Unregister(BlackboardToken<T> token)
-		{
-			if (_boardToEntry == null || !_boardToEntry.TryRemove(token.Hash, out var entry))
-			{
-				var blackboard = token.Blackboard;
-				var key = token.Key;
-				var msg = $"{blackboard.GetName()}: {typeof(T)} not registered" +
-					(!key.IsNullOrEmpty() ? $" by key [ {key} ]" : "");
-				throw blackboard.GetException(msg);
-			}
-
-			Pool<Entry>.Release(entry);
-			Pool<BlackboardToken<T>>.Release(token);
-		}
-
-		private static ConcurrentDictionary<RegisteredTokenHash, Entry> EnsureMap()
-		{
-			var map = _boardToEntry;
-			if (map != null)
-				return map;
-
-			var fresh = new ConcurrentDictionary<RegisteredTokenHash, Entry>();
-			var raced = Interlocked.CompareExchange(ref _boardToEntry, fresh, null);
-			return raced ?? fresh;
-		}
-
-		private static RegisteredTokenHash ToHash(Blackboard blackboard, string? key) => new(blackboard, key);
-
-		// вместо CollectionsMarshal.GetValueRefOrNullRef... которого нет в Unity
-		internal class Entry : IPoolable
-		{
-			internal T value;
-
-			void IPoolable.Release()
-				=> value = default;
 		}
 	}
 
@@ -276,6 +216,7 @@ namespace Sapientia
 		private readonly int _generation;
 
 		public bool IsValid => _token != null && _token.Generation == _generation;
+		internal IBlackboardToken Token { get => _token; }
 
 		internal BlackboardToken(IBlackboardToken token, int generation)
 		{

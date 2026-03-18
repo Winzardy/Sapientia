@@ -75,9 +75,6 @@ namespace Trading
 			if (_restoreSources != null && _restoreSources.IsEmpty())
 				BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
 		}
-
-		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
-			base.GetArgumentException(msg);
 	}
 
 	public static class TradeboardUtility

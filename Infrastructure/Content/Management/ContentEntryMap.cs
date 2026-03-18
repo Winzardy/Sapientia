@@ -63,7 +63,7 @@ namespace Content.Management
 			if (!_clearSubscribe)
 			{
 				ContentEntryMap.Cleared += OnCleared;
-				_clearSubscribe = true;
+				_clearSubscribe         =  true;
 			}
 
 			if (_dictionary.IsBuilding)
@@ -133,8 +133,8 @@ namespace Content.Management
 		public static ref readonly T Get(string id) => ref _dictionary[id].Value;
 		public static ref readonly T Get(int index) => ref _dictionary[index].Value;
 
-		public static string ToId(in SerializableGuid guid) => _dictionary[in guid].Id;
-		public static string ToId(int index) => _dictionary[index].Id;
+		public static string ToId(in SerializableGuid guid) => _dictionary.GetId(in guid);
+		public static string ToId(int index) => _dictionary.GetId(index);
 
 		public static ref readonly SerializableGuid ToGuid(string id) => ref _dictionary[id].Guid;
 		public static ref readonly SerializableGuid ToGuid(int index) => ref _dictionary[index].Guid;

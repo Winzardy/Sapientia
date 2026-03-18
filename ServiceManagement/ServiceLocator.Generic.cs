@@ -1,3 +1,4 @@
+using System;
 using Sapientia.Collections;
 using Sapientia.Data;
 using System.Runtime.CompilerServices;
@@ -29,6 +30,7 @@ namespace Sapientia.ServiceManagement
 			return Instance != null && Instance.Equals(service);
 		}
 
+		[Obsolete("Низя")]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService GetOrCreate<T>() where T : TService, new()
 		{
