@@ -1,9 +1,10 @@
 using System;
 using Sapientia;
 using Sapientia.Evaluators;
-using Sapientia.Pooling;
-using Sirenix.OdinInspector;
 using UnityEngine;
+#if CLIENT
+using Sirenix.OdinInspector;
+#endif
 
 namespace Trading
 {
@@ -13,7 +14,7 @@ namespace Trading
 		public const string ERROR_CATEGORY = "Collection";
 
 		// ReSharper disable once UseArrayEmptyMethod
-		public TradeWeightedRewardOption[] items = new TradeWeightedRewardOption[0];
+		public TradeWeightedRewardItem[] items = new TradeWeightedRewardItem[0];
 		public EvaluatedValue<Blackboard, int> count = 1;
 #if CLIENT
 		[ShowIf(nameof(CanShowRollMode))]
@@ -25,7 +26,7 @@ namespace Trading
 			var randomizer = board.Get<IRandomizer<int>>();
 
 			var evaluatedCount = count.Evaluate(board);
-			foreach (var index in items.RollMany<TradeWeightedRewardOption, Blackboard>(board, rollMode, evaluatedCount, randomizer))
+			foreach (var index in items.RollMany<TradeWeightedRewardItem, Blackboard>(board, rollMode, evaluatedCount, randomizer))
 			{
 				if (!items[index].reward.CanExecute(board, out error))
 					return false;
@@ -39,7 +40,7 @@ namespace Trading
 		{
 			var randomizer = board.Get<IRandomizer<int>>();
 			var evaluatedCount = count.Evaluate(board);
-			foreach (var index in items.RollMany<TradeWeightedRewardOption, Blackboard>(board, rollMode, evaluatedCount, randomizer))
+			foreach (var index in items.RollMany<TradeWeightedRewardItem, Blackboard>(board, rollMode, evaluatedCount, randomizer))
 			{
 				if (!items[index].reward.Execute(board))
 					return false;
@@ -52,7 +53,7 @@ namespace Trading
 	}
 
 	[Serializable]
-	public class TradeWeightedRewardOption : IWeightable<Blackboard>
+	public class TradeWeightedRewardItem : IWeightable<Blackboard>
 	{
 		public EvaluatedValue<Blackboard, int> weight = 1;
 

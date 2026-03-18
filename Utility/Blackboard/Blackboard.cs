@@ -147,7 +147,7 @@ namespace Sapientia
 				throw new BlackboardException($"Attempt to get value of type '{typeof(T).Name}'{keyLabel}, but it is not registered");
 			}
 
-			storage.Overwrite(in value, key);
+			storage!.Overwrite(in value, key);
 		}
 
 		internal void ReleaseToken(IBlackboardToken token)
@@ -190,7 +190,6 @@ namespace Sapientia
 			var newStorage = Pool<BlackboardStorage<T>>.Get();
 			newStorage.Bind(this);
 			_typeToStorage.Add(typeof(T), newStorage);
-
 			return newStorage;
 		}
 

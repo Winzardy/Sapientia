@@ -16,9 +16,8 @@ namespace Sapientia
 		/// </remarks>
 		public bool IsSimulationMode => _isSimulationMode;
 
-		/// <remarks>
-		/// ⚠️ Автоочищается при Dispose, отписка не обязательна
-		/// </remarks>
+		/// <inheritdoc cref="SafeSubscriptionAttribute"/>
+		[SafeSubscription]
 		public event Action<bool> SimulationModeChanged;
 
 		protected internal void SetSimulationMode(bool value)
@@ -44,7 +43,7 @@ namespace Sapientia
 
 		private void OnReleaseSimulationMode()
 		{
-			_isSimulationMode = false;
+			_isSimulationMode       = false;
 			_simulationRequestCount = 0;
 
 			SimulationModeChanged = null;

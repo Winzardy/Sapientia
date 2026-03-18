@@ -5,6 +5,7 @@ namespace SharedLogic
 	public enum CommandPriority
 	{
 		Passive,
+
 		/// <summary>
 		/// Наличие команды с этим приоритетом приводит к немедленной попытке отправить все команды
 		/// </summary>
@@ -13,10 +14,9 @@ namespace SharedLogic
 
 	public interface ICommand
 	{
-		public CommandPriority Priority => CommandPriority.Passive;
-
-		public bool Validate(ISharedRoot root, out Exception exception);
-		public void Execute(ISharedRoot root);
+		CommandPriority Priority => CommandPriority.Passive;
+		bool Validate(ISharedRoot root, out Exception exception);
+		void Execute(ISharedRoot root);
 	}
 
 	// TODO: необходимо проверять user permission на исполнение таких команд

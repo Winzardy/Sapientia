@@ -1,9 +1,38 @@
+using System.Collections.Generic;
+using Content;
 using Sapientia.Pooling;
 
 namespace Trading
 {
 	public static partial class TradingUtility
 	{
+		public static IEnumerable<TradeReward> EnumerateActualReward(this ContentReference<TradeConfig> tradeRef, Tradeboard board)
+			=> tradeRef.Read().EnumerateActualReward(board);
+
+		public static IEnumerable<TradeReward> EnumerateActualReward(this TradeConfig trade, Tradeboard board)
+		{
+			using (board.SimulationModeScope())
+			{
+				foreach (var _ in trade.cost.EnumerateActualInternal(board))
+				{
+					// Нужно перебрать цену, так как без ее перебора будет не валидная награда, так как цена может двигать рандом...
+				}
+
+				foreach (var actualReward in trade.reward.EnumerateActualInternal(board))
+					yield return actualReward;
+			}
+		}
+
+		public static IEnumerable<TradeCost> EnumerateActualCost(this ContentReference<TradeConfig> tradeRef, Tradeboard board)
+			=> tradeRef.Read().EnumerateActualCost(board);
+
+		public static IEnumerable<TradeCost> EnumerateActualCost(this TradeConfig trade, Tradeboard board)
+		{
+			using (board.SimulationModeScope())
+				foreach (var actualCost in trade.cost.EnumerateActualInternal(board))
+					yield return actualCost;
+		}
+
 		internal static bool CanExecute(this TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
 			var result = true;
@@ -46,7 +75,7 @@ namespace Trading
 
 		public TradeExecuteError(TradePayError? payError, TradeReceiveError? receiveError)
 		{
-			this.payError = payError;
+			this.payError     = payError;
 			this.receiveError = receiveError;
 		}
 

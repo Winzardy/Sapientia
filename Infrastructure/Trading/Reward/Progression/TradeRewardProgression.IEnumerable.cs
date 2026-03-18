@@ -7,11 +7,11 @@ namespace Trading
 #endif
 	public partial class TradeRewardProgression //: IEnumerable<TradeReward>
 	{
-		protected internal override IEnumerable<TradeReward> OnEnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> EnumerateActualInternal(Tradeboard board)
 		{
 			foreach (var reward in GetCurrentStage(board)
 				.reward
-				.OnEnumerateActual(board))
+				.EnumerateActualInternal(board))
 				yield return reward;
 		}
 	}

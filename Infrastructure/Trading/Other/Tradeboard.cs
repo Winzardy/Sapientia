@@ -85,27 +85,34 @@ namespace Trading
 
 		public static void Bind(this Tradeboard board, in ContentReference<TradeCost> reference)
 		{
-			Bind(board, reference.GetTradeId());
+			Bind(board, reference.GetTradeId(), false);
 		}
 
 		public static void Bind(this Tradeboard board, in ContentReference<TradeReward> reference)
 		{
-			Bind(board, reference.GetTradeId());
+			Bind(board, reference.GetTradeId(), false);
 		}
 
 		public static void Bind(this Tradeboard board, in ContentEntry<TradeCost> reference)
 		{
-			Bind(board, reference.GetTradeId());
+			Bind(board, reference.GetTradeId(), false);
 		}
 
 		public static void Bind(this Tradeboard board, in TradeConfig config)
 		{
-			Bind(board, config.Id);
+			Bind(board, config.Id, false);
 		}
 
-		public static void Bind(this Tradeboard board, string tradeId)
+		public static void Bind(this Tradeboard board, string tradeId, bool warning = true)
 		{
-			board.SetId(tradeId);
+			if (board.Id.IsNullOrEmpty())
+			{
+				board.SetId(tradeId);
+			}
+			else if (warning)
+			{
+				TradingDebug.LogWarning($"Tradeboard is already bound to '{board.Id}', attempted to bind '{tradeId}'");
+			}
 		}
 	}
 }

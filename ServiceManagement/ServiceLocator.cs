@@ -13,6 +13,7 @@ namespace Sapientia.ServiceManagement
 			_supplier = supplier;
 		}
 
+#if !CLIENT && !UNITY_EDITOR
 		[Obsolete("Низя")]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService GetOrCreate<TService>() where TService : new()
@@ -29,6 +30,7 @@ namespace Sapientia.ServiceManagement
 		{
 			service = GetOrCreate<TService>();
 		}
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Get<TService>()
