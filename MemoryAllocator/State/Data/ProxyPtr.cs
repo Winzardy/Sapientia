@@ -36,7 +36,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ProxyPtr(IndexedPtr indexedPtr)
 		{
-			proxy = IndexedTypes.GetProxy<T>(indexedPtr.typeIndex);
+			proxy = IndexedTypes.GetProxy<T>(indexedPtr.typeId);
 			this.indexedPtr = indexedPtr;
 		}
 

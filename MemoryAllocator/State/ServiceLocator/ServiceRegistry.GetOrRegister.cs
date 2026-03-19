@@ -12,7 +12,7 @@ namespace Sapientia.MemoryAllocator
 			var result = _typeToPtr.GetValue(worldState, context, out var exist);
 			if (!exist)
 			{
-				result = new IndexedPtr(CachedPtr<T>.Create(worldState), context.typeIndex);
+				result = new IndexedPtr(CachedPtr<T>.Create(worldState), context.typeId);
 				RegisterService(worldState, context, result);
 			}
 			return result;
@@ -24,7 +24,7 @@ namespace Sapientia.MemoryAllocator
 			var result = _typeToPtr.GetValue(worldState, context, out isExist);
 			if (!isExist)
 			{
-				result = new IndexedPtr(CachedPtr<T>.Create(worldState), context.typeIndex);
+				result = new IndexedPtr(CachedPtr<T>.Create(worldState), context.typeId);
 				RegisterService(worldState, context, result);
 			}
 			return result;
@@ -48,28 +48,28 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrRegisterService<T>(WorldState worldState) where T: unmanaged, IIndexedType
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			return ref GetOrRegisterService<T>(worldState, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetOrRegisterServicePtr<T>(WorldState worldState) where T: unmanaged, IIndexedType
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			return GetOrRegisterServicePtr<T>(worldState, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrRegisterService<T>(WorldState worldState, out bool exist) where T: unmanaged, IIndexedType
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			return ref GetOrRegisterService<T>(worldState, typeIndex, out exist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrRegisterService<T>(WorldState worldState, ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
 		{
-			return ref GetOrRegisterService<T>(worldState, proxyPtr.indexedPtr.typeIndex, out isExist);
+			return ref GetOrRegisterService<T>(worldState, proxyPtr.indexedPtr.typeId, out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

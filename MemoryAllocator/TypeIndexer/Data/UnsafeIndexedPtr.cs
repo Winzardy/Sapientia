@@ -7,7 +7,7 @@ namespace Sapientia.MemoryAllocator
 {
 	public struct UnsafeIndexedPtr : IEquatable<UnsafeIndexedPtr>
 	{
-		public readonly TypeIndex typeIndex;
+		public readonly TypeId typeId;
 		private SafePtr _ptr;
 
 		public readonly bool IsCreated
@@ -16,16 +16,16 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public UnsafeIndexedPtr(SafePtr ptr, TypeIndex typeIndex)
+		public UnsafeIndexedPtr(SafePtr ptr, TypeId typeId)
 		{
 			_ptr = ptr;
-			this.typeIndex = typeIndex;
+			this.typeId = typeId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UnsafeIndexedPtr Create<T>(SafePtr<T> ptr) where T : unmanaged
 		{
-			return new UnsafeIndexedPtr(ptr, TypeIndex<T>.typeIndex);
+			return new UnsafeIndexedPtr(ptr, TypeId<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -52,12 +52,12 @@ namespace Sapientia.MemoryAllocator
 
 		public static bool operator ==(UnsafeIndexedPtr a, UnsafeIndexedPtr b)
 		{
-			return a.typeIndex == b.typeIndex && a._ptr == b._ptr;
+			return a.typeId == b.typeId && a._ptr == b._ptr;
 		}
 
 		public static bool operator !=(UnsafeIndexedPtr a, UnsafeIndexedPtr b)
 		{
-			return a.typeIndex != b.typeIndex || a._ptr != b._ptr;
+			return a.typeId != b.typeId || a._ptr != b._ptr;
 		}
 
 		public bool Equals(UnsafeIndexedPtr other)
@@ -72,7 +72,7 @@ namespace Sapientia.MemoryAllocator
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(_ptr, typeIndex);
+			return HashCode.Combine(_ptr, typeId);
 		}
 	}
 }

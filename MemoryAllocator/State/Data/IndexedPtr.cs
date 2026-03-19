@@ -7,13 +7,13 @@ namespace Sapientia.MemoryAllocator
 {
 	/// <summary>
 	/// IndexedPtr — это обёртка над указателем,
-	/// которая хранит также индекс типа через <see cref="TypeIndex"/>.
+	/// которая хранит также идентификатор типа через <see cref="TypeId"/>.
 	///
 	/// Используется как универсальный указатель с информацией о типе.
 	/// </summary>
 	public struct IndexedPtr : IEquatable<IndexedPtr>
 	{
-		public readonly TypeIndex typeIndex;
+		public readonly TypeId typeId;
 		private CachedPtr _ptr;
 
 		public readonly bool IsCreated
@@ -22,50 +22,50 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr(MemPtr memPtr, TypeIndex typeIndex)
+		public IndexedPtr(MemPtr memPtr, TypeId typeId)
 		{
 			_ptr = new (memPtr);
-			this.typeIndex = typeIndex;
+			this.typeId = typeId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr(CachedPtr ptr, TypeIndex typeIndex)
+		public IndexedPtr(CachedPtr ptr, TypeId typeId)
 		{
 			_ptr = ptr;
-			this.typeIndex = typeIndex;
+			this.typeId = typeId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr(WorldState worldState, SafePtr cachedPtr, MemPtr memPtr, TypeIndex typeIndex)
+		public IndexedPtr(WorldState worldState, SafePtr cachedPtr, MemPtr memPtr, TypeId typeId)
 		{
 			_ptr = new CachedPtr(worldState, cachedPtr, memPtr);
-			this.typeIndex = typeIndex;
+			this.typeId = typeId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(CachedPtr<T> ptr) where T : unmanaged
 		{
-			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(ptr, TypeId<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(CachedPtr ptr) where T : unmanaged
 		{
-			return new IndexedPtr(ptr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(ptr, TypeId<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(WorldState worldState) where T : unmanaged
 		{
 			var memPtr = worldState.MemAlloc<T>(out var rawPtr);
-			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeId<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(WorldState worldState, in T value) where T : unmanaged
 		{
 			var memPtr = worldState.MemAlloc<T>(value, out var rawPtr);
-			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeId<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			var worldState = WorldManager.CurrentWorldState;
 			var memPtr = worldState.MemAlloc<T>(value, out var rawPtr);
-			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIndex<T>.typeIndex);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeId<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -127,12 +127,12 @@ namespace Sapientia.MemoryAllocator
 
 		public static bool operator ==(IndexedPtr a, IndexedPtr b)
 		{
-			return a.typeIndex == b.typeIndex && a._ptr == b._ptr;
+			return a.typeId == b.typeId && a._ptr == b._ptr;
 		}
 
 		public static bool operator !=(IndexedPtr a, IndexedPtr b)
 		{
-			return a.typeIndex != b.typeIndex || a._ptr != b._ptr;
+			return a.typeId != b.typeId || a._ptr != b._ptr;
 		}
 
 		public bool Equals(IndexedPtr other)
@@ -147,7 +147,7 @@ namespace Sapientia.MemoryAllocator
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(_ptr, typeIndex);
+			return HashCode.Combine(_ptr, typeId);
 		}
 	}
 }

@@ -87,7 +87,7 @@ namespace Sapientia.TypeIndexer
 			}
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine($"			var types = new Dictionary<Type, {nameof(TypeIndex)}>(indexToType.Length);");
+			sourceBuilder.AppendLine($"			var types = new Dictionary<Type, {nameof(TypeId)}>(indexToType.Length);");
 			sourceBuilder.AppendLine("			for (var i = 0; i < indexToType.Length; i++)");
 			sourceBuilder.AppendLine("			{");
 			sourceBuilder.AppendLine("				types.Add(indexToType[i], i);");
@@ -98,7 +98,7 @@ namespace Sapientia.TypeIndexer
 			sourceBuilder.AppendLine(GenerateDelegateIndexBody(proxyTypes));
 			sourceBuilder.AppendLine("			};");
 			sourceBuilder.AppendLine();
-			sourceBuilder.AppendLine($"			var delegates = new Dictionary<({nameof(TypeIndex)}, {nameof(ProxyId)}), {nameof(DelegateIndex)}>");
+			sourceBuilder.AppendLine($"			var delegates = new Dictionary<({nameof(TypeId)}, {nameof(ProxyId)}), {nameof(DelegateIndex)}>");
 			sourceBuilder.AppendLine("			{");
 			sourceBuilder.Append(GenerateDelegatesBody(proxyTypes, false));
 			sourceBuilder.AppendLine("			};");
@@ -186,7 +186,7 @@ namespace Sapientia.TypeIndexer
 			var sourceBuilder = new StringBuilder();
 			foreach (var type in types)
 			{
-				sourceBuilder.AppendLine($"			_ = {nameof(TypeIndex)}<{type.GetFullName()}>.typeIndex;");
+				sourceBuilder.AppendLine($"			_ = TypeId<{type.GetFullName()}>.typeId;");
 			}
 
 			return sourceBuilder.ToString();
@@ -229,19 +229,19 @@ namespace Sapientia.TypeIndexer
 		{
 			var sourceBuilder = new StringBuilder();
 			sourceBuilder.AppendLine($"			var contextCounts = new int[indexToType.Length];");
-			sourceBuilder.AppendLine($"			var contextTypeIndices = new Dictionary<({nameof(TypeIndex)}, {nameof(TypeIndex)}), {nameof(ContextTypeIndex)}>();");
-			sourceBuilder.AppendLine($"			var contextChildren = new {nameof(TypeIndex)}[indexToType.Length][];");
+			sourceBuilder.AppendLine($"			var contextTypeIndices = new Dictionary<(Type, Type), int>();");
+			sourceBuilder.AppendLine($"			var contextChildren = new {nameof(TypeId)}[indexToType.Length][];");
 			sourceBuilder.AppendLine();
 
 			foreach (var (contextIndex, children) in contextMappings)
 			{
 				sourceBuilder.AppendLine($"			contextCounts[{contextIndex}] = {children.Count};");
-				sourceBuilder.Append($"			contextChildren[{contextIndex}] = new {nameof(TypeIndex)}[] {{ ");
+				sourceBuilder.Append($"			contextChildren[{contextIndex}] = new {nameof(TypeId)}[] {{ ");
 				sourceBuilder.Append(string.Join(", ", children));
 				sourceBuilder.AppendLine(" };");
 				for (var i = 0; i < children.Count; i++)
 				{
-					sourceBuilder.AppendLine($"			contextTypeIndices.Add(({contextIndex}, {children[i]}), {i});");
+					sourceBuilder.AppendLine($"			contextTypeIndices.Add((indexToType[{contextIndex}], indexToType[{children[i]}]), {i});");
 				}
 				sourceBuilder.AppendLine();
 			}
@@ -260,7 +260,7 @@ namespace Sapientia.TypeIndexer
 				foreach (var childIndex in children)
 				{
 					var childTypeName = types[childIndex].GetFullName();
-					sourceBuilder.AppendLine($"			_ = {nameof(TypeIndex)}<{contextTypeName}, {childTypeName}>.typeIndex;");
+					sourceBuilder.AppendLine($"			_ = TypeIndex<{contextTypeName}, {childTypeName}>.typeIndex;");
 				}
 			}
 
