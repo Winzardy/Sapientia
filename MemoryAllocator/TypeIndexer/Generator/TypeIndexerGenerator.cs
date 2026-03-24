@@ -186,7 +186,7 @@ namespace Sapientia.TypeIndexer
 			var sourceBuilder = new StringBuilder();
 			foreach (var type in types)
 			{
-				sourceBuilder.AppendLine($"			_ = TypeId<{type.GetFullName()}>.typeId;");
+				sourceBuilder.AppendLine($"			_ = TypeIdOf<{type.GetFullName()}>.typeId;");
 			}
 
 			return sourceBuilder.ToString();
@@ -260,7 +260,7 @@ namespace Sapientia.TypeIndexer
 				foreach (var childIndex in children)
 				{
 					var childTypeName = types[childIndex].GetFullName();
-					sourceBuilder.AppendLine($"			_ = TypeIndex<{contextTypeName}, {childTypeName}>.typeIndex;");
+					sourceBuilder.AppendLine($"			_ = TypeIdOf<{contextTypeName}, {childTypeName}>.typeId;");
 				}
 			}
 

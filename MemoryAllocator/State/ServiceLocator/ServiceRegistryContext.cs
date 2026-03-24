@@ -20,7 +20,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			return new ServiceRegistryContext
 			{
-				typeId = TypeId<T>.typeId,
+				typeId = TypeIdOf<T>.typeId,
 				contextTypeId = TypeId.Empty,
 			};
 		}
@@ -30,8 +30,8 @@ namespace Sapientia.MemoryAllocator
 		{
 			return new ServiceRegistryContext
 			{
-				typeId = TypeId<T>.typeId,
-				contextTypeId = TypeId<TContext>.typeId,
+				typeId = TypeIdOf<T>.typeId,
+				contextTypeId = TypeIdOf<TContext>.typeId,
 			};
 		}
 
@@ -44,7 +44,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
-			return typeId.id ^ contextTypeId.id;
+			return (int)typeId ^ (int)contextTypeId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

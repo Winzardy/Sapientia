@@ -1,42 +1,43 @@
 using System;
 using System.Runtime.CompilerServices;
+using Submodules.Sapientia.Data;
 
 namespace Sapientia.TypeIndexer
 {
-	public static class TypeId<T>
+	public static class TypeIdOf<T>
 	{
 		public static readonly TypeId typeId;
 		public static readonly int Count;
 
-		static TypeId()
+		static TypeIdOf()
 		{
 			IndexedTypes.GetTypeIndex(typeof(T), out typeId);
 			Count = IndexedTypes.GetContextCount(typeof(T));
 		}
 	}
 
-	public static class TypeIndex<TContext, TType>
+	public static class TypeIdOf<TContext, TType>
 		where TType : IIndexedType
 	{
-		public static readonly TypeIndex<TContext> typeIndex;
+		public static readonly TypeId<TContext> typeId;
 
-		static TypeIndex()
+		static TypeIdOf()
 		{
 			IndexedTypes.GetContextTypeIndex(typeof(TContext), typeof(TType), out int idx);
-			typeIndex = idx;
+			typeId = idx;
 		}
 	}
 
 	public struct TypeId : IEquatable<TypeId>
 	{
-		public static readonly TypeId Empty = -1;
+		public static readonly TypeId Empty = default;
 
-		internal int id;
+		internal Id id;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TypeId Create<T>()
 		{
-			return TypeId<T>.typeId;
+			return TypeIdOf<T>.typeId;
 		}
 
 		public Type Type
@@ -80,58 +81,58 @@ namespace Sapientia.TypeIndexer
 
 		public override int GetHashCode()
 		{
-			return id;
+			return id.GetHashCode();
 		}
 	}
 
-	public struct TypeIndex<TContext> : IEquatable<TypeIndex<TContext>>
+	public struct TypeId<TContext> : IEquatable<TypeId<TContext>>
 	{
-		public static readonly TypeIndex<TContext> Empty = -1;
+		public static readonly TypeId<TContext> Empty = default;
 		public static readonly int Count;
 
-		internal int index;
+		internal Id id;
 
-		static TypeIndex()
+		static TypeId()
 		{
 			Count = IndexedTypes.GetContextCount(typeof(TContext));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator int(TypeIndex<TContext> typeIndex)
+		public static implicit operator int(TypeId<TContext> typeId)
 		{
-			return typeIndex.index;
+			return typeId.id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator TypeIndex<TContext>(int index)
+		public static implicit operator TypeId<TContext>(int index)
 		{
-			return new TypeIndex<TContext> { index = index, };
+			return new TypeId<TContext> { id = index, };
 		}
 
-		public static bool operator ==(TypeIndex<TContext> a, TypeIndex<TContext> b)
+		public static bool operator ==(TypeId<TContext> a, TypeId<TContext> b)
 		{
-			return a.index == b.index;
+			return a.id == b.id;
 		}
 
-		public static bool operator !=(TypeIndex<TContext> a, TypeIndex<TContext> b)
+		public static bool operator !=(TypeId<TContext> a, TypeId<TContext> b)
 		{
-			return a.index != b.index;
+			return a.id != b.id;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(TypeIndex<TContext> other)
+		public bool Equals(TypeId<TContext> other)
 		{
-			return index == other.index;
+			return id == other.id;
 		}
 
 		public override bool Equals(object obj)
 		{
-			return obj is TypeIndex<TContext> other && Equals(other);
+			return obj is TypeId<TContext> other && Equals(other);
 		}
 
 		public override int GetHashCode()
 		{
-			return index;
+			return id.GetHashCode();
 		}
 	}
 }

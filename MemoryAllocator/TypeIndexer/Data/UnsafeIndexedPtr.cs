@@ -25,7 +25,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UnsafeIndexedPtr Create<T>(SafePtr<T> ptr) where T : unmanaged
 		{
-			return new UnsafeIndexedPtr(ptr, TypeId<T>.typeId);
+			return new UnsafeIndexedPtr(ptr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

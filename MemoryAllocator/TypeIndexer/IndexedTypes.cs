@@ -39,7 +39,7 @@ namespace Sapientia.TypeIndexer
 		private static System.Collections.Generic.Dictionary<(TypeId, ProxyId), DelegateIndex> _typeToDelegateIndex;
 
 		/// <summary>
-		/// Количество дочерних типов для каждого контекста (интерфейса). Индексируется по TypeId.id контекста.
+		/// Количество дочерних типов для каждого контекста (интерфейса). Индексируется по (int)TypeId контекста.
 		/// </summary>
 		private static int[] _contextCounts = Array.Empty<int>();
 		/// <summary>
@@ -47,7 +47,7 @@ namespace Sapientia.TypeIndexer
 		/// </summary>
 		private static System.Collections.Generic.Dictionary<(Type, Type), int> _contextTypeIndices = new();
 		/// <summary>
-		/// Все дочерние TypeId для каждого контекста, упорядоченные по TypeIndex<TContext>.
+		/// Все дочерние TypeId для каждого контекста, упорядоченные по TypeId<TContext>.
 		/// </summary>
 		private static TypeId[][] _contextChildren = Array.Empty<TypeId[]>();
 
@@ -83,7 +83,7 @@ namespace Sapientia.TypeIndexer
 		public static TProxy GetProxy<T, TProxy>() where TProxy: unmanaged, IProxy
 		{
 			var result = default(TProxy);
-			result.FirstDelegateIndex = _typeToDelegateIndex[(TypeId<T>.typeId, result.ProxyId)];
+			result.FirstDelegateIndex = _typeToDelegateIndex[(TypeIdOf<T>.typeId, result.ProxyId)];
 			return result;
 		}
 
@@ -124,7 +124,7 @@ namespace Sapientia.TypeIndexer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type GetType(TypeId typeId)
 		{
-			return _types[typeId.id];
+			return _types[(int)typeId];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,7 +134,7 @@ namespace Sapientia.TypeIndexer
 			{
 				return 0;
 			}
-			var index = typeId.id;
+			var index = (int)typeId;
 			if (index < 0 || index >= _contextCounts.Length)
 			{
 				return 0;
@@ -158,7 +158,7 @@ namespace Sapientia.TypeIndexer
 			{
 				return Array.Empty<TypeId>();
 			}
-			var index = typeId.id;
+			var index = (int)typeId;
 			if (index < 0 || index >= _contextChildren.Length)
 			{
 				return Array.Empty<TypeId>();

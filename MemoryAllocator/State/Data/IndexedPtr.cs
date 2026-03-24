@@ -45,27 +45,27 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(CachedPtr<T> ptr) where T : unmanaged
 		{
-			return new IndexedPtr(ptr, TypeId<T>.typeId);
+			return new IndexedPtr(ptr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(CachedPtr ptr) where T : unmanaged
 		{
-			return new IndexedPtr(ptr, TypeId<T>.typeId);
+			return new IndexedPtr(ptr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(WorldState worldState) where T : unmanaged
 		{
 			var memPtr = worldState.MemAlloc<T>(out var rawPtr);
-			return new IndexedPtr(worldState, rawPtr, memPtr, TypeId<T>.typeId);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr Create<T>(WorldState worldState, in T value) where T : unmanaged
 		{
 			var memPtr = worldState.MemAlloc<T>(value, out var rawPtr);
-			return new IndexedPtr(worldState, rawPtr, memPtr, TypeId<T>.typeId);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			var worldState = WorldManager.CurrentWorldState;
 			var memPtr = worldState.MemAlloc<T>(value, out var rawPtr);
-			return new IndexedPtr(worldState, rawPtr, memPtr, TypeId<T>.typeId);
+			return new IndexedPtr(worldState, rawPtr, memPtr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
