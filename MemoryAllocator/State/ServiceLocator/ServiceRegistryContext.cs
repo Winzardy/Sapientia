@@ -12,16 +12,16 @@ namespace Sapientia.MemoryAllocator
 #endif
 	public struct ServiceRegistryContext : IEquatable<ServiceRegistryContext>
 	{
-		public TypeIndex typeIndex;
-		public TypeIndex contextTypeIndex;
+		public TypeId typeId;
+		public TypeId contextTypeId;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ServiceRegistryContext Create<T>() where T: unmanaged, IIndexedType
 		{
 			return new ServiceRegistryContext
 			{
-				typeIndex = TypeIndex<T>.typeIndex,
-				contextTypeIndex = TypeIndex.Empty,
+				typeId = TypeIdOf<T>.typeId,
+				contextTypeId = TypeId.Empty,
 			};
 		}
 
@@ -30,27 +30,27 @@ namespace Sapientia.MemoryAllocator
 		{
 			return new ServiceRegistryContext
 			{
-				typeIndex = TypeIndex<T>.typeIndex,
-				contextTypeIndex = TypeIndex<TContext>.typeIndex,
+				typeId = TypeIdOf<T>.typeId,
+				contextTypeId = TypeIdOf<TContext>.typeId,
 			};
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(ServiceRegistryContext other)
 		{
-			return other.typeIndex == typeIndex && other.contextTypeIndex == contextTypeIndex;
+			return other.typeId == typeId && other.contextTypeId == contextTypeId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
-			return typeIndex.index ^ contextTypeIndex.index;
+			return (int)typeId ^ (int)contextTypeId;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ServiceRegistryContext(TypeIndex typeIndex)
+		public static implicit operator ServiceRegistryContext(TypeId typeId)
 		{
-			return new ServiceRegistryContext { typeIndex = typeIndex, contextTypeIndex = -1, };
+			return new ServiceRegistryContext { typeId = typeId, contextTypeId = -1, };
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
