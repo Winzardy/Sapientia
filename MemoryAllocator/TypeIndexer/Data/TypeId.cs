@@ -85,6 +85,18 @@ namespace Sapientia.TypeIndexer
 			return new TypeId<TContext> { id = index, };
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator TypeId(TypeId<TContext> typeId)
+		{
+			return new TypeId { id = typeId.id, };
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator TypeId<TContext>(TypeId typeId)
+		{
+			return new TypeId<TContext> { id = typeId.id, };
+		}
+
 		public static bool operator ==(TypeId<TContext> a, TypeId<TContext> b)
 		{
 			return a.id == b.id;

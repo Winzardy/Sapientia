@@ -20,7 +20,7 @@ namespace Sapientia.TypeIndexer
 		static TypeIdOf()
 		{
 			IndexedTypes.GetContextTypeId(typeof(TContext), typeof(TType), out var rawId);
-			typeId = (int)rawId;
+			typeId = rawId;
 		}
 	}
 }
