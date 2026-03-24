@@ -4,30 +4,6 @@ using Submodules.Sapientia.Data;
 
 namespace Sapientia.TypeIndexer
 {
-	public static class TypeIdOf<T>
-	{
-		public static readonly TypeId typeId;
-		public static readonly int Count;
-
-		static TypeIdOf()
-		{
-			IndexedTypes.GetTypeIndex(typeof(T), out typeId);
-			Count = IndexedTypes.GetContextCount(typeof(T));
-		}
-	}
-
-	public static class TypeIdOf<TContext, TType>
-		where TType : IIndexedType
-	{
-		public static readonly TypeId<TContext> typeId;
-
-		static TypeIdOf()
-		{
-			IndexedTypes.GetContextTypeIndex(typeof(TContext), typeof(TType), out int idx);
-			typeId = idx;
-		}
-	}
-
 	public struct TypeId : IEquatable<TypeId>
 	{
 		public static readonly TypeId Empty = default;

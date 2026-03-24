@@ -229,7 +229,7 @@ namespace Sapientia.TypeIndexer
 		{
 			var sourceBuilder = new StringBuilder();
 			sourceBuilder.AppendLine($"			var contextCounts = new int[indexToType.Length];");
-			sourceBuilder.AppendLine($"			var contextTypeIndices = new Dictionary<(Type, Type), int>();");
+			sourceBuilder.AppendLine($"			var contextTypeIds = new Dictionary<(Type context, Type type), {nameof(TypeId)}>();");
 			sourceBuilder.AppendLine($"			var contextChildren = new {nameof(TypeId)}[indexToType.Length][];");
 			sourceBuilder.AppendLine();
 
@@ -241,12 +241,12 @@ namespace Sapientia.TypeIndexer
 				sourceBuilder.AppendLine(" };");
 				for (var i = 0; i < children.Count; i++)
 				{
-					sourceBuilder.AppendLine($"			contextTypeIndices.Add((indexToType[{contextIndex}], indexToType[{children[i]}]), {i});");
+					sourceBuilder.AppendLine($"			contextTypeIds.Add((indexToType[{contextIndex}], indexToType[{children[i]}]), {i});");
 				}
 				sourceBuilder.AppendLine();
 			}
 
-			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.InitializeContextIndices)}(contextCounts, contextTypeIndices, contextChildren);");
+			sourceBuilder.AppendLine($"			{nameof(IndexedTypes)}.{nameof(IndexedTypes.InitializeContextTypeIds)}(contextCounts, contextTypeIds, contextChildren);");
 
 			return sourceBuilder.ToString();
 		}
