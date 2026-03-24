@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Sapientia;
 
 namespace ProjectInformation
@@ -9,7 +10,20 @@ namespace ProjectInformation
 	{
 		public string branch;
 		public string commit;
-		public Dictionary<string, string> submodules;
+		public SubmoduleInfo[] submodules;
+
+		[Serializable]
+		public struct SubmoduleInfo
+		{
+			public string name;
+			public string commit;
+
+			public SubmoduleInfo(string name, string commit)
+			{
+				this.name = name;
+				this.commit = commit;
+			}
+		}
 
 		public static BuildInfo CreateFromGit(string projectRoot)
 		{
@@ -17,8 +31,15 @@ namespace ProjectInformation
 			{
 				branch = GitUtility.GetBranch(projectRoot),
 				commit = GitUtility.GetLastCommit(projectRoot),
-				submodules = GitUtility.GetSubmodules(projectRoot),
+				submodules = GitUtility.GetSubmodules(projectRoot)
+					.Select(entry => new SubmoduleInfo(entry.Key, entry.Value))
+					.ToArray(),
 			};
+		}
+
+		public static BuildInfo CreateUnknown()
+		{
+			return new BuildInfo() { branch = "unknown", commit = "unknown", submodules = Array.Empty<SubmoduleInfo>() };
 		}
 	}
 }
