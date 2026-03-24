@@ -11,6 +11,7 @@ namespace ProjectInformation
 		public static bool IsInitialized => _instance != null;
 
 		public static string Version => attendant.GetVersion();
+		public static BuildInfo Build => attendant.GetBuildInfo();
 		public static string Identifier => attendant.Identifier;
 
 		public static ref readonly PlatformEntry Platform => ref attendant.GetPlatform();
