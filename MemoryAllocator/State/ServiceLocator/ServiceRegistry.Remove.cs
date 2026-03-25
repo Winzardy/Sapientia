@@ -14,14 +14,14 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveService<T>(WorldState worldState) where T: unmanaged, IIndexedType
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			return _typeToPtr.Remove(worldState, typeIndex);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveService<T>(WorldState worldState, out T service) where T: unmanaged, IIndexedType
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			return RemoveService<T>(worldState, typeIndex, out service);
 		}
 
@@ -37,7 +37,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveService(WorldState worldState, IndexedPtr indexedPtr)
 		{
-			return _typeToPtr.Remove(worldState, indexedPtr.typeIndex);
+			return _typeToPtr.Remove(worldState, indexedPtr.typeId);
 		}
 	}
 }
