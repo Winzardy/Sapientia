@@ -12,7 +12,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetOrCreateService<T>(WorldState worldState) where T: unmanaged, IInitializableService
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			return ref GetOrCreateService<T>(worldState, typeIndex);
 		}
 
@@ -35,7 +35,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SafePtr<T> GetOrCreateServicePtr<T>(WorldState worldState) where T: unmanaged, IInitializableService
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			return GetOrCreateServicePtr<T>(worldState, typeIndex);
 		}
 

@@ -14,7 +14,7 @@ namespace Sapientia.MemoryAllocator
 			where T : class, IIndexedType
 		{
 			var ptr = new ClassPtr<T>(service);
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			ref var servicePtr = ref GetOrRegisterService<ClassPtr<T>>(typeIndex, ServiceType.NoState, out var isExist);
 			if (isExist)
 				servicePtr.Dispose();
@@ -27,7 +27,7 @@ namespace Sapientia.MemoryAllocator
 		public void RemoveService<T>()
 			where T : class, IIndexedType
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			if (!RemoveService<ClassPtr<T>>(typeIndex, ServiceType.NoState, out var servicePtr))
 				return;
 			servicePtr.Dispose();
@@ -44,7 +44,7 @@ namespace Sapientia.MemoryAllocator
 		public ClassPtr<T> GetServiceClassPtr<T>()
 			where T : class, IIndexedType
 		{
-			var typeIndex = TypeIndex.Create<T>();
+			var typeIndex = TypeId.Create<T>();
 			var ptr = GetService<ClassPtr<T>>(typeIndex, ServiceType.NoState);
 			return ptr;
 		}

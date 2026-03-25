@@ -7,6 +7,7 @@ namespace ProjectInformation
 		public string Identifier { get; }
 
 		public string GetVersion();
+		public BuildInfo GetBuildInfo();
 		public ref readonly PlatformEntry GetPlatform();
 		public ref readonly DistributionEntry GetDistribution();
 		public string GetStoreUrl(DistributionEntry distribution);

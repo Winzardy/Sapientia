@@ -24,7 +24,7 @@ namespace Sapientia.TypeIndexer
 
 	public static class IndexedTypes
 	{
-		private static System.Collections.Generic.Dictionary<Type, TypeIndex> _typeToIndex = new();
+		private static System.Collections.Generic.Dictionary<Type, TypeId> _typeToTypeId = new();
 		private static Type[] _types = Array.Empty<Type>();
 
 		/// <summary>
@@ -34,22 +34,45 @@ namespace Sapientia.TypeIndexer
 		/// </summary>
 		private static Delegate[] _delegates;
 		/// <summary>
-		/// Получаем индекс первого метода для интерфейса (ProxyId) и его наследника (TypeIndex).
+		/// Получаем индекс первого метода для интерфейса (ProxyId) и его наследника (TypeId).
 		/// </summary>
-		private static System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> _typeToDelegateIndex;
+		private static System.Collections.Generic.Dictionary<(TypeId, ProxyId), DelegateIndex> _typeToDelegateIndex;
 
-		public static void Initialize(System.Collections.Generic.Dictionary<Type, TypeIndex> typeToIndex,
+		/// <summary>
+		/// Количество дочерних типов для каждого контекста (интерфейса). Индексируется по (int)TypeId контекста.
+		/// </summary>
+		private static int[] _contextCounts = Array.Empty<int>();
+		/// <summary>
+		/// (Type context, Type type) → последовательный 0-based TypeId внутри контекста.
+		/// </summary>
+		private static System.Collections.Generic.Dictionary<(Type context, Type type), TypeId> _contextTypeIds = new();
+		/// <summary>
+		/// Все дочерние TypeId для каждого контекста, упорядоченные по TypeId<TContext>.
+		/// </summary>
+		private static TypeId[][] _contextChildren = Array.Empty<TypeId[]>();
+
+		public static void Initialize(System.Collections.Generic.Dictionary<Type, TypeId> typeToTypeId,
 			Type[] types,
-			Delegate[] delegates, System.Collections.Generic.Dictionary<(TypeIndex, ProxyId), DelegateIndex> typeToDelegateIndex)
+			Delegate[] delegates, System.Collections.Generic.Dictionary<(TypeId, ProxyId), DelegateIndex> typeToDelegateIndex)
 		{
-			_typeToIndex = typeToIndex;
+			_typeToTypeId = typeToTypeId;
 			_types = types;
 			_delegates = delegates;
 			_typeToDelegateIndex = typeToDelegateIndex;
 		}
 
+		public static void InitializeContextTypeIds(
+			int[] contextCounts,
+			System.Collections.Generic.Dictionary<(Type context, Type type), TypeId> contextTypeIds,
+			TypeId[][] contextChildren)
+		{
+			_contextCounts = contextCounts;
+			_contextTypeIds = contextTypeIds;
+			_contextChildren = contextChildren;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TProxy GetProxy<TProxy>(TypeIndex executorType) where TProxy: unmanaged, IProxy
+		public static TProxy GetProxy<TProxy>(TypeId executorType) where TProxy: unmanaged, IProxy
 		{
 			var result = default(TProxy);
 			result.FirstDelegateIndex = _typeToDelegateIndex[(executorType, result.ProxyId)];
@@ -60,7 +83,7 @@ namespace Sapientia.TypeIndexer
 		public static TProxy GetProxy<T, TProxy>() where TProxy: unmanaged, IProxy
 		{
 			var result = default(TProxy);
-			result.FirstDelegateIndex = _typeToDelegateIndex[(TypeIndex<T>.typeIndex, result.ProxyId)];
+			result.FirstDelegateIndex = _typeToDelegateIndex[(TypeIdOf<T>.typeId, result.ProxyId)];
 			return result;
 		}
 
@@ -71,37 +94,76 @@ namespace Sapientia.TypeIndexer
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryGetIndex(Type type, out TypeIndex index)
+		public static bool TryGetTypeId(Type type, out TypeId typeId)
 		{
-			index = -1;
-			return _typeToIndex.TryGetValue(type, out index);
+			typeId = default;
+			return _typeToTypeId.TryGetValue(type, out typeId);
 		}
 
 #if UNITY_5_3_OR_NEWER
 		[Unity.Burst.BurstDiscard]
 #endif
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void GetTypeIndex(Type type, out TypeIndex index)
+		public static void GetTypeId(Type type, out TypeId typeId)
 		{
-			index = _typeToIndex[type];
+			typeId = _typeToTypeId[type];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TypeIndex GetTypeIndex(Type type)
+		public static TypeId GetTypeId(Type type)
 		{
-			return _typeToIndex[type];
+			return _typeToTypeId[type];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int GetIndexOrDefault(Type type)
+		public static int GetTypeIdOrDefault(Type type)
 		{
-			return _typeToIndex.GetValueOrDefault(type, -1);
+			return _typeToTypeId.GetValueOrDefault(type, -1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type GetType(TypeIndex typeIndex)
+		public static Type GetType(TypeId typeId)
 		{
-			return _types[typeIndex.index];
+			return _types[(int)typeId];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int GetContextCount(Type contextType)
+		{
+			if (!_typeToTypeId.TryGetValue(contextType, out var typeId))
+			{
+				return 0;
+			}
+			var index = (int)typeId;
+			if (index < 0 || index >= _contextCounts.Length)
+			{
+				return 0;
+			}
+			return _contextCounts[index];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void GetContextTypeId(Type contextType, Type type, out TypeId typeId)
+		{
+			if (!_contextTypeIds.TryGetValue((contextType, type), out typeId))
+			{
+				typeId = default;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TypeId[] GetContextChildren(Type contextType)
+		{
+			if (!_typeToTypeId.TryGetValue(contextType, out var typeId))
+			{
+				return Array.Empty<TypeId>();
+			}
+			var index = (int)typeId;
+			if (index < 0 || index >= _contextChildren.Length)
+			{
+				return Array.Empty<TypeId>();
+			}
+			return _contextChildren[index] ?? Array.Empty<TypeId>();
 		}
 	}
 }

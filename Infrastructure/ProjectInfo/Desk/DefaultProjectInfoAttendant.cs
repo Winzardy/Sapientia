@@ -9,18 +9,20 @@ namespace ProjectInformation
 		private readonly ProjectInfoConfig _info;
 
 		private readonly PlatformEntry _platform;
+		private readonly BuildInfo _buildInfo;
 		private readonly DistributionEntry _store;
 
 		public IReactiveProperty<string> UserId => _userId;
 		public string Identifier => _info.identifier;
 
-		public DefaultProjectInfoAttendant(in ProjectInfoConfig info, in PlatformEntry platform)
+		public DefaultProjectInfoAttendant(in ProjectInfoConfig info, in PlatformEntry platform, BuildInfo buildInfo)
 		{
 			_info = info;
 			if (!info.platformToDistribution.TryGetValue(platform, out var store))
 				store = DistributionType.UNDEFINED;
 
 			_platform = platform;
+			_buildInfo = buildInfo;
 			_store = store;
 
 			_userId = new();
@@ -35,6 +37,7 @@ namespace ProjectInformation
 		public string GetVersion() =>
 			_info.buildNumber != 0 ? $"{_info.version} ({_info.buildNumber})" : _info.version;
 
+		public virtual BuildInfo GetBuildInfo() => _buildInfo;
 		public ref readonly PlatformEntry GetPlatform() => ref _platform;
 		public ref readonly DistributionEntry GetDistribution() => ref _store;
 
