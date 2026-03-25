@@ -20,7 +20,7 @@ namespace Sapientia
 		{
 			// result example:
 			// d9ba378 Assets/Submodules/Sapientia
-			string? output = RunGit(projectRoot, "submodule foreach -q --recursive 'echo $(git rev-parse --short HEAD) $name'")?.Trim();
+			string? output = RunGit(projectRoot, "submodule foreach -q --recursive \"echo $(git rev-parse --short HEAD) $name\"")?.Trim();
 
 			var submodules = new Dictionary<string, string>();
 			if (!string.IsNullOrEmpty(output))
