@@ -159,8 +159,15 @@ namespace Sapientia
 			throw new BlackboardException(msg);
 		}
 
-		void IPoolable.OnGet() => _active = true;
-		void IPoolable.Release() => ReleaseInternal();
+		void IPoolable.OnGet()
+		{
+			_active = true;
+		}
+
+		void IPoolable.Release()
+		{
+			ReleaseInternal();
+		}
 
 		protected virtual void OnRelease()
 		{

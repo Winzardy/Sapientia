@@ -11,27 +11,20 @@ namespace Trading
 
 		public static IEnumerable<TradeReward> EnumerateActualReward(this TradeConfig trade, Tradeboard board)
 		{
-			using (board.SimulationModeScope())
+			foreach (var _ in trade.cost.EnumerateActualInternal(board))
 			{
-				foreach (var _ in trade.cost.EnumerateActualInternal(board))
-				{
-					// Нужно перебрать цену, так как без ее перебора будет не валидная награда, так как цена может двигать рандом...
-				}
-
-				foreach (var actualReward in trade.reward.EnumerateActualInternal(board))
-					yield return actualReward;
+				// Нужно перебрать цену, так как без ее перебора будет не валидная награда, так как цена может двигать рандом...
 			}
+
+			foreach (var actualReward in trade.reward.EnumerateActualInternal(board))
+				yield return actualReward;
 		}
 
 		public static IEnumerable<TradeCost> EnumerateActualCost(this ContentReference<TradeConfig> tradeRef, Tradeboard board)
 			=> tradeRef.Read().EnumerateActualCost(board);
 
 		public static IEnumerable<TradeCost> EnumerateActualCost(this TradeConfig trade, Tradeboard board)
-		{
-			using (board.SimulationModeScope())
-				foreach (var actualCost in trade.cost.EnumerateActualInternal(board))
-					yield return actualCost;
-		}
+			=> trade.cost.EnumerateActualInternal(board);
 
 		internal static bool CanExecute(this TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
