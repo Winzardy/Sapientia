@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator
 			var ticksToUpdate = (updateStatePart.worldTimeDebt / tickTime).FloorToInt_Positive();
 #if UNITY_EDITOR
 			if (ticksToUpdate > MAX_TICKS_PER_FRAME)
-				Debug.LogWarning($"{ticksToUpdate} ticks was scheduled in this frame.");
+				Debug.Log($"{ticksToUpdate} ticks was scheduled in this frame.");
 #endif
 
 			if (ticksToUpdate > 0)

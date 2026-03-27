@@ -92,7 +92,7 @@ namespace Submodules.Sapientia.Memory
 
 			var allocations = _tracker.GetAllocations();
 #if UNITY_5_3_OR_NEWER
-			UnityEngine.Debug.LogWarning($"{nameof(MemoryManager)}.Dispose [id: {_id}({(MemoryType)(-_id)}), Allocations Count: {_tracker.AllocationCount}, Pointers to free: {allocations.Count}]");
+			UnityEngine.Debug.Log($"{nameof(MemoryManager)}.Dispose [id: {_id}({(MemoryType)(-_id)}), Allocations Count: {_tracker.AllocationCount}, Pointers to free: {allocations.Count}]");
 #endif
 
 			foreach (var entry in allocations)
