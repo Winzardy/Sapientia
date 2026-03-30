@@ -129,6 +129,7 @@ namespace Submodules.Sapientia.Memory
 				return;
 
 			UnityEditor.EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+			UnityEngine.Debug.Log($"{nameof(MemoryManagerController)}.{nameof(DisposeAll)}");
 			DisposeAll();
 		}
 #endif
