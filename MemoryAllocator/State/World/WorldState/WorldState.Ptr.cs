@@ -67,7 +67,7 @@ namespace Sapientia.MemoryAllocator
 		public IndexedPtr CopyPtrTo(WorldState dstWorldState, in IndexedPtr srsPtr)
 		{
 			var memPtr = CopyPtrTo(dstWorldState, srsPtr.GetMemPtr());
-			var result = new IndexedPtr(memPtr, srsPtr.typeIndex);
+			var result = new IndexedPtr(memPtr, srsPtr.typeId);
 			return result;
 		}
 

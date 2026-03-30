@@ -128,9 +128,8 @@ namespace Submodules.Sapientia.Memory
 			if (state != UnityEditor.PlayModeStateChange.EnteredEditMode)
 				return;
 
-			UnityEngine.Debug.LogWarning($"{nameof(PlayModeStateChanged)}: {state.ToString()}");
-
 			UnityEditor.EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+			UnityEngine.Debug.Log($"{nameof(MemoryManagerController)}.{nameof(DisposeAll)}");
 			DisposeAll();
 		}
 #endif

@@ -159,7 +159,9 @@ namespace Sapientia.MemoryAllocator
 
 		public Span<T> GetSpan<T>(WorldState worldState) where T: unmanaged
 		{
-			return new Span<T>(GetValuePtr<T>(worldState).ptr, Length);
+			if (Length == 0)
+				return Span<T>.Empty;
+			return new Span<T>(GetPtr(worldState).ptr, Length);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -265,6 +267,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator<T>(WorldState worldState) where T: unmanaged
 		{
+			if (Count == 0)
+				return default;
 			return new MemListEnumerator<T>(GetValuePtr<T>(worldState), Count);
 		}
 

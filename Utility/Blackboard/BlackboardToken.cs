@@ -17,18 +17,23 @@ namespace Sapientia
 		internal IBlackboardToken Clone(Blackboard blackboard);
 	}
 
-	internal class BlackboardToken<T> : IBlackboardToken, IPoolable
+	public class BlackboardToken<T> : IBlackboardToken, IPoolable
 	{
 		private int _generation;
-		private RegisteredTokenHash _hash;
+		private BlackboardStorage<T>? _storage;
+		private string? _key;
 
 		public Type ValueType => typeof(T);
 
 		int IBlackboardToken.Generation => _generation;
 
-		internal void Bind(in RegisteredTokenHash hash)
+		internal Blackboard? Blackboard => _storage!.Blackboard;
+		internal string? Key => _key;
+
+		internal void Bind(BlackboardStorage<T> storage, string? key)
 		{
-			_hash = hash;
+			_storage = storage;
+			_key     = key;
 		}
 
 		public void Dispose() => Release(true);
@@ -36,71 +41,29 @@ namespace Sapientia
 		/// <inheritdoc/>
 		public void Release(bool solo)
 		{
-			if (_hash == default)
-				throw new InvalidOperationException("Token already released");
+			if (_storage == null)
+				throw new InvalidOperationException($"{typeof(T).Name} Token already released");
 
 			if (solo)
-				_hash.blackboard.ReleaseToken(this);
+				Blackboard!.ReleaseToken(this);
 
-			Blackboard<T>.Unregister(this);
+			_storage.Unregister(this);
 		}
-
-		internal ref readonly RegisteredTokenHash Hash => ref _hash;
-		internal Blackboard Blackboard => _hash.blackboard;
-		internal string? Key => _hash.key;
 
 		void IPoolable.Release()
 		{
-			_hash = default;
+			_storage = null;
+			_key     = null;
+
 			_generation++;
 		}
 
 		IBlackboardToken IBlackboardToken.Clone(Blackboard blackboard)
 		{
-			var value = Blackboard<T>.Get(_hash.blackboard);
-			return Blackboard<T>.Register(in value, blackboard, _hash.key);
+			var value = _storage!.Get(_key);
+			return blackboard.Register(in value, _key).Token;
 		}
 
 		public static implicit operator BlackboardToken(BlackboardToken<T> token) => new(token, token._generation);
-	}
-
-	/// <summary>
-	/// Уникальный идентификатор записи в Blackboard, составленный из ссылки на Blackboard и строкового ключа
-	/// </summary>
-	internal readonly struct RegisteredTokenHash : IEquatable<RegisteredTokenHash>
-	{
-		internal readonly Blackboard blackboard;
-		internal readonly string? key;
-
-		internal RegisteredTokenHash(Blackboard blackboard, string? key)
-		{
-			this.blackboard = blackboard;
-			this.key = key;
-		}
-
-		public bool Equals(RegisteredTokenHash other)
-		{
-			return ReferenceEquals(blackboard, other.blackboard)
-				&& string.Equals(key, other.key, StringComparison.Ordinal);
-		}
-
-		public override bool Equals(object? obj) => obj is RegisteredTokenHash other && Equals(other);
-
-		public override int GetHashCode()
-		{
-			var h = RuntimeHelpers.GetHashCode(blackboard);
-			if (key != null)
-			{
-				unchecked
-				{
-					h = (h * 397) ^ StringComparer.Ordinal.GetHashCode(key);
-				}
-			}
-
-			return h;
-		}
-
-		public static bool operator ==(RegisteredTokenHash left, RegisteredTokenHash right) => left.Equals(right);
-		public static bool operator !=(RegisteredTokenHash left, RegisteredTokenHash right) => !left.Equals(right);
 	}
 }

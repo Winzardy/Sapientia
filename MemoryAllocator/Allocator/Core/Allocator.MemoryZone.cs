@@ -79,7 +79,10 @@ namespace Sapientia.MemoryAllocator
 			_zonesList.Add(zone);
 
 #if UNITY_5_3_OR_NEWER
-			UnityEngine.Debug.LogWarning($"Zone allocated with Size: {zoneSize}");
+			if (_zonesList.count > 1)
+				UnityEngine.Debug.LogWarning($"Zone allocated with Size: {zoneSize}");
+			else
+				UnityEngine.Debug.Log($"Zone allocated with Size: {zoneSize}");
 #endif
 		}
 

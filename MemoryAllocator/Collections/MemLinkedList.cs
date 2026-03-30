@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace Sapientia.MemoryAllocator
 {
 	[DebuggerTypeProxy(typeof(MemLinkedList<>.LinkedListProxy))]
-	public struct MemLinkedList<T> : IMemLinkedListEnumerable<T> where T : unmanaged
+	public struct MemLinkedList<T> where T : unmanaged
 	{
 		private struct MemLinkedListData
 		{
@@ -206,11 +206,6 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			return default;
-		}
-
-		MemLinkedList<T> IMemLinkedListEnumerable<T>.GetList(WorldState worldState)
-		{
-			return this;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -7,7 +7,7 @@ using Sapientia.Extensions;
 namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct MemSparseSet<T> : IMemListEnumerable<T> where T : unmanaged
+	public struct MemSparseSet<T> where T : unmanaged
 	{
 		private MemSparseSet _innerSet;
 
@@ -119,6 +119,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
+			if (Count == 0)
+				return default;
 			return new MemListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 
