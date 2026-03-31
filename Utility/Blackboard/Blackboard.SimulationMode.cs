@@ -17,7 +17,7 @@ namespace Sapientia
 		public bool IsSimulationMode => _isSimulationMode;
 
 		/// <inheritdoc cref="SafeSubscriptionAttribute"/>
-		[SafeSubscription]
+		[AutoClearOnDisposeEvent]
 		public event Action<bool> SimulationModeChanged;
 
 		protected internal void SetSimulationMode(bool value)

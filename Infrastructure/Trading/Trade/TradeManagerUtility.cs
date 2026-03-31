@@ -4,7 +4,7 @@ using Sapientia.Pooling;
 
 namespace Trading
 {
-	public static partial class TradingUtility
+	public static partial class TradeManagerUtility
 	{
 		public static IEnumerable<TradeReward> EnumerateActualReward(this ContentReference<TradeConfig> tradeRef, Tradeboard board)
 			=> tradeRef.Read().EnumerateActualReward(board);
@@ -45,18 +45,27 @@ namespace Trading
 
 		internal static bool Execute(this TradeConfig trade, Tradeboard tradeboard)
 		{
-			// Сначала платим
-			var success = trade.cost.Execute(tradeboard);
-			if (!success)
-				return false;
+			bool success;
+			var costs = ListPool<TradeCost>.Get();
+			var rewards = ListPool<TradeReward>.Get();
+			using (tradeboard.Register(costs))
+			using (tradeboard.Register(rewards))
+			{
+				// Сначала платим
+				success = trade.cost.Execute(tradeboard);
+				if (!success)
+					return false;
 
-			// Потом получаем
-			success = trade.reward.Execute(tradeboard);
+				// Потом получаем
+				success = trade.reward.Execute(tradeboard);
 
-			// Если что-то пошло не по плану возвращаем
-			if (!success)
-				tradeboard.RefundResult();
+				// Если что-то пошло не по плану возвращаем
+				if (!success)
+					tradeboard.RefundResult();
 
+			}
+			costs.ReleaseToStaticPool();
+			rewards.ReleaseToStaticPool();
 			return success;
 		}
 	}

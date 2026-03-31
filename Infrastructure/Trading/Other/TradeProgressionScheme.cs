@@ -1,21 +1,38 @@
 using System;
 using Sapientia;
-#if CLIENT
+using Sapientia.Conditions;
 using UnityEngine;
-#endif
 
 namespace Trading
 {
+	public enum TradeProgressionSchemeSource
+	{
+		[Tooltip("Свой личный прогресс")]
+		Local,
+
+		[Tooltip("Общий прогресс между несколькими трейд участниками")]
+		Shared
+	}
+
 	// Выглядит так что это можно использовать не только в Trading
 	[Serializable]
-	public struct TradeProgressionScheme
+	public class TradeProgressionScheme
 	{
+		public const string BOARD_PROGRESS_KEY_FORMAT = "TradeProgress_{0}";
+		public const string PROGRESS_GUID_KEY_FORMAT = "{0}_{1}";
+
 		/// <summary>
-		/// Тип авто сброса: <br/>
+		/// Условие при котором награда прогрессирует, если 'None', то прогрессирует всегда
+		/// </summary>
+		[SerializeReference]
+		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
+
+		/// <summary>
+		/// Тип запланированного сброса: <br/>
 		/// <b>None</b> - отсутствует <br/>
 		/// <b>Full</b> - полный сброс <br/>
 		/// </summary>
-		public TradeProgressionResetType type;
+		public TradeProgressionScheduleResetType type;
 
 		/// <summary>
 		/// Расписание при котором будет происходить сброс
@@ -23,13 +40,11 @@ namespace Trading
 		public ScheduleScheme schedule;
 	}
 
-	public enum TradeProgressionResetType
+	public enum TradeProgressionScheduleResetType
 	{
 		None,
 
-#if CLIENT
 		[Tooltip("Полная очистка")]
-#endif
 		Full,
 
 		// Incremental
@@ -52,14 +67,14 @@ namespace Trading
 		public static int GetCurrentProgress(this in TradeProgressionState state, in TradeProgressionScheme scheme,
 			DateTime dateTime)
 		{
-			if (scheme.type == TradeProgressionResetType.None)
+			if (scheme.type == TradeProgressionScheduleResetType.None)
 				return state.current;
 
 			var utcAt = new DateTime(state.firstIncrementTimestamp);
 
 			switch (scheme.type)
 			{
-				case TradeProgressionResetType.Full:
+				case TradeProgressionScheduleResetType.Full:
 
 					if (scheme.schedule.IsPassed(utcAt, dateTime))
 						return 0;
@@ -93,7 +108,7 @@ namespace Trading
 
 			switch (scheme.type)
 			{
-				case TradeProgressionResetType.Full:
+				case TradeProgressionScheduleResetType.Full:
 					if (scheme.schedule.IsPassed(utcAt, now))
 						ResetProgress(ref state, in scheme, now);
 
@@ -107,7 +122,7 @@ namespace Trading
 
 		public static void ResetProgress(this ref TradeProgressionState state, in TradeProgressionScheme scheme, DateTime dateTime)
 		{
-			state.current = 0;
+			state.current                 = 0;
 			state.firstIncrementTimestamp = 0;
 		}
 	}

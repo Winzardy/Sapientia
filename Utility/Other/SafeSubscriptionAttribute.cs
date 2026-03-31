@@ -3,10 +3,18 @@ using System;
 namespace Sapientia
 {
 	/// <remarks>
-	/// ⚠️ Защита от утечки при dispose или release
+	/// ⚠️ Все подписчики автоматически удаляются после Dispose или Release объекта
 	/// </remarks>
 	[AttributeUsage(AttributeTargets.Event)]
-	public sealed class SafeSubscriptionAttribute : Attribute
+	public sealed class AutoClearOnDisposeEventAttribute : Attribute
+	{
+	}
+
+	/// <remarks>
+	/// ⚠️ Все подписчики автоматически удаляются после первого вызова события
+	/// </remarks>
+	[AttributeUsage(AttributeTargets.Event)]
+	public sealed class InvokeOnceEventAttribute : Attribute
 	{
 	}
 }

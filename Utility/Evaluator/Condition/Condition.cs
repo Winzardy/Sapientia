@@ -1,5 +1,6 @@
 #nullable disable
 using System;
+using JetBrains.Annotations;
 using Sapientia.Evaluators;
 
 namespace Sapientia.Conditions
@@ -40,7 +41,7 @@ namespace Sapientia.Conditions
 
 	public static class ConditionUtility
 	{
-		public static bool IsFulfilled<TContext>(this ICondition<TContext> condition, TContext context)
+		public static bool IsFulfilled<TContext>([CanBeNull] this ICondition<TContext> condition, TContext context)
 			=> condition == null || condition.Evaluate(context);
 	}
 }

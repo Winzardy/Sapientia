@@ -11,7 +11,16 @@ namespace Trading
 		protected internal virtual int Priority => TradeRewardPriority.NORMAL;
 
 		internal bool CanExecute(Tradeboard board, out TradeReceiveError? error) => CanReceive(board, out error);
-		internal bool Execute(Tradeboard board) => Receive(board);
+
+		internal bool Execute(Tradeboard board)
+		{
+			if (!board.IsTradeMode)
+				throw TradingDebug.Exception("Trade mode must be active before executing a trade...");
+
+			var receive = Receive(board);
+			board.Register(this);
+			return receive;
+		}
 
 		/// <summary>
 		/// Доступно ли для получения? пример: нет места в инвентаре
@@ -37,8 +46,8 @@ namespace Trading
 		public TradeReceiveError(string category, int code, object rawData = null)
 		{
 			this.category = category;
-			this.code = code;
-			this.rawData = rawData;
+			this.code     = code;
+			this.rawData  = rawData;
 		}
 
 		public TradeReceiveError(string category, object rawData = null) : this(category, 0, rawData)

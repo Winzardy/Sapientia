@@ -1,6 +1,7 @@
 using Content;
 using JetBrains.Annotations;
 using Sapientia;
+using Sapientia.Pooling;
 
 namespace Trading
 {
@@ -12,16 +13,10 @@ namespace Trading
 		: StaticWrapper<ITradeGateway>
 #endif
 	{
-		public static bool CanPay([CanBeNull] TradeCost cost, Tradeboard board, out TradePayError? error)
+		public static bool CanPay(TradeCost cost, Tradeboard board, out TradePayError? error)
 		{
 			if (!board.IsSimulationMode)
 				throw TradingDebug.Exception($"CanPay check requires simulation mode (board [ {board.Id} ])");
-
-			if (cost == null)
-			{
-				error = null;
-				return true;
-			}
 
 #if CLIENT
 			if (board.IsFetchMode)
@@ -40,22 +35,29 @@ namespace Trading
 			return cost.CanExecute(board, out error);
 		}
 
-		public static bool Pay([CanBeNull] TradeCost cost, Tradeboard board)
+		public static bool Pay(TradeCost cost, Tradeboard board)
 		{
-			return cost == null || cost.Execute(board);
+			using (board.TradeModeScope())
+				return cost.Execute(board);
 		}
 
 		public static bool CanReceive(TradeReward reward, Tradeboard board, out TradeReceiveError? error)
 			=> reward.CanExecute(board, out error);
 
 		public static bool Receive(TradeReward reward, Tradeboard board)
-			=> reward.Execute(board);
+		{
+			using (board.TradeModeScope())
+				return reward.Execute(board);
+		}
 
 		public static bool CanExecute(in TradeConfig config, Tradeboard board, out TradeExecuteError? error)
 			=> config.CanExecute(board, out error);
 
 		public static bool Execute(in TradeConfig config, Tradeboard board)
-			=> config.Execute(board);
+		{
+			using (board.TradeModeScope())
+				return config.Execute(board);
+		}
 
 #if CLIENT
 		public static bool CanFetch(in ContentReference<TradeCost> costRef, Tradeboard tradeboard, out TradePayError? error)

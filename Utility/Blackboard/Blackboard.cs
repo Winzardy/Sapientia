@@ -18,7 +18,8 @@ namespace Sapientia
 		private HashSet<IBlackboardToken>? _tokens;
 		private Dictionary<Type, IBlackboardStorage> _typeToStorage;
 
-		public event Action Released;
+		[InvokeOnceEvent]
+		public event Action? Released;
 
 		protected internal bool _active = true;
 
@@ -67,6 +68,8 @@ namespace Sapientia
 			_typeToStorage.Clear();
 
 			Released?.Invoke();
+			Released = null;
+
 			OnRelease();
 		}
 
