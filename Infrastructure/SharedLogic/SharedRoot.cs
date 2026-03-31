@@ -30,7 +30,7 @@ namespace SharedLogic
 		public SharedRoot(ISharedNodesRegistrar registrar, ISystemTimeProvider dateTimeProvider, ILogger logger = null)
 		{
 			_registrar = registrar;
-			_logger = logger;
+			_logger    = logger;
 
 			_registry = new SharedNodeRegistry();
 
@@ -92,7 +92,15 @@ namespace SharedLogic
 			_revision++;
 
 			if (SLDebug.Logging.Command.execute && SLDebug.Logging.Command.ShouldLog(command.GetType(), LogKind.Execute))
-				_logger?.Log($"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})");
+			{
+				if (_logger != null)
+				{
+					var msg = $"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})";
+					msg += command.LogMessage;
+					_logger.Log(msg);
+				}
+
+			}
 		}
 
 		public void OnExecuted(ICommand command)

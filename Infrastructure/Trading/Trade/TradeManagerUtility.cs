@@ -14,6 +14,7 @@ namespace Trading
 			foreach (var _ in trade.cost.EnumerateActualInternal(board))
 			{
 				// Нужно перебрать цену, так как без ее перебора будет не валидная награда, так как цена может двигать рандом...
+				_.CanExecute(board, out var _);
 			}
 
 			foreach (var actualReward in trade.reward.EnumerateActualInternal(board))
@@ -45,27 +46,23 @@ namespace Trading
 
 		internal static bool Execute(this TradeConfig trade, Tradeboard tradeboard)
 		{
-			bool success;
-			var costs = ListPool<TradeCost>.Get();
-			var rewards = ListPool<TradeReward>.Get();
-			using (tradeboard.Register(costs))
-			using (tradeboard.Register(rewards))
+			// Сначала платим
+			var success = trade.cost.Execute(tradeboard);
+
+			// Если что-то пошло не по плану возвращаем
+			if (!success)
 			{
-				// Сначала платим
-				success = trade.cost.Execute(tradeboard);
-				if (!success)
-					return false;
-
-				// Потом получаем
-				success = trade.reward.Execute(tradeboard);
-
-				// Если что-то пошло не по плану возвращаем
-				if (!success)
-					tradeboard.RefundResult();
-
+				tradeboard.RefundResult();
+				return false;
 			}
-			costs.ReleaseToStaticPool();
-			rewards.ReleaseToStaticPool();
+
+			// Потом получаем
+			success = trade.reward.Execute(tradeboard);
+
+			// Если что-то пошло не по плану возвращаем
+			if (!success)
+				tradeboard.RefundResult();
+
 			return success;
 		}
 	}

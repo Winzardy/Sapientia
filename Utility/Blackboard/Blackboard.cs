@@ -18,8 +18,7 @@ namespace Sapientia
 		private HashSet<IBlackboardToken>? _tokens;
 		private Dictionary<Type, IBlackboardStorage> _typeToStorage;
 
-		[InvokeOnceEvent]
-		public event Action? Released;
+		[InvokeOnceEvent] public event Action? Released;
 
 		protected internal bool _active = true;
 
@@ -140,6 +139,17 @@ namespace Sapientia
 			var token = storage.Register(in value, key);
 			_tokens.Add(token);
 			return token;
+		}
+
+		public BlackboardToken? RegisterOrOverwrite<T>(in T value, string? key = null)
+		{
+			if (!Contains<T>(key))
+			{
+				return Register(in value, key);
+			}
+
+			Overwrite(in value, key);
+			return null;
 		}
 
 		public void Overwrite<T>(in T value, string? key = null)

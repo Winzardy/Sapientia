@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Sapientia.Pooling;
 
 namespace Trading
 {
@@ -28,7 +26,7 @@ namespace Trading
 			OnBeforePay(board);
 			var result = Pay(board);
 			OnAfterPay(board);
-			board.Register(this);
+			board.RegisterInternal(this);
 			return result;
 		}
 

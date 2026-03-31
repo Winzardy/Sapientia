@@ -1,4 +1,3 @@
-using System;
 using Trading.Result;
 
 namespace Trading.Advertising

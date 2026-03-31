@@ -17,13 +17,13 @@ namespace Trading
 		/// </summary>
 		public bool IsTradeMode { get => _tradeMode; }
 
-		internal void Register(TradeReward reward)
+		internal void RegisterInternal(TradeReward reward)
 		{
 			if (!_rewards.Add(reward))
 				throw TradingDebug.Exception("Already registered...");
 		}
 
-		internal void Register(TradeCost cost)
+		internal void RegisterInternal(TradeCost cost)
 		{
 			if (!_costs.Add(cost))
 				throw TradingDebug.Exception("Already registered...");
@@ -45,10 +45,13 @@ namespace Trading
 			if (!_tradeMode)
 				throw TradingDebug.Exception("Trade mode is not active");
 
-			foreach (ITradeFinishHandler cost in _costs)
-				cost.OnTradeFinished(this);
-			foreach (ITradeFinishHandler reward in _rewards)
-				reward.OnTradeFinished(this);
+			foreach (var cost in _costs)
+				if (cost is ITradeFinishHandler handler)
+					handler.OnTradeFinished(this);
+
+			foreach (var reward in _rewards)
+				if (reward is ITradeFinishHandler handler)
+					handler.OnTradeFinished(this);
 
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _rewards);
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _costs);

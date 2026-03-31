@@ -18,7 +18,7 @@ namespace Trading
 				throw TradingDebug.Exception("Trade mode must be active before executing a trade...");
 
 			var receive = Receive(board);
-			board.Register(this);
+			board.RegisterInternal(this);
 			return receive;
 		}
 

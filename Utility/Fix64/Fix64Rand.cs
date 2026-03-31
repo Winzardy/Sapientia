@@ -33,7 +33,7 @@ namespace Sapientia.Deterministic.Utility
 		}
 
 		public Fix64 Next() => NextFix64();
-		public int NextInt() => (int) NextFix64();
+		public int NextInt() => (int) NextUInt32();
 
 		public Fix64Rand(int seed) : this((ulong) seed)
 		{

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using Sapientia;
 
 namespace SharedLogic
 {
@@ -14,7 +16,9 @@ namespace SharedLogic
 
 	public interface ICommand
 	{
-		CommandPriority Priority => CommandPriority.Passive;
+		CommandPriority Priority { get => CommandPriority.Passive; }
+		string LogMessage { get => string.Empty; }
+
 		bool Validate(ISharedRoot root, out Exception exception);
 		void Execute(ISharedRoot root);
 	}

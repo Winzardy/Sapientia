@@ -2,19 +2,22 @@ using System;
 
 namespace Sapientia
 {
+	[AttributeUsage(AttributeTargets.Event)]
+	public abstract class EventPolicyAttribute : Attribute
+	{
+	}
+
 	/// <remarks>
 	/// ⚠️ Все подписчики автоматически удаляются после Dispose или Release объекта
 	/// </remarks>
-	[AttributeUsage(AttributeTargets.Event)]
-	public sealed class AutoClearOnDisposeEventAttribute : Attribute
+	public sealed class AutoClearOnDisposeEventAttribute : EventPolicyAttribute
 	{
 	}
 
 	/// <remarks>
 	/// ⚠️ Все подписчики автоматически удаляются после первого вызова события
 	/// </remarks>
-	[AttributeUsage(AttributeTargets.Event)]
-	public sealed class InvokeOnceEventAttribute : Attribute
+	public sealed class InvokeOnceEventAttribute : EventPolicyAttribute
 	{
 	}
 }
