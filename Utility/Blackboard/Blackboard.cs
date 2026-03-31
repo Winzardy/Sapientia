@@ -143,9 +143,13 @@ namespace Sapientia
 
 		public BlackboardToken? RegisterOrOverwrite<T>(in T value, string? key = null)
 		{
-			if (!Contains<T>(key))
-			{
+			if (!TryGet<T>(key, out var registeredValue))
 				return Register(in value, key);
+
+			if (EqualityComparer<T>.Default.Equals(registeredValue, value))
+			{
+				var keyLabel = key != null ? $" with key [ {key} ]" : string.Empty;
+				throw new BlackboardException($"Attempt to register or overwrite the same value of type [ {typeof(T).Name} ]{keyLabel}");
 			}
 
 			Overwrite(in value, key);
@@ -156,8 +160,8 @@ namespace Sapientia
 		{
 			if (!TryGetStorage<T>(out var storage))
 			{
-				var keyLabel = key != null ? $" with key [{key}]" : string.Empty;
-				throw new BlackboardException($"Attempt to get value of type '{typeof(T).Name}'{keyLabel}, but it is not registered");
+				var keyLabel = key != null ? $" with key [ {key} ]" : string.Empty;
+				throw new BlackboardException($"Attempt to get value of type [ {typeof(T).Name} ] {keyLabel}, but it is not registered");
 			}
 
 			storage!.Overwrite(in value, key);
