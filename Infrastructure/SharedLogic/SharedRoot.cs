@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Sapientia;
 using Sapientia.Extensions;
 using SharedLogic.Internal;
-using SharedLogic.Migration;
 
 namespace SharedLogic
 {
@@ -21,6 +20,21 @@ namespace SharedLogic
 		private SharedNodeRegistry _registry;
 
 		ILogger ISharedRoot.Logger => _logger;
+
+		public bool IsDebug
+		{
+			get
+			{
+#if CLIENT
+#if DEBUG
+				return true;
+#endif
+				return false;
+#else
+				return false;
+#endif
+			}
+		}
 
 		public event Action Loaded;
 		public event Action Saved;
@@ -99,7 +113,6 @@ namespace SharedLogic
 					msg += command.LogMessage;
 					_logger.Log(msg);
 				}
-
 			}
 		}
 
