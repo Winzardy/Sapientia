@@ -58,6 +58,8 @@ namespace Sapientia.MemoryAllocator
 				return;
 
 			UnityEditor.EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+
+			UnityEngine.Debug.Log($"{nameof(WorldManager)}.{nameof(Dispose)}");
 			Dispose();
 		}
 #endif
@@ -168,15 +170,11 @@ namespace Sapientia.MemoryAllocator
 			ref var worldState = ref _worldsStates[worldId.id];
 			ref var world = ref _worlds[worldId.id];
 
-			if (worldState.IsValid)
-			{
-				// Переиспользуем память
-				worldState.SetupNewWorldId(worldId);
-			}
-			else
-			{
+			if (!worldState.IsValid) // Переиспользуем память
 				worldState = new WorldState(worldId, initialSize);
-			}
+
+			worldId.version = ++_versions[worldId.id];
+			worldState.SetupNewWorldId(worldId);
 
 			world = new World(worldState);
 			return world;
@@ -194,7 +192,7 @@ namespace Sapientia.MemoryAllocator
 			}
 
 			var id = _freeIndexes.RemoveLast();
-			var version = ++_versions[id];
+			var version = _versions[id];
 			return new WorldId(id, version);
 		}
 
