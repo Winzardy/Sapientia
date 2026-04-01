@@ -26,7 +26,7 @@ namespace SharedLogic
 			get
 			{
 #if CLIENT
-#if DEBUG
+#if DebugLog
 				return true;
 #endif
 				return false;
