@@ -40,6 +40,12 @@ namespace Sapientia.Pooling
 			_pool.Release(_obj);
 		}
 
+		public IDisposable Get(out T obj)
+		{
+			obj = _obj;
+			return this;
+		}
+
 		public static void Release(ref PooledObject<T> p)
 		{
 			if (p._obj == null)

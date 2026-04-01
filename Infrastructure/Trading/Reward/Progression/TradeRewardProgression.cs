@@ -35,6 +35,7 @@ namespace Trading
 		[FormerlySerializedAs("autoReset")]
 #endif
 		public TradeProgressionScheme scheme;
+
 		public ContentReference<TradeProgressionScheme> schemeReference;
 
 		public void Reset(Tradeboard board)
@@ -63,14 +64,27 @@ namespace Trading
 		public ref readonly TradeRewardProgressionStage GetCurrentStage(Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
-			var progress = node.GetCurrentProgress(GetProgressKey(board.Id), scheme);
-			var length = stages.Value.Length;
-			var index = progress >= length
-				? cycle
-					? progress % length
-					: ^1
-				: progress;
+			return ref GetCurrentStage(node, board.Id);
+		}
+
+		public ref readonly TradeRewardProgressionStage GetCurrentStage(ITradingNode node, string tradeId)
+		{
+			var index = GetCurrentStageIndex(node, tradeId);
 			return ref stages.Value.GetValueByIndex(index);
+		}
+
+		public Index GetCurrentStageIndex(Tradeboard board)
+		{
+			var node = board.Get<ITradingNode>();
+			return GetCurrentStageIndex(node, board.Id);
+		}
+
+		public Index GetCurrentStageIndex(ITradingNode node, string tradeId)
+		{
+			var key = GetProgressKey(tradeId);
+			var progress = node.GetCurrentProgress(key, scheme);
+			var length = stages.Value.Length;
+			return progress >= length ? cycle ? progress % length : ^1 : progress;
 		}
 
 		private void TryIncrementStageAfterReceive(in TradeRewardProgressionStage stage, Tradeboard board)

@@ -22,19 +22,6 @@ namespace Trading
 					yield return actualReward;
 		}
 
-		public static TradeReward[] GetAllRawReward(this TradeReward reward)
-		{
-			using (ListPool<TradeReward>.Get(out var list))
-			{
-				foreach (var r in reward)
-				{
-					list.Add(r);
-				}
-
-				return list.ToArray();
-			}
-		}
-
 		public static void RegisterResultHandleTo<THandle, TReward>(this TReward source, Tradeboard board, out THandle handle)
 			where TReward : TradeReward
 			where THandle : class, ITradeRewardResultHandle<TReward>, new()
