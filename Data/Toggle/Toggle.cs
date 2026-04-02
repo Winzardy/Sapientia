@@ -35,6 +35,12 @@ namespace Sapientia
 			this.value  = value;
 		}
 
+		public readonly bool IsEnable(out T value)
+		{
+			value = this.value;
+			return enable;
+		}
+
 		public static implicit operator T(Toggle<T> toggle) => toggle.enable ? toggle.value : default;
 
 		public static implicit operator Toggle<T>(T value)

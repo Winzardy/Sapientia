@@ -18,7 +18,7 @@ namespace Sapientia
 		private HashSet<IBlackboardToken>? _tokens;
 		private Dictionary<Type, IBlackboardStorage> _typeToStorage;
 
-		public event Action Released;
+		[InvokeOnceEvent] public event Action? Released;
 
 		protected internal bool _active = true;
 
@@ -67,6 +67,8 @@ namespace Sapientia
 			_typeToStorage.Clear();
 
 			Released?.Invoke();
+			Released = null;
+
 			OnRelease();
 		}
 
@@ -139,15 +141,32 @@ namespace Sapientia
 			return token;
 		}
 
+		public BlackboardToken? RegisterOrOverwrite<T>(in T value, string? key = null)
+		{
+			if (!TryGet<T>(key, out var registeredValue))
+				return Register(in value, key);
+
+			if (EqualityComparer<T>.Default.Equals(registeredValue, value))
+			{
+				var keyLabel = key != null ? $" with key [ {key} ]" : string.Empty;
+				if (!_isSimulationMode)
+					throw new BlackboardException($"Attempt to register or overwrite the same value of type [ {typeof(T).Name} ]{keyLabel}");
+				return null;
+			}
+
+			Overwrite(in value, key);
+			return null;
+		}
+
 		public void Overwrite<T>(in T value, string? key = null)
 		{
 			if (!TryGetStorage<T>(out var storage))
 			{
-				var keyLabel = key != null ? $" with key [{key}]" : string.Empty;
-				throw new BlackboardException($"Attempt to get value of type '{typeof(T).Name}'{keyLabel}, but it is not registered");
+				var keyLabel = key != null ? $" with key [ {key} ]" : string.Empty;
+				throw new BlackboardException($"Attempt to get value of type [ {typeof(T).Name} ] {keyLabel}, but it is not registered");
 			}
 
-			storage.Overwrite(in value, key);
+			storage!.Overwrite(in value, key);
 		}
 
 		internal void ReleaseToken(IBlackboardToken token)
@@ -159,8 +178,15 @@ namespace Sapientia
 			throw new BlackboardException(msg);
 		}
 
-		void IPoolable.OnGet() => _active = true;
-		void IPoolable.Release() => ReleaseInternal();
+		void IPoolable.OnGet()
+		{
+			_active = true;
+		}
+
+		void IPoolable.Release()
+		{
+			ReleaseInternal();
+		}
 
 		protected virtual void OnRelease()
 		{
@@ -190,7 +216,6 @@ namespace Sapientia
 			var newStorage = Pool<BlackboardStorage<T>>.Get();
 			newStorage.Bind(this);
 			_typeToStorage.Add(typeof(T), newStorage);
-
 			return newStorage;
 		}
 

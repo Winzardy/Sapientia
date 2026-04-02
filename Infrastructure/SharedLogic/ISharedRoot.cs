@@ -10,19 +10,20 @@ namespace SharedLogic
 	{
 		[CanBeNull] ILogger Logger { get; }
 
-		public T GetNode<T>() where T : class, ISharedNode;
-		public ISharedNode GetNode(string id);
-		public bool TryGetNode(string id, out ISharedNode node);
+		int Revision { get; }
+		bool IsDebug { get; }
 
-		public void Initialize();
-		public void Save(ISharedDataStreamer streamer);
-		public void Load(ISharedDataStreamer streamer);
+		T GetNode<T>() where T : class, ISharedNode;
+		ISharedNode GetNode(string id);
+		bool TryGetNode(string id, out ISharedNode node);
 
-		public IEnumerable<TFilter> Enumerate<TFilter>();
+		void Initialize();
+		void Save(ISharedDataStreamer streamer);
+		void Load(ISharedDataStreamer streamer);
 
-		public int Revision { get; }
+		IEnumerable<TFilter> Enumerate<TFilter>();
 
-		public void OnExecuted<T>(in T command)
+		void OnExecuted<T>(in T command)
 			where T : struct, ICommand;
 	}
 

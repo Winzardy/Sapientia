@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Sapientia;
 using Sapientia.Extensions;
 using SharedLogic.Internal;
-using SharedLogic.Migration;
 
 namespace SharedLogic
 {
@@ -22,6 +21,21 @@ namespace SharedLogic
 
 		ILogger ISharedRoot.Logger => _logger;
 
+		public bool IsDebug
+		{
+			get
+			{
+#if CLIENT
+#if DebugLog
+				return true;
+#endif
+				return false;
+#else
+				return false;
+#endif
+			}
+		}
+
 		public event Action Loaded;
 		public event Action Saved;
 
@@ -30,7 +44,7 @@ namespace SharedLogic
 		public SharedRoot(ISharedNodesRegistrar registrar, ISystemTimeProvider dateTimeProvider, ILogger logger = null)
 		{
 			_registrar = registrar;
-			_logger = logger;
+			_logger    = logger;
 
 			_registry = new SharedNodeRegistry();
 
@@ -92,7 +106,14 @@ namespace SharedLogic
 			_revision++;
 
 			if (SLDebug.Logging.Command.execute && SLDebug.Logging.Command.ShouldLog(command.GetType(), LogKind.Execute))
-				_logger?.Log($"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})");
+			{
+				if (_logger != null)
+				{
+					var msg = $"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})";
+					msg += command.LogMessage;
+					_logger.Log(msg);
+				}
+			}
 		}
 
 		public void OnExecuted(ICommand command)

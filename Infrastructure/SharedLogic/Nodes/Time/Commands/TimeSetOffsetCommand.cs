@@ -2,7 +2,6 @@ using System;
 
 namespace SharedLogic.Commands
 {
-	[Serializable]
 	public struct TimeSetOffsetCommand : IDebugCommand
 	{
 		public TimeSpan offset;

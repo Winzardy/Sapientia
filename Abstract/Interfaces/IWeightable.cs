@@ -9,15 +9,15 @@ namespace Sapientia
 		int Weight { get; }
 	}
 
-	public interface IWeightableWithEvaluator : IWeightable
+	public interface IWeightableWithEvaluator : IWeightable // Наследование от IWeightable хак для редактора
 	{
 		Type ContextType { get; }
 	}
 
-	public interface IWeightableWithEvaluator<TContext> : IWeightableWithEvaluator
+	public interface IWeightable<TContext> : IWeightableWithEvaluator
 	{
 		Type IWeightableWithEvaluator.ContextType { get => typeof(TContext); }
 
-		EvaluatedValue<TContext, int> Weight { get; }
+		EvaluatedValue<TContext, int> EvaluatedWeight { get; }
 	}
 }

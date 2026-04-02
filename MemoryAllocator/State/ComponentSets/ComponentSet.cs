@@ -298,7 +298,7 @@ namespace Sapientia.MemoryAllocator.State
 			_elements.EnsureGet<ComponentSetElement>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 			if (oldCapacity != _elements.Capacity)
-				UnityEngine.Debug.LogWarning($"ComponentSet was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+				LogExpandWarning(_elements.Count - 1, oldCapacity);
 #endif
 			return true;
 		}
@@ -348,7 +348,7 @@ namespace Sapientia.MemoryAllocator.State
 				ref var element = ref _elements.EnsureGet<ComponentSetElement<T>>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				if (oldCapacity != _elements.Capacity)
-					UnityEngine.Debug.LogWarning($"ComponentSet of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+					LogExpandWarning<T>(_elements.Count - 1, oldCapacity);
 #endif
 				element = new ComponentSetElement<T>(entity, default);
 
@@ -386,7 +386,7 @@ namespace Sapientia.MemoryAllocator.State
 				ref var element = ref _elements.EnsureGet<ComponentSetElement<T>>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				if (oldCapacity != _elements.Capacity)
-					UnityEngine.Debug.LogWarning($"ComponentSet of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+					LogExpandWarning<T>(_elements.Count - 1, oldCapacity);
 #endif
 				element = new ComponentSetElement<T>(entity, default);
 
@@ -477,6 +477,20 @@ namespace Sapientia.MemoryAllocator.State
 				_elements.RemoveSwapBack(worldState, entities[i].id);
 			}
 		}
+
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
+		[Unity.Burst.BurstDiscard]
+		private void LogExpandWarning(int oldCount, int oldCapacity)
+		{
+			UnityEngine.Debug.LogWarning($"{nameof(ComponentSet)} расширился. 1) Посмотрите стек вызова; 2) Определите тип компонента; 3) Найдите место создания коллекции и установите туда новый Capacity [Count: {oldCount}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}].");
+		}
+
+		[Unity.Burst.BurstDiscard]
+		private void LogExpandWarning<T>(int oldCount, int oldCapacity)
+		{
+			UnityEngine.Debug.LogWarning($"{nameof(ComponentSet)}<{typeof(T).Name}> расширился. 1) Найдите место создания коллекции для {typeof(T).Name} и установите туда новый Capacity [Count: {oldCount}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}].");
+		}
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)

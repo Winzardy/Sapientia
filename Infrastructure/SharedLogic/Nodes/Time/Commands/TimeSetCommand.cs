@@ -6,7 +6,6 @@ namespace SharedLogic
 	/// <summary>
 	/// Системная команда, которая отправляется перед каждой командой, чтобы двигать время
 	/// </summary>
-	[Serializable]
 	public struct TimeSetCommand : ICommand
 	{
 		public long timestamp;

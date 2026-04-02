@@ -20,9 +20,13 @@ namespace Trading
 
 		internal bool Execute(Tradeboard board)
 		{
+			if (!board.IsTradeMode)
+				throw TradingDebug.Exception("Trade mode must be active before executing a trade...");
+
 			OnBeforePay(board);
 			var result = Pay(board);
 			OnAfterPay(board);
+			board.RegisterInternal(this);
 			return result;
 		}
 
@@ -67,8 +71,8 @@ namespace Trading
 		public TradePayError(string category, int code, object rawData = null)
 		{
 			this.category = category;
-			this.code = code;
-			this.rawData = rawData;
+			this.code     = code;
+			this.rawData  = rawData;
 		}
 
 		public TradePayError(string category, object rawData = null) : this(category, 0, rawData)

@@ -1,9 +1,32 @@
+using System.Collections.Generic;
+using Content;
 using Sapientia.Pooling;
 
 namespace Trading
 {
-	public static partial class TradingUtility
+	public static partial class TradeManagerUtility
 	{
+		public static IEnumerable<TradeReward> EnumerateActualReward(this ContentReference<TradeConfig> tradeRef, Tradeboard board)
+			=> tradeRef.Read().EnumerateActualReward(board);
+
+		public static IEnumerable<TradeReward> EnumerateActualReward(this TradeConfig trade, Tradeboard board)
+		{
+			foreach (var _ in trade.cost.EnumerateActualInternal(board))
+			{
+				// Нужно перебрать цену, так как без ее перебора будет не валидная награда, так как цена может двигать рандом...
+				_.CanExecute(board, out var _);
+			}
+
+			foreach (var actualReward in trade.reward.EnumerateActualInternal(board))
+				yield return actualReward;
+		}
+
+		public static IEnumerable<TradeCost> EnumerateActualCost(this ContentReference<TradeConfig> tradeRef, Tradeboard board)
+			=> tradeRef.Read().EnumerateActualCost(board);
+
+		public static IEnumerable<TradeCost> EnumerateActualCost(this TradeConfig trade, Tradeboard board)
+			=> trade.cost.EnumerateActualInternal(board);
+
 		internal static bool CanExecute(this TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
 		{
 			var result = true;
@@ -25,8 +48,13 @@ namespace Trading
 		{
 			// Сначала платим
 			var success = trade.cost.Execute(tradeboard);
+
+			// Если что-то пошло не по плану возвращаем
 			if (!success)
+			{
+				tradeboard.RefundResult();
 				return false;
+			}
 
 			// Потом получаем
 			success = trade.reward.Execute(tradeboard);
@@ -46,7 +74,7 @@ namespace Trading
 
 		public TradeExecuteError(TradePayError? payError, TradeReceiveError? receiveError)
 		{
-			this.payError = payError;
+			this.payError     = payError;
 			this.receiveError = receiveError;
 		}
 

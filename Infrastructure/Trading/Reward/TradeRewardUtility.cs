@@ -18,21 +18,8 @@ namespace Trading
 		public static IEnumerable<TradeReward> EnumerateActual(this TradeReward reward, Tradeboard board)
 		{
 			using (board.SimulationModeScope())
-				foreach (var actualReward in reward.OnEnumerateActual(board))
+				foreach (var actualReward in reward.EnumerateActualInternal(board))
 					yield return actualReward;
-		}
-
-		public static TradeReward[] GetAllRawReward(this TradeReward reward)
-		{
-			using (ListPool<TradeReward>.Get(out var list))
-			{
-				foreach (var r in reward)
-				{
-					list.Add(r);
-				}
-
-				return list.ToArray();
-			}
 		}
 
 		public static void RegisterResultHandleTo<THandle, TReward>(this TReward source, Tradeboard board, out THandle handle)

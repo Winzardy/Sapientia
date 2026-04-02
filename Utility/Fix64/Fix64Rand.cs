@@ -27,13 +27,13 @@ namespace Sapientia.Deterministic.Utility
 				unchecked
 				{
 					_state = (uint) value.a | (ulong) (uint) value.b << 32;
-					_inc = (uint) value.c | (ulong) (uint) value.d << 32;
+					_inc   = (uint) value.c | (ulong) (uint) value.d << 32;
 				}
 			}
 		}
 
 		public Fix64 Next() => NextFix64();
-		public int NextInt() => (int) NextFix64();
+		public int NextInt() => (int) NextUInt32();
 
 		public Fix64Rand(int seed) : this((ulong) seed)
 		{
@@ -41,9 +41,7 @@ namespace Sapientia.Deterministic.Utility
 
 		public Fix64Rand(ulong seed)
 		{
-			ulong x = seed;
-			_state = NextSplitMix64(ref x);
-			_inc = NextSplitMix64(ref x);
+			InitFromSeed(seed);
 		}
 
 		public Fix64Rand(State state)
@@ -61,6 +59,15 @@ namespace Sapientia.Deterministic.Utility
 			}
 
 			return minInclusive + Next() * (maxExclusive - minInclusive);
+		}
+
+		public void InitFromSeed(int seed) => InitFromSeed((ulong) seed);
+
+		public void InitFromSeed(ulong seed)
+		{
+			ulong x = seed;
+			_state = NextSplitMix64(ref x);
+			_inc   = NextSplitMix64(ref x);
 		}
 
 		public int Next(int minInclusive, int maxExclusive)

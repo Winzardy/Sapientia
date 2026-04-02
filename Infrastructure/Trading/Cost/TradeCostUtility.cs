@@ -37,7 +37,7 @@ namespace Trading
 
 		public static bool IsEmpty(this ContentEntry<TradeCost> entry, Tradeboard board)
 		{
-			if (((BaseContentEntry<TradeCost>) entry).IsEmpty())
+			if (entry.IsEmpty())
 				return true;
 
 			return IsEmpty(entry.Value, board);

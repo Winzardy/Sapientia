@@ -40,13 +40,13 @@ namespace Trading
 
 		#region Enumerate
 
-		protected internal override IEnumerable<TradeReward> OnEnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> EnumerateActualInternal(Tradeboard board)
 		{
 			var randomizer = board.Get<IRandomizer<Fix64>>();
 			var roll = randomizer.Next(0, MAX_CHANCE);
 
 			if (roll <= chance.Evaluate(board))
-				foreach (var actualReward in reward.OnEnumerateActual(board))
+				foreach (var actualReward in reward.EnumerateActualInternal(board))
 					yield return actualReward;
 		}
 

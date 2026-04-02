@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using Sapientia;
 
 namespace SharedLogic
 {
 	public enum CommandPriority
 	{
 		Passive,
+
 		/// <summary>
 		/// Наличие команды с этим приоритетом приводит к немедленной попытке отправить все команды
 		/// </summary>
@@ -13,10 +16,11 @@ namespace SharedLogic
 
 	public interface ICommand
 	{
-		public CommandPriority Priority => CommandPriority.Passive;
+		CommandPriority Priority { get => CommandPriority.Passive; }
+		string LogMessage { get => string.Empty; }
 
-		public bool Validate(ISharedRoot root, out Exception exception);
-		public void Execute(ISharedRoot root);
+		bool Validate(ISharedRoot root, out Exception exception);
+		void Execute(ISharedRoot root);
 	}
 
 	// TODO: необходимо проверять user permission на исполнение таких команд
