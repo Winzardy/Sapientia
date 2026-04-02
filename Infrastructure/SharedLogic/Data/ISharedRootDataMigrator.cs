@@ -14,7 +14,7 @@ namespace SharedLogic
 
 	public interface ISharedLogicMigration<TData>
 	{
-		void Migrate(in TData data, ILogger logger);
+		void Migrate(in TData data, ILogger? logger);
 	}
 
 	public interface ISharedMigrationsRegistry<TData>
@@ -24,15 +24,15 @@ namespace SharedLogic
 
 	public abstract class SharedDataMigrator<TData> : ISharedRootDataMigrator<TData>
 	{
-		private ILogger _logger;
+		private readonly ILogger? _logger;
 		private int _savedVersion;
 
 		private bool _began;
-		private string _typeName;
+		private readonly string _typeName;
 
 		public abstract int CurrentVersion { get; }
 
-		protected SharedDataMigrator(ILogger logger)
+		protected SharedDataMigrator(ILogger? logger)
 		{
 			_logger = logger;
 			_typeName = GetType().Name;
@@ -68,6 +68,8 @@ namespace SharedLogic
 
 		protected abstract int GetCurrentVersion(in TData data);
 		protected abstract void SetCurrentVersion(in TData data);
+
+		public bool IsMigrationNeeded(in TData data) => GetCurrentVersion(data) != CurrentVersion;
 
 		public void MigrateData<T>(in T data, ISharedMigrationsRegistry<T> migrations)
 		{
