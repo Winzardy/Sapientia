@@ -2,7 +2,7 @@ using System;
 
 namespace Sapientia.Deterministic.Utility
 {
-	public class Fix64Rand
+	public class Rand
 	{
 		private ulong _state;
 		private ulong _inc;
@@ -32,33 +32,32 @@ namespace Sapientia.Deterministic.Utility
 			}
 		}
 
-		public Fix64 Next() => NextFix64();
-		public int NextInt() => (int) NextUInt32();
+		public int Next() => (int) NextUInt32();
 
-		public Fix64Rand(int seed) : this((ulong) seed)
+		public Rand(int seed) : this((ulong) seed)
 		{
 		}
 
-		public Fix64Rand(ulong seed)
+		public Rand(ulong seed)
 		{
 			InitFromSeed(seed);
 		}
 
-		public Fix64Rand(State state)
+		public Rand(State state)
 		{
 			this.Current = state;
 		}
 
-		internal Fix64 NextFix64() => Fix64.FromRaw(NextUInt32());
+		public Fix64 NextFix64() => Fix64.FromRaw(NextUInt32());
 
-		public Fix64 Next(Fix64 minInclusive, Fix64 maxExclusive)
+		public Fix64 NextFix64(Fix64 minInclusive, Fix64 maxExclusive)
 		{
 			if (minInclusive > maxExclusive)
 			{
 				(minInclusive, maxExclusive) = (maxExclusive, minInclusive);
 			}
 
-			return minInclusive + Next() * (maxExclusive - minInclusive);
+			return minInclusive + NextFix64() * (maxExclusive - minInclusive);
 		}
 
 		public void InitFromSeed(int seed) => InitFromSeed((ulong) seed);
@@ -70,7 +69,7 @@ namespace Sapientia.Deterministic.Utility
 			_inc   = NextSplitMix64(ref x);
 		}
 
-		public int Next(int minInclusive, int maxExclusive)
+		public int NextFix64(int minInclusive, int maxExclusive)
 		{
 			if (minInclusive == maxExclusive)
 				return minInclusive;
