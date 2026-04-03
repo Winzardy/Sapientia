@@ -6,7 +6,7 @@ using Sapientia.Extensions;
 namespace ProjectInformation
 {
 	[Serializable]
-	public partial struct CountryEntry
+	public partial struct CountryEntry : IEquatable<CountryEntry>
 	{
 		public const string UNKNOWN = "Unknown";
 
@@ -25,6 +25,8 @@ namespace ProjectInformation
 		public static implicit operator bool(CountryEntry platform) =>
 			!platform.code.IsNullOrEmpty();
 
+		public bool Equals(CountryEntry other) => code == other.code;
+		public override bool Equals(object obj) => obj is CountryEntry other && Equals(other);
 		public override int GetHashCode() => code?.GetHashCode() ?? 0;
 
 		public override string ToString() => code ?? UNKNOWN;
