@@ -79,6 +79,8 @@ namespace Trading
 
 	public static class TradeboardUtility
 	{
+		private const string SUPPRESS_BIND_WARNING_KEY = "suppress_bind_warning";
+
 		public static string GetTradeId(this in ContentReference<TradeCost> reference) => reference.guid;
 		public static string GetTradeId(this in ContentReference<TradeReward> reference) => reference.guid;
 		public static string GetTradeId(this ContentEntry<TradeCost> reference) => reference.Guid;
@@ -105,14 +107,25 @@ namespace Trading
 
 		public static void Bind(this Tradeboard board, string tradeId, bool warning = true)
 		{
+			var skip = board.TryGet<bool>(SUPPRESS_BIND_WARNING_KEY, out var value) && value;
 			if (board.Id.IsNullOrEmpty())
 			{
 				board.SetId(tradeId);
 			}
-			else if (warning)
+			else if (warning && !skip)
 			{
 				TradingDebug.LogWarning($"Tradeboard is already bound to '{board.Id}', attempted to bind '{tradeId}'");
 			}
+		}
+
+		public static void Unbind(this Tradeboard board)
+		{
+			board.SetId(null);
+		}
+
+		public static IDisposable SuppressBindWarning(this Tradeboard board)
+		{
+			return board.Register(true, SUPPRESS_BIND_WARNING_KEY);
 		}
 	}
 }
