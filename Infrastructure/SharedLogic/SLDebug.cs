@@ -12,7 +12,7 @@ namespace SharedLogic
 {
 	public static class SLDebug
 	{
-		public static Sapientia.ILogger logger;
+		public static Sapientia.ILogger? logger;
 
 #if CLIENT
 		[HideInCallstack]
