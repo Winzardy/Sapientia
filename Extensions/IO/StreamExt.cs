@@ -17,19 +17,19 @@ namespace Sapientia.Extensions
 			return result;
 		}
 
-		// public static async IAsyncEnumerable<string> ReadLinesAsync(this Stream stream)
-		// {
-		// 	using var reader = new StreamReader(stream);
-		// 	await foreach (var line in reader.ReadLinesAsync().ConfigureAwait(false))
-		// 		yield return line;
-		// }
-		//
-		// public static async IAsyncEnumerable<string> ReadLinesAsync(this StreamReader reader)
-		// {
-		// 	while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
-		// 	{
-		// 		yield return line;
-		// 	}
-		// }
+		public static async IAsyncEnumerable<string> ReadLinesAsync(this Stream stream)
+		{
+			using var reader = new StreamReader(stream);
+			await foreach (var line in reader.ReadLinesAsync().ConfigureAwait(false))
+				yield return line;
+		}
+
+		public static async IAsyncEnumerable<string> ReadLinesAsync(this StreamReader reader)
+		{
+			while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
+			{
+				yield return line;
+			}
+		}
 	}
 }
