@@ -23,9 +23,8 @@ namespace SharedLogic
 		void Execute(ISharedRoot root);
 	}
 
-	// TODO: необходимо проверять user permission на исполнение таких команд
 	/// <summary>
-	/// Только в Debug билде
+	/// Сервер разрешает исполнение только при наличии разрешения ExecuteDebugCommands
 	/// </summary>
 	public interface IDebugCommand : ICommand
 	{
