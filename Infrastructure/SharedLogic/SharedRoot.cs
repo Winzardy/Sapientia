@@ -21,21 +21,6 @@ namespace SharedLogic
 
 		ILogger ISharedRoot.Logger => _logger;
 
-		public bool IsDebug
-		{
-			get
-			{
-#if CLIENT
-#if DebugLog
-				return true;
-#endif
-				return false;
-#else
-				return false;
-#endif
-			}
-		}
-
 		public event Action Loaded;
 		public event Action Saved;
 

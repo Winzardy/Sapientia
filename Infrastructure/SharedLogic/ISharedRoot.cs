@@ -11,7 +11,6 @@ namespace SharedLogic
 		[CanBeNull] ILogger Logger { get; }
 
 		int Revision { get; }
-		bool IsDebug { get; }
 
 		T GetNode<T>() where T : class, ISharedNode;
 		ISharedNode GetNode(string id);
