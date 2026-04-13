@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Sapientia.Extensions;
 using Sapientia.Reflection;
 
 namespace Content.Management
@@ -27,7 +28,7 @@ namespace Content.Management
 						{
 							if (e is IUniqueContentEntry unique)
 							{
-								if (unique.Id != unique.Guid.ToString())
+								if (unique.Id != unique.Guid.ToString() && !unique.Id.IsNullOrEmpty())
 									guidToId[unique.Guid.ToString()] = unique.Id;
 
 								return unique.Guid.ToString();
