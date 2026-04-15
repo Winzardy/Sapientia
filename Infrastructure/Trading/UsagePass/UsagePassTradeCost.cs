@@ -6,7 +6,7 @@ using Sapientia;
 namespace Trading.UsagePass
 {
 	[Serializable]
-	public partial class UsagePassTradeCost : TradeCostWithReceipt<UsagePassTradeReceipt>, IResettableCost
+	public partial class UsagePassTradeCost : TradeCostWithReceipt<UsagePassTradeReceipt>, ITradeResettable
 	{
 		public const string ERROR_CATEGORY = "UsagePass";
 

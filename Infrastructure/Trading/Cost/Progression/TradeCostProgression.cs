@@ -14,7 +14,7 @@ using UnityEngine.Serialization;
 namespace Trading
 {
 	[Serializable]
-	public partial class TradeCostProgression : TradeCost, IResettableCost, ITradeFinishHandler
+	public partial class TradeCostProgression : TradeCost, ITradeResettable, ITradeFinishHandler
 	{
 		[NonSerialized]
 		private string _progressKeyCache;
