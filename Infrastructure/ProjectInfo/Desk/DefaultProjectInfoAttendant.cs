@@ -1,10 +1,10 @@
-using Sapientia;
+using System;
 
 namespace ProjectInformation
 {
 	public class DefaultProjectInfoAttendant : IProjectInfoAttendant
 	{
-		private ReactiveField<string> _userId;
+		private string _userId;
 
 		private readonly ProjectInfoConfig _info;
 
@@ -12,8 +12,9 @@ namespace ProjectInformation
 		private readonly BuildInfo _buildInfo;
 		private readonly DistributionEntry _store;
 
-		public IReactiveProperty<string> UserId => _userId;
-		public string Identifier => _info.identifier;
+		public string UserId { get => _userId; }
+		public string Identifier { get => _info.identifier; }
+		public event Action UserIdChanged;
 
 		public DefaultProjectInfoAttendant(in ProjectInfoConfig info, in PlatformEntry platform, BuildInfo buildInfo)
 		{
@@ -21,11 +22,9 @@ namespace ProjectInformation
 			if (!info.platformToDistribution.TryGetValue(platform, out var store))
 				store = DistributionType.UNDEFINED;
 
-			_platform = platform;
+			_platform  = platform;
 			_buildInfo = buildInfo;
-			_store = store;
-
-			_userId = new();
+			_store     = store;
 
 			ProjectDebug.Log($"OS: {_platform}");
 			ProjectDebug.Log($"Distribution: {_store}");
@@ -41,6 +40,10 @@ namespace ProjectInformation
 		public ref readonly PlatformEntry GetPlatform() => ref _platform;
 		public ref readonly DistributionEntry GetDistribution() => ref _store;
 
-		void IProjectInfoAttendant.SetUserId(string userId) => _userId.Set(userId, true);
+		void IProjectInfoAttendant.SetUserId(string userId)
+		{
+			_userId = userId;
+			UserIdChanged?.Invoke();
+		}
 	}
 }

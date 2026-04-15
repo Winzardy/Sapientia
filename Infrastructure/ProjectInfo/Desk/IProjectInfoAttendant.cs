@@ -1,18 +1,19 @@
-using Sapientia;
+using System;
 
 namespace ProjectInformation
 {
 	public interface IProjectInfoAttendant
 	{
-		public string Identifier { get; }
+		string Identifier { get; }
 
-		public string GetVersion();
-		public BuildInfo GetBuildInfo();
-		public ref readonly PlatformEntry GetPlatform();
-		public ref readonly DistributionEntry GetDistribution();
-		public string GetStoreUrl(DistributionEntry distribution);
+		string GetVersion();
+		BuildInfo GetBuildInfo();
+		ref readonly PlatformEntry GetPlatform();
+		ref readonly DistributionEntry GetDistribution();
+		string GetStoreUrl(DistributionEntry distribution);
 
-		public IReactiveProperty<string> UserId { get; }
+		string UserId { get; }
 		internal void SetUserId(string userId);
+		event Action UserIdChanged;
 	}
 }

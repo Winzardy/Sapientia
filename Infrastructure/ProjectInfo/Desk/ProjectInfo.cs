@@ -1,3 +1,4 @@
+using System;
 using Sapientia;
 
 namespace ProjectInformation
@@ -7,16 +8,15 @@ namespace ProjectInformation
 	/// </summary>
 	public class ProjectInfo : StaticWrapper<IProjectInfoAttendant>
 	{
-		private static IProjectInfoAttendant attendant => _instance;
-		public static bool IsInitialized => _instance != null;
+		private static IProjectInfoAttendant attendant { get => _instance; }
+		public static bool IsInitialized { get => _instance != null; }
 
-		public static string Version => attendant.GetVersion();
-		public static BuildInfo Build => attendant.GetBuildInfo();
-		public static string Identifier => attendant.Identifier;
+		public static string Version { get => attendant.GetVersion(); }
+		public static BuildInfo Build { get => attendant.GetBuildInfo(); }
+		public static string Identifier { get => attendant.Identifier; }
 
-		public static ref readonly PlatformEntry Platform => ref attendant.GetPlatform();
-		public static ref readonly DistributionEntry Distribution => ref attendant.GetDistribution();
-		public static IReactiveProperty<string> UserId => attendant.UserId;
+		public static ref readonly PlatformEntry Platform { get => ref attendant.GetPlatform(); }
+		public static ref readonly DistributionEntry Distribution { get => ref attendant.GetDistribution(); }
 
 		public static string GetReviewLink() => GetReviewLink(Distribution);
 		public static string GetReviewLink(DistributionEntry store) => attendant.GetStoreUrl(store);
@@ -24,6 +24,12 @@ namespace ProjectInformation
 		public static string GetStoreUrl() => GetStoreUrl(Distribution);
 		public static string GetStoreUrl(DistributionEntry store) => attendant.GetStoreUrl(store);
 
+		public static string UserId { get => attendant.UserId; }
 		public static void SetUserId(string userId) => attendant.SetUserId(userId);
+		public static event Action UserIdChanged
+		{
+			add => attendant.UserIdChanged += value;
+			remove => attendant.UserIdChanged -= value;
+		}
 	}
 }
