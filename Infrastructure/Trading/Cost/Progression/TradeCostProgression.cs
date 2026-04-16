@@ -45,6 +45,16 @@ namespace Trading
 			node.ResetProgress(GetProgressKey(board.Id), in scheme);
 		}
 
+		public int GetCurrentStageIndex(Tradeboard board)
+		{
+			var node = board.Get<ITradingNode>();
+			var progress = node.GetCurrentProgress(GetProgressKey(board.Id), scheme);
+			var length = stages.Value.Length;
+			return progress >= length
+				? cycle ? progress % length : length - 1
+				: progress;
+		}
+
 		protected override bool CanPay(Tradeboard board, out TradePayError? error)
 		{
 			ref readonly var stage = ref GetCurrentStage(board);
