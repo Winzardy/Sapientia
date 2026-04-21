@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Content;
 using Sapientia.Collections;
 using Sapientia.Pooling;
+using Sirenix.Utilities;
 using Trading.Result;
 
 namespace Trading
@@ -36,16 +37,56 @@ namespace Trading
 			return board.RegisterRewardHandle<TReward, THandle>(source);
 		}
 
-		public static IEnumerable<ITradeRewardResult> ExpandAll(this ITradeRewardResult[] results)
+		public static IEnumerable<ITradeRewardResult> ExpandAll(this ITradeRewardResult[] results, bool forceFullExpansion = false)
+		{
+			if (CollectionsExt.IsNullOrEmpty(results))
+				yield break;
+
+			using (TradeRewardResultHelper.ForceFullExpansion(forceFullExpansion))
+			{
+				foreach (var result in results)
+				{
+					if (result is IEnumerable<ITradeRewardResult> enumerable)
+					{
+						foreach (var child in ExpandAll(enumerable))
+							yield return child;
+					}
+					else
+					{
+						yield return result;
+					}
+				}
+			}
+		}
+
+		public static IEnumerable<ITradeRewardResult> ExpandAll(
+			this IEnumerable<ITradeRewardResult> results)
 		{
 			if (results.IsNullOrEmpty())
 				yield break;
 
+			using (HashSetPool<ITradeRewardResult>.Get(out var visited))
+			{
+				foreach (var result in ExpandAllInternal(results, visited))
+					yield return result;
+			}
+		}
+
+		private static IEnumerable<ITradeRewardResult> ExpandAllInternal(
+			IEnumerable<ITradeRewardResult> results,
+			HashSet<ITradeRewardResult> visited)
+		{
 			foreach (var result in results)
 			{
-				if (result is IEnumerable<ITradeRewardResult> enumerable)
+				if (!visited.Add(result))
 				{
-					foreach (var child in ExpandAll(enumerable))
+					yield return result;
+					continue;
+				}
+
+				if (result is IEnumerable<ITradeRewardResult> nested)
+				{
+					foreach (var child in ExpandAllInternal(nested, visited))
 						yield return child;
 				}
 				else
@@ -55,33 +96,14 @@ namespace Trading
 			}
 		}
 
-		public static IEnumerable<ITradeRewardResult> ExpandAll(this IEnumerable<ITradeRewardResult> results)
+		public static IEnumerable<ITradeRewardResult> MergeAll(this ITradeRewardResult[] results, bool forceFullExpansion = false)
 		{
-			if (results.IsNullOrEmpty())
-				yield break;
-
-			foreach (var result in results)
-			{
-				if (result is IEnumerable<ITradeRewardResult> enumerable)
-				{
-					foreach (var child in ExpandAll(enumerable))
-						yield return child;
-				}
-				else
-				{
-					yield return result;
-				}
-			}
-		}
-
-		public static IEnumerable<ITradeRewardResult> MergeAll(this ITradeRewardResult[] results)
-		{
-			if (results.IsNullOrEmpty())
+			if (CollectionsExt.IsNullOrEmpty(results))
 				yield break;
 
 			using (ListPool<ITradeRewardResult>.Get(out var expanded))
 			{
-				foreach (var e in results.ExpandAll())
+				foreach (var e in results.ExpandAll(forceFullExpansion))
 					expanded.Add(e);
 
 				if (expanded.Count == 0)

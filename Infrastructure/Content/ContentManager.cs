@@ -170,6 +170,19 @@ namespace Content
 		public static string ToId<T>(in SerializableGuid guid) => resolver != null ? resolver.ToId<T>(in guid) : guid.ToString();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGet<T>(out T value)
+		{
+			if (Contains<T>())
+			{
+				value = Get<T>();
+				return true;
+			}
+
+			value = default;
+			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGet<T>(string id, out T value)
 		{
 			if (Contains<T>(id))
