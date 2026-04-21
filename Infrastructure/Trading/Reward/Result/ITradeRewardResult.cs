@@ -1,5 +1,3 @@
-using System;
-
 namespace Trading.Result
 {
 	/// <summary>
@@ -8,34 +6,10 @@ namespace Trading.Result
 	/// </summary>
 	public interface ITradeRewardResult
 	{
+		const string FORCE_FULL_EXPANSION_KEY = "forceFullExpansion";
+
 		bool Merge(ITradeRewardResult other) => false;
 
 		void Return(Tradeboard board);
-	}
-
-	public static class TradeRewardResultHelper
-	{
-		public static bool forceFullExpansion;
-
-		public static TradeRewardResultForceFullExpansionScope ForceFullExpansion(bool forceFullExpansion)
-		{
-			return new TradeRewardResultForceFullExpansionScope(forceFullExpansion);
-		}
-	}
-
-	public readonly struct TradeRewardResultForceFullExpansionScope : IDisposable
-	{
-		private readonly bool _originForceFullExpansion;
-
-		public TradeRewardResultForceFullExpansionScope(bool forceFullExpansion)
-		{
-			_originForceFullExpansion = TradeRewardResultHelper.forceFullExpansion;
-			TradeRewardResultHelper.forceFullExpansion = forceFullExpansion;
-		}
-
-		public void Dispose()
-		{
-			TradeRewardResultHelper.forceFullExpansion = _originForceFullExpansion;
-		}
 	}
 }
