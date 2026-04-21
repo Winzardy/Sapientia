@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Content;
 using Sapientia.Collections;
 using Sapientia.Pooling;
-using Sirenix.Utilities;
 using Trading.Result;
 
 namespace Trading
