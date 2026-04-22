@@ -274,4 +274,9 @@ namespace Sapientia
 			token = null;
 		}
 	}
+
+	public interface IEnumerableWithBoard<T>
+	{
+		IEnumerator<T> GetEnumerator(Blackboard board);
+	}
 }

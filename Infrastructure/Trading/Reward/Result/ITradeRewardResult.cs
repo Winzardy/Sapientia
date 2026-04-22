@@ -6,8 +6,10 @@ namespace Trading.Result
 	/// </summary>
 	public interface ITradeRewardResult
 	{
-		public bool Merge(ITradeRewardResult other) => false;
+		const string FORCE_FULL_EXPANSION_KEY = "forceFullExpansion";
 
-		public void Return(Tradeboard board);
+		bool Merge(ITradeRewardResult other) => false;
+
+		void Return(Tradeboard board);
 	}
 }

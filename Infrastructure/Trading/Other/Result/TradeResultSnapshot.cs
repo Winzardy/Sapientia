@@ -1,11 +1,24 @@
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Sapientia.Collections;
+using Sapientia.Extensions;
 using Sapientia.Pooling;
 using Trading.Result;
 
 namespace Trading
 {
+	[Flags]
+	public enum TradeResultSnapshotFlag
+	{
+		None   = 0,
+
+		Reward = 1 << 0,
+		Cost   = 1 << 1,
+
+		All    = Reward | Cost
+	}
+
 	[Serializable]
 	public struct TradeResultSnapshot
 	{
@@ -17,18 +30,24 @@ namespace Trading
 		[CanBeNull]
 		public ITradeCostResult[] costs;
 
-		internal TradeResultSnapshot(string tradeId, in TradeRawResult raw)
+		internal TradeResultSnapshot(string tradeId, in TradeRawResult raw, TradeResultSnapshotFlag flags = TradeResultSnapshotFlag.All)
 		{
 			this.tradeId = tradeId;
-
-			if (!raw.rewards.IsNullOrEmpty())
+			if (flags.HasFlag(TradeResultSnapshotFlag.Reward))
 			{
-				using (ListPool<ITradeRewardResult>.Get(out var r))
+				if (!raw.rewards.IsNullOrEmpty())
 				{
-					foreach (var handle in raw.rewards)
-						r.Add(handle.Bake());
+					using (ListPool<ITradeRewardResult>.Get(out var bakedRewards))
+					{
+						foreach (var handle in raw.rewards)
+							bakedRewards.Add(handle.Bake());
 
-					rewards = r.ToArray();
+						rewards = bakedRewards.ToArray();
+					}
+				}
+				else
+				{
+					rewards = Array.Empty<ITradeRewardResult>();
 				}
 			}
 			else
@@ -36,16 +55,24 @@ namespace Trading
 				rewards = null;
 			}
 
-			if (!raw.costs.IsNullOrEmpty())
+			if (flags.HasFlags(TradeResultSnapshotFlag.Cost))
 			{
-				using (ListPool<ITradeCostResult>.Get(out var c))
+				if (!raw.costs.IsNullOrEmpty())
 				{
-					foreach (var handle in raw.costs)
-						c.Add(handle.Bake());
+					using (ListPool<ITradeCostResult>.Get(out var bakedCosts))
+					{
+						foreach (var handle in raw.costs)
+							bakedCosts.Add(handle.Bake());
 
-					costs = c.ToArray();
+						costs = bakedCosts.ToArray();
+					}
+				}
+				else
+				{
+					costs = Array.Empty<ITradeCostResult>();
 				}
 			}
+
 			else
 			{
 				costs = null;

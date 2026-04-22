@@ -87,7 +87,8 @@ namespace Trading
 			}
 		}
 
-		public TradeResultSnapshot SnapshotResult() => new(Id, in _rawResult);
+		public TradeResultSnapshot SnapshotResult(TradeResultSnapshotFlag flags = TradeResultSnapshotFlag.All)
+			=> new TradeResultSnapshot(Id, in _rawResult, flags);
 
 		internal void RefundResult(bool clear = true)
 		{
