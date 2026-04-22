@@ -100,6 +100,28 @@ namespace Sapientia.Deterministic
 		}
 
 		/// <summary>
+		/// Rounds a value to the specified number of fractional digits. Precision 0 is equivalent to <see cref="Round(Fix64)"/>.
+		/// Negative precision is clamped to 0.
+		/// </summary>
+		public static Fix64 Round(this Fix64 value, int precision)
+		{
+			if (precision <= 0)
+				return Round(value);
+
+			var scale = Pow10(precision);
+			return Round(value * scale) / scale;
+		}
+
+		private static Fix64 Pow10(int exponent)
+		{
+			var result = Fix64.One;
+			var ten = (Fix64)10;
+			for (var i = 0; i < exponent; i++)
+				result *= ten;
+			return result;
+		}
+
+		/// <summary>
 		/// Adds x and y witout performing overflow checking. Should be inlined by the CLR.
 		/// </summary>
 		public static Fix64 FastAdd(this Fix64 x, Fix64 y)

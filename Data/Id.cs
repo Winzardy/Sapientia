@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Submodules.Sapientia.Data
 {
+	[Serializable]
 	public struct Id : IEquatable<Id>, IComparable<Id>
 	{
 		public static readonly Id Invalid = new Id
