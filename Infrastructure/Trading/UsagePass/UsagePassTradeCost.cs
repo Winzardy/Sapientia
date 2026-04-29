@@ -24,9 +24,9 @@ namespace Trading.UsagePass
 		{
 			error = null;
 
-			var backend = board.Get<IUsagePassNode>();
+			var node = board.Get<IUsagePassNode>();
 			var recipeKey = GetReceiptKey(board.Id);
-			ref readonly var model = ref backend.GetModel(recipeKey);
+			ref readonly var model = ref node.GetModel(recipeKey);
 			var tradingNode = board.Get<ITradingNode>();
 			var dateTime = tradingNode.DateTime;
 
