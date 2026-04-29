@@ -26,7 +26,7 @@ namespace Trading.UsagePass
 
 			var node = board.Get<IUsagePassNode>();
 			var recipeKey = GetReceiptKey(board.Id);
-			ref readonly var model = ref node.GetModel(recipeKey);
+			ref readonly var model = ref node.GetState(recipeKey);
 			var tradingNode = board.Get<ITradingNode>();
 			var dateTime = tradingNode.DateTime;
 

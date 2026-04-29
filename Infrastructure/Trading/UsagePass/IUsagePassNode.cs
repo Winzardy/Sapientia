@@ -4,7 +4,7 @@ namespace Trading.UsagePass
 {
 	public interface IUsagePassNode : ITradeReceiptRegistry<UsagePassTradeReceipt>
 	{
-		public ref readonly UsageLimitState GetModel(string key);
+		public ref readonly UsageLimitState GetState(string key);
 
 
 		public void ForceReset(string key);
