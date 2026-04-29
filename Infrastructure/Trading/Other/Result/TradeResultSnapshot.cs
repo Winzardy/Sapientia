@@ -79,4 +79,29 @@ namespace Trading
 			}
 		}
 	}
+
+	public static class TradeResultSnapshotUtility
+	{
+		public static TradeResultSnapshot WithRewards(this in TradeResultSnapshot snapshot, params ITradeRewardResult[] rewards)
+		{
+			return new TradeResultSnapshot
+			{
+				tradeId = snapshot.tradeId,
+
+				rewards = rewards,
+				costs   = snapshot.costs
+			};
+		}
+
+		public static TradeResultSnapshot WithCosts(this in TradeResultSnapshot snapshot, params ITradeCostResult[] costs)
+		{
+			return new TradeResultSnapshot
+			{
+				tradeId = snapshot.tradeId,
+
+				rewards = snapshot.rewards,
+				costs   = costs
+			};
+		}
+	}
 }
