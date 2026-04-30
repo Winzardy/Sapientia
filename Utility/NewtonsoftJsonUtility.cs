@@ -1,14 +1,14 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Sapientia.Collections;
+using Sapientia.JsonConverters;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using Sapientia.Collections;
-using Sapientia.JsonConverters;
 
 namespace Sapientia.Extensions
 {
@@ -37,7 +37,7 @@ namespace Sapientia.Extensions
 				LogError($"[JsonSerializer] path: {args.ErrorContext.Path}, msg: {args.ErrorContext.Error.Message}");
 				args.ErrorContext.Handled = true;
 			},
-			MissingMemberHandling = MissingMemberHandling.Error,
+			MissingMemberHandling = MissingMemberHandling.Ignore,
 			SerializationBinder = new CustomSerializationBinder(),
 			TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
 #if UNITY_EDITOR
@@ -287,7 +287,7 @@ namespace Sapientia.Extensions
 			{
 				var match = AppDomain.CurrentDomain
 					.GetAssemblies()
-					.Select(a => new {Assembly = a, Type = a.GetType(typeName, throwOnError: false)})
+					.Select(a => new { Assembly = a, Type = a.GetType(typeName, throwOnError: false) })
 					.FirstOrDefault(x => x.Type != null);
 
 				if (match == null)
