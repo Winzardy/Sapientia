@@ -13,7 +13,7 @@ namespace Trading
 	public partial class ConditionalTradeReward : TradeReward
 	{
 		[SerializeReference]
-		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
+		public Condition<Blackboard> condition; //= new ObjectProviderBlackboardProxyEvaluator();
 
 		[SerializeReference]
 		public TradeReward reward;

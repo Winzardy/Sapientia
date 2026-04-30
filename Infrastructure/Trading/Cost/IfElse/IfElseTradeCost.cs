@@ -14,7 +14,7 @@ namespace Trading
 	public partial class IfElseTradeCost : TradeCost
 	{
 		[SerializeReference]
-		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
+		public Condition<Blackboard> condition; // = new ObjectProviderBlackboardProxyEvaluator();
 
 		[SerializeReference]
 		[TradeAccess(TradeAccessType.ByParent)]

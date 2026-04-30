@@ -25,7 +25,7 @@ namespace Trading
 		/// Условие при котором награда прогрессирует, если 'None', то прогрессирует всегда
 		/// </summary>
 		[SerializeReference]
-		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
+		public Condition<Blackboard> condition;//= new ObjectProviderBlackboardProxyEvaluator();
 
 		/// <summary>
 		/// Тип запланированного сброса: <br/>
