@@ -41,7 +41,7 @@ namespace SharedLogic
 		public TimeSharedNode(ISystemTimeProvider timeProvider)
 		{
 			_timeProvider = timeProvider;
-			_dateTime = _timeProvider.SystemTime;
+			_dateTime     = _timeProvider.SystemTime;
 		}
 
 		/// <summary>
@@ -97,6 +97,19 @@ namespace SharedLogic
 				}
 			}
 
+			var nowSystemTimestamp = _timeProvider.SystemTime.Ticks;
+			if (timestamp > nowSystemTimestamp)
+			{
+				error = new(TimeSetError.Code.TimestampGreaterThanSystemTime)
+				{
+					prevTimestamp = currentTimestamp,
+					nextTimestamp = timestamp,
+
+					nowSystemTimestamp = nowSystemTimestamp
+				};
+				return false;
+			}
+
 			error = null;
 			return true;
 		}
@@ -127,7 +140,7 @@ namespace SharedLogic
 		protected override void OnSave(out SaveData data)
 		{
 			data.timestampOffset = _dateTimeOffset.Ticks;
-			data.timestamp = _dateTime.Ticks;
+			data.timestamp       = _dateTime.Ticks;
 		}
 
 		public struct SaveData
@@ -174,13 +187,16 @@ namespace SharedLogic
 		{
 			None,
 
-			TimestampLessThanCurrent
+			TimestampLessThanCurrent,
+			TimestampGreaterThanSystemTime,
 		}
 
 		public readonly Code code;
 
 		public long prevTimestamp;
 		public long nextTimestamp;
+
+		public long nowSystemTimestamp;
 
 		public TimeSetError(Code code) : this()
 		{
@@ -193,6 +209,15 @@ namespace SharedLogic
 		{
 			var prev = new DateTime(prevTimestamp, DateTimeKind.Utc);
 			var next = new DateTime(nextTimestamp, DateTimeKind.Utc);
+			if (code == Code.TimestampGreaterThanSystemTime)
+			{
+				var now = new DateTime(nowSystemTimestamp, DateTimeKind.Utc);
+				return $"Can't set timestamp with code [ {code} ] (" +
+					$"prev: {prev:HH:mm:ss yyyy-MM-dd} [ {prevTimestamp} ], " +
+					$"-> next: {next:HH:mm:ss yyyy-MM-dd} [ {nextTimestamp} ], " +
+					$"now: {now:HH:mm:ss yyyy-MM-dd} [ {nextTimestamp} ])";
+			}
+
 			return $"Can't set timestamp with code [ {code} ] (prev: {prev:HH:mm:ss yyyy-MM-dd} [ {prevTimestamp} ], -> next: {next:HH:mm:ss yyyy-MM-dd} [ {nextTimestamp} ])";
 		}
 	}
