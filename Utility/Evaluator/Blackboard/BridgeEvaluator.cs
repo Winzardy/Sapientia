@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Sapientia.Evaluators
 {
 	[Serializable]
-	public abstract class ProxyEvaluator<TContext1, TContext2, TValue> : Evaluator<TContext1, TValue>, IProxyEvaluator
+	public abstract class BridgeEvaluator<TContext1, TContext2, TValue> : Evaluator<TContext1, TValue>, IBridgeEvaluator
 	{
 		[SerializeReference]
 		public Evaluator<TContext2, TValue> value;

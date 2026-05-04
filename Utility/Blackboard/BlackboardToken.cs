@@ -1,19 +1,17 @@
 using System;
-using System.Runtime.CompilerServices;
 using Sapientia.Pooling;
 
 namespace Sapientia
 {
-	internal interface IBlackboardToken : IDisposable
+	internal interface IBlackboardToken : ISubscriptionToken
 	{
-		public Type ValueType { get; }
+		Type ValueType { get; }
 
 		/// <param name="solo">
 		/// Отписывать ли токен в <see cref="Blackboard"/>, мини хак чтобы при массовой отписке не дергать отписку отдельного токена
 		/// </param>
-		public void Release(bool solo = true);
+		void Release(bool solo = true);
 
-		internal int Generation { get; }
 		internal IBlackboardToken Clone(Blackboard blackboard);
 	}
 
@@ -25,7 +23,7 @@ namespace Sapientia
 
 		public Type ValueType => typeof(T);
 
-		int IBlackboardToken.Generation => _generation;
+		int ISubscriptionToken.Generation => _generation;
 
 		internal Blackboard? Blackboard => _storage!.Blackboard;
 		internal string? Key => _key;

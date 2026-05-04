@@ -253,9 +253,8 @@ namespace Sapientia
 
 		public void Release()
 		{
-			if (_token.Generation != _generation)
-				throw new InvalidOperationException(
-					$"[{nameof(BlackboardToken)}] Invalid token (token gen:{_token.Generation} != gen: {_generation})");
+			if (!IsValid)
+				throw new InvalidOperationException($"[{nameof(BlackboardToken)}] Invalid token (token gen:{_token?.Generation ?? -1} != gen: {_generation})");
 
 			_token.Release();
 		}
