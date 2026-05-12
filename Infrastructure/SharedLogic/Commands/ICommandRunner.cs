@@ -1,5 +1,3 @@
-using System;
-
 namespace SharedLogic
 {
 	public interface ICommandRunner

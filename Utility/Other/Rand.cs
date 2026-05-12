@@ -69,7 +69,7 @@ namespace Sapientia.Deterministic.Utility
 			_inc   = NextSplitMix64(ref x);
 		}
 
-		public int NextFix64(int minInclusive, int maxExclusive)
+		public int Next(int minInclusive, int maxExclusive)
 		{
 			if (minInclusive == maxExclusive)
 				return minInclusive;
@@ -83,7 +83,7 @@ namespace Sapientia.Deterministic.Utility
 			return (int) (minInclusive + r);
 		}
 
-		public Fix64 NextInclusive(Fix64 minInclusive, Fix64 maxInclusive)
+		public Fix64 NextFix64Inclusive(Fix64 minInclusive, Fix64 maxInclusive)
 		{
 			if (minInclusive > maxInclusive)
 			{
