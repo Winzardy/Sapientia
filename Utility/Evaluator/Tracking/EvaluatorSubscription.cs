@@ -17,21 +17,22 @@ namespace Sapientia.Evaluators.Tracking
 
 		private Action<TValue> _callback;
 		private IEvaluatorWatcher<TContext, TValue> _watcher;
+		private Action<EvaluatorSubscription<TContext, TValue>> _onRelease;
 
 		int ISubscriptionToken.Generation { get => _generation; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Invoke(TValue value) => _callback?.Invoke(value);
 
-		public void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action<TValue> callback)
+		public void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action<TValue> callback, Action<EvaluatorSubscription<TContext, TValue>> onRelease)
 		{
 			_watcher  = watcher;
 			_callback = callback;
 
+			_onRelease = onRelease;
+
 			watcher.Subscribe(this);
 		}
-
-		public void Reevaluate(TContext context) => _watcher.Reevaluate(context, false);
 
 		public void Dispose()
 		{
@@ -44,7 +45,10 @@ namespace Sapientia.Evaluators.Tracking
 				throw new InvalidOperationException($"{typeof(TValue).Name} Token already released");
 
 			_watcher.Unsubscribe(this);
+			_onRelease.Invoke(this);
 		}
+
+		public void Reevaluate(TContext context) => _watcher.Reevaluate(context, false);
 
 		void IPoolable.Release()
 		{
@@ -55,11 +59,15 @@ namespace Sapientia.Evaluators.Tracking
 		}
 
 		public static implicit operator EvaluatorSubscriptionToken<TContext>(EvaluatorSubscription<TContext, TValue> token) => new(token, token._generation);
-	}
 
+		internal static EvaluatorSubscription<TContext, TValue> New() => Pool<EvaluatorSubscription<TContext, TValue>>.Get();
+		internal static void Release(EvaluatorSubscription<TContext, TValue> subscription) => Pool<EvaluatorSubscription<TContext, TValue>>.Release(subscription);
+	}
 
 	public readonly struct EvaluatorSubscriptionToken<TContext> : IDisposable
 	{
+		public static EvaluatorSubscriptionToken<TContext> Empty = default;
+
 		private readonly IEvaluatorSubscription<TContext> _token;
 		private readonly int _generation;
 
@@ -72,7 +80,12 @@ namespace Sapientia.Evaluators.Tracking
 			_generation = generation;
 		}
 
-		public void Reevaluate(TContext context) => _token.Reevaluate(context);
+		public void Reevaluate(TContext context)
+		{
+			if (IsValid)
+				_token.Reevaluate(context);
+		}
+
 		public void Dispose() => Release();
 
 		public void Release()

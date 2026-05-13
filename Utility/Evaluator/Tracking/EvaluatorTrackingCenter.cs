@@ -12,6 +12,7 @@ namespace Sapientia.Evaluators.Tracking
 		ILogger Logger { get; }
 		EvaluatorSubscriptionToken<TContext> Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action<TValue> callback);
 		internal IEvaluatorTracker<TContext> ResolveTracker(Type type);
+		internal ref readonly TContext GetContext();
 	}
 
 	public class EvaluatorTrackingCenter<TContext> : IEvaluatorTrackingCenter<TContext>, IDisposable
@@ -35,10 +36,33 @@ namespace Sapientia.Evaluators.Tracking
 
 		public void Dispose()
 		{
-			_trackers.DisposeElements();
-			StaticObjectPoolUtility.ReleaseAndSetNull(ref _trackers);
 			_watchers.DisposeElements();
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _watchers);
+			_trackers.DisposeElements();
+			StaticObjectPoolUtility.ReleaseAndSetNull(ref _trackers);
+		}
+
+		public EvaluatorSubscriptionToken<TContext> Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action<TValue> callback)
+		{
+			if (callback == null)
+				throw new ArgumentNullException(nameof(callback));
+
+			var subscription = EvaluatorSubscription<TContext, TValue>.New();
+			if (!_watchers.TryGetValue(evaluator, out var rawWatcher))
+			{
+				var watcher = new EvaluatorWatcher<TContext, TValue>(this, evaluator);
+				watcher.Initialize(_context);
+				_watchers[evaluator] = watcher;
+
+				subscription.Bind(watcher, callback, EvaluatorSubscription<TContext, TValue>.Release);
+			}
+			else
+			{
+				var watcher = (IEvaluatorWatcher<TContext, TValue>) rawWatcher;
+				subscription.Bind(watcher, callback, EvaluatorSubscription<TContext, TValue>.Release);
+			}
+
+			return subscription;
 		}
 
 		IEvaluatorTracker<TContext> IEvaluatorTrackingCenter<TContext>.ResolveTracker(Type type)
@@ -46,33 +70,12 @@ namespace Sapientia.Evaluators.Tracking
 			if (!_trackers.TryGetValue(type, out var tracker))
 			{
 				tracker = _trackers[type] = type.CreateInstance<IEvaluatorTracker<TContext>>();
-				tracker.Initialize(_context);
+				tracker.Initialize(this);
 			}
 
 			return tracker;
 		}
 
-		EvaluatorSubscriptionToken<TContext> IEvaluatorTrackingCenter<TContext>.Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action<TValue> callback)
-		{
-			if (callback == null)
-				throw new ArgumentNullException(nameof(callback));
-
-			var subscription = Pool<EvaluatorSubscription<TContext, TValue>>.Get();
-			if (!_watchers.TryGetValue(evaluator, out var rawWatcher))
-			{
-				var watcher = new EvaluatorWatcher<TContext, TValue>(this, evaluator);
-				watcher.Initialize(_context);
-				_watchers[evaluator] = watcher;
-
-				subscription.Bind(watcher, callback);
-			}
-			else
-			{
-				var watcher = (IEvaluatorWatcher<TContext, TValue>) rawWatcher;
-				subscription.Bind( watcher, callback);
-			}
-
-			return subscription;
-		}
+		ref readonly TContext IEvaluatorTrackingCenter<TContext>.GetContext() => ref _context;
 	}
 }

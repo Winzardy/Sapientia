@@ -9,7 +9,8 @@ namespace Sapientia.Evaluators.Tracking
 		private ITrackableEvaluator _evaluator;
 		private IEvaluatorTracker<TContext> _tracker;
 
-		public IEvaluatorWatcher<TContext> Root { get => _watcher; }
+		public IEvaluator BoundEvaluator { get => _watcher.BoundEvaluator; }
+		IEvaluatorWatcher<TContext> IEvaluatorWatcher<TContext>.root { get => _watcher; }
 
 		public void Bind(IEvaluatorWatcher<TContext> watcher, IEvaluatorTracker<TContext> tracker, ITrackableEvaluator evaluator)
 		{
@@ -40,7 +41,8 @@ namespace Sapientia.Evaluators.Tracking
 			return true;
 		}
 
-		public void Reevaluate(TContext context, bool invoke = true) => _watcher.Reevaluate(context, invoke);
+		public void Reevaluate(TContext context) => _watcher.Reevaluate(context);
+		public void Reevaluate(TContext context, bool invoke) => _watcher.Reevaluate(context, invoke);
 
 		public static EvaluatorWatcherProxy<TContext> New() => Pool<EvaluatorWatcherProxy<TContext>>.Get();
 		public static void Release(EvaluatorWatcherProxy<TContext> proxy) => Pool<EvaluatorWatcherProxy<TContext>>.Release(proxy);

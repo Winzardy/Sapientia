@@ -12,5 +12,13 @@ namespace Sapientia.Evaluators.Tracking
 				callback.Invoke(evaluator.Evaluate(context));
 			return tracker.Subscribe(evaluator, callback);
 		}
+
+		public static EvaluatorSubscriptionToken<TContext> Subscribe<TContext, TValue>(this EvaluatedValue<TContext, TValue> value, TContext context, Action<TValue> callback, bool invokeOnSubscribe = false)
+		{
+			if (value.IsConstant)
+				return EvaluatorSubscriptionToken<TContext>.Empty;
+
+			return value.evaluator.Subscribe(context, callback,  invokeOnSubscribe);
+		}
 	}
 }

@@ -482,6 +482,8 @@ namespace Sapientia.Collections
 
 			foreach (var item in enumerable)
 			{
+				if(item is IDisposable disposable)
+					disposable.Dispose();
 			}
 		}
 

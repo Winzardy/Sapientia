@@ -4,7 +4,7 @@ using Sapientia.Pooling;
 
 namespace Sapientia.Evaluators.Tracking
 {
-	public interface ITrackableEvaluator
+	public interface ITrackableEvaluator : IEvaluator
 	{
 		Type TrackerType { get; }
 		int? TrackHash { get; }
@@ -12,30 +12,37 @@ namespace Sapientia.Evaluators.Tracking
 
 	public interface IEvaluatorTracker<TContext> : IDisposable
 	{
-		internal void Initialize(TContext context);
-		internal void Bind(IEvaluatorWatcher<TContext> watcher);
+		internal void Initialize(IEvaluatorTrackingCenter<TContext> center);
+		internal bool Bind(IEvaluatorWatcher<TContext> watcher);
 		internal void Unbind(IEvaluatorWatcher<TContext> watcher);
 	}
 
 	public abstract class EvaluatorTracker<TContext> : IEvaluatorTracker<TContext>
 	{
-		private TContext _context;
+		protected IEvaluatorTrackingCenter<TContext> _center;
 		private HashSet<IEvaluatorWatcher<TContext>> _watchers;
 
-		void IEvaluatorTracker<TContext>.Initialize(TContext context)
+		void IEvaluatorTracker<TContext>.Initialize(IEvaluatorTrackingCenter<TContext> center)
 		{
-			_context  = context;
+			_center   = center;
 			_watchers = HashSetPool<IEvaluatorWatcher<TContext>>.Get();
-			OnInitialized(context);
+			OnInitialized(_center.GetContext());
 		}
 
 		public void Dispose()
 		{
-			OnDisposed(_context);
+			OnDisposed(_center.GetContext());
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _watchers);
 		}
 
-		protected abstract void OnInitialized(TContext context);
+		protected virtual void OnInitialized(TContext context)
+		{
+			OnInitialized();
+		}
+
+		protected virtual void OnInitialized()
+		{
+		}
 
 		protected virtual void OnDisposed(TContext context)
 		{
@@ -46,8 +53,33 @@ namespace Sapientia.Evaluators.Tracking
 		{
 		}
 
-		void IEvaluatorTracker<TContext>.Bind(IEvaluatorWatcher<TContext> watcher) => _watchers.Add(watcher);
-		void IEvaluatorTracker<TContext>.Unbind(IEvaluatorWatcher<TContext> watcher) => _watchers?.Remove(watcher);
+		bool IEvaluatorTracker<TContext>.Bind(IEvaluatorWatcher<TContext> watcher)
+		{
+			if (OnBind(watcher))
+			{
+				_watchers.Add(watcher);
+				return true;
+			}
+
+			return false;
+		}
+
+		protected virtual bool OnBind(IEvaluatorWatcher<TContext> watcher)
+		{
+			return true;
+		}
+
+		void IEvaluatorTracker<TContext>.Unbind(IEvaluatorWatcher<TContext> watcher)
+		{
+			_watchers?.Remove(watcher);
+			OnUnbind(watcher);
+		}
+
+		protected virtual void OnUnbind(IEvaluatorWatcher<TContext> watcher)
+		{
+		}
+
+		protected ref readonly TContext GetContext() => ref _center.GetContext();
 
 		protected void Reevaluate(int? hash = null)
 		{
@@ -76,14 +108,14 @@ namespace Sapientia.Evaluators.Tracking
 				if (!watcher.IsMatch(hash))
 					continue;
 
-				roots.Add(watcher.Root);
+				roots.Add(watcher.root);
 			}
 		}
 
 		private void Reevaluate(HashSet<IEvaluatorWatcher<TContext>> watchers)
 		{
 			foreach (var watcher in watchers)
-				watcher.Reevaluate(_context);
+				watcher.Reevaluate(_center.GetContext());
 		}
 	}
 }

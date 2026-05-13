@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Sapientia.Evaluators;
+using Sapientia.Evaluators.Tracking;
 using UnityEngine;
 
 namespace Sapientia.Conditions
@@ -16,22 +17,26 @@ namespace Sapientia.Conditions
 	/// <typeparam name="TContext1">Исходный контекст</typeparam>
 	/// <typeparam name="TContext2">Целевой контекст</typeparam>
 	[Serializable]
-	public abstract class BridgeCondition<TContext1, TContext2> : Condition<TContext1>, IBridgeEvaluator
+	public abstract class BridgeCondition<TContext1, TContext2> : Condition<TContext1>,
+		IBridgeEvaluator<TContext1, TContext2, bool>,
+		ITrackableEvaluator
 	{
 		[SerializeReference]
 		public Condition<TContext2> value;
 
+		public IEvaluator Proxy => value;
+		public Type ProxyType { get => typeof(Condition<TContext2>); }
+		IEvaluator<TContext2, bool> IBridgeEvaluator<TContext1, TContext2, bool>.evaluator { get => value; }
+		public Type TrackerType { get => typeof(BridgeEvaluatorTracker<TContext1, TContext2, bool>); }
+		public int? TrackHash { get => null; }
+
 		protected override bool OnEvaluate(TContext1 context) => value?.IsFulfilled(Convert(context)) ?? true;
 
-		protected abstract TContext2 Convert(TContext1 context);
-
-		public IEvaluator Proxy => value;
-		public Type ProxyType => typeof(Condition<TContext2>);
+		public abstract TContext2 Convert(TContext1 context);
 
 		public override IEnumerator<IEvaluator> GetEnumerator()
 		{
 			yield return this;
-			yield return value;
 		}
 	}
 }
