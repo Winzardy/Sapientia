@@ -7,7 +7,7 @@ namespace Sapientia.Evaluators.Tracking
 {
 	public interface IEvaluatorSubscription<TContext> : ISubscriptionToken
 	{
-		void Release();
+		void Release(bool solo = true);
 		void Reevaluate(TContext context);
 	}
 
@@ -34,17 +34,18 @@ namespace Sapientia.Evaluators.Tracking
 			watcher.Subscribe(this);
 		}
 
-		public void Dispose()
-		{
-			Release();
-		}
+		public void Dispose() => Release();
 
-		public void Release()
+		public void Release(bool solo = true)
 		{
-			if (_watcher == null)
-				throw new InvalidOperationException($"{typeof(TValue).Name} Token already released");
+			if (solo)
+			{
+				if (_watcher == null)
+					throw new InvalidOperationException($"{typeof(TValue).Name} Token already released");
 
-			_watcher.Unsubscribe(this);
+				_watcher.Unsubscribe(this);
+			}
+
 			_onRelease.Invoke(this);
 		}
 
@@ -66,27 +67,42 @@ namespace Sapientia.Evaluators.Tracking
 
 	public readonly struct EvaluatorSubscriptionToken<TContext> : IDisposable
 	{
-		public static EvaluatorSubscriptionToken<TContext> Empty = default;
+		private readonly bool _empty;
+
+		public static EvaluatorSubscriptionToken<TContext> Empty = new EvaluatorSubscriptionToken<TContext>(true);
 
 		private readonly IEvaluatorSubscription<TContext> _token;
 		private readonly int _generation;
 
 		internal IEvaluatorSubscription<TContext> Token { get => _token; }
 		public bool IsValid { get => _token != null && _token.Generation == _generation; }
+		public bool IsEmpty { get => _empty; }
 
 		public EvaluatorSubscriptionToken(IEvaluatorSubscription<TContext> token, int generation)
 		{
 			_token      = token;
 			_generation = generation;
+			_empty      = false;
+		}
+
+		private EvaluatorSubscriptionToken(bool empty)
+		{
+			_empty = empty;
+			_generation = 0;
+			_token = null;
 		}
 
 		public void Reevaluate(TContext context)
 		{
-			if (IsValid)
+			if (!_empty)
 				_token.Reevaluate(context);
 		}
 
-		public void Dispose() => Release();
+		public void Dispose()
+		{
+			if (!_empty)
+				Release();
+		}
 
 		public void Release()
 		{

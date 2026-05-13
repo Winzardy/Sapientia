@@ -19,18 +19,23 @@ namespace Sapientia.Evaluators.Tracking
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _evaluatorToToken);
 		}
 
-		protected override bool OnBind(IEvaluatorWatcher<TContext1> watcher)
+		protected override void OnBind(IEvaluatorWatcher<TContext1> watcher)
 		{
 			var evaluator = watcher.BoundEvaluator;
 			if (evaluator is IBridgeEvaluator<TContext1, TContext2, TValue> bridge)
 			{
 				var context2 = bridge.Convert(GetContext());
-				_evaluatorToToken[evaluator] = bridge.evaluator.Subscribe(context2, Callback);
-				return true;
+				var token = bridge.evaluator.Subscribe(context2, Callback);
+
+				if(token.IsEmpty)
+					return;
+
+				_evaluatorToToken[evaluator] = token;
+				return;
 			}
 
 			throw _center.Logger.Exception("Invalid root evaluator type!");
-			void Callback(TValue _) => watcher.Reevaluate(_center.GetContext());
+			void Callback(TValue _) => watcher.Reevaluate(_center.ResolveContext());
 		}
 
 		protected override void OnUnbind(IEvaluatorWatcher<TContext1> watcher)

@@ -13,7 +13,7 @@ namespace Sapientia.Evaluators.Tracking
 	public interface IEvaluatorTracker<TContext> : IDisposable
 	{
 		internal void Initialize(IEvaluatorTrackingCenter<TContext> center);
-		internal bool Bind(IEvaluatorWatcher<TContext> watcher);
+		internal void Bind(IEvaluatorWatcher<TContext> watcher);
 		internal void Unbind(IEvaluatorWatcher<TContext> watcher);
 	}
 
@@ -26,12 +26,12 @@ namespace Sapientia.Evaluators.Tracking
 		{
 			_center   = center;
 			_watchers = HashSetPool<IEvaluatorWatcher<TContext>>.Get();
-			OnInitialized(_center.GetContext());
+			OnInitialized(_center.ResolveContext());
 		}
 
 		public void Dispose()
 		{
-			OnDisposed(_center.GetContext());
+			OnDisposed(_center.ResolveContext());
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _watchers);
 		}
 
@@ -53,33 +53,27 @@ namespace Sapientia.Evaluators.Tracking
 		{
 		}
 
-		bool IEvaluatorTracker<TContext>.Bind(IEvaluatorWatcher<TContext> watcher)
+		void IEvaluatorTracker<TContext>.Bind(IEvaluatorWatcher<TContext> watcher)
 		{
-			if (OnBind(watcher))
-			{
-				_watchers.Add(watcher);
-				return true;
-			}
-
-			return false;
+			if (_watchers.Add(watcher))
+				OnBind(watcher);
 		}
 
-		protected virtual bool OnBind(IEvaluatorWatcher<TContext> watcher)
+		protected virtual void OnBind(IEvaluatorWatcher<TContext> watcher)
 		{
-			return true;
 		}
 
 		void IEvaluatorTracker<TContext>.Unbind(IEvaluatorWatcher<TContext> watcher)
 		{
-			_watchers?.Remove(watcher);
-			OnUnbind(watcher);
+			if (_watchers.Remove(watcher))
+				OnUnbind(watcher);
 		}
 
 		protected virtual void OnUnbind(IEvaluatorWatcher<TContext> watcher)
 		{
 		}
 
-		protected ref readonly TContext GetContext() => ref _center.GetContext();
+		protected ref readonly TContext GetContext() => ref _center.ResolveContext();
 
 		protected void Reevaluate(int? hash = null)
 		{
@@ -115,7 +109,7 @@ namespace Sapientia.Evaluators.Tracking
 		private void Reevaluate(HashSet<IEvaluatorWatcher<TContext>> watchers)
 		{
 			foreach (var watcher in watchers)
-				watcher.Reevaluate(_center.GetContext());
+				watcher.Reevaluate(_center.ResolveContext());
 		}
 	}
 }

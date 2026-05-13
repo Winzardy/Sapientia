@@ -55,7 +55,6 @@ namespace Sapientia.Conditions
 			yield return this;
 			yield return a;
 			yield return b;
-
 		}
 	}
 }

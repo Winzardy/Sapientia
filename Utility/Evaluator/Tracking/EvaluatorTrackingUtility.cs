@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 
 namespace Sapientia.Evaluators.Tracking
@@ -6,6 +7,9 @@ namespace Sapientia.Evaluators.Tracking
 	{
 		public static EvaluatorSubscriptionToken<TContext> Subscribe<TContext, TValue>(this IEvaluator<TContext, TValue> evaluator, TContext context, Action<TValue> callback, bool invokeOnSubscribe = false)
 		{
+			if(evaluator == null)
+				return EvaluatorSubscriptionToken<TContext>.Empty;
+
 			var resolver = EvaluatorTrackerResolverRegistry.GetResolverByContext<TContext>();
 			var tracker = resolver.ResolveCenter(context);
 			if (invokeOnSubscribe)

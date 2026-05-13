@@ -11,6 +11,7 @@ namespace Sapientia.Evaluators.Tracking
 
 		public IEvaluator BoundEvaluator { get => _bridge; }
 
+		bool IEvaluatorWatcher.IsTrackable { get => _watcher.IsTrackable; }
 		IEvaluatorWatcher<TContext> IEvaluatorWatcher<TContext>.root { get => _watcher; }
 
 		public void Bind(IEvaluatorWatcher<TContext> watcher, IEvaluatorTracker<TContext> tracker, IBridgeEvaluator<TContext> bridge)
@@ -19,6 +20,9 @@ namespace Sapientia.Evaluators.Tracking
 			_watcher = watcher;
 			_bridge  = bridge;
 		}
+
+		public void EnableTracking() => _tracker.Bind(this);
+		public void DisableTracking() => _tracker.Unbind(this);
 
 		public void Dispose() => Release();
 

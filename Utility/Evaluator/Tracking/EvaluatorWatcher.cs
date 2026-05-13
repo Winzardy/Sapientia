@@ -8,6 +8,7 @@ namespace Sapientia.Evaluators.Tracking
 {
 	public interface IEvaluatorWatcher : IDisposable
 	{
+		bool IsTrackable { get; }
 	}
 
 	public interface IEvaluatorWatcher<TContext> : IEvaluatorWatcher
@@ -29,10 +30,11 @@ namespace Sapientia.Evaluators.Tracking
 
 	public class EvaluatorWatcher<TContext, TValue> : IEvaluatorWatcher<TContext, TValue>
 	{
-		private bool _active;
-
 		private IEvaluatorTrackingCenter<TContext> _center;
 		private IEvaluator<TContext, TValue> _rootEvaluator;
+
+		private bool _hasTrackableEvaluators;
+		private bool _trackingEnable;
 
 		private TValue _current;
 
@@ -42,6 +44,12 @@ namespace Sapientia.Evaluators.Tracking
 		private BridgeEvaluatorWatcherProxy<TContext>[] _bridges;
 
 		public IEvaluator BoundEvaluator { get => _rootEvaluator; }
+		public bool IsTrackable { get => _hasTrackableEvaluators; }
+
+		private bool _invoking;
+		private HashSet<EvaluatorSubscription<TContext, TValue>> _subscribePending;
+		private HashSet<EvaluatorSubscription<TContext, TValue>> _unsubscribePending;
+
 		IEvaluatorWatcher<TContext> IEvaluatorWatcher<TContext>.root { get => this; }
 
 		public EvaluatorWatcher(IEvaluatorTrackingCenter<TContext> center, IEvaluator<TContext, TValue> rootEvaluator)
@@ -50,18 +58,18 @@ namespace Sapientia.Evaluators.Tracking
 			_rootEvaluator = rootEvaluator;
 		}
 
-		public void Initialize(TContext context)
+		public void Initialize()
 		{
 			using (HashSetPool<ITrackableEvaluator>.Get(out var evaluators))
-			using (ListPool<IEvaluatorTracker<TContext>>.Get(out var trackers))
+			using (HashSetPool<IEvaluatorTracker<TContext>>.Get(out var trackers))
 			using (ListPool<EvaluatorWatcherProxy<TContext>>.Get(out var proxies))
 			using (ListPool<BridgeEvaluatorWatcherProxy<TContext>>.Get(out var bridges))
 			{
 				CollectTrackableEvaluators(_rootEvaluator, evaluators);
 
-				_active = !evaluators.IsEmpty();
+				_hasTrackableEvaluators = !evaluators.IsEmpty();
 
-				if (!_active)
+				if (!_hasTrackableEvaluators)
 					return;
 
 				foreach (var evaluator in evaluators)
@@ -69,39 +77,22 @@ namespace Sapientia.Evaluators.Tracking
 					var trackerType = evaluator.TrackerType;
 
 					var tracker = _center.ResolveTracker(trackerType);
-					IEvaluatorWatcher<TContext> watcher = this;
 					if (evaluator is IBridgeEvaluator<TContext> bridgeEvaluator)
 					{
 						var bridgeProxy = BridgeEvaluatorWatcherProxy<TContext>.New();
 						bridgeProxy.Bind(this, tracker, bridgeEvaluator);
 						bridges.Add(bridgeProxy);
-
-						watcher = bridgeProxy;
 					}
 					else if (evaluator.TrackHash.HasValue)
 					{
 						var proxy = EvaluatorWatcherProxy<TContext>.New();
 						proxy.Bind(this, tracker, evaluator);
 						proxies.Add(proxy);
-
-						watcher = proxy;
 					}
-
-					if (tracker.Bind(watcher))
+					else
+					{
 						trackers.Add(tracker);
-				}
-
-				if (trackers.IsEmpty())
-				{
-					_active = false;
-
-					foreach (var proxy in proxies)
-						EvaluatorWatcherProxy<TContext>.Release(proxy);
-
-					foreach (var bridge in bridges)
-						BridgeEvaluatorWatcherProxy<TContext>.Release(bridge);
-
-					return;
+					}
 				}
 
 				_trackers = trackers.ToArray();
@@ -110,12 +101,11 @@ namespace Sapientia.Evaluators.Tracking
 			}
 
 			_subscriptions = HashSetPool<EvaluatorSubscription<TContext, TValue>>.Get();
-			Reevaluate(context, false);
 		}
 
 		public void Dispose()
 		{
-			if (!_active)
+			if (!_hasTrackableEvaluators)
 				return;
 
 			foreach (var proxy in _proxies)
@@ -133,6 +123,8 @@ namespace Sapientia.Evaluators.Tracking
 
 			_trackers = null!;
 
+			foreach (var subscription in _subscriptions)
+				subscription.Release(false);
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _subscriptions);
 		}
 
@@ -155,22 +147,90 @@ namespace Sapientia.Evaluators.Tracking
 			if (!invoke)
 				return;
 
-			foreach (var subscription in _subscriptions)
-				subscription?.Invoke(value);
+			EnableInvoking();
+			{
+				foreach (var subscription in _subscriptions)
+					subscription?.Invoke(value);
+			}
+			DisableInvoking();
 		}
 
 		public void Subscribe(EvaluatorSubscription<TContext, TValue> subscription)
 		{
-			if (!_active)
+			if (!_hasTrackableEvaluators)
 				return;
+
+			if (_invoking)
+			{
+				_unsubscribePending?.Remove(subscription);
+
+				_subscribePending ??= HashSetPool<EvaluatorSubscription<TContext, TValue>>.Get();
+				_subscribePending.Add(subscription);
+				return;
+			}
+
 			_subscriptions.Add(subscription);
+
+			if (_subscriptions.Count == 1)
+			{
+				var context = _center.ResolveContext();
+				Reevaluate(context, false);
+				EnableTracking();
+			}
 		}
 
 		public void Unsubscribe(EvaluatorSubscription<TContext, TValue> subscription)
 		{
-			if (!_active)
+			if (!_hasTrackableEvaluators)
 				return;
+
+			if (_invoking)
+			{
+				_subscribePending?.Remove(subscription);
+
+				_unsubscribePending ??= HashSetPool<EvaluatorSubscription<TContext, TValue>>.Get();
+				_unsubscribePending.Add(subscription);
+				return;
+			}
+
 			_subscriptions.Remove(subscription);
+
+			if (_subscriptions.Count == 0)
+				DisableTracking();
+		}
+
+		private void EnableTracking()
+		{
+			if (_trackingEnable)
+				return;
+
+			foreach (var tracker in _trackers)
+				tracker.Bind(this);
+
+			foreach (var bridge in _bridges)
+				bridge.EnableTracking();
+
+			foreach (var proxy in _proxies)
+				proxy.EnableTracking();
+
+			_trackingEnable = true;
+		}
+
+		private void DisableTracking()
+		{
+			if (!_trackingEnable)
+				return;
+
+			foreach (var tracker in _trackers)
+				tracker.Unbind(this);
+
+			foreach (var bridge in _bridges)
+				bridge.DisableTracking();
+
+			foreach (var proxy in _proxies)
+				proxy.DisableTracking();
+
+			_trackingEnable = false;
 		}
 
 		private static void CollectTrackableEvaluators(
@@ -201,6 +261,32 @@ namespace Sapientia.Evaluators.Tracking
 					continue;
 
 				CollectTrackableEvaluators(child, results, visited);
+			}
+		}
+
+		private void EnableInvoking()
+		{
+			_invoking = true;
+		}
+
+		private void DisableInvoking()
+		{
+			_invoking = false;
+
+			if (_subscribePending != null)
+			{
+				foreach (var subscription in _subscribePending)
+					Subscribe(subscription);
+
+				StaticObjectPoolUtility.ReleaseAndSetNull(ref _subscribePending);
+			}
+
+			if (_unsubscribePending != null)
+			{
+				foreach (var subscription in _unsubscribePending)
+					Unsubscribe(subscription);
+
+				StaticObjectPoolUtility.ReleaseAndSetNull(ref _unsubscribePending);
 			}
 		}
 	}

@@ -12,7 +12,7 @@ namespace Sapientia.Evaluators.Tracking
 		ILogger Logger { get; }
 		EvaluatorSubscriptionToken<TContext> Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action<TValue> callback);
 		internal IEvaluatorTracker<TContext> ResolveTracker(Type type);
-		internal ref readonly TContext GetContext();
+		internal ref readonly TContext ResolveContext();
 	}
 
 	public class EvaluatorTrackingCenter<TContext> : IEvaluatorTrackingCenter<TContext>, IDisposable
@@ -47,17 +47,25 @@ namespace Sapientia.Evaluators.Tracking
 			if (callback == null)
 				throw new ArgumentNullException(nameof(callback));
 
-			var subscription = EvaluatorSubscription<TContext, TValue>.New();
+			EvaluatorSubscription<TContext, TValue> subscription;
 			if (!_watchers.TryGetValue(evaluator, out var rawWatcher))
 			{
 				var watcher = new EvaluatorWatcher<TContext, TValue>(this, evaluator);
-				watcher.Initialize(_context);
+				watcher.Initialize();
 				_watchers[evaluator] = watcher;
 
+				if (!watcher.IsTrackable)
+					return EvaluatorSubscriptionToken<TContext>.Empty;
+
+				subscription = EvaluatorSubscription<TContext, TValue>.New();
 				subscription.Bind(watcher, callback, EvaluatorSubscription<TContext, TValue>.Release);
 			}
 			else
 			{
+				if (!rawWatcher.IsTrackable)
+					return EvaluatorSubscriptionToken<TContext>.Empty;
+
+				subscription = EvaluatorSubscription<TContext, TValue>.New();
 				var watcher = (IEvaluatorWatcher<TContext, TValue>) rawWatcher;
 				subscription.Bind(watcher, callback, EvaluatorSubscription<TContext, TValue>.Release);
 			}
@@ -76,6 +84,7 @@ namespace Sapientia.Evaluators.Tracking
 			return tracker;
 		}
 
-		ref readonly TContext IEvaluatorTrackingCenter<TContext>.GetContext() => ref _context;
+		ref readonly TContext IEvaluatorTrackingCenter<TContext>.ResolveContext() => ref ResolveContext();
+		private ref readonly TContext ResolveContext() => ref _context;
 	}
 }
