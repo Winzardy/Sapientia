@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 #if CLIENT
 using UnityEngine;
 using Sirenix.OdinInspector;
@@ -43,6 +44,13 @@ namespace Sapientia.Conditions
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			for (int i = 0; i < collection.Length; i++)
+				yield return collection[i];
 		}
 	}
 }

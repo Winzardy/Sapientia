@@ -5,8 +5,8 @@ using Sapientia.Utility;
 namespace Sapientia.Evaluators.Tracking
 {
 	/// <summary>
-	/// Резолвер трекера для конкретного типа контекста.
-	/// Предоставляет способ извлечения <see cref="IEvaluatorTracker{TContext}"/>
+	/// Резолвер трекер центра для конкретного типа контекста.
+	/// Предоставляет способ извлечения <see cref="IEvaluatorTrackingCenter{TContext}"/>
 	/// из произвольного контекста без требования явной зависимости от трекера.
 	/// <br/><br/>
 	/// Используется как связующее звено между системой Evaluator'ов и внешними
@@ -18,41 +18,38 @@ namespace Sapientia.Evaluators.Tracking
 	/// <br/><br/>
 	/// ⚠️ Отсутствие резолвера для типа контекста приведёт к ошибке при попытке подписки
 	/// </summary>
-	public interface IEvaluatorTrackerResolver
+	public interface IEvaluatorTrackingCenterResolver
 	{
+		Type ContextType { get; }
 	}
 
-	public abstract class EvaluatorTrackerResolver<TContext> : IEvaluatorTrackerResolver
+	public abstract class EvaluatorTrackingCenterResolver<TContext> : IEvaluatorTrackingCenterResolver
 	{
-		private EvaluatorTrackerResolver()
-		{
-		}
-
-		protected internal abstract IEvaluatorTracker<TContext> GetTracker(TContext context);
+		public Type ContextType { get => typeof(TContext); }
+		protected internal abstract IEvaluatorTrackingCenter<TContext> ResolveCenter(TContext context);
 	}
 
 	public static class EvaluatorTrackerResolverRegistry
 	{
-		private static Dictionary<Type, IEvaluatorTrackerResolver>? _contextTypeToResolver;
+		private static Dictionary<Type, IEvaluatorTrackingCenterResolver>? _contextTypeToResolver;
 
-		public static EvaluatorTrackerResolver<TContext> GetResolverByContext<TContext>()
+		static EvaluatorTrackerResolverRegistry()
 		{
-			if (_contextTypeToResolver == null)
-				Fill();
+			_contextTypeToResolver = new Dictionary<Type, IEvaluatorTrackingCenterResolver>();
+			foreach (var resolver in ReflectionUtility.InstantiateAllTypes<IEvaluatorTrackingCenterResolver>())
+				_contextTypeToResolver[resolver.ContextType] = resolver;
+		}
 
+		public static EvaluatorTrackingCenterResolver<TContext> GetResolverByContext<TContext>()
+		{
 			if (!_contextTypeToResolver!.TryGetValue(typeof(TContext), out var rawResolver))
 				throw new InvalidOperationException($"No tracker registered for context type [ {typeof(TContext)} ]");
 
-			if (rawResolver is not EvaluatorTrackerResolver<TContext> resolver)
+			if (rawResolver is not EvaluatorTrackingCenterResolver<TContext> resolver)
 				throw new InvalidOperationException($"Registered tracker by type [ {rawResolver.GetType()} ] does not match expected " +
-					$"type [ {typeof(EvaluatorTrackerResolver<TContext>)} ] for context [ {typeof(TContext)}] ");
+					$"type [ {typeof(EvaluatorTrackingCenterResolver<TContext>)} ] for context [ {typeof(TContext)}] ");
 
 			return resolver;
-		}
-
-		private static void Fill()
-		{
-			_contextTypeToResolver = ReflectionUtility.InstantiateAllTypesMap<IEvaluatorTrackerResolver>();
 		}
 	}
 }

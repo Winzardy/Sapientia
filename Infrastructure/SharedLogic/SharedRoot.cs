@@ -129,10 +129,15 @@ namespace SharedLogic
 			_revision = streamer.Read<int>(REVISION_KEY);
 
 			Loaded?.Invoke();
+			foreach (var node in _registry.FilterBy<IAfterLoadSharedNode>())
+				node.OnAfterLoad();
 		}
 
 		public void Save(ISharedDataStreamer streamer)
 		{
+			foreach (var node in _registry.FilterBy<IBeforeSaveSharedNode>())
+				node.OnBeforeSave();
+
 			foreach (var node in _registry.FilterBy<IPersistentNode>())
 				node.Save(streamer);
 

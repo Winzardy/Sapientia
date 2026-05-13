@@ -1,5 +1,7 @@
 #nullable disable
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Sapientia.Evaluators
 {
@@ -30,5 +32,12 @@ namespace Sapientia.Evaluators
 			=> new ConstantEvaluator<TContext, TValue>(value);
 
 		public static implicit operator bool(Evaluator<TContext, TValue> evaluator) => evaluator != null;
+
+		public virtual IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }

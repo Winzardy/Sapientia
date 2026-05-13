@@ -447,6 +447,34 @@ namespace Sapientia.Collections
 			}
 		}
 
+		public static void TryDisposeElements<TKey, TValue>(this IDictionary<TKey, TValue>? dictionary, Action<TValue>? onDispose = null)
+		{
+			if (dictionary == null)
+				return;
+
+			foreach (var item in dictionary.Values)
+			{
+				if (item is IDisposable disposable)
+				{
+					disposable.Dispose();
+					onDispose?.Invoke(item);
+				}
+			}
+		}
+
+		public static void DisposeElements<TKey, TValue>(this IDictionary<TKey, TValue>? dictionary, Action<TValue>? onDispose = null)
+			where TValue : IDisposable
+		{
+			if (dictionary == null)
+				return;
+
+			foreach (var item in dictionary.Values)
+			{
+				item.Dispose();
+				onDispose?.Invoke(item);
+			}
+		}
+
 		public static void TryDisposeElements<T>(this IEnumerable<T>? enumerable, Action<T>? onDispose = null)
 		{
 			if (enumerable == null)
@@ -454,11 +482,6 @@ namespace Sapientia.Collections
 
 			foreach (var item in enumerable)
 			{
-				if (item is IDisposable disposable)
-				{
-					disposable.Dispose();
-					onDispose?.Invoke(item);
-				}
 			}
 		}
 

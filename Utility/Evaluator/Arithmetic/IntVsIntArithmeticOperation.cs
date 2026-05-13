@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Extensions;
 
 #if CLIENT
@@ -38,6 +39,14 @@ namespace Sapientia.Evaluators
 				ArithmeticOperator.Modulus => a.Evaluate(context) % b.Evaluate(context),
 				_ => throw new ArgumentOutOfRangeException()
 			};
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			yield return a;
+			if (!b.IsConstant)
+				yield return b.evaluator;
 		}
 
 		public override string ToString()

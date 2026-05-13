@@ -23,6 +23,16 @@ namespace SharedLogic
 		public void Load(in TData data);
 		public void Save(out TData data);
 	}
+
+	public interface IAfterLoadSharedNode : ISharedNode
+	{
+		void OnAfterLoad();
+	}
+
+	public interface IBeforeSaveSharedNode : ISharedNode
+	{
+		void OnBeforeSave();
+	}
 }
 
 namespace SharedLogic.Internal

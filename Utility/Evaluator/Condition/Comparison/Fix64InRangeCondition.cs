@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Deterministic;
 using Sapientia.Evaluators;
 #if CLIENT
@@ -57,6 +58,16 @@ namespace Sapientia.Conditions.Comparison
 			var a = min.Evaluate(context);
 			var b = max.Evaluate(context);
 			return v > a && v < b;
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			if (!min.IsConstant)
+				yield return min.evaluator;
+			yield return value;
+			if (!max.IsConstant)
+				yield return max.evaluator;
 		}
 	}
 }

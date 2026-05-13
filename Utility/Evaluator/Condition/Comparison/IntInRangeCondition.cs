@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Evaluators;
 #if CLIENT
 using Sirenix.OdinInspector;
@@ -74,6 +75,19 @@ namespace Sapientia.Conditions.Comparison
 				(exclusiveMax
 					? v <= b
 					: v < b);
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+
+			if (!min.IsConstant)
+				yield return min.evaluator;
+
+			yield return value;
+
+			if (!max.IsConstant)
+				yield return max.evaluator;
 		}
 	}
 }

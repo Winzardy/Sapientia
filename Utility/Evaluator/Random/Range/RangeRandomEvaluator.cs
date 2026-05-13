@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Sapientia.Evaluators
 {
@@ -27,7 +28,15 @@ namespace Sapientia.Evaluators
 		}
 
 		public override string ToString() => $"{min}-{max}";
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
 
+			if (!min.IsConstant)
+				yield return min.evaluator;
+			if (!max.IsConstant)
+				yield return max.evaluator;
+		}
 #if CLIENT
 		public const string SELECTOR_NAME = "\u2009Range (random)";
 		public const string SELECTOR_CATEGORY = "/";

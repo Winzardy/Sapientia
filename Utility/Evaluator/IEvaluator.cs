@@ -1,8 +1,10 @@
+#nullable disable
 using System;
+using System.Collections.Generic;
 
 namespace Sapientia
 {
-	public interface IEvaluator
+	public interface IEvaluator : IEnumerable<IEvaluator>
 	{
 		const float R = 0.6f;
 		const float G = 1f;

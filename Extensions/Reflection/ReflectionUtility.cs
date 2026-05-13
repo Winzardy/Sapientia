@@ -53,19 +53,45 @@ namespace Sapientia.Utility
 		{
 			var retrievedTypes = GetAllTypes<T>();
 			var map = new Dictionary<Type, T>(retrievedTypes.Count);
+			InstantiateAllTypesMap(map, activator);
+			return map;
+		}
 
+		public static void InstantiateAllTypesMap<T>(Dictionary<Type, T> dictionary, Action<T> activator = null)
+			where T : class
+		{
+			var retrievedTypes = GetAllTypes<T>();
 			for (int i = 0; i < retrievedTypes.Count; i++)
 			{
 				var type = retrievedTypes[i];
 				if (type.TryCreateInstance(out T instance))
 				{
-					map[type] = instance;
-
+					dictionary[type] = instance;
 					activator?.Invoke(instance);
 				}
 			}
+		}
 
-			return map;
+		public static void InstantiateAllTypes<T>(List<T> list, Action<T> activator = null)
+		{
+			foreach (var instance in InstantiateAllTypes<T>())
+			{
+				list.Add(instance);
+				activator?.Invoke(instance);
+			}
+		}
+
+		public static IEnumerable<T> InstantiateAllTypes<T>()
+		{
+			var retrievedTypes = GetAllTypes<T>();
+			for (int i = 0; i < retrievedTypes.Count; i++)
+			{
+				var type = retrievedTypes[i];
+				if (type.TryCreateInstance(out T instance))
+				{
+					yield return instance;
+				}
+			}
 		}
 
 		public static IEnumerable<Assembly> GetAssemblies(Func<Assembly, bool> predicate)
@@ -260,8 +286,8 @@ namespace Sapientia.Utility
 						var parent = type.BaseType;
 
 						if (parent != null &&
-						   parent.IsGenericType &&
-						   parent.GetGenericTypeDefinition() == baseType)
+							parent.IsGenericType &&
+							parent.GetGenericTypeDefinition() == baseType)
 						{
 							var argument = parent.GetGenericArguments()[0];
 							list.Add((type, argument));
@@ -465,7 +491,7 @@ namespace Sapientia.Utility
 			var values = new List<T>();
 			foreach (var fi in type.GetConstantFieldInfos())
 			{
-				var value = (T)fi.GetValue(null);
+				var value = (T) fi.GetValue(null);
 				values.Add(value);
 			}
 
@@ -498,8 +524,7 @@ namespace Sapientia.Utility
 				{
 					type = type.BaseType;
 				}
-			}
-			while (type != null);
+			} while (type != null);
 
 			info = default;
 			return false;
@@ -553,13 +578,13 @@ namespace Sapientia.Utility
 		public CachedFieldInfo(string name, BindingFlags bindingFlags = BindingFlags.NonPublic | BindingFlags.Instance) : this()
 		{
 			_bindingFlags = bindingFlags;
-			_name = name;
+			_name         = name;
 
 			var type = typeof(T);
 			_field = type.GetField(_name, _bindingFlags);
 		}
 
 		public void SetValue<TValue>(T obj, TValue value) => _field.SetValue(obj, value);
-		public TValue GetValue<TValue>(T obj) => (TValue)_field.GetValue(obj);
+		public TValue GetValue<TValue>(T obj) => (TValue) _field.GetValue(obj);
 	}
 }

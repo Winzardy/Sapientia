@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Comparison;
 using Sapientia.Deterministic;
 using Sapientia.Evaluators;
@@ -40,6 +41,14 @@ namespace Sapientia.Conditions.Comparison
 		{
 			return a.Evaluate(context)
 				.Compare(@operator, b.Evaluate(context));
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			yield return a;
+			if (!b.IsConstant)
+				yield return b.evaluator;
 		}
 	}
 }

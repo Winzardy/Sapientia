@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Evaluators;
 using UnityEngine;
 
@@ -26,5 +27,11 @@ namespace Sapientia.Conditions
 
 		public IEvaluator Proxy => value;
 		public Type ProxyType => typeof(Condition<TContext2>);
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			yield return value;
+		}
 	}
 }

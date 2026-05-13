@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Conditions;
 using UnityEngine;
 
@@ -22,6 +23,14 @@ namespace Sapientia.Evaluators
 				return a.Evaluate(context);
 
 			return b.Evaluate(context);
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			yield return condition;
+			yield return a;
+			yield return b;
 		}
 	}
 }

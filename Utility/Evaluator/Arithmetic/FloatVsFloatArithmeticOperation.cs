@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Deterministic;
 
 #if CLIENT
@@ -67,6 +68,14 @@ namespace Sapientia.Evaluators
 			};
 
 			return $"{a1}{o}{b1}";
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			yield return a;
+			if (!b.IsConstant)
+				yield return b.evaluator;
 		}
 	}
 }
