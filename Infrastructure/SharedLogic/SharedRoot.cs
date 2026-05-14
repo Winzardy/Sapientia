@@ -42,7 +42,7 @@ namespace SharedLogic
 
 		public void Dispose()
 		{
-			foreach (var node in _registry.FilterBy<IDisposable>())
+			foreach (var node in _registry.FilterBy<IDisposable>(true))
 				node.Dispose();
 
 			DisposeUtility.DisposeAndSetNull(ref _registry);

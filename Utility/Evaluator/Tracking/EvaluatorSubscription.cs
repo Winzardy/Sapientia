@@ -2,6 +2,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Pooling;
+using UnityEngine;
 
 namespace Sapientia.Evaluators.Tracking
 {
@@ -33,13 +34,13 @@ namespace Sapientia.Evaluators.Tracking
 			_callback?.Invoke();
 		}
 
-		public void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action<TValue> callback, Action<EvaluatorSubscription<TContext, TValue>> onRelease)
+		internal void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action<TValue> callback, Action<EvaluatorSubscription<TContext, TValue>> onRelease)
 		{
 			_callbackWithValue = callback;
 			Bind(watcher, onRelease);
 		}
 
-		public void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action callback, Action<EvaluatorSubscription<TContext, TValue>> onRelease)
+		internal void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action callback, Action<EvaluatorSubscription<TContext, TValue>> onRelease)
 		{
 			_callback = callback;
 			Bind(watcher, onRelease);
@@ -60,7 +61,7 @@ namespace Sapientia.Evaluators.Tracking
 			if (solo)
 			{
 				if (_watcher == null)
-					throw new InvalidOperationException($"{typeof(TValue).Name} Token already released");
+					throw new InvalidOperationException($"{typeof(TValue).Name} token already released");
 
 				_watcher.Unsubscribe(this);
 			}
@@ -102,12 +103,14 @@ namespace Sapientia.Evaluators.Tracking
 		{
 			_subscription = subscription;
 			_generation   = generation;
+
 			_empty        = false;
 		}
 
 		private EvaluatorSubscriptionToken(bool empty)
 		{
 			_empty        = empty;
+
 			_generation   = 0;
 			_subscription = null;
 		}
@@ -158,5 +161,24 @@ namespace Sapientia.Evaluators.Tracking
 		}
 
 		#endregion
+	}
+
+	public static class EvaluatorSubscriptionTokenExtensions
+	{
+		public static void Reevaluate(this EvaluatorSubscriptionToken? tokenOrNull)
+		{
+			if (!tokenOrNull.HasValue)
+				return;
+
+			tokenOrNull.Value.Reevaluate();
+		}
+
+		public static void Release(this ref EvaluatorSubscriptionToken? tokenOrNull)
+		{
+			if (!tokenOrNull.HasValue)
+				return;
+
+			EvaluatorSubscriptionToken.ReleaseAndSetNull(ref tokenOrNull);
+		}
 	}
 }

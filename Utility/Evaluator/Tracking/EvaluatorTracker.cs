@@ -32,13 +32,18 @@ namespace Sapientia.Evaluators.Tracking
 		{
 			_center   = center;
 			_watchers = HashSetPool<IEvaluatorWatcher<TContext>>.Get();
-			OnInitialized();
+			OnInitialized(context);
 		}
 
 		public void Dispose()
 		{
 			OnDisposed();
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _watchers);
+		}
+
+		protected virtual void OnInitialized(TContext context)
+		{
+			OnInitialized();
 		}
 
 		protected virtual void OnInitialized()
