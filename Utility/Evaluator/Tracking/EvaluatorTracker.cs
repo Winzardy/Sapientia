@@ -4,10 +4,14 @@ using Sapientia.Pooling;
 
 namespace Sapientia.Evaluators.Tracking
 {
+	public interface IFilteredTrackableEvaluator : ITrackableEvaluator
+	{
+		int FilterHash { get; }
+	}
+
 	public interface ITrackableEvaluator : IEvaluator
 	{
 		Type TrackerType { get; }
-		int? TrackHash { get; }
 	}
 
 	public interface IEvaluatorTracker<TContext> : IDisposable
@@ -22,31 +26,23 @@ namespace Sapientia.Evaluators.Tracking
 		protected IEvaluatorTrackingCenter<TContext> _center;
 		private HashSet<IEvaluatorWatcher<TContext>> _watchers;
 
+		protected ref readonly TContext context { get => ref _center.ResolveContext(); }
+
 		void IEvaluatorTracker<TContext>.Initialize(IEvaluatorTrackingCenter<TContext> center)
 		{
 			_center   = center;
 			_watchers = HashSetPool<IEvaluatorWatcher<TContext>>.Get();
-			OnInitialized(_center.ResolveContext());
+			OnInitialized();
 		}
 
 		public void Dispose()
 		{
-			OnDisposed(_center.ResolveContext());
+			OnDisposed();
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _watchers);
-		}
-
-		protected virtual void OnInitialized(TContext context)
-		{
-			OnInitialized();
 		}
 
 		protected virtual void OnInitialized()
 		{
-		}
-
-		protected virtual void OnDisposed(TContext context)
-		{
-			OnDisposed();
 		}
 
 		protected virtual void OnDisposed()
@@ -73,43 +69,41 @@ namespace Sapientia.Evaluators.Tracking
 		{
 		}
 
-		protected ref readonly TContext GetContext() => ref _center.ResolveContext();
-
-		protected void Reevaluate(int? hash = null)
+		protected void Reevaluate(int? filterHash = null)
 		{
 			using (HashSetPool<IEvaluatorWatcher<TContext>>.Get(out var watchers))
 			{
-				CollectMatchedWatchers(hash, watchers);
+				CollectMatchedWatchers(filterHash, watchers);
 				Reevaluate(watchers);
 			}
 		}
 
-		protected void Reevaluate(List<int> hashes)
+		protected void Reevaluate(List<int> filteredHashes)
 		{
 			using (HashSetPool<IEvaluatorWatcher<TContext>>.Get(out var roots))
 			{
-				foreach (var hash in hashes)
-					CollectMatchedWatchers(hash, roots);
+				foreach (var filterHash in filteredHashes)
+					CollectMatchedWatchers(filterHash, roots);
 
 				Reevaluate(roots);
 			}
 		}
 
-		private void CollectMatchedWatchers(int? hash, HashSet<IEvaluatorWatcher<TContext>> roots)
+		private void CollectMatchedWatchers(int? filterHash, HashSet<IEvaluatorWatcher<TContext>> roots)
 		{
 			foreach (var watcher in _watchers)
 			{
-				if (!watcher.IsMatch(hash))
+				if (!watcher.IsMatch(filterHash))
 					continue;
 
-				roots.Add(watcher.root);
+				roots.Add(watcher.parent);
 			}
 		}
 
 		private void Reevaluate(HashSet<IEvaluatorWatcher<TContext>> watchers)
 		{
 			foreach (var watcher in watchers)
-				watcher.Reevaluate(_center.ResolveContext());
+				watcher.Reevaluate();
 		}
 	}
 }

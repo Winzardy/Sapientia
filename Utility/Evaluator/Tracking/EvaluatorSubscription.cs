@@ -5,30 +5,49 @@ using Sapientia.Pooling;
 
 namespace Sapientia.Evaluators.Tracking
 {
-	public interface IEvaluatorSubscription<TContext> : ISubscriptionToken
+	public interface IEvaluatorSubscription : ISubscriptionToken
 	{
+		Type ContextType { get; }
 		void Release(bool solo = true);
-		void Reevaluate(TContext context);
+		void Reevaluate();
 	}
 
-	public class EvaluatorSubscription<TContext, TValue> : IEvaluatorSubscription<TContext>, IPoolable
+	public class EvaluatorSubscription<TContext, TValue> : IEvaluatorSubscription, IPoolable
 	{
 		private int _generation;
 
-		private Action<TValue> _callback;
 		private IEvaluatorWatcher<TContext, TValue> _watcher;
+
+		private Action _callback;
+		private Action<TValue> _callbackWithValue;
+
 		private Action<EvaluatorSubscription<TContext, TValue>> _onRelease;
 
 		int ISubscriptionToken.Generation { get => _generation; }
+		public Type ContextType { get => typeof(TContext); }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Invoke(TValue value) => _callback?.Invoke(value);
+		public void Invoke(TValue value)
+		{
+			_callbackWithValue?.Invoke(value);
+			_callback?.Invoke();
+		}
 
 		public void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action<TValue> callback, Action<EvaluatorSubscription<TContext, TValue>> onRelease)
 		{
-			_watcher  = watcher;
-			_callback = callback;
+			_callbackWithValue = callback;
+			Bind(watcher, onRelease);
+		}
 
+		public void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action callback, Action<EvaluatorSubscription<TContext, TValue>> onRelease)
+		{
+			_callback = callback;
+			Bind(watcher, onRelease);
+		}
+
+		private void Bind(IEvaluatorWatcher<TContext, TValue> watcher, Action<EvaluatorSubscription<TContext, TValue>> onRelease)
+		{
+			_watcher   = watcher;
 			_onRelease = onRelease;
 
 			watcher.Subscribe(this);
@@ -49,67 +68,75 @@ namespace Sapientia.Evaluators.Tracking
 			_onRelease.Invoke(this);
 		}
 
-		public void Reevaluate(TContext context) => _watcher.Reevaluate(context, false);
+		public void Reevaluate() => _watcher.Reevaluate(false);
 
 		void IPoolable.Release()
 		{
-			_watcher  = null;
-			_callback = null;
+			_watcher           = null;
+			_callback          = null;
+			_callbackWithValue = null;
+			_onRelease         = null;
 
 			_generation++;
 		}
 
-		public static implicit operator EvaluatorSubscriptionToken<TContext>(EvaluatorSubscription<TContext, TValue> token) => new(token, token._generation);
+		public static implicit operator EvaluatorSubscriptionToken(EvaluatorSubscription<TContext, TValue> token) => new(token, token._generation);
 
 		internal static EvaluatorSubscription<TContext, TValue> New() => Pool<EvaluatorSubscription<TContext, TValue>>.Get();
 		internal static void Release(EvaluatorSubscription<TContext, TValue> subscription) => Pool<EvaluatorSubscription<TContext, TValue>>.Release(subscription);
 	}
 
-	public readonly struct EvaluatorSubscriptionToken<TContext> : IDisposable
+	public readonly struct EvaluatorSubscriptionToken : IDisposable
 	{
 		private readonly bool _empty;
 
-		public static EvaluatorSubscriptionToken<TContext> Empty = new EvaluatorSubscriptionToken<TContext>(true);
-
-		private readonly IEvaluatorSubscription<TContext> _token;
+		private readonly IEvaluatorSubscription _subscription;
 		private readonly int _generation;
 
-		internal IEvaluatorSubscription<TContext> Token { get => _token; }
-		public bool IsValid { get => _token != null && _token.Generation == _generation; }
+		public bool IsValid { get => _subscription != null && _subscription.Generation == _generation; }
 		public bool IsEmpty { get => _empty; }
 
-		public EvaluatorSubscriptionToken(IEvaluatorSubscription<TContext> token, int generation)
+		internal IEvaluatorSubscription Subscription { get => _subscription; }
+
+		public EvaluatorSubscriptionToken(IEvaluatorSubscription subscription, int generation)
 		{
-			_token      = token;
-			_generation = generation;
-			_empty      = false;
+			_subscription = subscription;
+			_generation   = generation;
+			_empty        = false;
 		}
 
 		private EvaluatorSubscriptionToken(bool empty)
 		{
-			_empty = empty;
-			_generation = 0;
-			_token = null;
+			_empty        = empty;
+			_generation   = 0;
+			_subscription = null;
 		}
 
-		public void Reevaluate(TContext context)
+		public void Reevaluate()
 		{
-			if (!_empty)
-				_token.Reevaluate(context);
+			if (_empty)
+				return;
+
+			_subscription.Reevaluate();
 		}
 
 		public void Dispose()
 		{
-			if (!_empty)
-				Release();
+			if (_empty)
+				return;
+
+			Release();
 		}
 
 		public void Release()
 		{
-			if (!IsValid)
-				throw new InvalidOperationException($"[EvaluatorSubscriptionToken<{typeof(TContext).Name}>] Invalid token (token gen:{_token?.Generation ?? -1} != gen: {_generation})");
+			if (_empty)
+				return;
 
-			_token.Release();
+			if (!IsValid)
+				throw new InvalidOperationException($"[EvaluatorSubscriptionToken] Invalid token (token gen:{_subscription?.Generation ?? -1} != gen: {_generation})");
+
+			_subscription.Release();
 		}
 
 		public void ReleaseSafe()
@@ -120,10 +147,16 @@ namespace Sapientia.Evaluators.Tracking
 			Release();
 		}
 
-		public static void ReleaseAndSetNull(ref EvaluatorSubscriptionToken<TContext>? token)
+		#region Static
+
+		public static EvaluatorSubscriptionToken Empty = new EvaluatorSubscriptionToken(true);
+
+		public static void ReleaseAndSetNull(ref EvaluatorSubscriptionToken? token)
 		{
 			token?.Release();
 			token = null;
 		}
+
+		#endregion
 	}
 }

@@ -1,6 +1,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using Sapientia.Reflection;
@@ -10,9 +11,17 @@ namespace Sapientia.Evaluators.Tracking
 	public interface IEvaluatorTrackingCenter<TContext>
 	{
 		ILogger Logger { get; }
-		EvaluatorSubscriptionToken<TContext> Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action<TValue> callback);
+
+		EvaluatorSubscriptionToken Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action<TValue> callback);
+		EvaluatorSubscriptionToken Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action callback);
+
+		#region Internal
+
 		internal IEvaluatorTracker<TContext> ResolveTracker(Type type);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal ref readonly TContext ResolveContext();
+
+		#endregion
 	}
 
 	public class EvaluatorTrackingCenter<TContext> : IEvaluatorTrackingCenter<TContext>, IDisposable
@@ -42,36 +51,58 @@ namespace Sapientia.Evaluators.Tracking
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _trackers);
 		}
 
-		public EvaluatorSubscriptionToken<TContext> Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action<TValue> callback)
+		public EvaluatorSubscriptionToken Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action<TValue> callback)
 		{
 			if (callback == null)
 				throw new ArgumentNullException(nameof(callback));
-
-			EvaluatorSubscription<TContext, TValue> subscription;
-			if (!_watchers.TryGetValue(evaluator, out var rawWatcher))
-			{
-				var watcher = new EvaluatorWatcher<TContext, TValue>(this, evaluator);
-				watcher.Initialize();
-				_watchers[evaluator] = watcher;
-
-				if (!watcher.IsTrackable)
-					return EvaluatorSubscriptionToken<TContext>.Empty;
-
-				subscription = EvaluatorSubscription<TContext, TValue>.New();
-				subscription.Bind(watcher, callback, EvaluatorSubscription<TContext, TValue>.Release);
-			}
-			else
-			{
-				if (!rawWatcher.IsTrackable)
-					return EvaluatorSubscriptionToken<TContext>.Empty;
-
-				subscription = EvaluatorSubscription<TContext, TValue>.New();
-				var watcher = (IEvaluatorWatcher<TContext, TValue>) rawWatcher;
-				subscription.Bind(watcher, callback, EvaluatorSubscription<TContext, TValue>.Release);
-			}
-
+			if (!TryGetOrCreateWatcher(evaluator, out var watcher))
+				return EvaluatorSubscriptionToken.Empty;
+			var subscription = EvaluatorSubscription<TContext, TValue>.New();
+			subscription.Bind(watcher, callback, ReleaseSubscription);
 			return subscription;
 		}
+
+		public EvaluatorSubscriptionToken Subscribe<TValue>(IEvaluator<TContext, TValue> evaluator, Action callback)
+		{
+			if (callback == null)
+				throw new ArgumentNullException(nameof(callback));
+			if (!TryGetOrCreateWatcher(evaluator, out var watcher))
+				return EvaluatorSubscriptionToken.Empty;
+			var subscription = EvaluatorSubscription<TContext, TValue>.New();
+			subscription.Bind(watcher, callback, ReleaseSubscription);
+			return subscription;
+		}
+
+		private bool TryGetOrCreateWatcher<TValue>(IEvaluator<TContext, TValue> evaluator, out IEvaluatorWatcher<TContext, TValue> watcher)
+		{
+			if (!_watchers.TryGetValue(evaluator, out var rawWatcher))
+			{
+				var newWatcher = new EvaluatorWatcher<TContext, TValue>(this, evaluator);
+				newWatcher.Initialize();
+				_watchers[evaluator] = newWatcher;
+
+				if (!newWatcher.IsTrackable)
+				{
+					watcher = null;
+					return false;
+				}
+
+				watcher = newWatcher;
+				return true;
+			}
+
+			if (!rawWatcher.IsTrackable)
+			{
+				watcher = null;
+				return false;
+			}
+
+			watcher = (IEvaluatorWatcher<TContext, TValue>) rawWatcher;
+			return true;
+		}
+
+		private static void ReleaseSubscription<TValue>(EvaluatorSubscription<TContext, TValue> subscription)
+			=> EvaluatorSubscription<TContext, TValue>.Release(subscription);
 
 		IEvaluatorTracker<TContext> IEvaluatorTrackingCenter<TContext>.ResolveTracker(Type type)
 		{
@@ -84,7 +115,9 @@ namespace Sapientia.Evaluators.Tracking
 			return tracker;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		ref readonly TContext IEvaluatorTrackingCenter<TContext>.ResolveContext() => ref ResolveContext();
+
 		private ref readonly TContext ResolveContext() => ref _context;
 	}
 }

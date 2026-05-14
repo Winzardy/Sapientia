@@ -28,7 +28,6 @@ namespace Sapientia.Conditions
 		public Type ProxyType { get => typeof(Condition<TContext2>); }
 		IEvaluator<TContext2, bool> IBridgeEvaluator<TContext1, TContext2, bool>.evaluator { get => value; }
 		public Type TrackerType { get => typeof(BridgeEvaluatorTracker<TContext1, TContext2, bool>); }
-		public int? TrackHash { get => null; }
 
 		protected override bool OnEvaluate(TContext1 context) => value?.IsFulfilled(Convert(context)) ?? true;
 

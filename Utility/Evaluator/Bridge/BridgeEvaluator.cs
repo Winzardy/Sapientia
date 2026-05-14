@@ -18,7 +18,6 @@ namespace Sapientia.Evaluators
 		public Type ProxyType { get => typeof(Evaluator<TContext2, TValue>); }
 
 		public Type TrackerType { get => typeof(BridgeEvaluatorTracker<TContext1, TContext2, TValue>); }
-		public int? TrackHash { get => null; }
 
 		IEvaluator<TContext2, TValue> IBridgeEvaluator<TContext1, TContext2, TValue>.evaluator { get => value; }
 

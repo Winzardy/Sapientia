@@ -13,13 +13,11 @@ namespace Sapientia.Evaluators.Tracking
 
 	public interface IEvaluatorWatcher<TContext> : IEvaluatorWatcher
 	{
-		IEvaluator BoundEvaluator { get; }
+		void Reevaluate();
+		void Reevaluate(bool invoke);
+		bool IsMatch(int? filterHash);
 
-		void Reevaluate(TContext context);
-		void Reevaluate(TContext context, bool invoke);
-		bool IsMatch(int? hash);
-
-		internal IEvaluatorWatcher<TContext> root { get; }
+		internal IEvaluatorWatcher<TContext> parent { get; }
 	}
 
 	public interface IEvaluatorWatcher<TContext, TValue> : IEvaluatorWatcher<TContext>
@@ -40,17 +38,18 @@ namespace Sapientia.Evaluators.Tracking
 
 		private HashSet<EvaluatorSubscription<TContext, TValue>> _subscriptions;
 		private IEvaluatorTracker<TContext>[] _trackers;
-		private EvaluatorWatcherProxy<TContext>[] _proxies;
-		private BridgeEvaluatorWatcherProxy<TContext>[] _bridges;
+		private FilterEvaluatorWatcher<TContext>[] _filters;
+		private BridgeEvaluatorWatcher<TContext>[] _bridges;
 
 		public IEvaluator BoundEvaluator { get => _rootEvaluator; }
+
 		public bool IsTrackable { get => _hasTrackableEvaluators; }
 
 		private bool _invoking;
 		private HashSet<EvaluatorSubscription<TContext, TValue>> _subscribePending;
 		private HashSet<EvaluatorSubscription<TContext, TValue>> _unsubscribePending;
 
-		IEvaluatorWatcher<TContext> IEvaluatorWatcher<TContext>.root { get => this; }
+		IEvaluatorWatcher<TContext> IEvaluatorWatcher<TContext>.parent { get => this; }
 
 		public EvaluatorWatcher(IEvaluatorTrackingCenter<TContext> center, IEvaluator<TContext, TValue> rootEvaluator)
 		{
@@ -62,8 +61,8 @@ namespace Sapientia.Evaluators.Tracking
 		{
 			using (HashSetPool<ITrackableEvaluator>.Get(out var evaluators))
 			using (HashSetPool<IEvaluatorTracker<TContext>>.Get(out var trackers))
-			using (ListPool<EvaluatorWatcherProxy<TContext>>.Get(out var proxies))
-			using (ListPool<BridgeEvaluatorWatcherProxy<TContext>>.Get(out var bridges))
+			using (ListPool<FilterEvaluatorWatcher<TContext>>.Get(out var filters))
+			using (ListPool<BridgeEvaluatorWatcher<TContext>>.Get(out var bridges))
 			{
 				CollectTrackableEvaluators(_rootEvaluator, evaluators);
 
@@ -79,15 +78,15 @@ namespace Sapientia.Evaluators.Tracking
 					var tracker = _center.ResolveTracker(trackerType);
 					if (evaluator is IBridgeEvaluator<TContext> bridgeEvaluator)
 					{
-						var bridgeProxy = BridgeEvaluatorWatcherProxy<TContext>.New();
+						var bridgeProxy = BridgeEvaluatorWatcher<TContext>.New();
 						bridgeProxy.Bind(this, tracker, bridgeEvaluator);
 						bridges.Add(bridgeProxy);
 					}
-					else if (evaluator.TrackHash.HasValue)
+					else if (evaluator is IFilteredTrackableEvaluator filteredEvaluator)
 					{
-						var proxy = EvaluatorWatcherProxy<TContext>.New();
-						proxy.Bind(this, tracker, evaluator);
-						proxies.Add(proxy);
+						var filter = FilterEvaluatorWatcher<TContext>.New();
+						filter.Bind(this, tracker, filteredEvaluator);
+						filters.Add(filter);
 					}
 					else
 					{
@@ -96,7 +95,7 @@ namespace Sapientia.Evaluators.Tracking
 				}
 
 				_trackers = trackers.ToArray();
-				_proxies  = proxies.ToArray();
+				_filters  = filters.ToArray();
 				_bridges  = bridges.ToArray();
 			}
 
@@ -108,13 +107,13 @@ namespace Sapientia.Evaluators.Tracking
 			if (!_hasTrackableEvaluators)
 				return;
 
-			foreach (var proxy in _proxies)
-				EvaluatorWatcherProxy<TContext>.Release(proxy);
+			foreach (var proxy in _filters)
+				FilterEvaluatorWatcher<TContext>.Release(proxy);
 
-			_proxies = null;
+			_filters = null;
 
 			foreach (var bridge in _bridges)
-				BridgeEvaluatorWatcherProxy<TContext>.Release(bridge);
+				BridgeEvaluatorWatcher<TContext>.Release(bridge);
 
 			_bridges = null;
 
@@ -128,15 +127,16 @@ namespace Sapientia.Evaluators.Tracking
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _subscriptions);
 		}
 
-		public bool IsMatch(int? hash) => EvaluatorWatcherUtility.IsMatch(hash);
+		public bool IsMatch(int? filterHash) => EvaluatorWatcherUtility.IsMatch(filterHash);
 
-		public void Reevaluate(TContext context)
+		public void Reevaluate()
 		{
-			Reevaluate(context, true);
+			Reevaluate(true);
 		}
 
-		public void Reevaluate(TContext context, bool invoke)
+		public void Reevaluate(bool invoke)
 		{
+			ref readonly var context = ref _center.ResolveContext();
 			var value = _rootEvaluator.Evaluate(context);
 
 			if (EqualityComparer<TValue>.Default.Equals(value, _current))
@@ -173,8 +173,7 @@ namespace Sapientia.Evaluators.Tracking
 
 			if (_subscriptions.Count == 1)
 			{
-				var context = _center.ResolveContext();
-				Reevaluate(context, false);
+				Reevaluate(false);
 				EnableTracking();
 			}
 		}
@@ -210,7 +209,7 @@ namespace Sapientia.Evaluators.Tracking
 			foreach (var bridge in _bridges)
 				bridge.EnableTracking();
 
-			foreach (var proxy in _proxies)
+			foreach (var proxy in _filters)
 				proxy.EnableTracking();
 
 			_trackingEnable = true;
@@ -227,7 +226,7 @@ namespace Sapientia.Evaluators.Tracking
 			foreach (var bridge in _bridges)
 				bridge.DisableTracking();
 
-			foreach (var proxy in _proxies)
+			foreach (var proxy in _filters)
 				proxy.DisableTracking();
 
 			_trackingEnable = false;
@@ -293,6 +292,6 @@ namespace Sapientia.Evaluators.Tracking
 
 	public static class EvaluatorWatcherUtility
 	{
-		public static bool IsMatch(int? hash) => !hash.HasValue;
+		public static bool IsMatch(int? filterHash) => !filterHash.HasValue;
 	}
 }

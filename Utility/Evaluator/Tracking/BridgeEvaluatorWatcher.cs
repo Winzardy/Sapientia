@@ -3,16 +3,17 @@ using Sapientia.Pooling;
 
 namespace Sapientia.Evaluators.Tracking
 {
-	public class BridgeEvaluatorWatcherProxy<TContext> : IEvaluatorWatcher<TContext>, IPoolable
+	public class BridgeEvaluatorWatcher<TContext> : IEvaluatorWatcher<TContext>, IPoolable
 	{
 		private IEvaluatorWatcher<TContext> _watcher;
 		private IEvaluatorTracker<TContext> _tracker;
 		private IBridgeEvaluator<TContext> _bridge;
 
-		public IEvaluator BoundEvaluator { get => _bridge; }
+		internal IBridgeEvaluator<TContext> Bridge {get  => _bridge;}
 
 		bool IEvaluatorWatcher.IsTrackable { get => _watcher.IsTrackable; }
-		IEvaluatorWatcher<TContext> IEvaluatorWatcher<TContext>.root { get => _watcher; }
+		IEvaluatorWatcher<TContext> IEvaluatorWatcher<TContext>.parent { get => _watcher; }
+
 
 		public void Bind(IEvaluatorWatcher<TContext> watcher, IEvaluatorTracker<TContext> tracker, IBridgeEvaluator<TContext> bridge)
 		{
@@ -35,10 +36,10 @@ namespace Sapientia.Evaluators.Tracking
 			_bridge  = null;
 		}
 
-		public bool IsMatch(int? hash) => EvaluatorWatcherUtility.IsMatch(hash);
-		public void Reevaluate(TContext context) => _watcher.Reevaluate(context);
-		public void Reevaluate(TContext context, bool invoke) => _watcher.Reevaluate(context, invoke);
-		public static BridgeEvaluatorWatcherProxy<TContext> New() => Pool<BridgeEvaluatorWatcherProxy<TContext>>.Get();
-		public static void Release(BridgeEvaluatorWatcherProxy<TContext> proxy) => Pool<BridgeEvaluatorWatcherProxy<TContext>>.Release(proxy);
+		public bool IsMatch(int? filterHash) => EvaluatorWatcherUtility.IsMatch(filterHash);
+		public void Reevaluate() => _watcher.Reevaluate();
+		public void Reevaluate(bool invoke) => _watcher.Reevaluate(invoke);
+		public static BridgeEvaluatorWatcher<TContext> New() => Pool<BridgeEvaluatorWatcher<TContext>>.Get();
+		public static void Release(BridgeEvaluatorWatcher<TContext> proxy) => Pool<BridgeEvaluatorWatcher<TContext>>.Release(proxy);
 	}
 }

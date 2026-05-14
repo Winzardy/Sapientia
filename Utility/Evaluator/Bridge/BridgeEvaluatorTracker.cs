@@ -1,4 +1,3 @@
-using System;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 
@@ -6,11 +5,11 @@ namespace Sapientia.Evaluators.Tracking
 {
 	internal class BridgeEvaluatorTracker<TContext1, TContext2, TValue> : EvaluatorTracker<TContext1>
 	{
-		private HashMap<IEvaluator, EvaluatorSubscriptionToken<TContext2>> _evaluatorToToken;
+		private HashMap<IEvaluatorWatcher, EvaluatorSubscriptionToken> _evaluatorToToken;
 
 		protected override void OnInitialized()
 		{
-			_evaluatorToToken = HashMapPool<IEvaluator, EvaluatorSubscriptionToken<TContext2>>.Get();
+			_evaluatorToToken = HashMapPool<IEvaluatorWatcher, EvaluatorSubscriptionToken>.Get();
 		}
 
 		protected override void OnDisposed()
@@ -19,33 +18,30 @@ namespace Sapientia.Evaluators.Tracking
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _evaluatorToToken);
 		}
 
-		protected override void OnBind(IEvaluatorWatcher<TContext1> watcher)
+		protected override void OnBind(IEvaluatorWatcher<TContext1> rawWatcher)
 		{
-			var evaluator = watcher.BoundEvaluator;
-			if (evaluator is IBridgeEvaluator<TContext1, TContext2, TValue> bridge)
+			if (rawWatcher is BridgeEvaluatorWatcher<TContext1> {Bridge: IBridgeEvaluator<TContext1, TContext2, TValue> bridge})
 			{
-				var context2 = bridge.Convert(GetContext());
-				var token = bridge.evaluator.Subscribe(context2, Callback);
+				var context2 = bridge.Convert(context);
+				var token = bridge.evaluator.Subscribe(context2, rawWatcher.Reevaluate);
 
-				if(token.IsEmpty)
+				if (token.IsEmpty)
 					return;
 
-				_evaluatorToToken[evaluator] = token;
+				_evaluatorToToken[rawWatcher] = token;
 				return;
 			}
 
-			throw _center.Logger.Exception("Invalid root evaluator type!");
-			void Callback(TValue _) => watcher.Reevaluate(_center.ResolveContext());
+			throw _center.Logger.Exception($"Invalid watcher type [ {rawWatcher.GetType().Name} ] for bridge evaluator subscription...");
 		}
 
 		protected override void OnUnbind(IEvaluatorWatcher<TContext1> watcher)
 		{
-			var evaluator = watcher.BoundEvaluator;
-			if (!_evaluatorToToken.Contains(evaluator))
+			if (!_evaluatorToToken.Contains(watcher))
 				return;
 
-			_evaluatorToToken[evaluator].Dispose();
-			_evaluatorToToken.Remove(evaluator);
+			_evaluatorToToken[watcher].Dispose();
+			_evaluatorToToken.Remove(watcher);
 		}
 	}
 }

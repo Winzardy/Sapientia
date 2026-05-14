@@ -5,14 +5,14 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 #endif
 
-public enum ConditionGroupMode
-{
-	Any, // OR
-	All // AND
-}
-
 namespace Sapientia.Conditions
 {
+	public enum ConditionGroupMode
+	{
+		Any, // OR
+		All // AND
+	}
+
 	[Serializable]
 	public abstract class CollectionCondition<T> : InvertableCondition<T>
 	{
