@@ -18,6 +18,7 @@ namespace Sapientia.Evaluators
 
 	public interface IEvaluatedValue
 	{
+		bool IsConstant { get; }
 		public IEvaluator Evaluator { get; }
 		public void ToConstantMode();
 		public void ToEvaluatorMode();
