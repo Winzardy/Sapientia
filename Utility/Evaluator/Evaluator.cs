@@ -14,6 +14,9 @@ namespace Sapientia.Evaluators
 	/// Для корневых узлов графа значений рекомендуется использовать <see cref="EvaluatedValue{TContext, TValue}"/>,
 	/// так как он позволяет хранить дешевое константное значение, но внутри так же хранит <see cref="Evaluator{TContext, TValue}"/>
 	/// </remarks>
+#if NEWTONSOFT
+	[Newtonsoft.Json.JsonObject]
+#endif
 	[Serializable]
 	public abstract partial class Evaluator<TContext, TValue> : IEvaluator<TContext, TValue>
 	{
