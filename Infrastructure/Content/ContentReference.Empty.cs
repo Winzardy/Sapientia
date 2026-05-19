@@ -18,6 +18,7 @@
 			"IsEmpty can only be accessed on ContentReference<T>, use IsEmpty<T>");
 
 		public readonly bool IsEmpty() => guid == SerializableGuid.Empty;
+		public readonly bool IsValid() => true;
 
 		public readonly bool Contains<T>() => !IsEmpty() &&
 			guid == IContentReference.SINGLE_GUID

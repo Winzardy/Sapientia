@@ -57,21 +57,22 @@ namespace Content
 		/// <summary>
 		/// <see cref="ContentReference{T}.guid"/>
 		/// </summary>
-		public const string GUID_FIELD_NAME = "guid";
+		const string GUID_FIELD_NAME = "guid";
 
 		/// <summary>
 		/// <see cref="ContentReference{T}.index"/>
 		/// </summary>
-		public const string INDEX_FIELD_NAME = "single";
+		const string INDEX_FIELD_NAME = "single";
 
 		/// <summary>
 		/// Когда <see cref="ContentReference{T}"/> ссылается на <see cref="SingleContentEntry{T}"/>
 		/// </summary>
-		public static readonly SerializableGuid SINGLE_GUID = new(-1, -1);
+		static readonly SerializableGuid SINGLE_GUID = new(-1, -1);
 
-		public bool IsSingle { get; }
-		public SerializableGuid Guid { get; }
-		public bool IsEmpty();
+		bool IsSingle { get; }
+		SerializableGuid Guid { get; }
+		bool IsEmpty();
+		bool IsValid();
 		Type ValueType { get; }
 	}
 }
