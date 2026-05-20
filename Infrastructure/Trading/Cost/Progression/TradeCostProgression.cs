@@ -37,13 +37,15 @@ namespace Trading
 		public void Reset(Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
-			node.ResetProgress(GetProgressKey(), schemeEntry);
+			var key = GetProgressKey(out var scheme);
+			node.ResetProgress(key, scheme);
 		}
 
 		public int GetCurrentStageIndex(Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
-			var progress = node.GetCurrentProgress(GetProgressKey(), schemeEntry);
+			var key = GetProgressKey(out var scheme);
+			var progress = node.GetCurrentProgress(key, scheme);
 			var length = stages.Length;
 			return progress >= length
 				? cycle ? progress % length : length - 1
@@ -70,7 +72,7 @@ namespace Trading
 		private ref readonly TradeCostProgressionStage GetCurrentStage(Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
-			var progress = node.GetCurrentProgress(GetProgressKey(), schemeEntry);
+			var progress = node.GetCurrentProgress(GetProgressKey(out var scheme), scheme);
 			var length = stages.Length;
 			var index = progress >= length
 				? cycle
@@ -86,7 +88,7 @@ namespace Trading
 			if (schemeSource != TradeProgressionSchemeSource.Local)
 				return;
 
-			TryIncrementStage(schemeEntry, in stage, board);
+			TryIncrementStage(in stage, board);
 		}
 
 		public void OnTradeFinished(Tradeboard board)
@@ -94,45 +96,55 @@ namespace Trading
 			if (schemeSource != TradeProgressionSchemeSource.Shared)
 				return;
 
-			var progressKey = GetProgressKey();
+			var key = GetProgressKey(out _);
 
 			// Если прогресс уже был, игнорируем остальные
-			if (board.Contains<bool>(progressKey))
+			if (board.Contains<bool>(key))
 				return;
 
-			TryIncrementStage(progressKey, schemeReference, board);
-			board.Register(true, progressKey);
+			TryIncrementStage(board);
+			board.Register(true, key);
 		}
 
-		private void TryIncrementStage(TradeProgressionScheme targetScheme, in TradeCostProgressionStage stage, Tradeboard board)
+		private void TryIncrementStage(in TradeCostProgressionStage stage, Tradeboard board)
 		{
-			var progressKey = GetProgressKey();
 			var skipCondition = stage.useOverrideCondition;
 			if (!stage.overrideCondition.IsFulfilled(board))
 				return;
 
-			TryIncrementStage(progressKey, targetScheme, board, skipCondition);
+			TryIncrementStage( board, skipCondition);
 		}
 
-		private void TryIncrementStage(string key, TradeProgressionScheme targetScheme, Tradeboard board)
+		private void TryIncrementStage(Tradeboard board)
 		{
-			TryIncrementStage(key, targetScheme, board, false);
+			TryIncrementStage(board, false);
 		}
 
-		private void TryIncrementStage(string key, TradeProgressionScheme targetScheme, Tradeboard board, bool skipCondition)
+		private void TryIncrementStage(Tradeboard board, bool skipCondition)
 		{
-			if (!skipCondition && !targetScheme.condition.IsFulfilled(board))
+			var key = GetProgressKey(out var scheme);
+			if (!skipCondition && !scheme.condition.IsFulfilled(board))
 			{
 				return;
 			}
 
 			var node = board.Get<ITradingNode>();
-			node.IncrementProgress(key, targetScheme);
+			node.IncrementProgress(key, scheme);
 		}
 
-		private string GetProgressKey() => schemeSource == TradeProgressionSchemeSource.Shared
-				? schemeReference.guid
-				: schemeEntry.Guid;
+		private string GetProgressKey(out TradeProgressionScheme scheme)
+		{
+			if (schemeSource == TradeProgressionSchemeSource.Shared)
+			{
+				scheme = schemeReference.Read();
+				return schemeReference.guid;
+			}
+			else
+			{
+				scheme = schemeEntry;
+				return schemeEntry.Guid;
+			}
+		}
 
 #if CLIENT
 		[FormerlySerializedAs("autoReset")]
