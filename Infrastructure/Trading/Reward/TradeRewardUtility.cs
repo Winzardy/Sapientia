@@ -16,11 +16,20 @@ namespace Trading
 		/// <summary>
 		/// Результативный список наград который в итоге получается при текущем состоянии (на момент запроса)
 		/// </summary>
-		public static IEnumerable<TradeReward> EnumerateActual(this TradeReward reward, Tradeboard board)
+		public static IEnumerable<TradeReward> EnumerateActual(this TradeReward rootReward, Tradeboard board)
 		{
 			using (board.SimulationModeScope())
-				foreach (var actualReward in reward.EnumerateActualInternal(board))
-					yield return actualReward;
+				foreach (var reward in rootReward.EnumerateActualInternal(board))
+					yield return reward;
+		}
+
+		public static IEnumerable<TradeReward> EnumerateAll(this TradeReward rootReward)
+		{
+			using (HashSetPool<TradeReward>.Get(out var path))
+			{
+				foreach (var reward in EnumerateAll(rootReward, path))
+					yield return reward;
+			}
 		}
 
 		public static void RegisterResultHandleTo<THandle, TReward>(this TReward source, Tradeboard board, out THandle handle)
@@ -165,6 +174,22 @@ namespace Trading
 
 				for (int k = 0; k < expanded.Count; k++)
 					yield return expanded[k];
+			}
+		}
+
+		private static IEnumerable<TradeReward> EnumerateAll(this TradeReward reward, HashSet<TradeReward> visited)
+		{
+			if (reward == null)
+				yield break;
+
+			if (!visited.Add(reward))
+				yield break;
+
+			yield return reward;
+			foreach (var child in reward)
+			{
+				foreach (var nested in EnumerateAll(child, visited))
+					yield return nested;
 			}
 		}
 	}

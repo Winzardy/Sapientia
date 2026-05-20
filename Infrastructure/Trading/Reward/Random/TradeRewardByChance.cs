@@ -50,6 +50,12 @@ namespace Trading
 					yield return actualReward;
 		}
 
+		public override IEnumerator<TradeReward> GetEnumerator()
+		{
+			yield return this;
+			yield return reward;
+		}
+
 		#endregion
 	}
 }

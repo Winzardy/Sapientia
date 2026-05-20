@@ -1,20 +1,20 @@
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Trading
 {
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonObject] // иначе пытается сериализовать как список
-#endif
-	public sealed partial class TradeCostOptions : IEnumerable<TradeCost>
+	public sealed partial class TradeCostOptions
 	{
-		public new IEnumerator<TradeCost> GetEnumerator()
+		public override IEnumerator<TradeCost> GetEnumerator()
 		{
+			yield return this;
 			foreach (var option in options)
-				foreach (var cost in option) // ограничение на одну вложенность в системе!
-					yield return cost;
+				yield return option;
 		}
 
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		protected internal override IEnumerable<TradeCost> EnumerateActualInternal(Tradeboard board)
+		{
+			foreach (var actualCost in options[selectedIndex].EnumerateActual(board))
+				yield return actualCost;
+		}
 	}
 }

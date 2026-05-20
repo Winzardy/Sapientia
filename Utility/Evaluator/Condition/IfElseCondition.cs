@@ -20,9 +20,9 @@ namespace Sapientia.Evaluators
 		protected override bool OnEvaluate(TContext context)
 		{
 			if (condition.IsFulfilled(context))
-				return a.Evaluate(context);
+				return a.IsFulfilled(context);
 
-			return b.Evaluate(context);
+			return b.IsFulfilled(context);
 		}
 
 		public override IEnumerator<IEvaluator> GetEnumerator()

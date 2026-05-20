@@ -28,7 +28,7 @@ namespace Sapientia.Conditions
 				case ConditionGroupMode.Any:
 					for (int i = 0; i < collection.Length; i++)
 					{
-						if (collection[i].Evaluate(context))
+						if (collection[i].IsFulfilled(context))
 							return true;
 					}
 
@@ -36,7 +36,7 @@ namespace Sapientia.Conditions
 				case ConditionGroupMode.All:
 					for (int i = 0; i < collection.Length; i++)
 					{
-						if (!collection[i].Evaluate(context))
+						if (!collection[i].IsFulfilled(context))
 							return false;
 					}
 

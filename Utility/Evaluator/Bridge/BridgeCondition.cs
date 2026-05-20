@@ -29,7 +29,7 @@ namespace Sapientia.Conditions
 		IEvaluator<TContext2, bool> IBridgeEvaluator<TContext1, TContext2, bool>.evaluator { get => value; }
 		public Type TrackerType { get => typeof(BridgeEvaluatorTracker<TContext1, TContext2, bool>); }
 
-		protected override bool OnEvaluate(TContext1 context) => value?.IsFulfilled(Convert(context)) ?? true;
+		protected override bool OnEvaluate(TContext1 context) => value.IsFulfilled(Convert(context));
 
 		public abstract TContext2 Convert(TContext1 context);
 

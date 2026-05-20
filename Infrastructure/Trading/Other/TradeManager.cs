@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Content;
 using Sapientia;
 
@@ -56,6 +57,8 @@ namespace Trading
 			using (board.TradeModeScope())
 				return config.Execute(board);
 		}
+
+		public static IEnumerable<TradeReward> EnumerateActual(TradeReward reward, Tradeboard board) => reward.EnumerateActual(board);
 
 #if CLIENT
 		public static bool CanFetch(in ContentReference<TradeCost> costRef, Tradeboard tradeboard, out TradePayError? error)

@@ -7,10 +7,10 @@ namespace Trading
 {
 	public enum TradeProgressionSchemeSource
 	{
-		[Tooltip("Свой личный прогресс")]
+		[Tooltip("Локальный прогресс с уникальным GUID (автоматически генерируется для каждой прогрессии)")]
 		Local,
 
-		[Tooltip("Общий прогресс между несколькими трейд участниками")]
+		[Tooltip("Общий прогресс с общей конфигурацией")]
 		Shared
 	}
 
@@ -18,14 +18,11 @@ namespace Trading
 	[Serializable]
 	public class TradeProgressionScheme
 	{
-		public const string BOARD_PROGRESS_KEY_FORMAT = "TradeProgress_{0}";
-		public const string PROGRESS_GUID_KEY_FORMAT = "{0}_{1}";
-
 		/// <summary>
 		/// Условие при котором награда прогрессирует, если 'None', то прогрессирует всегда
 		/// </summary>
 		[SerializeReference]
-		public Condition<Blackboard> condition;//= new ObjectProviderBlackboardProxyEvaluator();
+		public Condition<Blackboard> condition;
 
 		/// <summary>
 		/// Тип запланированного сброса: <br/>
@@ -93,16 +90,23 @@ namespace Trading
 		public static void IncrementProgress(this ref TradeProgressionState state, in TradeProgressionScheme scheme,
 			DateTime dateTime)
 		{
-			DecrementProgress(ref state, in scheme, dateTime);
+			ChangeProgress(ref state, 1, scheme, dateTime);
+		}
 
-			state.current++;
-			state.total++;
-			if (state.current == 1)
+		public static void ChangeProgress(this ref TradeProgressionState state, int value, in TradeProgressionScheme scheme,
+			DateTime dateTime)
+		{
+			TryResetProgress(ref state, in scheme, dateTime);
+
+			var prev = state.current;
+			state.current += value;
+			state.total   += value;
+			if (prev == 0 && state.current > 0)
 				state.firstIncrementTimestamp = dateTime.Ticks;
 			state.lastIncrementTimestamp = dateTime.Ticks;
 		}
 
-		private static void DecrementProgress(this ref TradeProgressionState state, in TradeProgressionScheme scheme, DateTime now)
+		private static void TryResetProgress(this ref TradeProgressionState state, in TradeProgressionScheme scheme, DateTime now)
 		{
 			var utcAt = new DateTime(state.firstIncrementTimestamp);
 
