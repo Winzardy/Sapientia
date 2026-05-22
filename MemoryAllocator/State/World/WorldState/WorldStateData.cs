@@ -1,4 +1,5 @@
 using Sapientia.Memory;
+using Sapientia.MemoryAllocator.State;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -14,6 +15,12 @@ namespace Sapientia.MemoryAllocator
 		/// Работает с локальными данными (Вне мира)
 		/// </summary>
 		public UnsafeServiceRegistry noStateServiceRegistry;
+
+		/// <summary>
+		/// Хранилище <see cref="ComponentSet"/>-ов по индексу <see cref="TypeId{IComponent}"/>.
+		/// Часть стейта мира (попадает в снапшот через allocator).
+		/// </summary>
+		public ComponentsManager componentsManager;
 
 		public ushort version;
 
@@ -37,6 +44,8 @@ namespace Sapientia.MemoryAllocator
 			serviceRegistry = default;
 			// При добавлении сервиса происходит инициализация
 			noStateServiceRegistry = default;
+			// При первой регистрации ComponentSet'а массив создаётся лениво
+			componentsManager = default;
 		}
 
 		public static WorldStateData Deserialize(ref StreamBufferReader stream)
@@ -52,6 +61,8 @@ namespace Sapientia.MemoryAllocator
 			world.version++;
 			// При добавлении сервиса происходит инициализация
 			world.noStateServiceRegistry = default;
+			// componentsManager лежит в allocator и десериализуется вместе с serviceRegistry payload'ом
+			world.componentsManager = default;
 
 			return world;
 		}
@@ -63,6 +74,8 @@ namespace Sapientia.MemoryAllocator
 			serviceRegistry = default;
 			// Обязательно нужно очистить, т.к. сервисы выделяются в неуправляемой памяти
 			noStateServiceRegistry.Clear();
+			// Массив лежит в allocator, который будет очищен — просто сбрасываем handle
+			componentsManager = default;
 			allocator.Clear();
 
 			tick = 0u;
@@ -76,6 +89,8 @@ namespace Sapientia.MemoryAllocator
 			serviceRegistry = default;
 			// Обязательно нужно задиспозить, т.к. сервисы выделяются в неуправляемой памяти
 			noStateServiceRegistry.Dispose();
+			// Массив лежит в allocator, который будет задиспожен — просто сбрасываем handle
+			componentsManager = default;
 			allocator.Dispose();
 			this = default;
 		}
