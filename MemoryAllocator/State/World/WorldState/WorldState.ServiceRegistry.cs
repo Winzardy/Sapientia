@@ -17,8 +17,8 @@ namespace Sapientia.MemoryAllocator
 			=> ref worldState.GetServiceRegistry().GetService<T>(worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T GetService<T>(this WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
-			=> ref worldState.GetServiceRegistry().GetService<T>(worldState, out isExist);
+		public static ref T TryGetService<T>(this WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
+			=> ref worldState.GetServiceRegistry().TryGetService<T>(worldState, out isExist);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> GetServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldService

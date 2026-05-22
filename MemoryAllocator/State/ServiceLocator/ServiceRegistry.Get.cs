@@ -17,7 +17,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
+		public ref T TryGetService<T>(WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
 		{
 			if (!_services.IsCreated)
 			{
