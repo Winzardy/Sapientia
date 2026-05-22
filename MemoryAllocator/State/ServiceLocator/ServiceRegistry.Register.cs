@@ -36,12 +36,14 @@ namespace Sapientia.MemoryAllocator
 		/// <summary>
 		/// Регистрация по типу из <see cref="IndexedPtr.typeId"/>. Slow path —
 		/// используется когда конкретный тип не известен compile-time (например proxy-based регистрация в <see cref="State.WorldElementsService"/>).
+		/// Имя <c>ByProxy</c> подчёркивает что это **не** забытый generic у обычного <see cref="RegisterService{T}(WorldState, IndexedPtr)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(WorldState worldState, IndexedPtr indexedPtr)
+		public void RegisterServiceByProxy(WorldState worldState, IndexedPtr indexedPtr)
 		{
 			EnsureInitialized(worldState);
-			IndexedTypes.GetContextTypeIdByGlobalId(typeof(IWorldService), indexedPtr.typeId, out var contextTypeId);
+			var found = IndexedTypes.GetContextTypeIdByGlobalId(typeof(IWorldService), indexedPtr.typeId, out var contextTypeId);
+			E.ASSERT(found, "IndexedPtr.typeId не маркирован IWorldService — пропустишь silent collision на slot 0.");
 			_services[worldState, contextTypeId] = indexedPtr;
 		}
 	}

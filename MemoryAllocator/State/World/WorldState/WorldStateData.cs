@@ -18,7 +18,8 @@ namespace Sapientia.MemoryAllocator
 
 		/// <summary>
 		/// Хранилище <see cref="ComponentSet"/>-ов по индексу <see cref="TypeId{IComponent}"/>.
-		/// Часть стейта мира (попадает в снапшот через allocator).
+		/// Payload (<see cref="MemArray{T}"/> внутри) живёт в allocator и попадает в снапшот через него.
+		/// Handle-struct (поле в <see cref="WorldStateData"/>) надо отдельно читать/писать при Serialize/Deserialize.
 		/// </summary>
 		public ComponentsManager componentsManager;
 
@@ -54,6 +55,7 @@ namespace Sapientia.MemoryAllocator
 
 			world.allocator = Allocator.Deserialize(ref stream);
 			stream.Read(ref world.serviceRegistry);
+			stream.Read(ref world.componentsManager);
 			stream.Read(ref world.version);
 			stream.Read(ref world.tick);
 			stream.Read(ref world.time);
@@ -61,8 +63,6 @@ namespace Sapientia.MemoryAllocator
 			world.version++;
 			// При добавлении сервиса происходит инициализация
 			world.noStateServiceRegistry = default;
-			// componentsManager лежит в allocator и десериализуется вместе с serviceRegistry payload'ом
-			world.componentsManager = default;
 
 			return world;
 		}

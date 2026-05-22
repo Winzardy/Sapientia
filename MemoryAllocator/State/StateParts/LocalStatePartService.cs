@@ -45,6 +45,12 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		private ClassPtr[] _managedServices;
 		private readonly SimpleList<UnsafeProxyPtr<IWorldUnmanagedLocalStatePartProxy>> _unmanagedLocalStateParts = new();
+		/// <summary>
+		/// Подмножество индексов в <see cref="_managedServices"/> для которых надо вызывать lifecycle
+		/// (<see cref="IWorldLocalStatePart"/>-наследники, а не любой <see cref="IWorldLocalService"/>).
+		/// Инвариант: <c>_managedLifecycleIndices ⊆ {i | _managedServices[i].IsValid}</c>.
+		/// Поддерживается через assert в <see cref="AddStatePart{T}(WorldState, T)"/> и snapshot-clear в <see cref="Dispose"/>.
+		/// </summary>
 		private readonly SimpleList<int> _managedLifecycleIndices = new();
 
 		private static LocalStatePartService GetOrCreate(WorldState worldState)
@@ -82,8 +88,9 @@ namespace Sapientia.MemoryAllocator.State
 
 			var index = (int)TypeIdOf<IWorldLocalService, T>.typeId;
 			ref var slot = ref service._managedServices[index];
-			if (slot.IsValid)
-				slot.Dispose();
+			// Lifecycle index добавляется один раз: повторная регистрация одного T-state-парта
+			// перезатёрла бы lifecycle hook двойным вызовом Initialize/Start/Dispose.
+			E.ASSERT(!slot.IsValid, "AddStatePart вызван дважды для одного типа — это ошибка в WorldBuilder");
 			slot = ClassPtr.Create(statePart);
 			service._managedLifecycleIndices.Add(index);
 		}

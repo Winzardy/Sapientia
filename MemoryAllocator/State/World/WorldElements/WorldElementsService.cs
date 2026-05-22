@@ -16,7 +16,7 @@ namespace Sapientia.MemoryAllocator
 		public void AddWorldElement(WorldState worldState, ProxyPtr<IWorldElementProxy> element)
 		{
 			worldElements.Add(worldState, element);
-			worldState.RegisterService(element);
+			worldState.RegisterServiceByProxy(element);
 		}
 
 		public void AddWorldSystem(WorldState worldState, ProxyPtr<IWorldSystemProxy> system)

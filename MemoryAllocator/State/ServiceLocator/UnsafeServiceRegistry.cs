@@ -22,6 +22,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!_typeToPtr.IsCreated)
 				return;
+			// for: нужен ref-write по индексу (slot = default), foreach по SafePtr копию даст
 			for (var i = 0; i < _typeToPtr.Length; i++)
 			{
 				ref var slot = ref _typeToPtr[i];
@@ -35,15 +36,9 @@ namespace Sapientia.MemoryAllocator
 
 		public void Dispose()
 		{
-			if (!_typeToPtr.IsCreated)
-				return;
-			for (var i = 0; i < _typeToPtr.Length; i++)
-			{
-				ref var slot = ref _typeToPtr[i];
-				if (slot.IsValid)
-					MemoryExt.MemFree(slot);
-			}
-			_typeToPtr.Dispose();
+			Clear();
+			if (_typeToPtr.IsCreated)
+				_typeToPtr.Dispose();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

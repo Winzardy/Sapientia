@@ -10,7 +10,7 @@ namespace Sapientia.MemoryAllocator
 	/// помеченных маркером <see cref="IWorldService"/>: <see cref="IWorldElement"/>-наследники
 	/// (StatePart-ы, системы) и <see cref="IConfigurationRuntime"/>-конфиги.
 	/// </summary>
-	public static class WorldStateServiceExt
+	public static class WorldStateServiceExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this WorldState worldState) where T : unmanaged, IWorldService
@@ -56,9 +56,13 @@ namespace Sapientia.MemoryAllocator
 		public static void RegisterService<T>(this WorldState worldState, IndexedPtr indexedPtr) where T : unmanaged, IWorldService
 			=> worldState.GetServiceRegistry().RegisterService<T>(worldState, indexedPtr);
 
+		/// <summary>
+		/// Регистрация proxy-объекта без compile-time типа (slow path с runtime lookup в IndexedTypes).
+		/// Имя <c>ByProxy</c> — чтобы на callsite intent был виден, а не выглядело как accidental missing generic.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterService(this WorldState worldState, IndexedPtr indexedPtr)
-			=> worldState.GetServiceRegistry().RegisterService(worldState, indexedPtr);
+		public static void RegisterServiceByProxy(this WorldState worldState, IndexedPtr indexedPtr)
+			=> worldState.GetServiceRegistry().RegisterServiceByProxy(worldState, indexedPtr);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool RemoveService<T>(this WorldState worldState) where T : unmanaged, IWorldService
@@ -86,7 +90,7 @@ namespace Sapientia.MemoryAllocator
 	/// для типов помеченных <see cref="IWorldLocalUnmanagedService"/>: Logic'и
 	/// (<see cref="IInitializableService"/>), а также <see cref="IWorldUnmanagedLocalStatePart"/>.
 	/// </summary>
-	public static class WorldStateLocalUnmanagedServiceExt
+	public static class WorldStateLocalUnmanagedServiceExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
@@ -134,7 +138,7 @@ namespace Sapientia.MemoryAllocator
 	/// <see cref="IWorldLocalService"/>: managed <see cref="IWorldLocalStatePart"/>,
 	/// <see cref="Tags.TagsMapping"/> и им подобные.
 	/// </summary>
-	public static class WorldStateLocalServiceExt
+	public static class WorldStateLocalServiceExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ClassPtr<T> RegisterService<T>(this WorldState worldState, T service) where T : class, IWorldLocalService
