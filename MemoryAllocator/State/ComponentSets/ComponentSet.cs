@@ -15,7 +15,7 @@ namespace Sapientia.MemoryAllocator.State
 	/// Доступ к настройкам в рантайме осуществляется через
 	/// <see cref="allocator.GetService{IConfigurationRuntime}"/>, если они заданы.
 	/// </summary>
-	public interface IConfigurationRuntime : IIndexedType
+	public interface IConfigurationRuntime : IWorldService
 	{
 	}
 

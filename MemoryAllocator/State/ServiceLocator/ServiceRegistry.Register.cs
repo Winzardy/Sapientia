@@ -6,55 +6,43 @@ namespace Sapientia.MemoryAllocator
 	public partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(WorldState worldState, ServiceRegistryContext context, MemPtr ptr)
+		public void RegisterService<T>(WorldState worldState, MemPtr ptr) where T : unmanaged, IWorldService
 		{
-			_typeToPtr.Add(worldState, context, new IndexedPtr(ptr, context.typeId));
+			EnsureInitialized(worldState);
+			_services[worldState, TypeIdOf<IWorldService, T>.typeId] = new IndexedPtr(ptr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(WorldState worldState, ServiceRegistryContext context, CachedPtr ptr)
+		public void RegisterService<T>(WorldState worldState, CachedPtr<T> ptr) where T : unmanaged, IWorldService
 		{
-			_typeToPtr.Add(worldState, context, new IndexedPtr(ptr, context.typeId));
+			EnsureInitialized(worldState);
+			_services[worldState, TypeIdOf<IWorldService, T>.typeId] = new IndexedPtr(ptr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService(WorldState worldState, ServiceRegistryContext context, IndexedPtr indexedPtr)
+		public void RegisterService<T>(WorldState worldState, CachedPtr ptr) where T : unmanaged, IWorldService
 		{
-			_typeToPtr.Add(worldState, context, indexedPtr);
+			EnsureInitialized(worldState);
+			_services[worldState, TypeIdOf<IWorldService, T>.typeId] = new IndexedPtr(ptr, TypeIdOf<T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(WorldState worldState, MemPtr ptr) where T: unmanaged, IIndexedType
+		public void RegisterService<T>(WorldState worldState, IndexedPtr indexedPtr) where T : unmanaged, IWorldService
 		{
-			var serviceContext = ServiceRegistryContext.Create<T>();
-			_typeToPtr.Add(worldState, serviceContext, new IndexedPtr(ptr, serviceContext.typeId));
+			EnsureInitialized(worldState);
+			_services[worldState, TypeIdOf<IWorldService, T>.typeId] = indexedPtr;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(WorldState worldState, CachedPtr<T> ptr) where T: unmanaged, IIndexedType
-		{
-			var serviceContext = ServiceRegistryContext.Create<T>();
-			_typeToPtr.Add(worldState, serviceContext, new IndexedPtr(ptr, serviceContext.typeId));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterService<T>(WorldState worldState, CachedPtr ptr) where T: unmanaged, IIndexedType
-		{
-			var serviceContext = ServiceRegistryContext.Create<T>();
-			_typeToPtr.Add(worldState, serviceContext, new IndexedPtr(ptr, serviceContext.typeId));
-		}
-
+		/// <summary>
+		/// Регистрация по типу из <see cref="IndexedPtr.typeId"/>. Slow path —
+		/// используется когда конкретный тип не известен compile-time (например proxy-based регистрация в <see cref="State.WorldElementsService"/>).
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void RegisterService(WorldState worldState, IndexedPtr indexedPtr)
 		{
-			_typeToPtr.Add(worldState, indexedPtr.typeId, indexedPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RegisterServiceAs<T, TBase>(WorldState worldState, CachedPtr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
-		{
-			var serviceContext = ServiceRegistryContext.Create<TBase>();
-			_typeToPtr.Add(worldState, serviceContext, new IndexedPtr(ptr, serviceContext.typeId));
+			EnsureInitialized(worldState);
+			IndexedTypes.GetContextTypeIdByGlobalId(typeof(IWorldService), indexedPtr.typeId, out var contextTypeId);
+			_services[worldState, contextTypeId] = indexedPtr;
 		}
 	}
 }

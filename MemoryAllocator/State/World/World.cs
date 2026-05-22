@@ -176,23 +176,35 @@ namespace Sapientia.MemoryAllocator
 		public static implicit operator WorldState(World world) => world.worldState;
 	}
 
+	public static class WorldManagedServiceExtensions
+	{
+		public static T GetService<T>(this World world) where T : class, IWorldLocalService
+			=> world.worldState.GetServiceClass<T>();
+	}
+
+	public static class WorldServiceExtensions
+	{
+		public static ref T Get<T>(this World world) where T : unmanaged, IWorldService
+			=> ref world.worldState.GetService<T>();
+
+		public static SafePtr<T> GetPtr<T>(this World world) where T : unmanaged, IWorldService
+			=> world.worldState.GetServicePtr<T>();
+	}
+
+	public static class WorldLocalUnmanagedServiceExtensions
+	{
+		public static ref T Get<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService
+			=> ref world.worldState.GetService<T>();
+
+		public static SafePtr<T> GetPtr<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService
+			=> world.worldState.GetServicePtr<T>();
+
+		public static ref T GetOrCreate<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
+			=> ref world.worldState.GetOrCreateService<T>();
+	}
+
 	public static class WorldExtensions
 	{
-		public static T GetService<T>(this World world)
-			where T : class, IIndexedType
-			=> world.worldState.GetServiceClass<T>();
-
-		public static ref T Get<T>(this World world, ServiceType type = ServiceType.WorldState)
-			where T : unmanaged, IIndexedType
-			=> ref world.worldState.GetService<T>(type);
-
-		public static SafePtr<T> GetPtr<T>(this World world, ServiceType type = ServiceType.WorldState)
-			where T : unmanaged, IIndexedType
-			=> world.worldState.GetServicePtr<T>(type);
-
-		public static ref T GetOrCreate<T>(this World world, ServiceType type = ServiceType.WorldState)
-			where T : unmanaged, IInitializableService
-			=> ref world.worldState.GetOrCreateService<T>(type);
 
 		[CanBeNull]
 		public static World ToWorld(this Entity entity)

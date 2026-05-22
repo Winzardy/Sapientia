@@ -8,152 +8,75 @@ namespace Sapientia.MemoryAllocator
 	public partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
+		public ref T GetService<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			var ptr = _typeToPtr.GetValue(worldState, context, out var success);
-			E.ASSERT(success);
-			ref var result = ref ptr.GetValue<T>(worldState);
-			return ref result;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(WorldState worldState) where T: unmanaged, IIndexedType
-		{
-			var typeId = TypeId.Create<T>();
-			return ref GetService<T>(worldState, typeId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T TryGetService<T>(WorldState worldState, ServiceRegistryContext context, out bool isExist) where T: unmanaged
-		{
-			ref var ptr = ref _typeToPtr.GetValue(worldState, context, out isExist);
-			if (isExist)
-				return ref ptr.GetValue<T>(worldState);
+			E.ASSERT(_services.IsCreated);
+			ref var ptr = ref _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			E.ASSERT(ptr.IsCreated);
 			return ref ptr.GetValue<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(WorldState worldState, out bool isExist) where T: unmanaged, IIndexedType
+		public ref T GetService<T>(WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
 		{
-			var typeId = TypeId.Create<T>();
-
-			ref var ptr = ref _typeToPtr.GetValue(worldState, typeId, out isExist);
+			if (!_services.IsCreated)
+			{
+				isExist = false;
+				return ref worldState.GetZeroRef<T>();
+			}
+			ref var ptr = ref _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			isExist = ptr.IsCreated;
 			if (isExist)
 				return ref ptr.GetValue<T>(worldState);
-
 			return ref worldState.GetZeroRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(WorldState worldState, ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
+		public IndexedPtr GetServiceIndexedPtr<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			var ptr = _typeToPtr.GetValue(worldState, proxyPtr.indexedPtr.typeId, out var success);
-			E.ASSERT(success);
-			return ref ptr.GetValue<T>(worldState);
-		}
-
-		/// <summary>
-		/// Мы должны быть уверены, что результат при `isExist = false` не будет использован!
-		/// Иначе может повредиться память стейта.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetService<T>(WorldState worldState, ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
-		{
-			ref var ptr = ref _typeToPtr.GetValue(worldState, proxyPtr.indexedPtr.typeId, out isExist);
-			if (isExist)
-				return ref ptr.GetValue<T>(worldState);
-
-			return ref worldState.GetZeroRef<T>();
+			E.ASSERT(_services.IsCreated);
+			var ptr = _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			E.ASSERT(ptr.IsCreated);
+			return ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetServiceAs<TBase, T>(WorldState worldState) where TBase: unmanaged, IIndexedType where T: unmanaged
+		public CachedPtr<T> GetServiceCachedPtr<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			var typeId = TypeId.Create<TBase>();
-			var ptr = _typeToPtr.GetValue(worldState, typeId, out var success);
-			E.ASSERT(success);
-
-			return ref ptr.GetValue<T>(worldState);
+			E.ASSERT(_services.IsCreated);
+			var ptr = _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			E.ASSERT(ptr.IsCreated);
+			return ptr.GetCachedPtr<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetServiceIndexedPtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
+		public SafePtr<T> GetServicePtr<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			var result = _typeToPtr.GetValue(worldState, context, out var success);
-			E.ASSERT(success);
-			return result;
+			E.ASSERT(_services.IsCreated);
+			var ptr = _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			E.ASSERT(ptr.IsCreated);
+			return ptr.GetPtr<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetServiceIndexedPtr<T>(WorldState worldState) where T: unmanaged, IIndexedType
-		{
-			var typeId = TypeId.Create<T>();
-			return GetServiceIndexedPtr<T>(worldState, typeId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CachedPtr<T> GetServiceCachedPtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
-		{
-			var result = _typeToPtr.GetValue(worldState, context, out var success);
-			E.ASSERT(success);
-			return result.GetCachedPtr<T>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CachedPtr<T> GetServiceCachedPtr<T>(WorldState worldState) where T: unmanaged, IIndexedType
-		{
-			var typeId = TypeId.Create<T>();
-			return GetServiceCachedPtr<T>(worldState, typeId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetServicePtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
-		{
-			var result = _typeToPtr.GetValue(worldState, context, out var success);
-			E.ASSERT(success);
-
-			return result.GetPtr<T>(worldState);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetServicePtr<T>(WorldState worldState) where T: unmanaged, IIndexedType
-		{
-			var typeId = TypeId.Create<T>();
-			return GetServicePtr<T>(worldState, typeId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TryGetServicePtr<T>(WorldState worldState, out SafePtr<T> ptr) where T: unmanaged, IIndexedType
+		public bool TryGetServicePtr<T>(WorldState worldState, out SafePtr<T> ptr) where T : unmanaged, IWorldService
 		{
 			ptr = default;
-			var typeId = TypeId.Create<T>();
-			ref var refPtr = ref _typeToPtr.GetValue(worldState, typeId, out var success);
-			if (success)
-				ptr = refPtr.GetPtr<T>(worldState);
-			return success;
+			if (!_services.IsCreated)
+				return false;
+			ref var indexedPtr = ref _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			if (!indexedPtr.IsCreated)
+				return false;
+			ptr = indexedPtr.GetPtr<T>(worldState);
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetServiceAsPtr<TBase, T>(WorldState worldState) where TBase: unmanaged, IIndexedType where T: unmanaged
+		public bool HasService<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			var typeId = TypeId.Create<TBase>();
-			var result = _typeToPtr.GetValue(worldState, typeId, out var success);
-			E.ASSERT(success);
-
-			return result.GetPtr<T>(worldState);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool HasService<T>(WorldState worldState) where T: unmanaged, IIndexedType
-		{
-			var typeId = TypeId.Create<T>();
-			return _typeToPtr.ContainsKey(worldState, typeId);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool HasService(WorldState worldState, ServiceRegistryContext context)
-		{
-			return _typeToPtr.ContainsKey(worldState, context);
+			if (!_services.IsCreated)
+				return false;
+			return _services[worldState, TypeIdOf<IWorldService, T>.typeId].IsCreated;
 		}
 	}
 }

@@ -6,38 +6,29 @@ namespace Sapientia.MemoryAllocator
 	public partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveService(WorldState worldState, ServiceRegistryContext context)
+		public bool RemoveService<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			return _typeToPtr.Remove(worldState, context);
+			if (!_services.IsCreated)
+				return false;
+			ref var slot = ref _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			if (!slot.IsCreated)
+				return false;
+			slot = default;
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveService<T>(WorldState worldState) where T: unmanaged, IIndexedType
+		public bool RemoveService<T>(WorldState worldState, out T service) where T : unmanaged, IWorldService
 		{
-			var typeIndex = TypeId.Create<T>();
-			return _typeToPtr.Remove(worldState, typeIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveService<T>(WorldState worldState, out T service) where T: unmanaged, IIndexedType
-		{
-			var typeIndex = TypeId.Create<T>();
-			return RemoveService<T>(worldState, typeIndex, out service);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveService<T>(WorldState worldState, ServiceRegistryContext context, out T service) where T: unmanaged
-		{
-			var result = _typeToPtr.Remove(worldState, context, out var servicePtr);
-			service = servicePtr.GetValue<T>(worldState);
-
-			return result;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveService(WorldState worldState, IndexedPtr indexedPtr)
-		{
-			return _typeToPtr.Remove(worldState, indexedPtr.typeId);
+			service = default;
+			if (!_services.IsCreated)
+				return false;
+			ref var slot = ref _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			if (!slot.IsCreated)
+				return false;
+			service = slot.GetValue<T>(worldState);
+			slot = default;
+			return true;
 		}
 	}
 }

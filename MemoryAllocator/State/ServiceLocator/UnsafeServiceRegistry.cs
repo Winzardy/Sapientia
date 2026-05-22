@@ -9,211 +9,158 @@ namespace Sapientia.MemoryAllocator
 {
 	public struct UnsafeServiceRegistry : IDisposable
 	{
-		private UnsafeDictionary<ServiceRegistryContext, SafePtr> _typeToPtr;
+		private UnsafeArray<SafePtr> _typeToPtr;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void EnsureInitialized()
+		{
+			if (!_typeToPtr.IsCreated)
+				_typeToPtr = new UnsafeArray<SafePtr>(TypeId<IWorldLocalUnmanagedService>.Count);
+		}
 
 		public void Clear()
 		{
-			foreach (var entry in _typeToPtr)
+			if (!_typeToPtr.IsCreated)
+				return;
+			for (var i = 0; i < _typeToPtr.Length; i++)
 			{
-				MemoryExt.MemFree(entry.value);
+				ref var slot = ref _typeToPtr[i];
+				if (slot.IsValid)
+				{
+					MemoryExt.MemFree(slot);
+					slot = default;
+				}
 			}
-			_typeToPtr.Clear();
 		}
 
 		public void Dispose()
 		{
-			foreach (var entry in _typeToPtr)
+			if (!_typeToPtr.IsCreated)
+				return;
+			for (var i = 0; i < _typeToPtr.Length; i++)
 			{
-				MemoryExt.MemFree(entry.value);
+				ref var slot = ref _typeToPtr[i];
+				if (slot.IsValid)
+					MemoryExt.MemFree(slot);
 			}
 			_typeToPtr.Dispose();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetPtr<T>(ServiceRegistryContext context) where T : unmanaged
+		public bool Has<T>() where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			return _typeToPtr.GetValue(context, out _);
+			if (!_typeToPtr.IsCreated)
+				return false;
+			return _typeToPtr[TypeIdOf<IWorldLocalUnmanagedService, T>.typeId].IsValid;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has<T>() where T : unmanaged, IIndexedType
+		public bool TryGetPtr<T>(out SafePtr<T> value) where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			var context = ServiceRegistryContext.Create<T>();
-			var result = _typeToPtr.TryGetValue(context, out var ptr);
-			return result;
+			value = default;
+			if (!_typeToPtr.IsCreated)
+				return false;
+			ref var slot = ref _typeToPtr[TypeIdOf<IWorldLocalUnmanagedService, T>.typeId];
+			if (!slot.IsValid)
+				return false;
+			value = slot;
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TryGetPtr<T>(out SafePtr<T> value) where T : unmanaged, IIndexedType
+		public SafePtr<T> GetPtr<T>() where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			var context = ServiceRegistryContext.Create<T>();
-			var result = _typeToPtr.TryGetValue(context, out var ptr);
-			value = ptr;
-
-			return result;
+			E.ASSERT(_typeToPtr.IsCreated);
+			ref var slot = ref _typeToPtr[TypeIdOf<IWorldLocalUnmanagedService, T>.typeId];
+			E.ASSERT(slot.IsValid);
+			return slot;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetPtr<T>() where T : unmanaged, IIndexedType
+		public ref T Get<T>() where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			var context = ServiceRegistryContext.Create<T>();
-			return _typeToPtr.GetValue(context, out _);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get<T>(ServiceRegistryContext context) where T : unmanaged
-		{
-			return ref GetPtr<T>(context).Value();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T Get<T>() where T : unmanaged, IIndexedType
-		{
-			var context = ServiceRegistryContext.Create<T>();
-			return ref GetPtr<T>(context).Value();
+			return ref GetPtr<T>().Value();
 		}
 
 		/// <summary>
-		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
+		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrCreatePtr`, который просто регистрирует).
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrCreate<T>(WorldState worldState) where T: unmanaged, IInitializableService
+		public ref T GetOrCreate<T>(WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
 		{
-			var typeIndex = TypeId.Create<T>();
-			return ref GetOrCreate<T>(worldState, typeIndex);
-		}
-
-		/// <summary>
-		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrCreate<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged, IInitializableService
-		{
-			ref var service = ref GetOrCreatePtr<T>(context, out var isExist).Value();
+			ref var service = ref GetOrCreatePtr<T>(out var isExist).Value();
 			if (!isExist)
 				service.Initialize(worldState);
-
 			return ref service;
 		}
 
 		/// <summary>
-		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
+		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrCreatePtr`, который просто регистрирует).
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(WorldState worldState) where T: unmanaged, IInitializableService
+		public SafePtr<T> GetOrCreatePtr<T>(WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
 		{
-			var typeIndex = TypeId.Create<T>();
-			return GetOrCreatePtr<T>(worldState, typeIndex);
-		}
-
-		/// <summary>
-		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged, IInitializableService
-		{
-			var servicePtr = GetOrCreatePtr<T>(context, out var isExist);
+			var servicePtr = GetOrCreatePtr<T>(out var isExist);
 			if (!isExist)
 				servicePtr.Value().Initialize(worldState);
-
 			return servicePtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(ServiceRegistryContext context, out bool isExist) where T : unmanaged
+		public SafePtr<T> GetOrCreatePtr<T>() where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			var value = _typeToPtr.GetValue(context, out isExist);
-			if (isExist)
-				return value;
-
-			value = MemoryExt.MemAllocAndClear<T>();
-			_typeToPtr.Add(context, value);
-
-			return value;
+			return GetOrCreatePtr<T>(out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(ServiceRegistryContext context) where T : unmanaged
+		public SafePtr<T> GetOrCreatePtr<T>(out bool isExist) where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			return GetOrCreatePtr<T>(context, out _);
+			EnsureInitialized();
+			ref var slot = ref _typeToPtr[TypeIdOf<IWorldLocalUnmanagedService, T>.typeId];
+			isExist = slot.IsValid;
+			if (!isExist)
+				slot = MemoryExt.MemAllocAndClear<T>();
+			return slot;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>() where T : unmanaged, IIndexedType
+		public ref T GetOrCreate<T>() where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			var context = ServiceRegistryContext.Create<T>();
-			return GetOrCreatePtr<T>(context);
+			return ref GetOrCreatePtr<T>().Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrCreatePtr<T>(out bool isExist) where T : unmanaged, IIndexedType
+		public ref T GetOrCreate<T>(out bool isExist) where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			var context = ServiceRegistryContext.Create<T>();
-			return GetOrCreatePtr<T>(context, out isExist);
+			return ref GetOrCreatePtr<T>(out isExist).Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrCreate<T>(ServiceRegistryContext context) where T : unmanaged
+		public bool Remove<T>() where T : unmanaged, IWorldLocalUnmanagedService
 		{
-			return ref GetOrCreatePtr<T>(context).Value();
+			if (!_typeToPtr.IsCreated)
+				return false;
+			ref var slot = ref _typeToPtr[TypeIdOf<IWorldLocalUnmanagedService, T>.typeId];
+			if (!slot.IsValid)
+				return false;
+			MemoryExt.MemFree(slot);
+			slot = default;
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrCreate<T>(ServiceRegistryContext context, out bool isExist) where T : unmanaged
-		{
-			return ref GetOrCreatePtr<T>(context, out isExist).Value();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrCreate<T>() where T : unmanaged, IIndexedType
-		{
-			var context = ServiceRegistryContext.Create<T>();
-			return ref GetOrCreatePtr<T>(context).Value();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrCreate<T>(out ServiceRegistryContext context) where T : unmanaged, IIndexedType
-		{
-			context = ServiceRegistryContext.Create<T>();
-			return ref GetOrCreatePtr<T>(context).Value();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Remove<T>(ServiceRegistryContext context, out T value) where T : unmanaged
+		public bool Remove<T>(out T value) where T : unmanaged, IWorldLocalUnmanagedService
 		{
 			value = default;
-			var success = _typeToPtr.Remove(context, out var ptr);
-			if (success)
-			{
-				value = ptr.Value<T>();
-				MemoryExt.MemFree(ptr);
-			}
-			return success;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Remove(ServiceRegistryContext context)
-		{
-			var success = _typeToPtr.Remove(context, out var ptr);
-			if (success)
-			{
-				MemoryExt.MemFree(ptr);
-			}
-			return success;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Remove<T>() where T : unmanaged, IIndexedType
-		{
-			var context = ServiceRegistryContext.Create<T>();
-			return Remove(context);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Remove<T>(out T value) where T : unmanaged, IIndexedType
-		{
-			var context = ServiceRegistryContext.Create<T>();
-			return Remove(context, out value);
+			if (!_typeToPtr.IsCreated)
+				return false;
+			ref var slot = ref _typeToPtr[TypeIdOf<IWorldLocalUnmanagedService, T>.typeId];
+			if (!slot.IsValid)
+				return false;
+			value = slot.Value<T>();
+			MemoryExt.MemFree(slot);
+			slot = default;
+			return true;
 		}
 	}
 }

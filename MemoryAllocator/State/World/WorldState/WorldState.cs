@@ -17,7 +17,7 @@ namespace Sapientia.MemoryAllocator
 			get => _worldStateData.IsValid && _worldId.IsValid() && _worldStateData.Value().version > 0;
 		}
 
-		private ref WorldStateData WorldStateData
+		internal ref WorldStateData WorldStateData
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
@@ -70,19 +70,19 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private readonly ref Allocator GetAllocator()
+		internal readonly ref Allocator GetAllocator()
 		{
 			return ref WorldStateData.allocator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private readonly ref ServiceRegistry GetServiceRegistry()
+		internal readonly ref ServiceRegistry GetServiceRegistry()
 		{
 			return ref WorldStateData.serviceRegistry;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private readonly ref UnsafeServiceRegistry GetNoStateServiceRegistry()
+		internal readonly ref UnsafeServiceRegistry GetNoStateServiceRegistry()
 		{
 			return ref WorldStateData.noStateServiceRegistry;
 		}

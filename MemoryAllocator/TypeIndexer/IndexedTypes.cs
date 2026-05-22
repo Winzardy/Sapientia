@@ -151,6 +151,20 @@ namespace Sapientia.TypeIndexer
 			}
 		}
 
+		/// <summary>
+		/// Конвертирует глобальный <see cref="TypeId"/> в per-context typeId.
+		/// Slow path — использовать только когда конкретный тип неизвестен compile-time (proxy-based регистрация).
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void GetContextTypeIdByGlobalId(Type contextType, TypeId globalTypeId, out TypeId contextTypeId)
+		{
+			var type = _types[(int)globalTypeId];
+			if (!_contextTypeIds.TryGetValue((contextType, type), out contextTypeId))
+			{
+				contextTypeId = default;
+			}
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TypeId[] GetContextChildren(Type contextType)
 		{

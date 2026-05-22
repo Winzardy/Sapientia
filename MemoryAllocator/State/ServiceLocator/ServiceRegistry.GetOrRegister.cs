@@ -7,81 +7,44 @@ namespace Sapientia.MemoryAllocator
 	public partial struct ServiceRegistry
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
+		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			var result = _typeToPtr.GetValue(worldState, context, out var exist);
-			if (!exist)
-			{
-				result = new IndexedPtr(CachedPtr<T>.Create(worldState), context.typeId);
-				RegisterService(worldState, context, result);
-			}
-			return result;
+			return GetOrRegisterServiceIndexedPtr<T>(worldState, out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(WorldState worldState, ServiceRegistryContext context, out bool isExist) where T: unmanaged
+		public IndexedPtr GetOrRegisterServiceIndexedPtr<T>(WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
 		{
-			var result = _typeToPtr.GetValue(worldState, context, out isExist);
+			EnsureInitialized(worldState);
+			ref var slot = ref _services[worldState, TypeIdOf<IWorldService, T>.typeId];
+			isExist = slot.IsCreated;
 			if (!isExist)
-			{
-				result = new IndexedPtr(CachedPtr<T>.Create(worldState), context.typeId);
-				RegisterService(worldState, context, result);
-			}
-			return result;
-		}
-
-		/// <summary>
-		/// Если сервиса нет, то регистрирует его
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
-		{
-			return ref GetOrRegisterServiceIndexedPtr<T>(worldState, context).GetValue<T>(worldState);
+				slot = new IndexedPtr(CachedPtr<T>.Create(worldState), TypeIdOf<T>.typeId);
+			return slot;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(WorldState worldState, ServiceRegistryContext context, out bool isExist) where T: unmanaged
+		public ref T GetOrRegisterService<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			return ref GetOrRegisterServiceIndexedPtr<T>(worldState, context, out isExist).GetValue<T>(worldState);
+			return ref GetOrRegisterServiceIndexedPtr<T>(worldState).GetValue<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(WorldState worldState) where T: unmanaged, IIndexedType
+		public ref T GetOrRegisterService<T>(WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
 		{
-			var typeIndex = TypeId.Create<T>();
-			return ref GetOrRegisterService<T>(worldState, typeIndex);
+			return ref GetOrRegisterServiceIndexedPtr<T>(worldState, out isExist).GetValue<T>(worldState);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrRegisterServicePtr<T>(WorldState worldState) where T: unmanaged, IIndexedType
+		public CachedPtr<T> GetOrRegisterServiceCachedPtr<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			var typeIndex = TypeId.Create<T>();
-			return GetOrRegisterServicePtr<T>(worldState, typeIndex);
+			return GetOrRegisterServiceIndexedPtr<T>(worldState).GetCachedPtr<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(WorldState worldState, out bool exist) where T: unmanaged, IIndexedType
+		public SafePtr<T> GetOrRegisterServicePtr<T>(WorldState worldState) where T : unmanaged, IWorldService
 		{
-			var typeIndex = TypeId.Create<T>();
-			return ref GetOrRegisterService<T>(worldState, typeIndex, out exist);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T GetOrRegisterService<T>(WorldState worldState, ProxyPtr<T> proxyPtr, out bool isExist) where T: unmanaged, IProxy
-		{
-			return ref GetOrRegisterService<T>(worldState, proxyPtr.indexedPtr.typeId, out isExist);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CachedPtr<T> GetOrRegisterServiceCachedPtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
-		{
-			return GetOrRegisterServiceIndexedPtr<T>(worldState, context).GetCachedPtr<T>();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SafePtr<T> GetOrRegisterServicePtr<T>(WorldState worldState, ServiceRegistryContext context) where T: unmanaged
-		{
-			return GetOrRegisterServiceIndexedPtr<T>(worldState, context).GetPtr<T>(worldState);
+			return GetOrRegisterServiceIndexedPtr<T>(worldState).GetPtr<T>(worldState);
 		}
 	}
 }

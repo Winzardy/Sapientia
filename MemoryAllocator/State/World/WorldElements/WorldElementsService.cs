@@ -2,7 +2,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public struct WorldElementsService : IIndexedType
+	public struct WorldElementsService : IWorldService
 	{
 		public MemList<ProxyPtr<IWorldElementProxy>> worldElements;
 		public MemList<ProxyPtr<IWorldSystemProxy>> worldSystems;

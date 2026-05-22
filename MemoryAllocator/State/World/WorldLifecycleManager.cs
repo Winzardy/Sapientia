@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return 0f;
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			return updateStatePart.stateUpdateData.resumeDelay;
 		}
 
@@ -31,7 +31,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return;
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			updateStatePart.ResumeSimulation();
 		}
 
@@ -39,13 +39,13 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return;
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			updateStatePart.PauseSimulation();
 		}
 
 		public bool IsPaused()
 		{
-			var updateStatePart = _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			var updateStatePart = _world.worldState.GetService<UpdateLocalStatePart>();
 			return updateStatePart.IsPaused();
 		}
 
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator
 			if (!IsValid)
 				return;
 
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			if (updateStatePart.IsPaused())
 				return;
 
@@ -107,7 +107,7 @@ namespace Sapientia.MemoryAllocator
 			if (!IsValid)
 				return;
 
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			if (!updateStatePart.ShouldLateUpdate())
 				return;
 

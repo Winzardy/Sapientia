@@ -1,355 +1,169 @@
-using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
+using Sapientia.MemoryAllocator.State;
 using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial struct WorldState
+	/// <summary>
+	/// Фасад над <see cref="ServiceRegistry"/> (in-state сервисы) для типов
+	/// помеченных маркером <see cref="IWorldService"/>: <see cref="IWorldElement"/>-наследники
+	/// (StatePart-ы, системы) и <see cref="IConfigurationRuntime"/>-конфиги.
+	/// </summary>
+	public static class WorldStateServiceExt
 	{
-		#region Managed
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetService<T>(this WorldState worldState) where T : unmanaged, IWorldService
+			=> ref worldState.GetServiceRegistry().GetService<T>(worldState);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ClassPtr<T> RegisterService<T>(T service)
-			where T : class, IIndexedType
-		{
-			var ptr = new ClassPtr<T>(service);
-			var typeIndex = TypeId.Create<T>();
-			ref var servicePtr = ref GetOrRegisterService<ClassPtr<T>>(typeIndex, ServiceType.NoState, out var isExist);
-			if (isExist)
-				servicePtr.Dispose();
+		public static ref T GetService<T>(this WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
+			=> ref worldState.GetServiceRegistry().GetService<T>(worldState, out isExist);
 
-			servicePtr = ptr;
-			return ptr;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> GetServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().GetServicePtr<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGetServicePtr<T>(this WorldState worldState, out SafePtr<T> ptr) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().TryGetServicePtr(worldState, out ptr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static IndexedPtr GetServiceIndexedPtr<T>(this WorldState worldState) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().GetServiceIndexedPtr<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static CachedPtr<T> GetServiceCachedPtr<T>(this WorldState worldState) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().GetServiceCachedPtr<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasService<T>(this WorldState worldState) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().HasService<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService<T>(this WorldState worldState, MemPtr ptr) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().RegisterService<T>(worldState, ptr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService<T>(this WorldState worldState, CachedPtr<T> ptr) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().RegisterService(worldState, ptr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService<T>(this WorldState worldState, CachedPtr ptr) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().RegisterService<T>(worldState, ptr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService<T>(this WorldState worldState, IndexedPtr indexedPtr) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().RegisterService<T>(worldState, indexedPtr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterService(this WorldState worldState, IndexedPtr indexedPtr)
+			=> worldState.GetServiceRegistry().RegisterService(worldState, indexedPtr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool RemoveService<T>(this WorldState worldState) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().RemoveService<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool RemoveService<T>(this WorldState worldState, out T service) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().RemoveService(worldState, out service);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetOrRegisterService<T>(this WorldState worldState) where T : unmanaged, IWorldService
+			=> ref worldState.GetServiceRegistry().GetOrRegisterService<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetOrRegisterService<T>(this WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
+			=> ref worldState.GetServiceRegistry().GetOrRegisterService<T>(worldState, out isExist);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> GetOrRegisterServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldService
+			=> worldState.GetServiceRegistry().GetOrRegisterServicePtr<T>(worldState);
+	}
+
+	/// <summary>
+	/// Фасад над <see cref="UnsafeServiceRegistry"/> (runtime-only heap сервисы, не в снапшоте)
+	/// для типов помеченных <see cref="IWorldLocalUnmanagedService"/>: Logic'и
+	/// (<see cref="IInitializableService"/>), а также <see cref="IWorldUnmanagedLocalStatePart"/>.
+	/// </summary>
+	public static class WorldStateLocalUnmanagedServiceExt
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
+			=> ref worldState.GetNoStateServiceRegistry().Get<T>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> GetServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
+			=> worldState.GetNoStateServiceRegistry().GetPtr<T>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGetServicePtr<T>(this WorldState worldState, out SafePtr<T> ptr) where T : unmanaged, IWorldLocalUnmanagedService
+			=> worldState.GetNoStateServiceRegistry().TryGetPtr(out ptr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
+			=> worldState.GetNoStateServiceRegistry().Has<T>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetOrCreateService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
+			=> ref worldState.GetNoStateServiceRegistry().GetOrCreate<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> GetOrCreateServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
+			=> worldState.GetNoStateServiceRegistry().GetOrCreatePtr<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T GetOrRegisterService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
+			=> ref worldState.GetNoStateServiceRegistry().GetOrCreate<T>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<T> GetOrRegisterServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
+			=> worldState.GetNoStateServiceRegistry().GetOrCreatePtr<T>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool RemoveService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
+			=> worldState.GetNoStateServiceRegistry().Remove<T>();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool RemoveService<T>(this WorldState worldState, out T service) where T : unmanaged, IWorldLocalUnmanagedService
+			=> worldState.GetNoStateServiceRegistry().Remove(out service);
+	}
+
+	/// <summary>
+	/// Фасад над <see cref="LocalStatePartService"/> для managed-сервисов, помеченных
+	/// <see cref="IWorldLocalService"/>: managed <see cref="IWorldLocalStatePart"/>,
+	/// <see cref="Tags.TagsMapping"/> и им подобные.
+	/// </summary>
+	public static class WorldStateLocalServiceExt
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ClassPtr<T> RegisterService<T>(this WorldState worldState, T service) where T : class, IWorldLocalService
+		{
+			ref var ptr = ref LocalStatePartService.RegisterManagedService(worldState, service);
+			return (ClassPtr<T>)ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void RemoveService<T>()
-			where T : class, IIndexedType
+		public static T GetService<T>(this WorldState worldState) where T : class, IWorldLocalService
+			=> LocalStatePartService.GetManagedService<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T GetServiceClass<T>(this WorldState worldState) where T : class, IWorldLocalService
+			=> LocalStatePartService.GetManagedService<T>(worldState);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ClassPtr<T> GetServiceClassPtr<T>(this WorldState worldState) where T : class, IWorldLocalService
 		{
-			var typeIndex = TypeId.Create<T>();
-			if (!RemoveService<ClassPtr<T>>(typeIndex, ServiceType.NoState, out var servicePtr))
-				return;
-			servicePtr.Dispose();
+			LocalStatePartService.TryGetManagedClassPtr<T>(worldState, out var ptr);
+			return (ClassPtr<T>)ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T GetServiceClass<T>()
-			where T : class, IIndexedType
-		{
-			return GetServiceClassPtr<T>().Value();
-		}
+		public static bool HasService<T>(this WorldState worldState) where T : class, IWorldLocalService
+			=> LocalStatePartService.TryGetManagedClassPtr<T>(worldState, out _);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ClassPtr<T> GetServiceClassPtr<T>()
-			where T : class, IIndexedType
-		{
-			var typeIndex = TypeId.Create<T>();
-			var ptr = GetService<ClassPtr<T>>(typeIndex, ServiceType.NoState);
-			return ptr;
-		}
-
-		#endregion
-
-		/// <summary>
-		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetOrCreateService<T>(ServiceType serviceType) where T: unmanaged, IInitializableService
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return ref GetServiceRegistry().GetOrCreateService<T>(this);
-				case ServiceType.NoState:
-					return ref GetNoStateServiceRegistry().GetOrCreate<T>(this);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		/// <summary>
-		/// Если сервиса нет, то регистрирует его и инициализирует (В отличие от `GetOrRegister`, который просто регистрирует)
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SafePtr<T> GetOrCreateServicePtr<T>(ServiceType serviceType) where T: unmanaged, IInitializableService
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().GetOrCreateServicePtr<T>(this);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().GetOrCreatePtr<T>(this);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void RegisterService<T>(MemPtr ptr) where T: unmanaged, IIndexedType
-		{
-			GetServiceRegistry().RegisterService<T>(this, ptr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void RegisterService<T>(CachedPtr<T> ptr) where T: unmanaged, IIndexedType
-		{
-			GetServiceRegistry().RegisterService(this, ptr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void RegisterService<T>(CachedPtr ptr) where T: unmanaged, IIndexedType
-		{
-			GetServiceRegistry().RegisterService<T>(this, ptr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void RegisterService(IndexedPtr indexedPtr)
-		{
-			GetServiceRegistry().RegisterService(this, indexedPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly bool RemoveService<T>(ServiceType serviceType, out T service) where T: unmanaged, IIndexedType
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().RemoveService<T>(this, out service);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().Remove<T>(out service);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly bool RemoveService<T>(ServiceRegistryContext context, ServiceType serviceType, out T service) where T: unmanaged
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().RemoveService<T>(this, context, out service);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().Remove<T>(context, out service);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly bool RemoveService<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().RemoveService<T>(this);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().Remove<T>();
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void RegisterServiceAs<T, TBase>(CachedPtr<T> ptr) where TBase: unmanaged, IIndexedType where T: unmanaged
-		{
-			GetServiceRegistry().RegisterServiceAs<T, TBase>(this, ptr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void RemoveService(IndexedPtr indexedPtr)
-		{
-			GetServiceRegistry().RemoveService(this, indexedPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetOrRegisterService<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return ref GetServiceRegistry().GetOrRegisterService<T>(this);
-				case ServiceType.NoState:
-					return ref GetNoStateServiceRegistry().GetOrCreate<T>();
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetOrRegisterService<T>(ServiceRegistryContext context, ServiceType serviceType = ServiceType.WorldState) where T: unmanaged
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return ref GetServiceRegistry().GetOrRegisterService<T>(this, context);
-				case ServiceType.NoState:
-					return ref GetNoStateServiceRegistry().GetOrCreate<T>(context);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetOrRegisterService<T>(ServiceRegistryContext context, ServiceType serviceType, out bool isExist) where T: unmanaged
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return ref GetServiceRegistry().GetOrRegisterService<T>(this, context, out isExist);
-				case ServiceType.NoState:
-					return ref GetNoStateServiceRegistry().GetOrCreate<T>(context, out isExist);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SafePtr<T> GetOrRegisterServicePtr<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().GetOrRegisterServicePtr<T>(this);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().GetOrCreatePtr<T>();
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SafePtr<T> GetOrRegisterServicePtr<T>(ServiceRegistryContext context, ServiceType serviceType = ServiceType.WorldState)
-			where T: unmanaged
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().GetOrRegisterServicePtr<T>(this, context);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().GetOrCreatePtr<T>(context);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetService<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return ref GetServiceRegistry().GetService<T>(this);
-				case ServiceType.NoState:
-					return ref GetNoStateServiceRegistry().Get<T>();
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetService<T>(ServiceRegistryContext context, ServiceType serviceType = ServiceType.WorldState) where T: unmanaged
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return ref GetServiceRegistry().GetService<T>(this, context);
-				case ServiceType.NoState:
-					return ref GetNoStateServiceRegistry().Get<T>(context);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T TryGetService<T>(out bool exist) where T: unmanaged, IIndexedType
-		{
-			return ref GetServiceRegistry().GetService<T>(this, out exist);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetService<T>(ProxyPtr<T> proxyPtr) where T: unmanaged, IProxy
-		{
-			return ref GetServiceRegistry().GetService(this, proxyPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetService<T>(ProxyPtr<T> proxyPtr, out bool exist) where T: unmanaged, IProxy
-		{
-			return ref GetServiceRegistry().GetService(this, proxyPtr, out exist);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void GetService<T>(out CachedPtr<T> ptr) where T: unmanaged, IIndexedType
-		{
-			ptr = GetServiceRegistry().GetServiceCachedPtr<T>(this);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly ref T GetServiceAs<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
-		{
-			return ref GetServiceRegistry().GetServiceAs<TBase, T>(this);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly IndexedPtr GetServiceIndexedPtr<T>() where T: unmanaged, IIndexedType
-		{
-			return GetServiceRegistry().GetServiceIndexedPtr<T>(this);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly CachedPtr<T> GetServiceCachedPtr<T>() where T: unmanaged, IIndexedType
-		{
-			return GetServiceRegistry().GetServiceCachedPtr<T>(this);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SafePtr<T> GetServicePtr<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().GetServicePtr<T>(this);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().GetPtr<T>();
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SafePtr<T> GetServiceAsPtr<TBase, T>() where TBase: unmanaged, IIndexedType where T: unmanaged
-		{
-			return GetServiceRegistry().GetServiceAsPtr<TBase, T>(this);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly bool HasService<T>(ServiceType serviceType = ServiceType.WorldState) where T: unmanaged, IIndexedType
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().HasService<T>(this);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().Has<T>();
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly bool TryGetServicePtr<T>(ServiceType serviceType, out SafePtr<T> ptr) where T: unmanaged, IIndexedType
-		{
-			switch (serviceType)
-			{
-				case ServiceType.WorldState:
-					return GetServiceRegistry().TryGetServicePtr<T>(this, out ptr);
-				case ServiceType.NoState:
-					return GetNoStateServiceRegistry().TryGetPtr<T>(out ptr);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(serviceType), serviceType, null);
-			}
-		}
+		public static void RemoveService<T>(this WorldState worldState) where T : class, IWorldLocalService
+			=> LocalStatePartService.RemoveManagedService<T>(worldState);
 	}
 }
