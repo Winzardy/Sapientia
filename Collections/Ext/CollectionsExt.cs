@@ -126,8 +126,14 @@ namespace Sapientia.Collections
 			return collection.Count == 0;
 		}
 
+		public static bool None<T>(this IEnumerable<T> source)
+		{
+			return source == null || !source.Any();
+		}
+
 		public static bool Any<T>(this ICollection<T> collection)
 			=> !collection.IsNullOrEmpty();
+
 
 		public static bool IsNullOrEmpty<T>(this IEnumerable<T>? enumerable)
 		{
