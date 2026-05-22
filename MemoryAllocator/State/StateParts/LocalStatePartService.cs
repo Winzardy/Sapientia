@@ -5,7 +5,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public interface IWorldUnmanagedLocalStatePart : IInterfaceProxyType
+	public interface IWorldUnmanagedLocalStatePart : IInterfaceProxyType, IWorldLocalUnmanagedService
 	{
 		public void Initialize(WorldState worldState){}
 
@@ -18,7 +18,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void Dispose(WorldState worldState){}
 	}
 
-	public interface IWorldLocalStatePart : IIndexedType
+	public interface IWorldLocalStatePart : IWorldLocalService
 	{
 		public void Initialize(WorldState worldState){}
 

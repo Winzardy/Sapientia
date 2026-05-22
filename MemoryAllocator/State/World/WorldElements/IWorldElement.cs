@@ -2,7 +2,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IWorldElement : IInterfaceProxyType
+	public interface IWorldElement : IInterfaceProxyType, IWorldService
 	{
 		public virtual void Initialize(WorldState worldState, IndexedPtr self) {}
 
