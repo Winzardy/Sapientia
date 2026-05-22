@@ -1,7 +1,7 @@
 #if CLIENT
-using Content.ScriptableObjects;
+using Sapientia.ScaleTables;
 
-namespace Sapientia.ScaleTables.ScriptableObjects
+namespace Content.ScriptableObjects.ScaleTables
 {
 	public class ScaleTableScriptableObject : ContentEntryScriptableObject<ScaleTableConfig>
 	{

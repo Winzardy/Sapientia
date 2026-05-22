@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using Content;
-using Sapientia.ScaleTables.ScriptableObjects;
 using Sirenix.OdinInspector.Editor;
 using System;
 using System.Collections.Generic;

@@ -2,10 +2,10 @@
 using Content;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
+using Content.ScriptableObjects.ScaleTables;
 using Fusumity.Editor;
 using Sapientia.Collections;
 using Sapientia.Extensions;
-using Sapientia.ScaleTables.ScriptableObjects;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;

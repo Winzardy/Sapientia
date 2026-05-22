@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using Content.ScriptableObjects;
+using Content.ScriptableObjects.ScaleTables;
 using NReco.Csv;
 using Sapientia.Deterministic;
 using Sapientia.Extensions;
-using Sapientia.ScaleTables.ScriptableObjects;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
