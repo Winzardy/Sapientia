@@ -14,7 +14,7 @@ namespace Sapientia.Conditions
 	}
 
 	[Serializable]
-	public abstract class CollectionCondition<T> : InvertableCondition<T>
+	public class CollectionCondition<T> : InvertableCondition<T>
 	{
 		public ConditionGroupMode mode;
 

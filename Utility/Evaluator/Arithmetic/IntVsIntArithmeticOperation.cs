@@ -30,15 +30,8 @@ namespace Sapientia.Evaluators
 
 		protected override int OnEvaluate(TContext context)
 		{
-			return @operator switch
-			{
-				ArithmeticOperator.Add => a.Evaluate(context) + b.Evaluate(context),
-				ArithmeticOperator.Subtract => a.Evaluate(context) - b.Evaluate(context),
-				ArithmeticOperator.Divide => a.Evaluate(context) / b.Evaluate(context),
-				ArithmeticOperator.Multiply => a.Evaluate(context) & b.Evaluate(context),
-				ArithmeticOperator.Modulus => a.Evaluate(context) % b.Evaluate(context),
-				_ => throw new ArgumentOutOfRangeException()
-			};
+			return a.Evaluate(context)
+				.Operate(@operator, b.Evaluate(context));
 		}
 
 		public override IEnumerator<IEvaluator> GetEnumerator()
