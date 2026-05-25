@@ -1,14 +1,18 @@
 using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
+using Sapientia.Memory;
 using Sapientia.TypeIndexer;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {
 	/// <summary>
 	/// Generic-хранилище payload'ов в heap-памяти (off-allocator) проиндексированное по
-	/// <see cref="TypeIdOf{TBase, T}"/>. Не попадает в снапшот мира.
-	/// Не знает о конкретном <typeparamref name="TBase"/>-маркере.
+	/// <see cref="TypeIdOf{TBase, T}"/>. Не знает о конкретном <typeparamref name="TBase"/>-маркере —
+	/// переиспользуется для in-state регистров (ServiceRegistry, ComponentsManager) и heap-only
+	/// (noStateServiceRegistry). Сериализация — ручная через <see cref="Serialize"/> / <see cref="Deserialize"/>,
+	/// caller решает попадает регистр в снапшот или нет.
 	/// Для cases где payload требует ручного free (например <see cref="Sapientia.Data.SafePtr"/> из MemAlloc) — caller отвечает за освобождение перед Set.
 	/// </summary>
 	public struct UnsafeIndexedRegistry<TBase, TPayload> : IDisposable
@@ -46,13 +50,14 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref TPayload Get<T>() where T : unmanaged, TBase
 		{
-			return ref _payloads[(int)TypeIdOf<TBase, T>.typeId];
+			return ref Get(TypeIdOf<TBase, T>.typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref TPayload Get(TypeId<TBase> contextTypeId)
+		public ref TPayload Get(TypeId<TBase> typeId)
 		{
-			return ref _payloads[(int)contextTypeId];
+			E.ASSERT(_payloads.IsCreated);
+			return ref _payloads[(int)typeId];
 		}
 
 		/// <summary>
@@ -62,23 +67,21 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref TPayload GetByIndex(int index)
 		{
+			E.ASSERT(_payloads.IsCreated);
 			return ref _payloads[index];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Set<T>(in TPayload payload) where T : unmanaged, TBase
 		{
-			if (!_payloads.IsCreated)
-				throw new System.InvalidOperationException("UnsafeIndexedRegistry не инициализирован — должен быть создан через UnsafeIndexedRegistry<,>.Create().");
-			_payloads[(int)TypeIdOf<TBase, T>.typeId] = payload;
+			Set(TypeIdOf<TBase, T>.typeId, payload);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Set(TypeId<TBase> contextTypeId, in TPayload payload)
+		public void Set(TypeId<TBase> typeId, in TPayload payload)
 		{
-			if (!_payloads.IsCreated)
-				throw new System.InvalidOperationException("UnsafeIndexedRegistry не инициализирован — должен быть создан через UnsafeIndexedRegistry<,>.Create().");
-			_payloads[(int)contextTypeId] = payload;
+			E.ASSERT(_payloads.IsCreated, "UnsafeIndexedRegistry не инициализирован — должен быть создан через UnsafeIndexedRegistry<,>.Create().");
+			_payloads[(int)typeId] = payload;
 		}
 
 		/// <summary>
@@ -88,14 +91,43 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!_payloads.IsCreated)
 				return;
-			for (var i = 0; i < _payloads.Length; i++)
-				_payloads[i] = default;
+			_payloads.Clear();
 		}
 
 		public void Dispose()
 		{
 			if (_payloads.IsCreated)
 				_payloads.Dispose();
+		}
+
+		/// <summary>
+		/// Записывает в снапшот length + blittable массив payload'ов. Caller решает попадает регистр в снапшот.
+		/// </summary>
+		public void Serialize(ref StreamBufferWriter stream)
+		{
+			stream.Write(_payloads.Length);
+			if (_payloads.Length > 0)
+				stream.Write(_payloads.ptr, _payloads.Length);
+		}
+
+		/// <summary>
+		/// Восстанавливает регистр из снапшота. Длина массива берётся из стрима — она может отличаться от
+		/// <see cref="TypeId{TBase}.Count"/> текущего билда (если генератор перечитал типы между Save и Load),
+		/// поэтому payload-ы valid только в рамках одного билда.
+		/// </summary>
+		public static UnsafeIndexedRegistry<TBase, TPayload> Deserialize(ref StreamBufferReader stream)
+		{
+			var length = stream.Read<int>();
+			var result = new UnsafeIndexedRegistry<TBase, TPayload>
+			{
+				_payloads = new UnsafeArray<TPayload>(length, ClearOptions.UninitializedMemory),
+			};
+			if (length > 0)
+			{
+				var ptr = result._payloads.ptr;
+				stream.Read(ref ptr, length);
+			}
+			return result;
 		}
 	}
 }

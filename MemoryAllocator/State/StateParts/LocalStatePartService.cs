@@ -217,9 +217,8 @@ namespace Sapientia.MemoryAllocator.State
 			}
 			service._managedLifecycleIndices.Dispose();
 
-			for (var i = 0; i < service._managedServices.Length; i++)
+			foreach (var slot in service._managedServices)
 			{
-				ref var slot = ref service._managedServices[i];
 				if (slot.IsValid)
 					slot.Dispose();
 			}

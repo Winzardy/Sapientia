@@ -58,21 +58,11 @@ namespace Sapientia.MemoryAllocator
 			_worldStateData = MemoryExt.MemAlloc<WorldStateData>();
 			_worldStateData.Value() = new WorldStateData(initialSize);
 			_worldId = worldId;
-			// Registries не инициализируем здесь — WorldManager.CreateWorld после конструктора зовёт
-			// SetupNewWorldId с обновлённой версией worldId. Если бы MemArray создавался сейчас,
-			// его внутренний _worldId был бы со старой версией → AssertWorldState mismatch на первом Get.
 		}
 
-		/// <summary>
-		/// Allocates <see cref="MemArray{T}"/> backing storage for in-state registries.
-		/// MemArray сохраняет внутри текущий <see cref="WorldId"/> — поэтому init **должен** вызываться
-		/// после финального <see cref="SetupNewWorldId"/>, иначе assertion на первом Get.
-		/// </summary>
-		private void InitializeInStateRegistries()
+		public void Serialize(ref StreamBufferWriter stream)
 		{
-			ref var data = ref WorldStateData;
-			data.serviceRegistry = new IndexedRegistry<IWorldService, IndexedPtr>(this);
-			data.componentsManager = new IndexedRegistry<IComponent, CachedPtr<ComponentSet>>(this);
+			WorldStateData.Serialize(ref stream);
 		}
 
 		public void Dispose()
@@ -93,7 +83,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal readonly ref IndexedRegistry<IWorldService, IndexedPtr> GetServiceRegistry()
+		internal readonly ref UnsafeIndexedRegistry<IWorldService, IndexedPtr> GetServiceRegistry()
 		{
 			return ref WorldStateData.serviceRegistry;
 		}
@@ -105,7 +95,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal readonly ref IndexedRegistry<IComponent, CachedPtr<ComponentSet>> GetComponentsManager()
+		internal readonly ref UnsafeIndexedRegistry<IComponent, CachedPtr<ComponentSet>> GetComponentsManager()
 		{
 			return ref WorldStateData.componentsManager;
 		}
@@ -116,9 +106,8 @@ namespace Sapientia.MemoryAllocator
 
 			worldState._worldStateData = MemoryExt.MemAlloc<WorldStateData>();
 			worldState.WorldStateData = WorldStateData.Deserialize(ref stream);
-			// Caller ОБЯЗАН вызвать SetupNewWorldId(worldId) после Deserialize — это единая точка init
-			// in-state registries и установки _worldId. Если snapshot был сделан до первого Register —
-			// registries придут как default, SetupNewWorldId их пересоздаст с актуальным worldId.
+			// Caller обязан вызвать SetupNewWorldId(worldId) после Deserialize — это назначение
+			// нового handle мира. Регистры уже восстановлены из стрима.
 
 			return worldState;
 		}
@@ -126,8 +115,6 @@ namespace Sapientia.MemoryAllocator
 		public void SetupNewWorldId(WorldId newWorldId)
 		{
 			_worldId = newWorldId;
-			// In-state registries создаются здесь, не в ctor: MemArray._worldId должен совпадать с finalized worldId.
-			InitializeInStateRegistries();
 		}
 
 		public void Reset()
@@ -135,10 +122,6 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(IsValid);
 
 			WorldStateData.Reset();
-			// In-state registries не инициализируются здесь — WorldManager.RemoveWorld после Reset
-			// зовёт SetupNewWorldId, который и есть единая точка init. Если бы init был здесь —
-			// MemArray создавался бы дважды подряд (Reset+SetupNewWorldId), второй перетирал бы первый
-			// без Dispose (allocator pop работает, но invariant "один init на жизненный цикл" нарушается).
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

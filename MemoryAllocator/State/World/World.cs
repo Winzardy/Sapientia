@@ -40,21 +40,21 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		public void Initialize(
-			IEnumerable<(ProxyPtr<IWorldStatePartProxy> proxy, TypeId<IWorldService> contextTypeId)> stateParts,
-			IEnumerable<(ProxyPtr<IWorldSystemProxy> proxy, TypeId<IWorldService> contextTypeId)> systems)
+			IEnumerable<WorldService<IWorldStatePartProxy>> stateParts,
+			IEnumerable<WorldService<IWorldSystemProxy>> systems)
 		{
 			using var scope = worldState.GetWorldScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
-			foreach (var (statePart, ctxId) in stateParts)
+			foreach (var statePart in stateParts)
 			{
-				elementsService.AddWorldElement(worldState, statePart.ToProxy<IWorldElementProxy>(), ctxId);
+				elementsService.AddWorldElement(worldState, statePart.proxy.ToProxy<IWorldElementProxy>(), statePart.typeId);
 			}
 
-			foreach (var (system, ctxId) in systems)
+			foreach (var system in systems)
 			{
-				elementsService.AddWorldSystem(worldState, system, ctxId);
+				elementsService.AddWorldSystem(worldState, system.proxy, system.typeId);
 			}
 
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
