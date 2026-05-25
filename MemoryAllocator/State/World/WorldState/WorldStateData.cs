@@ -1,5 +1,8 @@
+using Sapientia.Data;
 using Sapientia.Memory;
 using Sapientia.MemoryAllocator.State;
+using Sapientia.TypeIndexer;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {
@@ -8,20 +11,20 @@ namespace Sapientia.MemoryAllocator
 		public Allocator allocator;
 
 		/// <summary>
-		/// Работает с состоянием мира
+		/// In-state хранилище unmanaged сервисов (StatePart-ы, системы, конфиги, save-структуры).
+		/// Маркер <see cref="IWorldService"/>. Попадает в снапшот.
 		/// </summary>
-		public ServiceRegistry serviceRegistry;
+		public IndexedRegistry<IWorldService, IndexedPtr> serviceRegistry;
 		/// <summary>
-		/// Работает с локальными данными (Вне мира)
+		/// Heap-хранилище unmanaged runtime-сервисов (Logic'и, unmanaged local part-ы).
+		/// Маркер <see cref="IWorldLocalUnmanagedService"/>. Не попадает в снапшот.
 		/// </summary>
-		public UnsafeServiceRegistry noStateServiceRegistry;
-
+		public UnsafeIndexedRegistry<IWorldLocalUnmanagedService, SafePtr> noStateServiceRegistry;
 		/// <summary>
-		/// Хранилище <see cref="ComponentSet"/>-ов по индексу <see cref="TypeId{IComponent}"/>.
-		/// Payload (<see cref="MemArray{T}"/> внутри) живёт в allocator и попадает в снапшот через него.
-		/// Handle-struct (поле в <see cref="WorldStateData"/>) надо отдельно читать/писать при Serialize/Deserialize.
+		/// In-state хранилище <see cref="ComponentSet"/>-ов, проиндексированное по <see cref="TypeId{IComponent}"/>.
+		/// Попадает в снапшот.
 		/// </summary>
-		public ComponentsManager componentsManager;
+		public IndexedRegistry<IComponent, CachedPtr<ComponentSet>> componentsManager;
 
 		public ushort version;
 
@@ -41,12 +44,11 @@ namespace Sapientia.MemoryAllocator
 			allocator = new Allocator();
 			allocator.Initialize(initialSize);
 
-			// При добавлении сервиса происходит инициализация
+			// in-state registries требуют WorldState handle для allocator — инициализируются в WorldState constructor
 			serviceRegistry = default;
-			// При добавлении сервиса происходит инициализация
-			noStateServiceRegistry = default;
-			// При первой регистрации ComponentSet'а массив создаётся лениво
 			componentsManager = default;
+			// heap-based: можно создать сразу
+			noStateServiceRegistry = UnsafeIndexedRegistry<IWorldLocalUnmanagedService, SafePtr>.Create();
 		}
 
 		public static WorldStateData Deserialize(ref StreamBufferReader stream)
@@ -61,21 +63,23 @@ namespace Sapientia.MemoryAllocator
 			stream.Read(ref world.time);
 
 			world.version++;
-			// При добавлении сервиса происходит инициализация
-			world.noStateServiceRegistry = default;
+			// heap registry пересоздаётся при загрузке (runtime-only, не в стейте)
+			world.noStateServiceRegistry = UnsafeIndexedRegistry<IWorldLocalUnmanagedService, SafePtr>.Create();
+			// Note: если snapshot был сделан до первого Register'а — in-state registries придут как default(IndexedRegistry).
+			// WorldState constructor / SetupNewWorldId должны вызвать InitializeInStateRegistries после Deserialize
+			// (это ответственность caller'а — WorldState.Deserialize).
 
 			return world;
 		}
 
 		public void Reset()
 		{
-			// При добавлении сервиса происходит инициализация
-			// Серввисы выделяются в аллокаторе, который будет очищен
+			// in-state registries: их MemArray лежат в allocator который сейчас очистится
 			serviceRegistry = default;
-			// Обязательно нужно очистить, т.к. сервисы выделяются в неуправляемой памяти
-			noStateServiceRegistry.Clear();
-			// Массив лежит в allocator, который будет очищен — просто сбрасываем handle
 			componentsManager = default;
+			// heap registry — освобождаем SafePtr payload'ы перед сбросом
+			FreeNoStateSafePtrs();
+			noStateServiceRegistry.Clear();
 			allocator.Clear();
 
 			tick = 0u;
@@ -85,14 +89,29 @@ namespace Sapientia.MemoryAllocator
 
 		public void Dispose()
 		{
-			// Не обязательно диспозить, т.к. сервисы выделяются в аллокаторе, который будет задиспожен
+			// in-state — диспозятся вместе с allocator
 			serviceRegistry = default;
-			// Обязательно нужно задиспозить, т.к. сервисы выделяются в неуправляемой памяти
-			noStateServiceRegistry.Dispose();
-			// Массив лежит в allocator, который будет задиспожен — просто сбрасываем handle
 			componentsManager = default;
+			// heap — обязательная очистка
+			FreeNoStateSafePtrs();
+			noStateServiceRegistry.Dispose();
 			allocator.Dispose();
 			this = default;
+		}
+
+		private void FreeNoStateSafePtrs()
+		{
+			if (!noStateServiceRegistry.IsCreated)
+				return;
+			for (var i = 0; i < noStateServiceRegistry.Length; i++)
+			{
+				ref var slot = ref noStateServiceRegistry.GetByIndex(i);
+				if (slot.IsValid)
+				{
+					MemoryExt.MemFree(slot);
+					slot = default;
+				}
+			}
 		}
 	}
 }

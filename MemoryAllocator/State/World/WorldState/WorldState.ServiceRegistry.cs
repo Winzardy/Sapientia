@@ -2,141 +2,264 @@ using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.MemoryAllocator.State;
 using Sapientia.TypeIndexer;
+using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {
 	/// <summary>
-	/// Фасад над <see cref="ServiceRegistry"/> (in-state сервисы) для типов
-	/// помеченных маркером <see cref="IWorldService"/>: <see cref="IWorldElement"/>-наследники
-	/// (StatePart-ы, системы) и <see cref="IConfigurationRuntime"/>-конфиги.
+	/// Фасад над in-state <see cref="IndexedRegistry{IWorldService, IndexedPtr}"/>:
+	/// <see cref="IWorldElement"/>-наследники (StatePart-ы, системы), <see cref="IConfigurationRuntime"/>,
+	/// <see cref="ISave"/>-структуры.
 	/// </summary>
 	public static class WorldStateServiceExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this WorldState worldState) where T : unmanaged, IWorldService
-			=> ref worldState.GetServiceRegistry().GetService<T>(worldState);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			E.ASSERT(slot.IsCreated);
+			return ref slot.GetValue<T>(worldState);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T TryGetService<T>(this WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
-			=> ref worldState.GetServiceRegistry().TryGetService<T>(worldState, out isExist);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			isExist = slot.IsCreated;
+			if (isExist)
+				return ref slot.GetValue<T>(worldState);
+			return ref worldState.GetZeroRef<T>();
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> GetServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().GetServicePtr<T>(worldState);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			E.ASSERT(slot.IsCreated);
+			return slot.GetPtr<T>(worldState);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGetServicePtr<T>(this WorldState worldState, out SafePtr<T> ptr) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().TryGetServicePtr(worldState, out ptr);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			if (slot.IsCreated)
+			{
+				ptr = slot.GetPtr<T>(worldState);
+				return true;
+			}
+			ptr = default;
+			return false;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static IndexedPtr GetServiceIndexedPtr<T>(this WorldState worldState) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().GetServiceIndexedPtr<T>(worldState);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			E.ASSERT(slot.IsCreated);
+			return slot;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CachedPtr<T> GetServiceCachedPtr<T>(this WorldState worldState) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().GetServiceCachedPtr<T>(worldState);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			E.ASSERT(slot.IsCreated);
+			return slot.GetCachedPtr<T>();
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool HasService<T>(this WorldState worldState) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().HasService<T>(worldState);
+			=> worldState.GetServiceRegistry().Get<T>(worldState).IsCreated;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void RegisterService<T>(this WorldState worldState, MemPtr ptr) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().RegisterService<T>(worldState, ptr);
+			=> worldState.GetServiceRegistry().Set<T>(worldState, new IndexedPtr(ptr, TypeIdOf<T>.typeId));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void RegisterService<T>(this WorldState worldState, CachedPtr<T> ptr) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().RegisterService(worldState, ptr);
+			=> worldState.GetServiceRegistry().Set<T>(worldState, new IndexedPtr(ptr, TypeIdOf<T>.typeId));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void RegisterService<T>(this WorldState worldState, CachedPtr ptr) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().RegisterService<T>(worldState, ptr);
+			=> worldState.GetServiceRegistry().Set<T>(worldState, new IndexedPtr(ptr, TypeIdOf<T>.typeId));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void RegisterService<T>(this WorldState worldState, IndexedPtr indexedPtr) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().RegisterService<T>(worldState, indexedPtr);
+			=> worldState.GetServiceRegistry().Set<T>(worldState, indexedPtr);
 
 		/// <summary>
-		/// Регистрация proxy-объекта без compile-time типа (slow path с runtime lookup в IndexedTypes).
-		/// Имя <c>ByProxy</c> — чтобы на callsite intent был виден, а не выглядело как accidental missing generic.
+		/// Регистрация с уже известным per-context <see cref="TypeId{IWorldService}"/>. Используется когда
+		/// конкретный T-параметр недоступен compile-time, но caller хранит/вычисляет contextTypeId сам
+		/// (например, <see cref="State.WorldElementsService.AddWorldElement"/>).
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void RegisterServiceByProxy(this WorldState worldState, IndexedPtr indexedPtr)
-			=> worldState.GetServiceRegistry().RegisterServiceByProxy(worldState, indexedPtr);
+		public static void RegisterService(this WorldState worldState, TypeId<IWorldService> contextTypeId, IndexedPtr indexedPtr)
+			=> worldState.GetServiceRegistry().Set(worldState, contextTypeId, indexedPtr);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool RemoveService<T>(this WorldState worldState) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().RemoveService<T>(worldState);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			if (!slot.IsCreated)
+				return false;
+			slot = default;
+			return true;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool RemoveService<T>(this WorldState worldState, out T service) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().RemoveService(worldState, out service);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			if (!slot.IsCreated)
+			{
+				service = default;
+				return false;
+			}
+			service = slot.GetValue<T>(worldState);
+			slot = default;
+			return true;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetOrRegisterService<T>(this WorldState worldState) where T : unmanaged, IWorldService
-			=> ref worldState.GetServiceRegistry().GetOrRegisterService<T>(worldState);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			if (!slot.IsCreated)
+				slot = new IndexedPtr(CachedPtr<T>.Create(worldState), TypeIdOf<T>.typeId);
+			return ref slot.GetValue<T>(worldState);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetOrRegisterService<T>(this WorldState worldState, out bool isExist) where T : unmanaged, IWorldService
-			=> ref worldState.GetServiceRegistry().GetOrRegisterService<T>(worldState, out isExist);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			isExist = slot.IsCreated;
+			if (!isExist)
+				slot = new IndexedPtr(CachedPtr<T>.Create(worldState), TypeIdOf<T>.typeId);
+			return ref slot.GetValue<T>(worldState);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> GetOrRegisterServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldService
-			=> worldState.GetServiceRegistry().GetOrRegisterServicePtr<T>(worldState);
+		{
+			ref var slot = ref worldState.GetServiceRegistry().Get<T>(worldState);
+			if (!slot.IsCreated)
+				slot = new IndexedPtr(CachedPtr<T>.Create(worldState), TypeIdOf<T>.typeId);
+			return slot.GetPtr<T>(worldState);
+		}
 	}
 
 	/// <summary>
-	/// Фасад над <see cref="UnsafeServiceRegistry"/> (runtime-only heap сервисы, не в снапшоте)
-	/// для типов помеченных <see cref="IWorldLocalUnmanagedService"/>: Logic'и
-	/// (<see cref="IInitializableService"/>), а также <see cref="IWorldUnmanagedLocalStatePart"/>.
+	/// Фасад над heap <see cref="UnsafeIndexedRegistry{IWorldLocalUnmanagedService, SafePtr}"/>:
+	/// Logic-структуры (<see cref="IInitializableService"/>), <see cref="IWorldUnmanagedLocalStatePart"/>.
 	/// </summary>
 	public static class WorldStateLocalUnmanagedServiceExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
-			=> ref worldState.GetNoStateServiceRegistry().Get<T>();
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			E.ASSERT(slot.IsValid);
+			return ref slot.Value<T>();
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> GetServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
-			=> worldState.GetNoStateServiceRegistry().GetPtr<T>();
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			E.ASSERT(slot.IsValid);
+			return slot;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGetServicePtr<T>(this WorldState worldState, out SafePtr<T> ptr) where T : unmanaged, IWorldLocalUnmanagedService
-			=> worldState.GetNoStateServiceRegistry().TryGetPtr(out ptr);
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			if (slot.IsValid)
+			{
+				ptr = slot;
+				return true;
+			}
+			ptr = default;
+			return false;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool HasService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
-			=> worldState.GetNoStateServiceRegistry().Has<T>();
+			=> worldState.GetNoStateServiceRegistry().Get<T>().IsValid;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetOrCreateService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
-			=> ref worldState.GetNoStateServiceRegistry().GetOrCreate<T>(worldState);
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			if (!slot.IsValid)
+			{
+				slot = MemoryExt.MemAllocAndClear<T>();
+				slot.Value<T>().Initialize(worldState);
+			}
+			return ref slot.Value<T>();
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> GetOrCreateServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
-			=> worldState.GetNoStateServiceRegistry().GetOrCreatePtr<T>(worldState);
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			if (!slot.IsValid)
+			{
+				slot = MemoryExt.MemAllocAndClear<T>();
+				slot.Value<T>().Initialize(worldState);
+			}
+			return slot;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ref T GetOrRegisterService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
-			=> ref worldState.GetNoStateServiceRegistry().GetOrCreate<T>();
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			if (!slot.IsValid)
+				slot = MemoryExt.MemAllocAndClear<T>();
+			return ref slot.Value<T>();
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> GetOrRegisterServicePtr<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
-			=> worldState.GetNoStateServiceRegistry().GetOrCreatePtr<T>();
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			if (!slot.IsValid)
+				slot = MemoryExt.MemAllocAndClear<T>();
+			return slot;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool RemoveService<T>(this WorldState worldState) where T : unmanaged, IWorldLocalUnmanagedService
-			=> worldState.GetNoStateServiceRegistry().Remove<T>();
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			if (!slot.IsValid)
+				return false;
+			MemoryExt.MemFree(slot);
+			slot = default;
+			return true;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool RemoveService<T>(this WorldState worldState, out T service) where T : unmanaged, IWorldLocalUnmanagedService
-			=> worldState.GetNoStateServiceRegistry().Remove(out service);
+		{
+			ref var slot = ref worldState.GetNoStateServiceRegistry().Get<T>();
+			if (!slot.IsValid)
+			{
+				service = default;
+				return false;
+			}
+			service = slot.Value<T>();
+			MemoryExt.MemFree(slot);
+			slot = default;
+			return true;
+		}
 	}
 
 	/// <summary>
-	/// Фасад над <see cref="LocalStatePartService"/> для managed-сервисов, помеченных
-	/// <see cref="IWorldLocalService"/>: managed <see cref="IWorldLocalStatePart"/>,
-	/// <see cref="Tags.TagsMapping"/> и им подобные.
+	/// Фасад над managed <see cref="LocalStatePartService"/> для типов помеченных <see cref="IWorldLocalService"/>.
 	/// </summary>
 	public static class WorldStateLocalServiceExtensions
 	{
@@ -169,5 +292,31 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void RemoveService<T>(this WorldState worldState) where T : class, IWorldLocalService
 			=> LocalStatePartService.RemoveManagedService<T>(worldState);
+	}
+
+	/// <summary>
+	/// Фасад над <see cref="IndexedRegistry{IComponent, CachedPtr{ComponentSet}}"/> для <see cref="ComponentSet"/>.
+	/// </summary>
+	public static class WorldStateComponentExtensions
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr<ComponentSet> GetComponentSetPtr<T>(this WorldState worldState) where T : unmanaged, IComponent
+		{
+			ref var slot = ref worldState.GetComponentsManager().Get<T>(worldState);
+			E.ASSERT(slot.IsValid());
+			return slot.GetPtr(worldState);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref ComponentSet GetComponentSet<T>(this WorldState worldState) where T : unmanaged, IComponent
+			=> ref worldState.GetComponentSetPtr<T>().Value();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void RegisterComponentSet<T>(this WorldState worldState, CachedPtr<ComponentSet> componentSetPtr) where T : unmanaged, IComponent
+			=> worldState.GetComponentsManager().Set<T>(worldState, componentSetPtr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasComponentSet<T>(this WorldState worldState) where T : unmanaged, IComponent
+			=> worldState.GetComponentsManager().Get<T>(worldState).IsValid();
 	}
 }

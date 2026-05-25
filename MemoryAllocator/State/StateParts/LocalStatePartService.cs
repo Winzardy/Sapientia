@@ -37,13 +37,14 @@ namespace Sapientia.MemoryAllocator.State
 	/// managed-сервисов (через <see cref="IWorldLocalService"/>).
 	///
 	/// Managed-сервисы лежат в массиве <c>_managedServices</c>, проиндексированном по
-	/// <c>TypeIdOf&lt;IWorldLocalService, T&gt;.typeId</c>. Unmanaged local state parts регистрируются
-	/// в <see cref="UnsafeServiceRegistry"/> через <see cref="IWorldLocalUnmanagedService"/> маркер;
-	/// здесь хранится только <see cref="UnsafeProxyPtr"/>-список для lifecycle iteration.
+	/// <c>TypeIdOf&lt;IWorldLocalService, T&gt;.typeId</c>. Размер фиксирован при создании.
+	/// Unmanaged local state parts регистрируются в <see cref="UnsafeIndexedRegistry{IWorldLocalUnmanagedService, SafePtr}"/>
+	/// через <see cref="WorldStateLocalUnmanagedServiceExtensions"/>; здесь хранится только
+	/// <see cref="UnsafeProxyPtr"/>-список для lifecycle iteration.
 	/// </summary>
 	public class LocalStatePartService
 	{
-		private ClassPtr[] _managedServices;
+		private readonly ClassPtr[] _managedServices;
 		private readonly SimpleList<UnsafeProxyPtr<IWorldUnmanagedLocalStatePartProxy>> _unmanagedLocalStateParts = new();
 		/// <summary>
 		/// Подмножество индексов в <see cref="_managedServices"/> для которых надо вызывать lifecycle
@@ -51,7 +52,25 @@ namespace Sapientia.MemoryAllocator.State
 		/// Инвариант: <c>_managedLifecycleIndices ⊆ {i | _managedServices[i].IsValid}</c>.
 		/// Поддерживается через assert в <see cref="AddStatePart{T}(WorldState, T)"/> и snapshot-clear в <see cref="Dispose"/>.
 		/// </summary>
-		private readonly SimpleList<int> _managedLifecycleIndices = new();
+		private readonly SimpleList<TypeId<IWorldLocalService>> _managedLifecycleIndices = new();
+
+		public LocalStatePartService()
+		{
+			var count = TypeId<IWorldLocalService>.Count;
+			_managedServices = count > 0 ? new ClassPtr[count] : System.Array.Empty<ClassPtr>();
+		}
+
+		/// <summary>
+		/// IWorldLocalStatePart требует lifecycle tracking через AddStatePart — иначе Initialize/Start/Dispose
+		/// потеряются: RegisterManagedService перезаписывает slot но не трогает _managedLifecycleIndices,
+		/// старый ClassPtr disposed, новый instance не получает Initialize. Compile-out в release.
+		/// </summary>
+		[System.Diagnostics.Conditional(E.DEBUG)]
+		private static void AssertNotStatePartMisuse<T>(T service) where T : class, IWorldLocalService
+		{
+			E.ASSERT(service is not IWorldLocalStatePart,
+				"Используй LocalStatePartService.AddStatePart для IWorldLocalStatePart-наследников — иначе lifecycle hook'и потеряются");
+		}
 
 		private static LocalStatePartService GetOrCreate(WorldState worldState)
 		{
@@ -65,14 +84,6 @@ namespace Sapientia.MemoryAllocator.State
 			return service;
 		}
 
-		private void EnsureManagedArray()
-		{
-			if (_managedServices != null)
-				return;
-			var count = TypeId<IWorldLocalService>.Count;
-			_managedServices = count > 0 ? new ClassPtr[count] : System.Array.Empty<ClassPtr>();
-		}
-
 		public static void AddStatePart<T>(WorldState worldState, SafePtr<T> statePart) where T: unmanaged, IWorldUnmanagedLocalStatePart
 		{
 			var service = GetOrCreate(worldState);
@@ -84,9 +95,8 @@ namespace Sapientia.MemoryAllocator.State
 		public static void AddStatePart<T>(WorldState worldState, T statePart) where T : class, IWorldLocalStatePart
 		{
 			var service = GetOrCreate(worldState);
-			service.EnsureManagedArray();
 
-			var index = (int)TypeIdOf<IWorldLocalService, T>.typeId;
+			var index = TypeIdOf<IWorldLocalService, T>.typeId;
 			ref var slot = ref service._managedServices[index];
 			// Lifecycle index добавляется один раз: повторная регистрация одного T-state-парта
 			// перезатёрла бы lifecycle hook двойным вызовом Initialize/Start/Dispose.
@@ -97,10 +107,11 @@ namespace Sapientia.MemoryAllocator.State
 
 		internal static ref ClassPtr RegisterManagedService<T>(WorldState worldState, T service) where T : class, IWorldLocalService
 		{
-			var owner = GetOrCreate(worldState);
-			owner.EnsureManagedArray();
+			AssertNotStatePartMisuse(service);
 
-			var index = (int)TypeIdOf<IWorldLocalService, T>.typeId;
+			var owner = GetOrCreate(worldState);
+
+			var index = TypeIdOf<IWorldLocalService, T>.typeId;
 			ref var slot = ref owner._managedServices[index];
 			if (slot.IsValid)
 				slot.Dispose();
@@ -111,12 +122,7 @@ namespace Sapientia.MemoryAllocator.State
 		internal static bool TryGetManagedClassPtr<T>(WorldState worldState, out ClassPtr ptr) where T : class, IWorldLocalService
 		{
 			var owner = GetOrCreate(worldState);
-			if (owner._managedServices == null)
-			{
-				ptr = default;
-				return false;
-			}
-			var index = (int)TypeIdOf<IWorldLocalService, T>.typeId;
+			var index = TypeIdOf<IWorldLocalService, T>.typeId;
 			ptr = owner._managedServices[index];
 			return ptr.IsValid;
 		}
@@ -124,17 +130,14 @@ namespace Sapientia.MemoryAllocator.State
 		internal static T GetManagedService<T>(WorldState worldState) where T : class, IWorldLocalService
 		{
 			var owner = GetOrCreate(worldState);
-			E.ASSERT(owner._managedServices != null);
-			var index = (int)TypeIdOf<IWorldLocalService, T>.typeId;
+			var index = TypeIdOf<IWorldLocalService, T>.typeId;
 			return owner._managedServices[index].Cast<T>();
 		}
 
 		internal static bool RemoveManagedService<T>(WorldState worldState) where T : class, IWorldLocalService
 		{
 			var owner = GetOrCreate(worldState);
-			if (owner._managedServices == null)
-				return false;
-			var index = (int)TypeIdOf<IWorldLocalService, T>.typeId;
+			var index = TypeIdOf<IWorldLocalService, T>.typeId;
 			ref var slot = ref owner._managedServices[index];
 			if (!slot.IsValid)
 				return false;
@@ -214,15 +217,11 @@ namespace Sapientia.MemoryAllocator.State
 			}
 			service._managedLifecycleIndices.Dispose();
 
-			if (service._managedServices != null)
+			for (var i = 0; i < service._managedServices.Length; i++)
 			{
-				for (var i = 0; i < service._managedServices.Length; i++)
-				{
-					ref var slot = ref service._managedServices[i];
-					if (slot.IsValid)
-						slot.Dispose();
-				}
-				service._managedServices = null;
+				ref var slot = ref service._managedServices[i];
+				if (slot.IsValid)
+					slot.Dispose();
 			}
 
 			foreach (var statePartPtr in service._unmanagedLocalStateParts)

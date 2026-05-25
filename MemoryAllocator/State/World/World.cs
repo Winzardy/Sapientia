@@ -39,20 +39,22 @@ namespace Sapientia.MemoryAllocator
 			worldState.GetOrRegisterService<WorldElementsService>() = new WorldElementsService(worldState, elementsCapacity);
 		}
 
-		public void Initialize(IEnumerable<ProxyPtr<IWorldStatePartProxy>> stateParts, IEnumerable<ProxyPtr<IWorldSystemProxy>> systems)
+		public void Initialize(
+			IEnumerable<(ProxyPtr<IWorldStatePartProxy> proxy, TypeId<IWorldService> contextTypeId)> stateParts,
+			IEnumerable<(ProxyPtr<IWorldSystemProxy> proxy, TypeId<IWorldService> contextTypeId)> systems)
 		{
 			using var scope = worldState.GetWorldScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
-			foreach (var statePart in stateParts)
+			foreach (var (statePart, ctxId) in stateParts)
 			{
-				elementsService.AddWorldElement(worldState, statePart.ToProxy<IWorldElementProxy>());
+				elementsService.AddWorldElement(worldState, statePart.ToProxy<IWorldElementProxy>(), ctxId);
 			}
 
-			foreach (var system in systems)
+			foreach (var (system, ctxId) in systems)
 			{
-				elementsService.AddWorldSystem(worldState, system);
+				elementsService.AddWorldSystem(worldState, system, ctxId);
 			}
 
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
@@ -184,22 +186,22 @@ namespace Sapientia.MemoryAllocator
 
 	public static class WorldServiceExtensions
 	{
-		public static ref T Get<T>(this World world) where T : unmanaged, IWorldService
+		public static ref T GetService<T>(this World world) where T : unmanaged, IWorldService
 			=> ref world.worldState.GetService<T>();
 
-		public static SafePtr<T> GetPtr<T>(this World world) where T : unmanaged, IWorldService
+		public static SafePtr<T> GetServicePtr<T>(this World world) where T : unmanaged, IWorldService
 			=> world.worldState.GetServicePtr<T>();
 	}
 
 	public static class WorldLocalUnmanagedServiceExtensions
 	{
-		public static ref T Get<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService
+		public static ref T GetService<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService
 			=> ref world.worldState.GetService<T>();
 
-		public static SafePtr<T> GetPtr<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService
+		public static SafePtr<T> GetServicePtr<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService
 			=> world.worldState.GetServicePtr<T>();
 
-		public static ref T GetOrCreate<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
+		public static ref T GetOrCreateService<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
 			=> ref world.worldState.GetOrCreateService<T>();
 	}
 

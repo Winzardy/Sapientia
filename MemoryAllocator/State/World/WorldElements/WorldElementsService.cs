@@ -13,15 +13,15 @@ namespace Sapientia.MemoryAllocator
 			worldSystems = new (worldState, elementsCapacity);
 		}
 
-		public void AddWorldElement(WorldState worldState, ProxyPtr<IWorldElementProxy> element)
+		public void AddWorldElement(WorldState worldState, ProxyPtr<IWorldElementProxy> element, TypeId<IWorldService> contextTypeId)
 		{
 			worldElements.Add(worldState, element);
-			worldState.RegisterServiceByProxy(element);
+			worldState.RegisterService(contextTypeId, (IndexedPtr)element);
 		}
 
-		public void AddWorldSystem(WorldState worldState, ProxyPtr<IWorldSystemProxy> system)
+		public void AddWorldSystem(WorldState worldState, ProxyPtr<IWorldSystemProxy> system, TypeId<IWorldService> contextTypeId)
 		{
-			AddWorldElement(worldState, system.ToProxy<IWorldElementProxy>());
+			AddWorldElement(worldState, system.ToProxy<IWorldElementProxy>(), contextTypeId);
 			worldSystems.Add(worldState, system);
 		}
 	}

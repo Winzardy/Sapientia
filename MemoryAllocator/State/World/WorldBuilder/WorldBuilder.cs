@@ -9,8 +9,8 @@ namespace Sapientia.MemoryAllocator
 	{
 		protected World _world;
 
-		private readonly SimpleList<ProxyPtr<IWorldStatePartProxy>> _stateParts = new();
-		private readonly SimpleList<ProxyPtr<IWorldSystemProxy>> _systems = new();
+		private readonly SimpleList<(ProxyPtr<IWorldStatePartProxy> proxy, TypeId<IWorldService> contextTypeId)> _stateParts = new();
+		private readonly SimpleList<(ProxyPtr<IWorldSystemProxy> proxy, TypeId<IWorldService> contextTypeId)> _systems = new();
 
 		private readonly StateUpdateData _stateUpdateData;
 
@@ -73,7 +73,7 @@ namespace Sapientia.MemoryAllocator
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart
 		{
 			var proxy = ProxyPtr<IWorldStatePartProxy>.Create(_world.worldState, value);
-			_stateParts.Add(proxy);
+			_stateParts.Add((proxy, TypeIdOf<IWorldService, T>.typeId));
 		}
 
 		public void AddStatePartGroup<T>() where T: WorldStatePartGroup, new()
@@ -85,7 +85,7 @@ namespace Sapientia.MemoryAllocator
 		public void AddSystem<T>() where T: unmanaged, IWorldSystem
 		{
 			var proxy = ProxyPtr<IWorldSystemProxy>.Create<T>(_world.worldState);
-			_systems.Add(proxy);
+			_systems.Add((proxy, TypeIdOf<IWorldService, T>.typeId));
 		}
 
 		public void AddSystemGroup<T>() where T: WorldSystemGroup, new()
