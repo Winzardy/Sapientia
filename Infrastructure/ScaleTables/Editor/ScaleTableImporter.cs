@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using Content;
 using Content.ScriptableObjects;
 using Content.ScriptableObjects.ScaleTables;
 using NReco.Csv;
@@ -7,6 +8,7 @@ using Sapientia.Extensions;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.AssetImporters;
 using UnityEngine;
 
@@ -117,8 +119,11 @@ namespace Sapientia.ScaleTables.Editor
 				}
 			}
 
+			var path = ctx.assetPath;
+			var guid = AssetDatabase.AssetPathToGUID(path);
+
 			var table = ScriptableObject.CreateInstance<ScaleTableScriptableObject>();
-			table.ForceCreateEntry();
+			table.ForceCreateEntry(new SerializableGuid(guid));
 
 			var config = new ScaleTableConfig
 			{
@@ -146,7 +151,7 @@ namespace Sapientia.ScaleTables.Editor
 		{
 			return reader.FieldsCount > 0 &&
 				!reader[0].IsNullOrWhiteSpace();
-		}				
+		}
 	}
 }
 #endif

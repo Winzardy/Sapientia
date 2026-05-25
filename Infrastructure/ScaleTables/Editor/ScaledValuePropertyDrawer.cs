@@ -63,7 +63,7 @@ namespace Sapientia.ScaleTables.Editor
 
 			if (_scrobject == null || _scrobject.Id != value.scaleTableId)
 			{
-				_scrobject = ContentDatabaseEditorUtility.GetScrobjectFromDb<ScaleTableScriptableObject, MiscDatabaseScriptableObject>(value.scaleTableId);
+				_scrobject = ContentDatabaseEditorUtility.GetScrobjectFromDb<ScaleTableScriptableObject, ScaleTablesDatabaseScriptableObject>(value.scaleTableId);
 
 				if (_scrobject == null)
 				{
