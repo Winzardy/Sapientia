@@ -1,8 +1,9 @@
 #nullable disable
 using System;
 using Sapientia.Deterministic;
+#if CLIENT
 using Sirenix.OdinInspector;
-
+#endif
 namespace Sapientia.Evaluators
 {
 #if CLIENT
