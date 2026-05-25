@@ -343,6 +343,20 @@ namespace Sapientia.Collections
 			return false;
 		}
 
+		public static int IndexOf<T>(this IEnumerable<T> enumerable, T item)
+		{
+			var index = 0;
+			var comparer = EqualityComparer<T>.Default;
+			foreach (var element in enumerable)
+			{
+				if (comparer.Equals(element, item))
+					return index;
+				index++;
+			}
+
+			return -1;
+		}
+
 		public static bool IsEmpty<T>(this IEnumerable<T> enumerable) => !enumerable.Any();
 
 		public static bool HasSingle<T>(this IEnumerable<T>? source)
@@ -482,7 +496,7 @@ namespace Sapientia.Collections
 
 			foreach (var item in enumerable)
 			{
-				if(item is IDisposable disposable)
+				if (item is IDisposable disposable)
 					disposable.Dispose();
 			}
 		}
