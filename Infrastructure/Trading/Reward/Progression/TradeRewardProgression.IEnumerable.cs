@@ -2,10 +2,7 @@ using System.Collections.Generic;
 
 namespace Trading
 {
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonObject] // иначе пытается сериализовать как список
-#endif
-	public partial class TradeRewardProgression //: IEnumerable<TradeReward>
+	public partial class TradeRewardProgression
 	{
 		protected internal override IEnumerable<TradeReward> EnumerateActualInternal(Tradeboard board)
 		{
@@ -13,6 +10,13 @@ namespace Trading
 				.reward
 				.EnumerateActualInternal(board))
 				yield return reward;
+		}
+
+		public override IEnumerator<TradeReward> GetEnumerator()
+		{
+			yield return this;
+			for (int i = 0; i < stages.Length; i++)
+				yield return stages[i].reward;
 		}
 	}
 }

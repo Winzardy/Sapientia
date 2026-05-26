@@ -3,18 +3,24 @@ using Sapientia;
 
 namespace Trading
 {
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonObject] // иначе пытается сериализовать как список
-#endif
-	public partial class WeightedTradeRewardCollection //: IEnumerable<TradeReward>
+	public partial class WeightedTradeRewardCollection
 	{
-		protected internal IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		public override IEnumerator<TradeReward> GetEnumerator()
+		{
+			yield return this;
+			for (var i = 0; i < items.Length; i++)
+				yield return items[i].reward;
+		}
+
+		protected internal override IEnumerable<TradeReward> EnumerateActualInternal(Tradeboard board)
 		{
 			var randomizer = board.Get<IRandomizer<int>>();
-			if (!items.Roll<TradeWeightedRewardItem, Blackboard>(board, randomizer, out var index))
-				yield break;
-			foreach (var reward in items[index].reward.EnumerateActualInternal(board))
-				yield return reward;
+			var evaluatedCount = count.Evaluate(board);
+			foreach (var index in items.RollMany<TradeWeightedRewardItem, Blackboard>(board, rollMode, evaluatedCount, randomizer))
+			{
+				foreach (var reward in items[index].reward.EnumerateActualInternal(board))
+					yield return reward;
+			}
 		}
 	}
 }

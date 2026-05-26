@@ -1,8 +1,12 @@
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Trading
 {
-	public abstract partial class TradeCost
+#if NEWTONSOFT
+	[Newtonsoft.Json.JsonObject]
+#endif
+	public abstract partial class TradeCost : IEnumerable<TradeCost>
 	{
 		public virtual IEnumerator<TradeCost> GetEnumerator()
 		{
@@ -16,5 +20,7 @@ namespace Trading
 		{
 			yield return this;
 		}
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }

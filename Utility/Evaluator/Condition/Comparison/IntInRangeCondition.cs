@@ -9,10 +9,10 @@ using UnityEngine;
 namespace Sapientia.Conditions.Comparison
 {
 	[Serializable]
-	public abstract class IntInRangeCondition<TContext> : Condition<TContext>
+	public class IntInRangeCondition<TContext> : Condition<TContext>
 	{
 #if CLIENT
-		public const string SELECTOR_NAME = "\u2009Int In Range";
+		public const string SELECTOR_NAME = "\u2009Int In Range (Legacy)";
 		public const string SELECTOR_CATEGORY = "Comparison";
 		public const SdfIconType SELECTOR_ICON = SdfIconType.ArrowsCollapse;
 		public const int SELECTOR_PRIORITY = -1;

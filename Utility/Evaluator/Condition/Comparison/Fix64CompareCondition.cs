@@ -13,10 +13,10 @@ using UnityEngine;
 namespace Sapientia.Conditions.Comparison
 {
 	[Serializable]
-	public abstract class Fix64CompareCondition<TContext> : Condition<TContext>
+	public class Fix64CompareCondition<TContext> : Condition<TContext>
 	{
 #if CLIENT
-		public const string SELECTOR_NAME = "\u2009Float Comparison";
+		public const string SELECTOR_NAME = "\u2009Float Comparison (Legacy)";
 		public const string SELECTOR_CATEGORY = "Comparison";
 		public const SdfIconType SELECTOR_ICON = SdfIconType.ArrowLeftRight;
 
