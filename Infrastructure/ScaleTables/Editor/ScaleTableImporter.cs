@@ -84,10 +84,10 @@ namespace Sapientia.ScaleTables.Editor
 					{
 						if (lineIndex == 0 && reader[i].IsNullOrWhiteSpace())
 						{
-							ctx.LogImportError(
-								$"Invalid scale table format - " +
+							ctx.LogImportWarning(
 								$"Scale row contains " +
-								$"empty cell at index [ {i} ]");
+								$"empty cell at index [ {i} ], " +
+								$"turnicating to [ {i - 1} ]");
 
 							valuesRowSize = i;
 							break;

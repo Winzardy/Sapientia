@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using Content;
-using Content.ScriptableObjects;
 using Content.ScriptableObjects.Editor;
 using Content.ScriptableObjects.ScaleTables;
 using Fusumity.Editor;
