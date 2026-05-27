@@ -1,41 +1,41 @@
-using System.Collections;
 using System.Collections.Generic;
 using Sapientia.Pooling;
 
 namespace Trading
 {
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonObject] // иначе пытается сериализовать как список
-#endif
-	public partial class TradeRewardCollection : IEnumerable<TradeReward>
+	public partial class TradeRewardCollection
 	{
-		public override IEnumerator<TradeReward> GetEnumerator()
+		protected internal override IEnumerable<TradeReward> EnumerateActualInternal(Tradeboard board)
 		{
 			using (ListPool<TradeReward>.Get(out var sorted))
 			{
 				sorted.AddRange(items);
 				sorted.Sort(SortByPriority);
 
-				foreach (var item in sorted)
-					foreach (var reward in item)
+				foreach (var raw in sorted)
+				{
+					if (raw == null)
+					{
+						TradingDebug.LogError($"Null reward in collection (tradeId: {board.Id})");
+						continue;
+					}
+
+					foreach (var reward in raw.EnumerateActualInternal(board))
 						yield return reward;
+				}
 			}
 		}
 
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-		protected internal override IEnumerable<TradeReward> EnumerateActualInternal(Tradeboard board)
+		public override IEnumerator<TradeReward> GetEnumerator()
 		{
-			foreach (var raw in items)
+			yield return this;
+			using (ListPool<TradeReward>.Get(out var sorted))
 			{
-				if (raw == null)
-				{
-					TradingDebug.LogError($"Null reward in collection (tradeId: {board.Id})");
-					continue;
-				}
-
-				foreach (var reward in raw.EnumerateActualInternal(board))
-					yield return reward;}
+				sorted.AddRange(items);
+				sorted.Sort(SortByPriority);
+				foreach (var reward in sorted)
+					yield return reward;
+			}
 		}
 	}
 }

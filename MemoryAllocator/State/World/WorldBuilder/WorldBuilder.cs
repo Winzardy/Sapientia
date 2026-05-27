@@ -9,8 +9,8 @@ namespace Sapientia.MemoryAllocator
 	{
 		protected World _world;
 
-		private readonly SimpleList<ProxyPtr<IWorldStatePartProxy>> _stateParts = new();
-		private readonly SimpleList<ProxyPtr<IWorldSystemProxy>> _systems = new();
+		private readonly SimpleList<WorldService<IWorldStatePartProxy>> _stateParts = new();
+		private readonly SimpleList<WorldService<IWorldSystemProxy>> _systems = new();
 
 		private readonly StateUpdateData _stateUpdateData;
 
@@ -53,7 +53,7 @@ namespace Sapientia.MemoryAllocator
 
 		public void AddUnmanagedLocalStatePart<T>(in T value) where T: unmanaged, IWorldUnmanagedLocalStatePart
 		{
-			var ptr = _world.worldState.GetOrRegisterServicePtr<T>(ServiceType.NoState);
+			var ptr = _world.worldState.GetOrRegisterServicePtr<T>();
 			ptr.Value() = value;
 
 			LocalStatePartService.AddStatePart(_world.worldState, ptr);
@@ -66,15 +66,14 @@ namespace Sapientia.MemoryAllocator
 
 		public void AddLocalStatePart<T>(in T value) where T: class, IWorldLocalStatePart
 		{
-			var servicePtr = _world.worldState.RegisterService<T>(value);
-			LocalStatePartService.AddStatePart(_world.worldState, servicePtr);
+			LocalStatePartService.AddStatePart(_world.worldState, value);
 			ServiceContext<WorldId>.SetService(_world.worldState.WorldId, value);
 		}
 
 		public void AddStatePart<T>(in T value = default) where T: unmanaged, IWorldStatePart
 		{
 			var proxy = ProxyPtr<IWorldStatePartProxy>.Create(_world.worldState, value);
-			_stateParts.Add(proxy);
+			_stateParts.Add(new WorldService<IWorldStatePartProxy>(proxy, TypeIdOf<IWorldService, T>.typeId));
 		}
 
 		public void AddStatePartGroup<T>() where T: WorldStatePartGroup, new()
@@ -86,7 +85,7 @@ namespace Sapientia.MemoryAllocator
 		public void AddSystem<T>() where T: unmanaged, IWorldSystem
 		{
 			var proxy = ProxyPtr<IWorldSystemProxy>.Create<T>(_world.worldState);
-			_systems.Add(proxy);
+			_systems.Add(new WorldService<IWorldSystemProxy>(proxy, TypeIdOf<IWorldService, T>.typeId));
 		}
 
 		public void AddSystemGroup<T>() where T: WorldSystemGroup, new()

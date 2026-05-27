@@ -8,6 +8,7 @@ namespace Trading
 
 		int GetCurrentProgress(string key, in TradeProgressionScheme scheme);
 		void IncrementProgress(string key, in TradeProgressionScheme scheme);
+		void ChangeProgress(string key, int value, in TradeProgressionScheme scheme);
 		void ResetProgress(string key, in TradeProgressionScheme scheme);
 	}
 

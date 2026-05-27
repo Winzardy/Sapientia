@@ -14,7 +14,7 @@ namespace Sapientia.Conditions
 	}
 
 	[Serializable]
-	public abstract class CollectionCondition<T> : InvertableCondition<T>
+	public class CollectionCondition<T> : InvertableCondition<T>
 	{
 		public ConditionGroupMode mode;
 
@@ -28,7 +28,7 @@ namespace Sapientia.Conditions
 				case ConditionGroupMode.Any:
 					for (int i = 0; i < collection.Length; i++)
 					{
-						if (collection[i].Evaluate(context))
+						if (collection[i].IsFulfilled(context))
 							return true;
 					}
 
@@ -36,7 +36,7 @@ namespace Sapientia.Conditions
 				case ConditionGroupMode.All:
 					for (int i = 0; i < collection.Length; i++)
 					{
-						if (!collection[i].Evaluate(context))
+						if (!collection[i].IsFulfilled(context))
 							return false;
 					}
 
