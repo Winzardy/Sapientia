@@ -1,8 +1,6 @@
-using Sapientia.TypeIndexer;
-
 namespace Sapientia.MemoryAllocator
 {
-	public interface IInitializableService : IIndexedType
+	public interface IInitializableService : IWorldLocalUnmanagedService
 	{
 		public void Initialize(WorldState worldState);
 	}

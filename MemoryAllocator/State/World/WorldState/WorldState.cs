@@ -2,6 +2,8 @@ using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Memory;
+using Sapientia.MemoryAllocator.State;
+using Sapientia.TypeIndexer;
 using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
@@ -17,7 +19,7 @@ namespace Sapientia.MemoryAllocator
 			get => _worldStateData.IsValid && _worldId.IsValid() && _worldStateData.Value().version > 0;
 		}
 
-		private ref WorldStateData WorldStateData
+		internal ref WorldStateData WorldStateData
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get
@@ -58,6 +60,11 @@ namespace Sapientia.MemoryAllocator
 			_worldId = worldId;
 		}
 
+		public void Serialize(ref StreamBufferWriter stream)
+		{
+			WorldStateData.Serialize(ref stream);
+		}
+
 		public void Dispose()
 		{
 			if (!IsValid)
@@ -70,21 +77,27 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private readonly ref Allocator GetAllocator()
+		internal readonly ref Allocator GetAllocator()
 		{
 			return ref WorldStateData.allocator;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private readonly ref ServiceRegistry GetServiceRegistry()
+		internal readonly ref UnsafeIndexedRegistry<IWorldService, IndexedPtr> GetServiceRegistry()
 		{
 			return ref WorldStateData.serviceRegistry;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private readonly ref UnsafeServiceRegistry GetNoStateServiceRegistry()
+		internal readonly ref UnsafeIndexedRegistry<IWorldLocalUnmanagedService, SafePtr> GetNoStateServiceRegistry()
 		{
 			return ref WorldStateData.noStateServiceRegistry;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal readonly ref UnsafeIndexedRegistry<IComponent, CachedPtr<ComponentSet>> GetComponentsManager()
+		{
+			return ref WorldStateData.componentsManager;
 		}
 
 		public static WorldState Deserialize(ref StreamBufferReader stream)
@@ -93,6 +106,8 @@ namespace Sapientia.MemoryAllocator
 
 			worldState._worldStateData = MemoryExt.MemAlloc<WorldStateData>();
 			worldState.WorldStateData = WorldStateData.Deserialize(ref stream);
+			// Caller обязан вызвать SetupNewWorldId(worldId) после Deserialize — это назначение
+			// нового handle мира. Регистры уже восстановлены из стрима.
 
 			return worldState;
 		}

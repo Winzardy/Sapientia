@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			_worldState = worldState;
 			_entitiesStatePart = _worldState.GetServicePtr<EntityStatePart>();
-			_destroyLogic = _worldState.GetOrCreateServicePtr<DestroyLogic>(ServiceType.NoState);
+			_destroyLogic = _worldState.GetOrCreateServicePtr<DestroyLogic>();
 			_destroyRequestSet = new (_worldState);
 			_destroyComponentsSet = new (_worldState);
 			_killRequestSet = new (_worldState);
