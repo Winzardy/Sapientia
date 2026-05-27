@@ -123,15 +123,14 @@ namespace Sapientia.ScaleTables.Editor
 			var guid = AssetDatabase.AssetPathToGUID(path);
 
 			var table = ScriptableObject.CreateInstance<ScaleTableScriptableObject>();
-			table.ForceCreateEntry(new SerializableGuid(guid));
+			table.ForceCreateEntry(id, new SerializableGuid(guid));
+			table.useCustomId = true;
 
 			var config = new ScaleTableConfig
 			{
 				scaleRow = tableRows.First(),
 				valueRows = tableRows.Skip(1).ToArray()
 			};
-
-			(config as IExternallyIdentifiable).SetId(id);
 
 			table.SetValue(config, false);
 

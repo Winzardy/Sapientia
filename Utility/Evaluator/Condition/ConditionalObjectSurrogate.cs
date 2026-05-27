@@ -15,6 +15,12 @@ namespace Sapientia.Conditions
 		public bool IsActive { get; private set; }
 		public bool IsDisposed { get; private set; }
 
+		/// <summary>
+		/// If both activation and deactivation conditions are currently fulfilled,
+		/// and object is in an inactive state - activation will be ignored.
+		/// </summary>
+		public bool DeactivationPriority { get; set; }
+
 		public ICondition<TContext> ActivationCondition { get; }
 		public ICondition<TContext> DeactivationCondition { get; }
 
@@ -93,27 +99,27 @@ namespace Sapientia.Conditions
 			{
 				exception = generateException ? new Exception(
 				   $"Could not change state for surrogate [ {Id} ] to [ {active} ] - " +
-				   $"state is identical") : null;
+				   $"state is identical.") : null;
 
 				return false;
 			}
 
 			if (_context != null)
 			{
-				if (active && !this.CanBeActivated(_context))
+				if (active && (DeactivationPriority ? !this.CanBeActivated(_context) : !ActivationCondition.IsFulfilled<TContext>(_context)))
 				{
 					exception = generateException ? new Exception(
 					   $"Could not change state for surrogate [ {Id} ] to [ {active} ] - " +
-					   $"activation conditions are not valid") : null;
+					   $"activation conditions are not met.") : null;
 
 					return false;
 				}
-
+				
 				if (!active && !this.CanBeDeactivated(_context))
 				{
 					exception = generateException ? new Exception(
 					   $"Could not change state for surrogate [ {Id} ] to [ {active} ] - " +
-					   $"deactivation conditions are not valid") : null;
+					   $"deactivation conditions are not met.") : null;
 
 					return false;
 				}
