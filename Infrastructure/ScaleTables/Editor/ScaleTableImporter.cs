@@ -109,9 +109,9 @@ namespace Sapientia.ScaleTables.Editor
 
 					var row = new ScaleTableRow
 					{
-						key = rowKey,
+						key        = rowKey,
 						identifier = Path.GetFileName(rowKey),
-						values = valuesBuffer.ToArray()
+						values     = valuesBuffer.ToArray()
 					};
 
 					tableRows.Add(row);
@@ -122,20 +122,21 @@ namespace Sapientia.ScaleTables.Editor
 			var path = ctx.assetPath;
 			var guid = AssetDatabase.AssetPathToGUID(path);
 
-			var table = ScriptableObject.CreateInstance<ScaleTableScriptableObject>();
-			table.ForceCreateEntry(id, new SerializableGuid(guid));
-			table.useCustomId = true;
+			var asset = ScriptableObject.CreateInstance<ScaleTableScriptableObject>();
+			var serializableGuid = SerializableGuid.Parse(guid);
+			if (!asset.TryCreateEntry(serializableGuid))
+				asset.SetId(id);
 
 			var config = new ScaleTableConfig
 			{
-				scaleRow = tableRows.First(),
+				scaleRow  = tableRows.First(),
 				valueRows = tableRows.Skip(1).ToArray()
 			};
 
-			table.SetValue(config, false);
+			asset.SetValue(config, false);
 
-			ctx.AddObjectToAsset(nameof(ScaleTableScriptableObject), table);
-			ctx.SetMainObject(table);
+			ctx.AddObjectToAsset(nameof(ScaleTableScriptableObject), asset);
+			ctx.SetMainObject(asset);
 		}
 
 		private bool IsValidScaleRow(CsvReader reader)
@@ -154,4 +155,3 @@ namespace Sapientia.ScaleTables.Editor
 	}
 }
 #endif
-
