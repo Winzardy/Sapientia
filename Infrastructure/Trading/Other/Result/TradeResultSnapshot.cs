@@ -30,6 +30,8 @@ namespace Trading
 		[CanBeNull]
 		public ITradeCostResult[] costs;
 
+		public bool IsEmpty { get => rewards.IsNullOrEmpty() && costs.IsNullOrEmpty(); }
+
 		internal TradeResultSnapshot(string tradeId, in TradeRawResult raw, TradeResultSnapshotFlag flags = TradeResultSnapshotFlag.All)
 		{
 			this.tradeId = tradeId;

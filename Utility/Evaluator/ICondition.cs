@@ -12,10 +12,10 @@ namespace Sapientia
 		const int OPERATOR_WIDTH = 55;
 	}
 
-	public interface ICondition<in T> : IEvaluator<T, bool>, ICondition
+	public interface ICondition<in TContext> : IEvaluator<TContext, bool>, ICondition
 	{
-		bool IsFulfilled(T context);
+		bool IsFulfilled(TContext context);
 
-		bool IEvaluator<T, bool>.Evaluate(T provider) => IsFulfilled(provider);
+		bool IEvaluator<TContext, bool>.Evaluate(TContext provider) => IsFulfilled(provider);
 	}
 }
