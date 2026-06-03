@@ -1,3 +1,4 @@
+#if UNITY_5_4_OR_NEWER
 using NUnit.Framework;
 using Sapientia.Memory;
 
@@ -37,3 +38,4 @@ namespace Sapientia.LogicGraph.Tests
 		}
 	}
 }
+#endif
