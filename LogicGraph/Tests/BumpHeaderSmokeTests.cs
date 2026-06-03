@@ -20,7 +20,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Arena_RoundTripsOneInt()
 		{
-			var arena = RawBumpAllocator.Create(1024);
+			var arena = new RawBumpAllocator(1024);
 			try
 			{
 				ref var header = ref arena.Value;

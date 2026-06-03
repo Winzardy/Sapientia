@@ -18,7 +18,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Raw_AllocReturnsMonotonicOffsets()
 		{
-			var arena = RawBumpAllocator.Create(256);
+			var arena = new RawBumpAllocator(256);
 			try
 			{
 				ref var header = ref arena.Value;
@@ -38,7 +38,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Raw_Serialize_RoundTrips()
 		{
-			var source = RawBumpAllocator.Create(256);
+			var source = new RawBumpAllocator(256);
 			ref var header = ref source.Value;
 			ref var slot = ref header.MemAlloc<int>(out var offset);
 			slot = 777;
@@ -67,10 +67,10 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void World_RoundTripsOneInt()
 		{
-			var worldState = new WorldState(new WorldId(1, 1), 1024);
+			var worldState = WorldManager.CreateWorld(1024).worldState;
 			try
 			{
-				var arena = WorldBumpAllocator.Create(worldState, 256);
+				var arena = new MemBumpAllocator(worldState, 256);
 
 				ref var header = ref arena.GetValue(worldState);
 				ref var slot = ref header.MemAlloc<int>(out var offset);
@@ -89,10 +89,10 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void World_Dispose_InvalidatesHandle()
 		{
-			var worldState = new WorldState(new WorldId(1, 1), 1024);
+			var worldState = WorldManager.CreateWorld(1024).worldState;
 			try
 			{
-				var arena = WorldBumpAllocator.Create(worldState, 64);
+				var arena = new MemBumpAllocator(worldState, 64);
 				Assert.IsTrue(arena.IsValid, "Свежесозданная арена должна быть валидна.");
 
 				arena.Dispose(worldState);
@@ -107,11 +107,11 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void World_ReResolvesAfterSnapshotMoveAndVersionBump()
 		{
-			var worldState = new WorldState(new WorldId(1, 1), 1024);
+			var worldState = WorldManager.CreateWorld(1024).worldState;
 			var disposed = false;
 			try
 			{
-				var arena = WorldBumpAllocator.Create(worldState, 256);
+				var arena = new MemBumpAllocator(worldState, 256);
 				ref var header = ref arena.GetValue(worldState);
 				ref var slot = ref header.MemAlloc<int>(out var offset);
 				slot = 1234;
@@ -126,8 +126,7 @@ namespace Sapientia.LogicGraph.Tests
 				disposed = true;
 
 				var reader = new StreamBufferReader(bytes);
-				var restoredWorld = WorldState.Deserialize(ref reader);
-				restoredWorld.SetupNewWorldId(new WorldId(1, 2));
+				var restoredWorld = WorldManager.DeserializeWorld(ref reader).worldState;
 				reader.Dispose();
 				try
 				{
