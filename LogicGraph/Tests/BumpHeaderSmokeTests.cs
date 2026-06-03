@@ -5,10 +5,10 @@ namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
 	/// Smoke-тесты Фазы 0: проверяют, что EditMode-harness обнаруживает и запускает тесты LogicGraph,
-	/// и что <see cref="ArenaAllocator"/>, на котором строятся последующие фазы, корректно
+	/// и что <see cref="BumpHeader"/>, на котором строятся последующие фазы, корректно
 	/// проходит запись и чтение значения насквозь.
 	/// </summary>
-	public class ArenaAllocatorSmokeTests
+	public class BumpHeaderSmokeTests
 	{
 		[Test]
 		public void Harness_Runs()
@@ -20,19 +20,19 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Arena_RoundTripsOneInt()
 		{
-			var allocatorPtr = ArenaAllocator.Create(1024);
+			var arena = RawBumpAllocator.Create(1024);
 			try
 			{
-				ref var arena = ref allocatorPtr.Value();
+				ref var header = ref arena.Value;
 
-				ref var slot = ref arena.MemAlloc<int>(out var offset);
+				ref var slot = ref header.MemAlloc<int>(out var offset);
 				slot = 42;
 
-				Assert.AreEqual(42, arena.GetRef(offset), "Значение, записанное по смещению в арене, не прочиталось обратно.");
+				Assert.AreEqual(42, header.GetRef(offset), "Значение, записанное по смещению в арене, не прочиталось обратно.");
 			}
 			finally
 			{
-				allocatorPtr.Value().Dispose();
+				arena.Dispose();
 			}
 		}
 	}
