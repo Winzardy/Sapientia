@@ -1,7 +1,9 @@
 # Sapientia
 
 > Foundation library. Code is the source of truth — every claim below cites `file_path:line`.
-> Nested deep-dives: [MemoryAllocator](MemoryAllocator/CLAUDE.md) · [Collections](MemoryAllocator/Collections/CLAUDE.md) · [State / World / Entity](MemoryAllocator/State/CLAUDE.md).
+> Nested deep-dives: [MemoryAllocator](MemoryAllocator/CLAUDE.md) · [Arena Collections](MemoryAllocator/Collections/CLAUDE.md) · [State / World / Entity](MemoryAllocator/State/CLAUDE.md).
+>
+> Module docs: [Collections (off-arena)](Collections/CLAUDE.md) · [Data (ptr wrappers / Id / Events)](Data/CLAUDE.md) · [ServiceManagement (legacy ServiceLocator)](ServiceManagement/CLAUDE.md) · [Safety (DisposeSentinel)](Safety/CLAUDE.md) · [Pooling](Pooling/CLAUDE.md).
 
 ## 1. Purpose
 
