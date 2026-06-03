@@ -9,7 +9,9 @@
 >
 > **Implementation:** the phased roadmap is [PLAN.md](PLAN.md); execute a phase with the
 > `/logicgraph-phase <n>` command (`.claude/commands/logicgraph-phase.md`) — plan-gate → implement →
-> codebase self-review → review packet → your review → close.
+> codebase self-review → review packet → your review → close. **Phase 0 done:** EditMode tests live in
+> `Tests/` (`Sapientia.LogicGraph.Tests`, Editor-only); run via the Test Runner or the batchmode command
+> in [Tests/README.md](Tests/README.md).
 >
 > **Design intent source:** the FigJam board *"Наработки нодового графа (Октябрь 2025)"*
 > ([Winzardy Board, node 1588:7723](https://www.figma.com/board/Xok4N0R7BJUBygFs3Q9Uzo/WInzardy-Board?node-id=1588-7723)).

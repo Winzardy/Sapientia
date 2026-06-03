@@ -22,7 +22,7 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 
 | # | Phase | Concept | Depends on | Status |
 |---|---|---|---|---|
-| 0 | Test harness | EditMode test asmdef + smoke test; establish the loop | — | ☐ |
+| 0 | Test harness | EditMode test asmdef + smoke test; establish the loop | — | ☑ |
 | 1 | Universal `ArenaAllocator` | backend-agnostic block provider (raw `MemoryExt` ⟷ main `Allocator`) | 0 | ☐ |
 | 2 | Five-scope layout | per-node compile-time sizing + layout of all 5 scope blocks; `static` keyed by (id,version) | 1 | ☐ |
 | 3 | `NodesScope` entity | scope lifecycle, ownership, static-dedup vs per-usage static-cache; instance bound to (id,version) | 2 | ☐ |
@@ -55,6 +55,12 @@ loop on something trivial.
 **Test list.** harness-runs smoke test; arena round-trips one int.
 
 **Definition of done.** Test Runner discovers and passes the smoke test; no production code touched.
+
+**Status: done (2026-06-03).** Harness lives at `LogicGraph/Tests/` (`Sapientia.LogicGraph.Tests`,
+EditMode, Editor-only). Resolved at planning: Unity Test Framework `1.6.0` is present
+(`Packages/manifest.json`); the asmdef sits under `LogicGraph/Tests/` (co-located, not submodule-wide);
+batchmode runs work via `Unity -runTests -batchmode -testPlatform EditMode` (see `Tests/README.md`) when
+the editor isn't holding the project lock. Two smoke tests added: `Harness_Runs`, `Arena_RoundTripsOneInt`.
 
 **Risks / decide at planning.** Is the Unity Test Framework package present in the project? Where should
 the test asmdef physically live (under `LogicGraph/Tests/` vs a submodule-wide `Tests/`)? Does a
