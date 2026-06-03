@@ -25,7 +25,7 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 | 0 | Test harness | EditMode test asmdef + smoke test; establish the loop | — | ☑ |
 | 1 | Universal `ArenaAllocator` | backend-agnostic block provider (raw `MemoryExt` ⟷ main `Allocator`) | 0 | ☐ |
 | 2 | Five-scope layout | per-node compile-time sizing + layout of all 5 scope blocks; `static` keyed by (id,version) | 1 | ☐ |
-| 3 | `NodesScope` entity | scope lifecycle, ownership, static-dedup vs per-usage static-cache; instance bound to (id,version) | 2 | ☐ |
+| 3 | `NodesScope` entity | scope lifecycle, per-usage static-cache/persistent, instance bound to (id,version), type-indexed context registry | 2 | ☐ |
 | 4 | Blueprint manager | versioning, lazy compile, recompile-on-new-version, runtime add/remove, retain-old-for-live-instances | 3 | ☐ |
 | 5 | Save/load persistent | serialize `*persistent`; re-wire allocator refs (`CachedPtr` pattern) | 4 | ☐ |
 | M6 | Node dispatch + dual backend | Burst fn-pointer registry by index + managed path + version gate | 5 | ☐ milestone |
@@ -152,20 +152,26 @@ by a direct single-version compile.
 - Instance carries `(blueprint id, version)` and resolves its `static` through it (single version for now;
   staleness across recompiles is Phase 4).
 - **Multiple coexisting scopes**, each lazily allocating its own `static *`.
+- **Ambient context registry** on the scope (#14): a `TypeId` → context map (via `TypeIndexer`, contexts
+  as `IndexedPtr`/`UnsafeIndexedPtr`) with **put / get-by-type**; precedent `WorldState.ServiceRegistry.cs`.
+  Storage/lookup only — node-side retrieval is M7.
 
-**Out of scope.** The blueprint manager / dedup / versioning / recompile (Phase 4); execution; save/load.
+**Out of scope.** The blueprint manager / dedup / versioning / recompile (Phase 4); execution; save/load;
+node-side context access during a run (M7).
 
 **Test list (the model-proving tests).**
 - **Per-usage-site** `static cache`/`static persistent`: for `bp1→bp2`, `bp3→bp2`, standalone `bp2`,
   there are **3 independent** `static cache`/`static persistent` buffers (one per usage-site).
 - multi-scope isolation: two scopes' `static *` are independent; disposing one leaves the other intact.
 - lifetime: instance dispose frees instance blocks but not scope blocks; scope dispose frees all.
+- context registry: put a context, retrieve it by type; different types coexist; missing type handled.
 
-**Definition of done.** Per-usage-site + multi-scope + lifetime tests green; no leaks (allocations freed on
-dispose).
+**Definition of done.** Per-usage-site + multi-scope + lifetime + context-registry tests green; no leaks
+(allocations freed on dispose).
 
 **Risks.** This is where ownership bugs hide — emphasize leak/double-free tests. Needs a representative
-"usage-site" identity (how a nested-blueprint reference is keyed) — decide at planning.
+"usage-site" identity (how a nested-blueprint reference is keyed) — decide at planning. If the context
+registry makes the phase too large for one review sitting, **split it into its own sub-phase at planning**.
 
 ---
 
@@ -241,7 +247,8 @@ whether persistent save/load piggybacks on the world `Allocator.Serialize` or is
   pass alternation** (non-Burst node parks; dependents wait), single-blueprint as a special case of group
   execution. Generalizes the board's Instruction/Processor loop. Invocation entry point is an
   **execution reference** (#12): "start from this node/group/blueprint on this instance" — the
-  instance-form ExecRef *is* an Instruction.
+  instance-form ExecRef *is* an Instruction. Nodes retrieve **ambient context by type** from the scope
+  registry (Phase 3) during a run, Burst-side via proxies (#14).
 - **M8 — Memoized evaluation.** Pull-based `Is Calculated` gating at runtime
   (`EdgeDataHeader.IsCalculated`).
 - **M9 — Typed + composable blueprints.** Blueprint I/O as **explicit input/output nodes** = **multiple

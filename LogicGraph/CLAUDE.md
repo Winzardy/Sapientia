@@ -173,7 +173,8 @@ Two subtleties that distinguish *static* from the *static\** scopes, for deps `b
 used to **manage instance lifecycle** within an execution domain. It **owns** the per-scope
 `static cache` and `static persistent` blocks (the mutable working sets), allocated **lazily** per
 usage-site. **Multiple scopes coexist**, each with its own `static *`. It does **not** own `static` (that
-is the blueprint manager's). This is **not built yet** (§8) — `LogicGraph`/`CompiledGraph` are the nearest stubs.
+is the blueprint manager's). The scope also holds the **ambient context registry** (`TypeId` → context,
+#14) that nodes retrieve from. This is **not built yet** (§8) — `LogicGraph`/`CompiledGraph` are the nearest stubs.
 
 ### Blueprint manager — versioning & runtime mutation
 
@@ -224,7 +225,9 @@ found here; grep), so there is **no tick wiring yet** — it is currently a set 
     (`BlueprintInstance.cs:20`,`:28`).
   - [Data](../Data/CLAUDE.md) — `SafePtr`/`SafePtr<T>`, `PtrOffset`/`PtrOffset<T>` (the
     relative-offset model that makes the blob position-independent), `Id<T>`, `ByteEnumMask<T>` (edge header flags).
-  - `Sapientia.TypeIndexer` — `NodeTypeId` intends to use `IndexedTypes.GetTypeIndex` (currently commented out, `Data/NodeTypeId.cs:13`).
+  - `Sapientia.TypeIndexer` (part of `Sapientia.MemoryAllocator`) — `NodeTypeId` intends to use
+    `IndexedTypes.GetTypeIndex` (currently commented out, `Data/NodeTypeId.cs:13`); also the mechanism for
+    the **scope's ambient context registry** (`TypeId` → context, #14) and node-function dispatch by index.
   - `Sapientia.Extensions` (`TSize<T>.size`, `UnsafeExt.As`), `Submodules.Sapientia.Memory` (`MemoryExt.MemCopy`, `StreamBuffer*`).
   - `Unity.Burst` — `[BurstCompile]` + `FunctionPointer<DoNode>` (`NodeInvoker.cs`).
   - `UnityEngine` — only `[SerializeReference]`/`[Serializable]` on the authoring side (`Blueprint.cs:18`, `AddNode.cs:7`).
@@ -414,6 +417,22 @@ Design direction:
   uniformity, or keep a context-free fast path? Where does the `Allocator`-backend handle store the
   allocator reference under Burst (via `WorldState` passed in, presumably)?
 
+**LogicGraph ↔ allocator coupling** (decided 2026-06-03). LogicGraph **does not require a live world
+`Allocator`** to run: it depends on the *memory abstraction* (the universal-backend arena above). The
+**default/standalone path is raw `MemoryExt`** — works on a server, in tests, and for shipped binaries
+with **no `World`**. The **`Allocator` backend is opt-in**, used only when data must ride the world
+snapshot (`*persistent`). At the **assembly** level it still references `Sapientia.MemoryAllocator`
+(unavoidable: both the optional `Allocator` backend *and* `TypeIndexer` live there) — so the goal is "no
+**mandatory live allocator instance** at runtime," not "no MemoryAllocator reference." A hard split
+(allocator-free core + integration assembly) is possible later but not justified now.
+
+**Ambient context registry on `Scope`** (decided 2026-06-03). The scope holds a **`TypeId` → context**
+registry (via `TypeIndexer`; contexts as `IndexedPtr`/`ProxyPtr`); nodes retrieve the context type they
+need at any execution point — the precedent is `WorldState.ServiceRegistry.cs`. Separate from per-call
+edge parameters. Not built; closely tied to the `Scope` work (Phase 3) and node execution (M7).
+*Open sub-question:* allocator-free contexts use `UnsafeIndexedPtr`/`UnsafeProxyPtr` (no `MemPtr`),
+world-backed contexts use `IndexedPtr` (`CachedPtr`) — confirm both are supported per the backend stance.
+
 > **Notion cross-reference:** none found for this system in `Docs/Core/DOCUMENTATION_PLAN.md`.
 
 ---
@@ -493,6 +512,18 @@ status of each piece is tracked in the [design → code map](#design--code-statu
        reference, not a data copy). Input/output nodes are realized via this zero-cost passthrough; the
        code seed is the **`EdgeDataHeaderState.PassThroughRef`** flag (`CompiledBlueprint.cs:279`).
     4. The board's `Start(MyValue)` / `Exit(float)` nodes are exactly such input / output nodes.
+14. **Ambient context lives in the `Scope`, retrieved by type.** Besides per-call edge parameters (#13),
+    nodes need **ambient context**, and **different nodes need different context types**.
+    1. You **create a scope, place global context object(s) into it**, and at **any execution point** a
+       node can **retrieve the context it needs by type**.
+    2. Mechanism: the existing **`TypeIndexer`** feature (`Sapientia.TypeIndexer`, part of
+       `Sapientia.MemoryAllocator`, already referenced) — a `TypeId`-keyed registry, like `WorldState`'s
+       service registry (`WorldState.ServiceRegistry.cs`); contexts stored as `IndexedPtr`/`ProxyPtr`
+       (`TypeId` + pointer, `IndexedPtr.cs`) and accessed Burst-side via proxies. This realizes the
+       board's capability-context idea (`MyValue : IEntityContainer, IStatLogicContainer`; `ReadStat`
+       pulls those).
+    3. **Two distinct context channels:** (a) **edge/parameter** context flowing through input nodes
+       (per call, #13); (b) **ambient scope** context retrieved by type (available everywhere).
 
 ### FigJam board (earlier sketch)
 
@@ -583,6 +614,7 @@ Use this as the canonical end-to-end target when wiring the runtime.
 | Non-Burst node/blueprint functionality (#6) | — | ✗ absent |
 | **Orchestrator**: deps + parallel + Burst/non-Burst (#7) | `NodeInvoker.DoNode` only | ✗ no scheduler |
 | `Scope` entity / lifecycle (#9) | `LogicGraph`/`CompiledGraph` | ✗ stubs |
+| Ambient context registry on scope, by type (#14) | `IndexedPtr`/`TypeIndexer`; `WorldState.ServiceRegistry` precedent | ✗ no scope registry |
 | Blueprint manager: versioning, lazy compile, runtime mutation (#11) | `version` fields on `Blueprint`/`CompiledBlueprint`/`BlueprintInstance` | ✗ no manager |
 | Instance bound to `(id, version)`; `version` ≈ generation (#11) | `BlueprintInstance.blueprintId`+`version` (`BlueprintInstance.cs:10`) | ◐ fields only; no staleness check |
 | 5 data scopes (#8) | `CompiledBlueprint` + `BlueprintInstance` | ◐ `static` + `instance cache`/`instance persistent` partial; `static cache`/`static persistent` absent |
