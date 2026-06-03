@@ -18,6 +18,7 @@ namespace Trading.InAppPurchasing
 
 		public override int Priority => TradeCostPriority.HIGH;
 
+#if CLIENT
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
@@ -54,6 +55,7 @@ namespace Trading.InAppPurchasing
 
 			return new IAPTradeReceipt(receipt.Value);
 		}
+#endif
 
 		protected override void OnIssue(Tradeboard board, string receiptKey)
 		{
@@ -103,21 +105,5 @@ namespace Trading.InAppPurchasing
 		}
 
 		#endregion
-	}
-
-	public class IAPConsumableTradeCostResult : ITradeCostResult
-	{
-		public ContentReference<IAPConsumableProductEntry> productRef;
-	}
-
-	public class IAPConsumableTradeCostResultHandle : TradeCostResultHandle<IAPConsumableTradeCost>
-	{
-		public override ITradeCostResult Bake()
-		{
-			return new IAPConsumableTradeCostResult
-			{
-				productRef = Source.product
-			};
-		}
 	}
 }

@@ -15,7 +15,7 @@ namespace Sapientia.MemoryAllocator
 	}
 
 	[DebuggerTypeProxy(typeof(MemDictionary<,>.EquatableDictionaryProxy))]
-	public struct MemDictionary<TKey, TValue> : IMemDictionaryEnumerable<TKey, TValue>
+	public struct MemDictionary<TKey, TValue>
 		where TKey : unmanaged, IEquatable<TKey>
 		where TValue : unmanaged
 	{
@@ -377,10 +377,23 @@ namespace Sapientia.MemoryAllocator
 			entries = entryArray;
 		}
 
+		/// <summary><para>Removes the elements with the specified keys from the dictionary.</para></summary>
+		/// <param name="worldState"></param>
+		/// <param name="keys">The keys of the elements to be removed from the dictionary.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Remove(WorldState worldState, Span<TKey> keys)
+		{
+			var success = true;
+			foreach (ref var key in keys)
+			{
+				success &= Remove(worldState, key, out _);
+			}
+			return success;
+		}
+
 		/// <summary><para>Removes the element with the specified key from the dictionary.</para></summary>
 		/// <param name="worldState"></param>
 		/// <param name="key">The key of the element to be removed from the dictionary.</param>
-		/// <param name="value"></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove(WorldState worldState, TKey key)
 		{
@@ -467,6 +480,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemDictionaryEnumerator<TKey, TValue> GetEnumerator(WorldState worldState)
 		{
+			if (Count == 0)
+				return default;
 			return new MemDictionaryEnumerator<TKey, TValue>(GetEntryPtr(worldState), LastIndex);
 		}
 

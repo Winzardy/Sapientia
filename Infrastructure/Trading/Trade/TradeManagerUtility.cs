@@ -1,0 +1,110 @@
+using System.Collections.Generic;
+using Content;
+using Sapientia.Pooling;
+
+namespace Trading
+{
+	public static partial class TradeManagerUtility
+	{
+		public static IEnumerable<TradeReward> EnumerateActualReward(this ContentReference<TradeConfig> tradeRef, Tradeboard board)
+			=> tradeRef.Read().EnumerateActualReward(board);
+
+		public static IEnumerable<TradeReward> EnumerateActualReward(this TradeConfig trade, Tradeboard board)
+		{
+			using (board.SimulationModeScope())
+			{
+				foreach (var _ in trade.cost.EnumerateActual(board))
+				{
+					// Нужно перебрать цену, так как без ее перебора будет не валидная награда, так как цена может двигать рандом...
+					_.CanExecute(board, out var _);
+				}
+
+				foreach (var actualReward in trade.reward.EnumerateActual(board))
+					yield return actualReward;
+			}
+		}
+
+		public static IEnumerable<TradeCost> EnumerateActualCost(this ContentReference<TradeConfig> tradeRef, Tradeboard board)
+			=> EnumerateActualCost(tradeRef.Read(), board);
+
+		public static IEnumerable<TradeCost> EnumerateActualCost(this TradeConfig trade, Tradeboard board)
+			=> trade.cost.EnumerateActual(board);
+
+		internal static bool CanExecute(this TradeConfig trade, Tradeboard tradeboard, out TradeExecuteError? error)
+		{
+			var result = true;
+			error = null;
+
+			if (!trade.cost.CanExecute(tradeboard, out var payError))
+				result = false;
+
+			if (!trade.reward.CanExecute(tradeboard, out var receiveError))
+				result = false;
+
+			if (!result)
+				error = new TradeExecuteError(payError, receiveError);
+
+			return result;
+		}
+
+		internal static bool Execute(this TradeConfig trade, Tradeboard tradeboard)
+		{
+			// Сначала платим
+			var success = trade.cost.Execute(tradeboard);
+
+			// Если что-то пошло не по плану возвращаем
+			if (!success)
+			{
+				tradeboard.RefundResult();
+				return false;
+			}
+
+			// Потом получаем
+			success = trade.reward.Execute(tradeboard);
+
+			// Если что-то пошло не по плану возвращаем
+			if (!success)
+				tradeboard.RefundResult();
+
+			return success;
+		}
+	}
+
+	public struct TradeExecuteError
+	{
+		public TradePayError? payError;
+		public TradeReceiveError? receiveError;
+
+		public TradeExecuteError(TradePayError? payError, TradeReceiveError? receiveError)
+		{
+			this.payError     = payError;
+			this.receiveError = receiveError;
+		}
+
+		public static TradeExecuteError NotImplemented = new(TradePayError.NotImplemented, TradeReceiveError.NotImplemented);
+		public static TradeExecuteError? NotError => null;
+
+		public override string ToString() => ToString(", ");
+
+		public string ToString(string separator)
+		{
+			using (StringBuilderPool.Get(out var sb))
+			{
+				if (payError.HasValue)
+				{
+					sb.Append(payError);
+
+					if (receiveError.HasValue)
+						sb.Append(separator);
+				}
+
+				if (receiveError.HasValue)
+				{
+					sb.Append(payError);
+				}
+
+				return sb.ToString();
+			}
+		}
+	}
+}

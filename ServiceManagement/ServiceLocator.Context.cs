@@ -68,6 +68,8 @@ namespace Sapientia.ServiceManagement
 		private static TService _currentService = default;
 		private static ContextContainer _currentContext = default;
 
+		public static event Action<TContext, TService> Updated;
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static ServiceLocator()
 		{
@@ -162,6 +164,8 @@ namespace Sapientia.ServiceManagement
 			}
 			else
 				_contextToService[context] = service;
+
+			Updated?.Invoke(context, service);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

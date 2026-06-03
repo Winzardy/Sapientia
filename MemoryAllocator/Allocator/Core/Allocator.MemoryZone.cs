@@ -11,7 +11,7 @@ namespace Sapientia.MemoryAllocator
 	public unsafe partial struct Allocator
 	{
 		[StructLayout(LayoutKind.Sequential)]
-		public readonly struct MemoryZone : IDisposable
+		public readonly struct MemoryZone
 		{
 			public readonly SafePtr memory;
 			public readonly byte* zoneEnd;
@@ -79,7 +79,10 @@ namespace Sapientia.MemoryAllocator
 			_zonesList.Add(zone);
 
 #if UNITY_5_3_OR_NEWER
-			UnityEngine.Debug.LogWarning($"Zone allocated with Size: {zoneSize}");
+			if (_zonesList.count > 1)
+				UnityEngine.Debug.LogWarning($"Zone allocated with Size: {zoneSize}");
+			else
+				UnityEngine.Debug.Log($"Zone allocated with Size: {zoneSize}");
 #endif
 		}
 

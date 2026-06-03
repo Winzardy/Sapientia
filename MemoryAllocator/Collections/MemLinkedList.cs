@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace Sapientia.MemoryAllocator
 {
 	[DebuggerTypeProxy(typeof(MemLinkedList<>.LinkedListProxy))]
-	public struct MemLinkedList<T> : IMemLinkedListEnumerable<T> where T : unmanaged
+	public struct MemLinkedList<T> where T : unmanaged
 	{
 		private struct MemLinkedListData
 		{
@@ -35,10 +35,23 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemLinkedList(WorldState worldState)
 		{
+			this = default;
+			Initialize(worldState);
+		}
+
+		private void Initialize(WorldState worldState)
+		{
 			_data = CachedPtr<MemLinkedListData>.Create(worldState);
 #if DEBUG
 			_worldId = worldState.WorldId;
 #endif
+		}
+
+		private void EnsureInitialize(WorldState worldState)
+		{
+			if (IsValid())
+				return;
+			Initialize(worldState);
 		}
 
 		public MemLinkedListNode<T> GetFirst(WorldState worldState)
@@ -54,6 +67,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemLinkedListNode<T> AddAfter(WorldState worldState, MemLinkedListNode<T> node, T value)
 		{
+			EnsureInitialize(worldState);
 			ValidateNode(worldState, node);
 
 			var result = MemLinkedListNodeData<T>.Create(worldState, this, value);
@@ -63,6 +77,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemLinkedListNode<T> AddBefore(WorldState worldState, MemLinkedListNode<T> node, T value)
 		{
+			EnsureInitialize(worldState);
 			ref var data = ref _data.GetValue(worldState);
 
 			ValidateNode(worldState, node);
@@ -77,6 +92,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemLinkedListNode<T> AddFirst(WorldState worldState, T value)
 		{
+			EnsureInitialize(worldState);
 			ref var data = ref _data.GetValue(worldState);
 
 			var result = MemLinkedListNodeData<T>.Create(worldState, this, value);
@@ -95,6 +111,7 @@ namespace Sapientia.MemoryAllocator
 
 		public MemLinkedListNode<T> AddLast(WorldState worldState, T value)
 		{
+			EnsureInitialize(worldState);
 			ref var data = ref _data.GetValue(worldState);
 
 			var result = MemLinkedListNodeData<T>.Create(worldState, this, value);
@@ -112,10 +129,13 @@ namespace Sapientia.MemoryAllocator
 
 		public void Clear(WorldState worldState)
 		{
+			if (!IsValid())
+				return;
+
 			ref var data = ref _data.GetValue(worldState);
 
 			var current = data.head;
-			while (current.IsValid())
+			for (var i = 0; i < data.count; i++)
 			{
 				var temp = current;
 				current = temp.GetNext(worldState); // use Next the instead of "next", otherwise it will loop forever
@@ -130,6 +150,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			Clear(worldState);
 			_data.Dispose(worldState);
+			this = default;
 		}
 
 		public bool Contains(WorldState worldState, T value)
@@ -187,11 +208,6 @@ namespace Sapientia.MemoryAllocator
 			return default;
 		}
 
-		MemLinkedList<T> IMemLinkedListEnumerable<T>.GetList(WorldState worldState)
-		{
-			return this;
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemLinkedListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
@@ -204,26 +220,26 @@ namespace Sapientia.MemoryAllocator
 			return new MemLinkedListEnumerable<T>(GetEnumerator(worldState));
 		}
 
-		public bool Remove(WorldState worldState, T value)
+		public bool Remove(WorldState worldState, T value, bool disposeIfEmpty = false)
 		{
 			var node = Find(worldState, value);
 			if (node.IsValid())
 			{
-				InternalRemoveNode(worldState, node);
+				InternalRemoveNode(worldState, node, disposeIfEmpty);
 				return true;
 			}
 
 			return false;
 		}
 
-		public void Remove(WorldState worldState, ref MemLinkedListNode<T> node)
+		public void Remove(WorldState worldState, ref MemLinkedListNode<T> node, bool disposeIfEmpty = false)
 		{
 			ValidateNode(worldState, node);
-			InternalRemoveNode(worldState, node);
+			InternalRemoveNode(worldState, node, disposeIfEmpty);
 			node = default;
 		}
 
-		public void RemoveFirst(WorldState worldState)
+		public void RemoveFirst(WorldState worldState, bool disposeIfEmpty = false)
 		{
 			ref var data = ref _data.GetValue(worldState);
 
@@ -232,10 +248,10 @@ namespace Sapientia.MemoryAllocator
 				throw new InvalidOperationException("Попытка удалить ноду из пустого MemLinkedList");
 			}
 
-			InternalRemoveNode(worldState, data.head);
+			InternalRemoveNode(worldState, data.head, disposeIfEmpty);
 		}
 
-		public void RemoveLast(WorldState worldState)
+		public void RemoveLast(WorldState worldState, bool disposeIfEmpty = false)
 		{
 			ref var data = ref _data.GetValue(worldState);
 
@@ -244,7 +260,7 @@ namespace Sapientia.MemoryAllocator
 				throw new InvalidOperationException("Попытка удалить ноду из пустого MemLinkedList");
 			}
 
-			InternalRemoveNode(worldState, data.head.GetPrevious(worldState));
+			InternalRemoveNode(worldState, data.head.GetPrevious(worldState), disposeIfEmpty);
 		}
 
 		private void InternalInsertNodeBefore(WorldState worldState, CachedPtr<MemLinkedListNodeData<T>> node, CachedPtr<MemLinkedListNodeData<T>> newNode)
@@ -277,7 +293,7 @@ namespace Sapientia.MemoryAllocator
 #endif
 		}
 
-		private void InternalRemoveNode(WorldState worldState, CachedPtr<MemLinkedListNodeData<T>> node)
+		private void InternalRemoveNode(WorldState worldState, CachedPtr<MemLinkedListNodeData<T>> node, bool disposeIfEmpty)
 		{
 			ref var data = ref _data.GetValue(worldState);
 			ref var nodeValue = ref node.GetValue(worldState);
@@ -301,6 +317,9 @@ namespace Sapientia.MemoryAllocator
 			node.Dispose(worldState);
 
 			data.count--;
+
+			if (disposeIfEmpty && data.count == 0)
+				_data.Dispose(worldState);
 		}
 
 		internal void ValidateNewNode(WorldState worldState, ref MemLinkedListNodeData<T> node)
@@ -320,21 +339,10 @@ namespace Sapientia.MemoryAllocator
 
 		private void ValidateNode(WorldState worldState, CachedPtr<MemLinkedListNodeData<T>> node)
 		{
-			if (node.IsValid())
-			{
-				throw new ArgumentNullException("node");
-			}
-
-			if (node.GetValue(worldState).list.GetFirst(worldState) == GetFirst(worldState))
-			{
-				throw new InvalidOperationException("В MemLinkedList Была передана некорректная нода.");
-			}
-
+			E.ASSERT(node.IsValid(), "Невалидная нода! Возможно, она уже была удалена или никогда не была добавлена в список.");
+			E.ASSERT(node.GetValue(worldState).list.GetFirst(worldState) == GetFirst(worldState), "Нода принадлежит другому MemLinkedList.");
 #if DEBUG
-			if (_worldId.IsValid() && _worldId != worldState.WorldId)
-			{
-				throw new InvalidOperationException("Попытка использовать MemLinkedList, используя другой WorldState.");
-			}
+			E.ASSERT(_worldId.IsValid() && _worldId == worldState.WorldId, "Попытка использовать MemLinkedList в другом WorldState.");
 #endif
 		}
 
@@ -477,6 +485,15 @@ namespace Sapientia.MemoryAllocator
 		public override int GetHashCode()
 		{
 			return cachedPtr.GetHashCode();
+		}
+	}
+
+	public static class MemLinkedListNodeExt
+	{
+		public static void Remove<T>(this ref MemLinkedListNode<T> node, WorldState worldState, bool disposeIfEmpty = false)
+			where T : unmanaged
+		{
+			node.GetList(worldState).Remove(worldState, ref node, disposeIfEmpty);
 		}
 	}
 }

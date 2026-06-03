@@ -1,34 +1,36 @@
-using System.Collections;
 using System.Collections.Generic;
 using Sapientia.Pooling;
 
 namespace Trading
 {
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonObject] // иначе пытается сериализовать как список
-#endif
-	public sealed partial class TradeCostCollection : IEnumerable<TradeCost>
+	public sealed partial class TradeCostCollection
 	{
 		public override IEnumerator<TradeCost> GetEnumerator()
 		{
+			yield return this;
 			using (ListPool<TradeCost>.Get(out var sorted))
 			{
 				sorted.AddRange(items);
 				sorted.Sort(SortByPriority);
 
 				foreach (var item in sorted)
-					foreach (var cost in item) // ограничение на одну вложенность в системе!
-						yield return cost;
+					yield return item;
 			}
 		}
 
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeCost> EnumerateActualInternal(Tradeboard board)
 		{
-			foreach (var cost in items)
-				foreach (var actualCost in cost.EnumerateActual(board))
-					yield return actualCost;
+			using (ListPool<TradeCost>.Get(out var sorted))
+			{
+				sorted.AddRange(items);
+				sorted.Sort(SortByPriority);
+
+				foreach (var cost in sorted)
+				{
+					foreach (var actualCost in cost.EnumerateActual(board))
+						yield return actualCost;
+				}
+			}
 		}
 	}
 }

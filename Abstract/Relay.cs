@@ -16,7 +16,8 @@ namespace Sapientia
 				OnClear(_source);
 
 			_source = source;
-			OnBind(source);
+			if (source != null)
+				OnBind(source);
 		}
 
 		public void Dispose() => Clear();

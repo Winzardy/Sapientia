@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Sapientia;
 using Sapientia.Extensions;
 using SharedLogic.Internal;
-using SharedLogic.Migration;
 
 namespace SharedLogic
 {
@@ -27,15 +26,15 @@ namespace SharedLogic
 
 		public int Revision => _revision;
 
-		public SharedRoot(ISharedNodesRegistrar registrar, IDateTimeProvider dateTimeProvider, ILogger logger = null)
+		public SharedRoot(ISharedNodesRegistrar registrar, ISystemTimeProvider dateTimeProvider, ILogger logger = null)
 		{
 			_registrar = registrar;
-			_logger = logger;
+			_logger    = logger;
 
 			_registry = new SharedNodeRegistry();
 
 			// Системные ноды
-			_registry.Register(new MigrationSharedNode());
+			//_registry.Register(new MigrationSharedNode());
 			_registry.Register(new TimeSharedNode(dateTimeProvider));
 
 			_registrar.Register(_registry);
@@ -43,7 +42,7 @@ namespace SharedLogic
 
 		public void Dispose()
 		{
-			foreach (var node in _registry.FilterBy<IDisposable>())
+			foreach (var node in _registry.FilterBy<IDisposable>(true))
 				node.Dispose();
 
 			DisposeUtility.DisposeAndSetNull(ref _registry);
@@ -56,8 +55,16 @@ namespace SharedLogic
 
 			_initialized = true;
 
-			foreach (var node in _registry.FilterBy<IInitializableNode>())
-				node.Initialize(this);
+#if CLIENT
+			var timeNode = _registry.GetNode<TimeSharedNode>();
+			using (timeNode.ProviderSuppressScope())
+			{
+#endif
+				foreach (var node in _registry.FilterBy<IInitializableNode>())
+					node.Initialize(this);
+#if CLIENT
+			}
+#endif
 		}
 
 		public T GetNode<T>() where T : class, ISharedNode
@@ -83,22 +90,54 @@ namespace SharedLogic
 
 			_revision++;
 
+			if (SLDebug.Logging.Command.execute && SLDebug.Logging.Command.ShouldLog(command.GetType(), LogKind.Execute))
+			{
+				if (_logger != null)
+				{
+					var msg = $"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})";
+					msg += command.LogMessage;
+					_logger.Log(msg);
+				}
+			}
+		}
+
+		public void OnExecuted(ICommand command)
+		{
+			var commandType = command.GetType();
+			if (SharedTimeUtility.IsTimedCommand(commandType))
+				return;
+
+			_revision++;
+
 			if (SLDebug.Logging.Command.execute)
-				_logger?.Log($"Executed command by type [ {command.GetType().Name} ] (rev: {_revision})");
+				_logger?.Log($"Executed command by type [ {commandType.Name} ] (rev: {_revision})");
 		}
 
 		public void Load(ISharedDataStreamer streamer)
 		{
-			foreach (var node in _registry.FilterBy<IPersistentNode>())
-				node.Load(streamer);
+#if CLIENT
+			var timeNode = _registry.GetNode<TimeSharedNode>();
+			using (timeNode.ProviderSuppressScope())
+			{
+#endif
+				foreach (var node in _registry.FilterBy<IPersistentNode>())
+					node.Load(streamer);
+#if CLIENT
+			}
+#endif
 
 			_revision = streamer.Read<int>(REVISION_KEY);
 
 			Loaded?.Invoke();
+			foreach (var node in _registry.FilterBy<IAfterLoadSharedNode>())
+				node.OnAfterLoad();
 		}
 
 		public void Save(ISharedDataStreamer streamer)
 		{
+			foreach (var node in _registry.FilterBy<IBeforeSaveSharedNode>())
+				node.OnBeforeSave();
+
 			foreach (var node in _registry.FilterBy<IPersistentNode>())
 				node.Save(streamer);
 

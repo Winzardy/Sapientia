@@ -1,5 +1,7 @@
 #nullable disable
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Sapientia.Evaluators
 {
@@ -12,6 +14,9 @@ namespace Sapientia.Evaluators
 	/// Для корневых узлов графа значений рекомендуется использовать <see cref="EvaluatedValue{TContext, TValue}"/>,
 	/// так как он позволяет хранить дешевое константное значение, но внутри так же хранит <see cref="Evaluator{TContext, TValue}"/>
 	/// </remarks>
+#if NEWTONSOFT
+	[Newtonsoft.Json.JsonObject]
+#endif
 	[Serializable]
 	public abstract partial class Evaluator<TContext, TValue> : IEvaluator<TContext, TValue>
 	{
@@ -30,5 +35,12 @@ namespace Sapientia.Evaluators
 			=> new ConstantEvaluator<TContext, TValue>(value);
 
 		public static implicit operator bool(Evaluator<TContext, TValue> evaluator) => evaluator != null;
+
+		public virtual IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }

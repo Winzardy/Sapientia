@@ -8,6 +8,7 @@ namespace Sapientia.Data
 		private event Action ActionEvent = null;
 
 		private int _invocationCount = 0;
+		public int Subs { get; private set; }
 
 		public bool HasSubscribers()
 		{
@@ -84,22 +85,26 @@ namespace Sapientia.Data
 		{
 			using var scope = GetBusyScope();
 			ActionEvent += action;
+			Subs++;
 		}
 
 		public void UnSubscribeInterlocked(Action action)
 		{
 			using var scope = GetBusyScope();
 			ActionEvent -= action;
+			Subs--;
 		}
 
 		public void Subscribe(Action action)
 		{
 			ActionEvent += action;
+			Subs++;
 		}
 
 		public void UnSubscribe(Action action)
 		{
 			ActionEvent -= action;
+			Subs--;
 		}
 
 		public void SubscribeInterlocked(DelayableAction action)
@@ -107,6 +112,7 @@ namespace Sapientia.Data
 			using var scopeA = GetBusyScope();
 			using var scopeB = action.GetBusyScope();
 			ActionEvent += action.ActionEvent;
+			Subs++;
 		}
 
 		public void UnSubscribeInterlocked(DelayableAction action)
@@ -114,16 +120,19 @@ namespace Sapientia.Data
 			using var scopeA = GetBusyScope();
 			using var scopeB = action.GetBusyScope();
 			ActionEvent -= action.ActionEvent;
+			Subs--;
 		}
 
 		public void Subscribe(DelayableAction action)
 		{
 			ActionEvent += action.ActionEvent;
+			Subs++;
 		}
 
 		public void UnSubscribe(DelayableAction action)
 		{
 			ActionEvent -= action.ActionEvent;
+			Subs--;
 		}
 	}
 

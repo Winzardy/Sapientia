@@ -4,7 +4,7 @@ namespace Trading.Result
 	public abstract class TradeCostResultHandle<TCost> : ITradeCostResultHandle<TCost>
 		where TCost : TradeCost
 	{
-		private TCost _source;
+		protected TCost _source;
 
 		TradeCost ITradeCostResultHandle.Source => _source;
 
@@ -13,6 +13,11 @@ namespace Trading.Result
 		void ITradeCostResultHandle<TCost>.Bind(TCost source)
 		{
 			_source = source;
+			OnBind();
+		}
+
+		protected virtual void OnBind()
+		{
 		}
 
 		public abstract ITradeCostResult Bake();

@@ -1,19 +1,20 @@
 using System;
+using System.Collections.Generic;
 #if CLIENT
 using UnityEngine;
 using Sirenix.OdinInspector;
 #endif
 
-public enum ConditionGroupMode
-{
-	Any, // OR
-	All // AND
-}
-
 namespace Sapientia.Conditions
 {
+	public enum ConditionGroupMode
+	{
+		Any, // OR
+		All // AND
+	}
+
 	[Serializable]
-	public abstract class CollectionCondition<T> : InvertableCondition<T>
+	public class CollectionCondition<T> : InvertableCondition<T>
 	{
 		public ConditionGroupMode mode;
 
@@ -27,7 +28,7 @@ namespace Sapientia.Conditions
 				case ConditionGroupMode.Any:
 					for (int i = 0; i < collection.Length; i++)
 					{
-						if (collection[i].Evaluate(context))
+						if (collection[i].IsFulfilled(context))
 							return true;
 					}
 
@@ -35,7 +36,7 @@ namespace Sapientia.Conditions
 				case ConditionGroupMode.All:
 					for (int i = 0; i < collection.Length; i++)
 					{
-						if (!collection[i].Evaluate(context))
+						if (!collection[i].IsFulfilled(context))
 							return false;
 					}
 
@@ -43,6 +44,13 @@ namespace Sapientia.Conditions
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			for (int i = 0; i < collection.Length; i++)
+				yield return collection[i];
 		}
 	}
 }

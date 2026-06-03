@@ -4,38 +4,44 @@ using static SharedLogic.TimeSharedNode;
 
 namespace SharedLogic
 {
-	public class TimeSharedNode : SharedNode<SaveData>
+	public partial class TimeSharedNode : SharedNode<SaveData>, IVirtualTimeProvider
 	{
-		private readonly IDateTimeProvider _timeProvider;
+		private const long TIMESTAMP_TOLERANCE_TICKS = TimeSpan.TicksPerMillisecond * 500;
+
+		private readonly ISystemTimeProvider _timeProvider;
 
 		private TimeSpan _dateTimeOffset;
 		private DateTime _dateTime;
 
 		/// <summary>
-		/// Время без учета смещения!
+		/// Реальное системное время (без игрового смещения)
 		/// </summary>
-		public DateTime DateTimeWithoutOffset
+		public DateTime SystemTime
 		{
 			get
 			{
-#if !CLIENT
-				return _dateTime;
-#else
+#if CLIENT
 				return GetDateTime();
+#else
+				return _dateTime;
 #endif
 			}
 		}
 
-		public DateTime DateTime => DateTimeWithoutOffset + _dateTimeOffset;
+		/// <summary>
+		/// Игровое время (с учетом игрового смещения)
+		/// </summary>
+		public DateTime DateTime { get => SystemTime + Offset; }
 
-#if CLIENT
-		private bool _timeProviderSuppress;
-#endif
+		/// <summary>
+		/// Игровое смещение
+		/// </summary>
+		public TimeSpan Offset { get => _dateTimeOffset; }
 
-		public TimeSharedNode(IDateTimeProvider timeProvider)
+		public TimeSharedNode(ISystemTimeProvider timeProvider)
 		{
 			_timeProvider = timeProvider;
-			_dateTime = _timeProvider.DateTimeWithoutOffset;
+			_dateTime     = _timeProvider.SystemTime;
 		}
 
 		/// <summary>
@@ -43,7 +49,16 @@ namespace SharedLogic
 		/// </summary>
 		internal void AddTimeOffset(TimeSpan offset)
 		{
-			_dateTimeOffset += offset;
+			SetTimeOffset(_dateTimeOffset + offset);
+		}
+
+		/// <summary>
+		/// Увеличивает смещение относительно серверного времени
+		/// </summary>
+		internal void SetTimeOffset(TimeSpan offset)
+		{
+			_dateTimeOffset = offset;
+			SLDebug.Log($"Update dateTime, new: {DateTime} (real: {SystemTime}, offset: {_dateTimeOffset})");
 		}
 
 		/// <summary>
@@ -56,9 +71,42 @@ namespace SharedLogic
 
 		public bool CanSetTimestamp(long timestamp, out TimeSetError? error)
 		{
-			if (_dateTime.Ticks > timestamp)
+			var currentTimestamp = _dateTime.Ticks;
+
+			if (currentTimestamp > timestamp)
 			{
-				error = TimeSetError.Code.TimestampLessThanCurrent;
+				var delta = currentTimestamp - timestamp;
+				if (delta > TIMESTAMP_TOLERANCE_TICKS)
+				{
+					error = new(TimeSetError.Code.TimestampLessThanCurrent)
+					{
+						prevTimestamp = currentTimestamp,
+						nextTimestamp = timestamp
+					};
+					return false;
+				}
+
+				if (delta > 0)
+				{
+					var deltaMs = TimeSpan.FromTicks(delta).TotalMilliseconds;
+
+					SLDebug.LogWarning(
+						"Timestamp regression within tolerance. " +
+						$"Delta: {deltaMs:F2} ms | Current: {currentTimestamp} | Incoming: {timestamp}"
+					);
+				}
+			}
+
+			var nowSystemTimestamp = _timeProvider.SystemTime.Ticks;
+			if (timestamp > nowSystemTimestamp)
+			{
+				error = new(TimeSetError.Code.TimestampGreaterThanSystemTime)
+				{
+					prevTimestamp = currentTimestamp,
+					nextTimestamp = timestamp,
+
+					nowSystemTimestamp = nowSystemTimestamp
+				};
 				return false;
 			}
 
@@ -66,61 +114,41 @@ namespace SharedLogic
 			return true;
 		}
 
+		/// <summary>
+		/// Устанавливает timestamp, гарантируя монотонность.
+		/// Если переданное значение меньше текущего, используется текущее
+		/// </summary>
+		internal void SetTimestampSafe(long timestamp)
+		{
+			var clamp = Math.Max(_dateTime.Ticks, timestamp);
+			SetTimestamp(clamp);
+		}
+
 		internal void SetTimestamp(long timestamp)
 		{
-			_dateTime = new DateTime(timestamp);
+			_dateTime = new DateTime(timestamp, DateTimeKind.Utc);
 		}
-
-#if CLIENT
-		private DateTime GetDateTime()
-		{
-			if (_timeProvider == null || _timeProviderSuppress)
-				return _dateTime;
-
-			return _timeProvider.DateTimeWithoutOffset;
-		}
-
-		public TimeProviderSuppressFlow ProviderSuppressScope() => new(this);
-		internal void SuppressTimeProvider(bool value) => _timeProviderSuppress = value;
-#endif
 
 		protected override void OnLoad(in SaveData data)
 		{
 			_dateTimeOffset = new TimeSpan(data.timestampOffset);
-			_dateTime = data.timestamp == 0 ? new DateTime(data.timestamp) : _timeProvider.DateTimeWithoutOffset;
+			_dateTime = data.timestamp != 0
+				? new DateTime(data.timestamp, DateTimeKind.Utc)
+				: _timeProvider.SystemTime;
 		}
 
 		protected override void OnSave(out SaveData data)
 		{
 			data.timestampOffset = _dateTimeOffset.Ticks;
-			data.timestamp = _dateTime.Ticks;
+			data.timestamp       = _dateTime.Ticks;
 		}
 
-		[Serializable]
 		public struct SaveData
 		{
 			public long timestamp;
 			public long timestampOffset;
 		}
 	}
-
-#if CLIENT
-	public readonly ref struct TimeProviderSuppressFlow
-	{
-		private readonly TimeSharedNode _node;
-
-		public TimeProviderSuppressFlow(TimeSharedNode node)
-		{
-			_node = node;
-			_node.SuppressTimeProvider(true);
-		}
-
-		public void Dispose()
-		{
-			_node.SuppressTimeProvider(false);
-		}
-	}
-#endif
 
 	public static class SharedTimeUtility
 	{
@@ -132,15 +160,24 @@ namespace SharedLogic
 
 		public static DateTime GetDateTimeWithoutOffset(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
-			   .DateTimeWithoutOffset;
+				.SystemTime;
 
 		public static DateTime GetDateTime(this ISharedRoot root)
 			=> root.GetNode<TimeSharedNode>()
-			   .DateTime;
+				.DateTime;
+
+		public static TimeSpan GetDateTimeOffset(this ISharedRoot root)
+			=> root.GetNode<TimeSharedNode>()
+				.Offset;
 
 		public static bool IsTimedCommand<T>(in T command) where T : struct, ICommand
 		{
-			return typeof(T) == typeof(TimeSetCommand);
+			return IsTimedCommand(typeof(T));
+		}
+
+		public static bool IsTimedCommand(Type commandType)
+		{
+			return commandType == typeof(TimeSetCommand);
 		}
 	}
 
@@ -150,10 +187,16 @@ namespace SharedLogic
 		{
 			None,
 
-			TimestampLessThanCurrent
+			TimestampLessThanCurrent,
+			TimestampGreaterThanSystemTime,
 		}
 
 		public readonly Code code;
+
+		public long prevTimestamp;
+		public long nextTimestamp;
+
+		public long nowSystemTimestamp;
 
 		public TimeSetError(Code code) : this()
 		{
@@ -162,6 +205,20 @@ namespace SharedLogic
 
 		public static implicit operator TimeSetError(Code code) => new(code);
 
-		public override string ToString() => $"Can't set timestamp with code [ {code} ]";
+		public override string ToString()
+		{
+			var prev = new DateTime(prevTimestamp, DateTimeKind.Utc);
+			var next = new DateTime(nextTimestamp, DateTimeKind.Utc);
+			if (code == Code.TimestampGreaterThanSystemTime)
+			{
+				var now = new DateTime(nowSystemTimestamp, DateTimeKind.Utc);
+				return $"Can't set timestamp with code [ {code} ] (" +
+					$"prev: {prev:HH:mm:ss yyyy-MM-dd} [ {prevTimestamp} ], " +
+					$"-> next: {next:HH:mm:ss yyyy-MM-dd} [ {nextTimestamp} ], " +
+					$"now: {now:HH:mm:ss yyyy-MM-dd} [ {nextTimestamp} ])";
+			}
+
+			return $"Can't set timestamp with code [ {code} ] (prev: {prev:HH:mm:ss yyyy-MM-dd} [ {prevTimestamp} ], -> next: {next:HH:mm:ss yyyy-MM-dd} [ {nextTimestamp} ])";
+		}
 	}
 }

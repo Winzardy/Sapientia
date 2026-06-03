@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Content
 {
-	[Conditional("CLIENT")]
+	[Conditional("UNITY_EDITOR")]
 	public class ClientOnlyAttribute : Attribute
 	{
 	}

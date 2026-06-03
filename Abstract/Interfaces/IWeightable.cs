@@ -1,15 +1,23 @@
-﻿using Sapientia.Evaluators;
+﻿using System;
+using Sapientia.Evaluators;
 
 namespace Sapientia
 {
 	//TODO: сделать полоску отображения весов перед коллекцией<IWeightable>
 	public interface IWeightable
 	{
-		public int Weight { get; }
+		int Weight { get; }
 	}
 
-	public interface IWeightableWithEvaluator<TContext>
+	public interface IWeightableWithContext : IWeightable // Наследование от IWeightable хак для редактора
 	{
-		public EvaluatedValue<TContext, int> Weight { get; }
+		Type ContextType { get; }
+	}
+
+	public interface IWeightable<TContext> : IWeightableWithContext
+	{
+		Type IWeightableWithContext.ContextType { get => typeof(TContext); }
+
+		EvaluatedValue<TContext, int> EvaluatedWeight { get; }
 	}
 }

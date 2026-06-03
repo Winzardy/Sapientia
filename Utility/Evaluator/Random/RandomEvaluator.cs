@@ -5,7 +5,6 @@ namespace Sapientia.Evaluators
 	[Serializable]
 	public abstract class RandomEvaluator<TContext, TValue> : Evaluator<TContext, TValue>, IRandomEvaluator<TValue>
 		where TValue : struct, IComparable<TValue>
-
 	{
 		protected sealed override TValue OnEvaluate(TContext context)
 		{

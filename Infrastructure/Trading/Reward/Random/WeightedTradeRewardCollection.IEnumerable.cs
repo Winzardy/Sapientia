@@ -1,30 +1,26 @@
-using System.Collections;
 using System.Collections.Generic;
 using Sapientia;
-using Trading.Result;
 
 namespace Trading
 {
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonObject] // иначе пытается сериализовать как список
-#endif
-	public partial class WeightedTradeRewardCollection : IEnumerable<TradeReward>
+	public partial class WeightedTradeRewardCollection
 	{
 		public override IEnumerator<TradeReward> GetEnumerator()
 		{
-			foreach (var item in items)
-				foreach (var reward in item.reward)
-					yield return reward;
+			yield return this;
+			for (var i = 0; i < items.Length; i++)
+				yield return items[i].reward;
 		}
 
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> EnumerateActualInternal(Tradeboard board)
 		{
 			var randomizer = board.Get<IRandomizer<int>>();
-			items.Roll<WeightedReward, Blackboard>(board, randomizer, out var index);
-			foreach (var reward in items[index].reward.EnumerateActual(board))
-				yield return reward;
+			var evaluatedCount = count.Evaluate(board);
+			foreach (var index in items.RollMany<TradeWeightedRewardItem, Blackboard>(board, rollMode, evaluatedCount, randomizer))
+			{
+				foreach (var reward in items[index].reward.EnumerateActualInternal(board))
+					yield return reward;
+			}
 		}
 	}
 }

@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public static unsafe class EntityExt
+	public static class EntityExt
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsExist(this Entity entity, WorldState worldState)
@@ -73,15 +73,21 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T Get<T>(this ref Entity entity, out bool isCreated) where T: unmanaged, IComponent
+		public static ref T Get<T>(this ref Entity entity, out bool isExist) where T: unmanaged, IComponent
 		{
-			return ref entity.Get<T>(entity.GetWorldState(), out isCreated);
+			return ref entity.Get<T>(entity.GetWorldState(), out isExist);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T Get<T>(this Entity entity, WorldState worldState, out bool isCreated) where T: unmanaged, IComponent
+		public static ref T Get<T>(this Entity entity, WorldState worldState, out bool isExist) where T: unmanaged, IComponent
 		{
-			return ref worldState.GetComponentSet<T>().GetElement<T>(worldState, entity, out isCreated);
+			return ref worldState.GetComponentSet<T>().GetElement<T>(worldState, entity, out isExist);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T TryGet<T>(this Entity entity, WorldState worldState, out bool success) where T: unmanaged, IComponent
+		{
+			return ref worldState.GetComponentSet<T>().TryGetElement<T>(worldState, entity, out success);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

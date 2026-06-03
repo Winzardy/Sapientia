@@ -26,6 +26,10 @@ namespace Trading
 
 	public class FreeTradeCostResult : ITradeCostResult
 	{
+		public void Refund(Tradeboard board)
+		{
+			// Бесплатно жи
+		}
 	}
 
 	public class FreeTradeCostResultHandle : TradeCostResultHandle<FreeTradeCost>

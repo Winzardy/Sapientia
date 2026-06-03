@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Submodules.Sapientia.Data
 {
+	[Serializable]
 	public struct Id<T> : IEquatable<Id<T>>
 	{
 		public static readonly Id<T> Invalid = new Id<T>
@@ -88,6 +89,11 @@ namespace Submodules.Sapientia.Data
 		public override int GetHashCode()
 		{
 			return id.GetHashCode();
+		}
+
+		public override string ToString()
+		{
+			return id.ToString();
 		}
 	}
 }

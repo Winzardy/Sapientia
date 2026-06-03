@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Content;
+using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Pooling;
 using Trading.Result;
@@ -15,23 +16,19 @@ namespace Trading
 		/// <summary>
 		/// Результативный список наград который в итоге получается при текущем состоянии (на момент запроса)
 		/// </summary>
-		public static IEnumerable<TradeReward> EnumerateActual(this TradeReward reward, Tradeboard board)
+		public static IEnumerable<TradeReward> EnumerateActual(this TradeReward rootReward, Tradeboard board)
 		{
-			using (board.DummyModeScope())
-				foreach (var actualReward in reward.EnumerateActual(board))
-					yield return actualReward;
+			using (board.SimulationModeScope())
+				foreach (var reward in rootReward.EnumerateActualInternal(board))
+					yield return reward;
 		}
 
-		public static TradeReward[] GetAllRawReward(this TradeReward reward)
+		public static IEnumerable<TradeReward> EnumerateAll(this TradeReward rootReward)
 		{
-			using (ListPool<TradeReward>.Get(out var list))
+			using (HashSetPool<TradeReward>.Get(out var path))
 			{
-				foreach (var r in reward)
-				{
-					list.Add(r);
-				}
-
-				return list.ToArray();
+				foreach (var reward in EnumerateAll(rootReward, path))
+					yield return reward;
 			}
 		}
 
@@ -49,52 +46,110 @@ namespace Trading
 			return board.RegisterRewardHandle<TReward, THandle>(source);
 		}
 
-		public static IEnumerable<ITradeRewardResult> ExpandAll(this ITradeRewardResult[] results)
+		public static IEnumerable<ITradeRewardResult> ExpandAll(this ITradeRewardResult[] results, bool forceFullExpansion = false)
 		{
 			if (results.IsNullOrEmpty())
 				yield break;
 
-			foreach (var result in results)
+			using (Pool<Blackboard>.Get(out var blackboard))
 			{
-				if (result is IEnumerable<ITradeRewardResult> enumerable)
+				blackboard.Register(forceFullExpansion, ITradeRewardResult.FORCE_FULL_EXPANSION_KEY);
+				foreach (var result in results)
 				{
-					foreach (var child in ExpandAll(enumerable))
-						yield return child;
-				}
-				else
-				{
-					yield return result;
+					if (result is IEnumerableWithBoard<ITradeRewardResult> enumerableWithBoard)
+					{
+						foreach (var child in ExpandAll(enumerableWithBoard, blackboard))
+							yield return child;
+					}
+					else if (result is IEnumerable<ITradeRewardResult> enumerable)
+					{
+						foreach (var child in ExpandAll(enumerable, blackboard))
+							yield return child;
+					}
+					else
+					{
+						yield return result;
+					}
 				}
 			}
 		}
 
-		public static IEnumerable<ITradeRewardResult> ExpandAll(this IEnumerable<ITradeRewardResult> results)
+		private static IEnumerable<ITradeRewardResult> ExpandAll(this IEnumerableWithBoard<ITradeRewardResult> results, Blackboard board)
+		{
+			using (HashSetPool<ITradeRewardResult>.Get(out var visited))
+			{
+				using var enumerator = results.GetEnumerator(board);
+				while (enumerator.MoveNext())
+				{
+					foreach (var result in ExpandAllInternal(enumerator.Current, board, visited))
+						yield return result;
+				}
+			}
+		}
+
+		private static IEnumerable<ITradeRewardResult> ExpandAll(this IEnumerable<ITradeRewardResult> results, Blackboard board)
 		{
 			if (results.IsNullOrEmpty())
 				yield break;
 
-			foreach (var result in results)
+			using (HashSetPool<ITradeRewardResult>.Get(out var visited))
 			{
-				if (result is IEnumerable<ITradeRewardResult> enumerable)
-				{
-					foreach (var child in ExpandAll(enumerable))
-						yield return child;
-				}
-				else
-				{
+				foreach (var result in ExpandAllInternal(results, board, visited))
 					yield return result;
-				}
 			}
 		}
 
-		public static IEnumerable<ITradeRewardResult> MergeAll(this ITradeRewardResult[] results)
+		private static IEnumerable<ITradeRewardResult> ExpandAllInternal(
+			IEnumerable<ITradeRewardResult> results,
+			Blackboard board,
+			HashSet<ITradeRewardResult> visited)
+		{
+			foreach (var result in results)
+			{
+				foreach (var child in ExpandAllInternal(result, board, visited))
+					yield return child;
+			}
+		}
+
+		private static IEnumerable<ITradeRewardResult> ExpandAllInternal(
+			ITradeRewardResult result,
+			Blackboard board,
+			HashSet<ITradeRewardResult> visited)
+		{
+			if (!visited.Add(result))
+			{
+				yield return result;
+				yield break;
+			}
+
+			if (result is IEnumerableWithBoard<ITradeRewardResult> nestedWithBoard)
+			{
+				using var enumerator = nestedWithBoard.GetEnumerator(board);
+				while (enumerator.MoveNext())
+				{
+					foreach (var child in ExpandAllInternal(enumerator.Current, board, visited))
+						yield return child;
+				}
+			}
+			else if (result is IEnumerable<ITradeRewardResult> nested)
+			{
+				foreach (var child in ExpandAllInternal(nested, board, visited))
+					yield return child;
+			}
+			else
+			{
+				yield return result;
+			}
+		}
+
+		public static IEnumerable<ITradeRewardResult> MergeAll(this ITradeRewardResult[] results, bool forceFullExpansion = false)
 		{
 			if (results.IsNullOrEmpty())
 				yield break;
 
 			using (ListPool<ITradeRewardResult>.Get(out var expanded))
 			{
-				foreach (var e in results.ExpandAll())
+				foreach (var e in results.ExpandAll(forceFullExpansion))
 					expanded.Add(e);
 
 				if (expanded.Count == 0)
@@ -119,6 +174,22 @@ namespace Trading
 
 				for (int k = 0; k < expanded.Count; k++)
 					yield return expanded[k];
+			}
+		}
+
+		private static IEnumerable<TradeReward> EnumerateAll(this TradeReward reward, HashSet<TradeReward> visited)
+		{
+			if (reward == null)
+				yield break;
+
+			if (!visited.Add(reward))
+				yield break;
+
+			yield return reward;
+			foreach (var child in reward)
+			{
+				foreach (var nested in EnumerateAll(child, visited))
+					yield return nested;
 			}
 		}
 	}

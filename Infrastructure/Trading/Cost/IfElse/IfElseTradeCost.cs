@@ -14,7 +14,7 @@ namespace Trading
 	public partial class IfElseTradeCost : TradeCost
 	{
 		[SerializeReference]
-		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
+		public Condition<Blackboard> condition;
 
 		[SerializeReference]
 		[TradeAccess(TradeAccessType.ByParent)]
@@ -41,7 +41,7 @@ namespace Trading
 
 		#region Enumerate
 
-		public override IEnumerable<TradeCost> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeCost> EnumerateActualInternal(Tradeboard board)
 		{
 			if (condition.IsFulfilled(board))
 			{
@@ -53,6 +53,13 @@ namespace Trading
 				foreach (var cost in b.EnumerateActual(board))
 					yield return cost;
 			}
+		}
+
+		public override IEnumerator<TradeCost> GetEnumerator()
+		{
+			yield return this;
+			yield return a;
+			yield return b;
 		}
 
 		#endregion

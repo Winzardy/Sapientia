@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using Sapientia.Collections;
 using Sapientia.Pooling;
-using Sapientia.Pooling.Concurrent;
 
 namespace SharedLogic
 {
@@ -14,11 +13,6 @@ namespace SharedLogic
 	public interface ISharedNodesRegistrar
 	{
 		public void Register(ISharedNodeRegistry registry);
-	}
-
-	public interface ISharedNodesRegistrarFactory
-	{
-		public ISharedNodesRegistrar Create();
 	}
 
 	/// <summary>
@@ -48,7 +42,7 @@ namespace SharedLogic
 		{
 			_index = Interlocked.Increment(ref _i) - 1;
 
-			_nodes = ListPool<ISharedNode>.Get();
+			_nodes    = ListPool<ISharedNode>.Get();
 			_idToNode = DictionaryPool<string, ISharedNode>.Get();
 		}
 
@@ -60,14 +54,17 @@ namespace SharedLogic
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _idToNode);
 		}
 
-		internal IEnumerable<T> FilterBy<T>()
+		internal IEnumerable<T> FilterBy<T>(bool reverse = false)
 		{
 			if (_nodes.IsNullOrEmpty())
 				yield break;
 
-			foreach (var node in _nodes)
+			var index = reverse ? _nodes.Count - 1 : 0;
+			var end = reverse ? -1 : _nodes.Count;
+			var step = reverse ? -1 : 1;
+			for (; index != end; index += step)
 			{
-				if (node is T filteredNode)
+				if (_nodes[index] is T filteredNode)
 					yield return filteredNode;
 			}
 		}

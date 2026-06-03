@@ -57,7 +57,7 @@ namespace Trading
 					{
 						if (!reward.Execute(board))
 						{
-							Return(board, received);
+							board.RefundResult();
 							return false;
 						}
 
@@ -69,7 +69,7 @@ namespace Trading
 				catch (Exception e)
 				{
 					TradingDebug.LogException(e);
-					Return(board, received);
+					board.RefundResult();
 					throw;
 				}
 			}

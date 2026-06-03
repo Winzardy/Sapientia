@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Sapientia.Data;
@@ -10,7 +8,7 @@ using Submodules.Sapientia.Memory;
 namespace Sapientia.Collections
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct UnsafeSparseSet<T> : IEnumerable<(int id, T value)> where T: unmanaged
+	public struct UnsafeSparseSet<T> where T: unmanaged
 	{
 		public readonly int expandStep;
 
@@ -68,6 +66,12 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly ReadOnlySpan<int> GetIdsSpan()
+		{
+			return _dense.ptr.GetSpan(_count);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly Span<T> GetValuesSpan()
 		{
 			return _values.ptr.GetSpan(_count);
@@ -94,7 +98,7 @@ namespace Sapientia.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetByDenseId(int denseId)
 		{
-			return ref  _values[denseId];
+			return ref _values[denseId];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -119,6 +123,9 @@ namespace Sapientia.Collections
 			return denseId < _count && _dense[denseId] == id;
 		}
 
+		/// <summary>
+		/// Возвращает элемент если он существует, если нет - создаёт новый
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T EnsureGet(int id)
 		{
@@ -134,9 +141,58 @@ namespace Sapientia.Collections
 			return ref _values[denseId];
 		}
 
+		/// <summary>
+		/// Возвращает элемент если он существует, если нет - создаёт новый
+		/// </summary>
+		/// <param name="isExist"> true - если элемент уже существует, false - если элемент был только что создан </param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ref T EnsureGet(int id, out bool isExist)
+		{
+			ExpandSparseIfNeeded(id + 1);
+			ref var denseId = ref _sparse[id];
+
+			isExist = denseId < _count && _dense[denseId] == id;
+			if (!isExist)
+			{
+				ExpandIfNeeded( _count + 1);
+				_dense[_count] = id;
+				denseId = _count++;
+			}
+
+			return ref _values[denseId];
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveSwapBack(int id)
 		{
+			if (id >= _sparse.Length)
+				return false;
+			var denseId = _sparse[id];
+			if (denseId >= _count)
+				return false;
+
+			var denseRaw = _dense.ptr;
+			if (denseRaw[denseId] != id)
+				return false;
+
+			var sparseId = denseRaw[denseId] = denseRaw[--_count];
+			_sparse[sparseId] = denseId;
+
+			ref var valueA = ref (_values.ptr + denseId).Value();
+			ref var valueB = ref (_values.ptr + _count).Value();
+
+			valueA = valueB;
+			valueB = default;
+
+			E.ASSERT(_count >= 0);
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool RemoveSwapBack(int id, out T removedValue)
+		{
+			removedValue = default;
+
 			if (id >= _sparse.Length)
 				return false;
 			var denseId = _sparse[id];
@@ -243,17 +299,7 @@ namespace Sapientia.Collections
 			return new Enumerator(this);
 		}
 
-		IEnumerator<(int id, T value)> IEnumerable<(int id, T value)>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		public struct Enumerator : IEnumerator<(int id, T value)>
+		public ref struct Enumerator
 		{
 			private int _index;
 
@@ -283,16 +329,10 @@ namespace Sapientia.Collections
 				_index = -1;
 			}
 
-			public (int id, T value) Current
+			public ref T Current
 			{
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => (_dense[_index], _values[_index]);
-			}
-
-			object IEnumerator.Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => Current;
+				get => ref _values[_index];
 			}
 
 			public void Dispose()

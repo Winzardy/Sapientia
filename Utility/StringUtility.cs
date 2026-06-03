@@ -26,7 +26,7 @@ namespace Sapientia.Extensions
 			return string.Format(format, args);
 		}
 
-		public static bool IsNullOrWhiteSpace(this string? str)
+		public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? str)
 		{
 			return string.IsNullOrWhiteSpace(str);
 		}

@@ -75,40 +75,57 @@ namespace Trading
 			if (_restoreSources != null && _restoreSources.IsEmpty())
 				BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
 		}
-
-		protected override Exception GetArgumentException(object msg) => TradingDebug.logger?.Exception(msg) ??
-			base.GetArgumentException(msg);
 	}
 
 	public static class TradeboardUtility
 	{
+		private const string SUPPRESS_BIND_WARNING_KEY = "suppress_bind_warning";
+
 		public static string GetTradeId(this in ContentReference<TradeCost> reference) => reference.guid;
 		public static string GetTradeId(this in ContentReference<TradeReward> reference) => reference.guid;
 		public static string GetTradeId(this ContentEntry<TradeCost> reference) => reference.Guid;
 
 		public static void Bind(this Tradeboard board, in ContentReference<TradeCost> reference)
 		{
-			Bind(board, reference.GetTradeId());
+			Bind(board, reference.GetTradeId(), false);
 		}
 
 		public static void Bind(this Tradeboard board, in ContentReference<TradeReward> reference)
 		{
-			Bind(board, reference.GetTradeId());
+			Bind(board, reference.GetTradeId(), false);
 		}
 
 		public static void Bind(this Tradeboard board, in ContentEntry<TradeCost> reference)
 		{
-			Bind(board, reference.GetTradeId());
+			Bind(board, reference.GetTradeId(), false);
 		}
 
 		public static void Bind(this Tradeboard board, in TradeConfig config)
 		{
-			Bind(board, config.Id);
+			Bind(board, config.Id, false);
 		}
 
-		public static void Bind(this Tradeboard board, string tradeId)
+		public static void Bind(this Tradeboard board, string tradeId, bool warning = true)
 		{
-			board.SetId(tradeId);
+			var skip = board.TryGet<bool>(SUPPRESS_BIND_WARNING_KEY, out var value) && value;
+			if (board.Id.IsNullOrEmpty())
+			{
+				board.SetId(tradeId);
+			}
+			else if (warning && !skip)
+			{
+				TradingDebug.LogWarning($"Tradeboard is already bound to '{board.Id}', attempted to bind '{tradeId}'");
+			}
+		}
+
+		public static void Unbind(this Tradeboard board)
+		{
+			board.SetId(null);
+		}
+
+		public static IDisposable SuppressBindWarning(this Tradeboard board)
+		{
+			return board.Register(true, SUPPRESS_BIND_WARNING_KEY);
 		}
 	}
 }

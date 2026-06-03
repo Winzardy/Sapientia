@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -8,8 +7,12 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial class World : IDisposable
+	public partial class World
 	{
+#if CLIENT
+		public UnityEngine.SceneManagement.Scene? scene;
+#endif
+
 		public bool ScheduleLateUpdate { get; private set; }
 
 		public WorldState worldState;
@@ -36,21 +39,22 @@ namespace Sapientia.MemoryAllocator
 			worldState.GetOrRegisterService<WorldElementsService>() = new WorldElementsService(worldState, elementsCapacity);
 		}
 
-		public void Initialize(IEnumerable<ProxyPtr<IWorldStatePartProxy>> stateParts, IEnumerable<ProxyPtr<IWorldSystemProxy>> systems)
+		public void Initialize(
+			IEnumerable<WorldService<IWorldStatePartProxy>> stateParts,
+			IEnumerable<WorldService<IWorldSystemProxy>> systems)
 		{
 			using var scope = worldState.GetWorldScope();
-			using var updateScope = worldState.GetUpdateScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
 			foreach (var statePart in stateParts)
 			{
-				elementsService.AddWorldElement(worldState, statePart.ToProxy<IWorldElementProxy>());
+				elementsService.AddWorldElement(worldState, statePart.proxy.ToProxy<IWorldElementProxy>(), statePart.typeId);
 			}
 
 			foreach (var system in systems)
 			{
-				elementsService.AddWorldSystem(worldState, system);
+				elementsService.AddWorldSystem(worldState, system.proxy, system.typeId);
 			}
 
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
@@ -71,7 +75,6 @@ namespace Sapientia.MemoryAllocator
 			E.ASSERT(!IsStarted);
 
 			using var scope = worldState.GetWorldScope();
-			using var updateScope = worldState.GetUpdateScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
@@ -98,7 +101,6 @@ namespace Sapientia.MemoryAllocator
 
 			using var scope = worldState.GetWorldScope();
 
-			using var updateScope = worldState.GetUpdateScope();
 			worldState.Tick++;
 			worldState.Time += deltaTime;
 
@@ -128,7 +130,6 @@ namespace Sapientia.MemoryAllocator
 			ScheduleLateUpdate = false;
 
 			using var scope = worldState.GetWorldScope();
-			using var updateScope = worldState.GetUpdateScope();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
@@ -152,12 +153,18 @@ namespace Sapientia.MemoryAllocator
 		public void Dispose()
 		{
 			using var scope = worldState.GetWorldScope();
-			using var updateScope = worldState.GetUpdateScope();
 
-			LocalStatePartService.Dispose(worldState);
 			SendBeginDisposeMessage();
 
 			ref var elementsService = ref worldState.GetService<WorldElementsService>();
+
+			LocalStatePartService.BeforeDispose(worldState);
+			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
+			{
+				element.BeforeDispose(worldState, worldState, element);
+			}
+
+			LocalStatePartService.Dispose(worldState);
 			foreach (ref var element in elementsService.worldElements.GetEnumerable(worldState))
 			{
 				element.Dispose(worldState, worldState, element);
@@ -171,23 +178,35 @@ namespace Sapientia.MemoryAllocator
 		public static implicit operator WorldState(World world) => world.worldState;
 	}
 
+	public static class WorldManagedServiceExtensions
+	{
+		public static T GetService<T>(this World world) where T : class, IWorldLocalService
+			=> world.worldState.GetServiceClass<T>();
+	}
+
+	public static class WorldServiceExtensions
+	{
+		public static ref T GetService<T>(this World world) where T : unmanaged, IWorldService
+			=> ref world.worldState.GetService<T>();
+
+		public static SafePtr<T> GetServicePtr<T>(this World world) where T : unmanaged, IWorldService
+			=> world.worldState.GetServicePtr<T>();
+	}
+
+	public static class WorldLocalUnmanagedServiceExtensions
+	{
+		public static ref T GetService<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService
+			=> ref world.worldState.GetService<T>();
+
+		public static SafePtr<T> GetServicePtr<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService
+			=> world.worldState.GetServicePtr<T>();
+
+		public static ref T GetOrCreateService<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
+			=> ref world.worldState.GetOrCreateService<T>();
+	}
+
 	public static class WorldExtensions
 	{
-		public static T GetService<T>(this World world)
-			where T : class, IIndexedType
-			=> world.worldState.GetServiceClass<T>();
-
-		public static ref T Get<T>(this World world, ServiceType type = ServiceType.WorldState)
-			where T : unmanaged, IIndexedType
-			=> ref world.worldState.GetService<T>(type);
-
-		public static SafePtr<T> GetPtr<T>(this World world, ServiceType type = ServiceType.WorldState)
-			where T : unmanaged, IIndexedType
-			=> world.worldState.GetServicePtr<T>(type);
-
-		public static ref T GetOrCreate<T>(this World world, ServiceType type = ServiceType.WorldState)
-			where T : unmanaged, IInitializableService
-			=> ref world.worldState.GetOrCreateService<T>(type);
 
 		[CanBeNull]
 		public static World ToWorld(this Entity entity)
@@ -196,6 +215,15 @@ namespace Sapientia.MemoryAllocator
 				return null;
 
 			return WorldManager.GetWorld(entity.worldId);
+		}
+
+		[CanBeNull]
+		public static World ToWorld(this WorldState worldState)
+		{
+			if (!worldState.IsValid)
+				return null;
+
+			return WorldManager.GetWorld(worldState.WorldId);
 		}
 
 		public static bool IsValid(this Entity entity)

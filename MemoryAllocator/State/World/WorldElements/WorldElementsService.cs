@@ -2,7 +2,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public struct WorldElementsService : IIndexedType
+	public struct WorldElementsService : IWorldService
 	{
 		public MemList<ProxyPtr<IWorldElementProxy>> worldElements;
 		public MemList<ProxyPtr<IWorldSystemProxy>> worldSystems;
@@ -13,15 +13,15 @@ namespace Sapientia.MemoryAllocator
 			worldSystems = new (worldState, elementsCapacity);
 		}
 
-		public void AddWorldElement(WorldState worldState, ProxyPtr<IWorldElementProxy> element)
+		public void AddWorldElement(WorldState worldState, ProxyPtr<IWorldElementProxy> element, TypeId<IWorldService> typeId)
 		{
 			worldElements.Add(worldState, element);
-			worldState.RegisterService(element);
+			worldState.RegisterService(typeId, (IndexedPtr)element);
 		}
 
-		public void AddWorldSystem(WorldState worldState, ProxyPtr<IWorldSystemProxy> system)
+		public void AddWorldSystem(WorldState worldState, ProxyPtr<IWorldSystemProxy> system, TypeId<IWorldService> typeId)
 		{
-			AddWorldElement(worldState, system.ToProxy<IWorldElementProxy>());
+			AddWorldElement(worldState, system.ToProxy<IWorldElementProxy>(), typeId);
 			worldSystems.Add(worldState, system);
 		}
 	}

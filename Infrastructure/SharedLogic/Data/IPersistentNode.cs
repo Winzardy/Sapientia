@@ -8,20 +8,30 @@ namespace SharedLogic
 	{
 		Type IPersistentNode.DataType => typeof(TData);
 
-		void IPersistentNode.Load(ISharedDataStreamer streamer)
+		void IPersistentNode.Load(ISharedDataReader reader)
 		{
-			var data = streamer.Read<TData>(Id);
+			var data = reader.Read<TData>(Id);
 			Load(in data);
 		}
 
-		void IPersistentNode.Save(ISharedDataStreamer streamer)
+		void IPersistentNode.Save(ISharedDataWriter writer)
 		{
 			Save(out var data);
-			streamer.Write(Id, in data);
+			writer.Write(Id, in data);
 		}
 
 		public void Load(in TData data);
 		public void Save(out TData data);
+	}
+
+	public interface IAfterLoadSharedNode : ISharedNode
+	{
+		void OnAfterLoad();
+	}
+
+	public interface IBeforeSaveSharedNode : ISharedNode
+	{
+		void OnBeforeSave();
 	}
 }
 
@@ -34,8 +44,8 @@ namespace SharedLogic.Internal
 	public interface IPersistentNode : ISharedNode
 	{
 		public Type DataType { get; }
-		internal void Load(ISharedDataStreamer streamer);
-		internal void Save(ISharedDataStreamer streamer);
+		public void Load(ISharedDataReader reader);
+		public void Save(ISharedDataWriter writer);
 		string Id { get; }
 	}
 }

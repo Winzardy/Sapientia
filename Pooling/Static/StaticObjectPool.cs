@@ -1,9 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace Sapientia.Pooling
 {
-	public sealed class StaticObjectPool<T> : StaticProvider<ObjectPool<T>>
+	public sealed class StaticObjectPool<T> : StaticWrapper<ObjectPool<T>>
 		where T : class
 	{
 		private static ObjectPool<T> pool
@@ -30,7 +33,7 @@ namespace Sapientia.Pooling
 		internal static void Initialize<T>(IObjectPoolPolicy<T> policy) where T : class
 		{
 			if (!StaticObjectPool<T>.IsInitialized)
-				StaticObjectPool<T>.Initialize(new(policy));
+				StaticObjectPool<T>.Set(new(policy));
 		}
 
 		internal static PooledObject<T> Get<T>(out T result) where T : class
@@ -65,6 +68,21 @@ namespace Sapientia.Pooling
 				return;
 
 			ReleaseAndSetNull(ref obj);
+		}
+
+		public static void ReleaseDisposableListAndSetNull<T>(ref List<T> list, Action<T>? onDispose = null)
+			where T : IDisposable
+		{
+			list.DisposeElements(onDispose);
+			StaticObjectPool<List<T>>.Release(list);
+			list = null!;
+		}
+
+		public static void ReleaseListWithTryDisposeAndSetNull<T>(ref List<T> list, Action<T>? onDispose = null)
+		{
+			list.TryDisposeElements(onDispose);
+			StaticObjectPool<List<T>>.Release(list);
+			list = null!;
 		}
 	}
 }

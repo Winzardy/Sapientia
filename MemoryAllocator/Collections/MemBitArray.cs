@@ -4,516 +4,6 @@ using Submodules.Sapientia.Memory;
 
 namespace Sapientia.MemoryAllocator
 {
-	internal unsafe struct Bitwise
-	{
-		private const int _ulongSize = sizeof(ulong);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int GetMinLength(int bitsCount1, int bitsCount2)
-		{
-			var length = GetLength(bitsCount1).Min(GetLength(bitsCount2));
-			return length;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int GetMaxLength(int bitsCount1, int bitsCount2)
-		{
-			var length = GetLength(bitsCount1).Max(GetLength(bitsCount2));
-			return length;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int GetLength(int bitsCount)
-		{
-			return AlignULongBits(bitsCount) / _ulongSize;
-			//if (bitsCount > 0u && bitsCount < 64u) bitsCount = 64u;
-			//return bitsCount / Bitwise.ULONG_SIZE;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int AlignULongBits(int bitsCount)
-		{
-			var delta = bitsCount % 64;
-			if (delta < 64 && delta > 0u)
-				bitsCount += 64 - delta;
-			return bitsCount / 8;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int AlignDown(int value, int alignPow2)
-		{
-			return value & ~(alignPow2 - 1);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int AlignUp(int value, int alignPow2)
-		{
-			return AlignDown(value + alignPow2 - 1, alignPow2);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int FromBool(bool value)
-		{
-			return value ? 1 : 0;
-		}
-
-		// 32-bit uint
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static uint ExtractBits(uint input, int pos, uint mask)
-		{
-			var tmp0 = input >> pos;
-			return tmp0 & mask;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static uint ReplaceBits(uint input, int pos, uint mask, uint value)
-		{
-			var tmp0 = (value & mask) << pos;
-			var tmp1 = input & ~(mask << pos);
-			return tmp0 | tmp1;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static uint SetBits(uint input, int pos, uint mask, bool value)
-		{
-			return ReplaceBits(input, pos, mask, (uint)-FromBool(value));
-		}
-
-		// 64-bit ulong
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static ulong ExtractBits(ulong input, int pos, ulong mask)
-		{
-			var tmp0 = input >> pos;
-			return tmp0 & mask;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static ulong ReplaceBits(ulong input, int pos, ulong mask, ulong value)
-		{
-			var tmp0 = (value & mask) << pos;
-			var tmp1 = input & ~(mask << pos);
-			return tmp0 | tmp1;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static ulong SetBits(ulong input, int pos, ulong mask, bool value)
-		{
-			return ReplaceBits(input, pos, mask, (ulong)-(long)FromBool(value));
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int LeadingZeroCount(byte value)
-		{
-			return ((uint)value).LeadingZeroCount() - 24;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int LeadingZeroCount(ushort value)
-		{
-			return ((uint)value).LeadingZeroCount() - 16;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int TrailingZeroCount(byte value)
-		{
-			return 8.Min(((uint)value).TrailingZeroCount());
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int TrailingZeroCount(ushort value)
-		{
-			return 16.Min(((uint)value).TrailingZeroCount());
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int FindUlong(ulong* ptr, int beginBit, int endBit, int numBits)
-		{
-			var bits = ptr;
-			var numSteps = (numBits + 63) >> 6;
-			var numBitsPerStep = 64;
-			var maxBits = numSteps * numBitsPerStep;
-
-			for (int i = beginBit / numBitsPerStep, end = AlignUp(endBit, numBitsPerStep) / numBitsPerStep;
-			     i < end;
-			     ++i)
-			{
-				if (bits[i] != 0)
-				{
-					continue;
-				}
-
-				var idx = i * numBitsPerStep;
-				var num = endBit.Min(idx + numBitsPerStep) - idx;
-
-				if (idx != beginBit)
-				{
-					var test = bits[idx / numBitsPerStep - 1];
-					var newIdx = beginBit.Max(idx - test.LeadingZeroCount());
-
-					num += idx - newIdx;
-					idx = newIdx;
-				}
-
-				for (++i; i < end; ++i)
-				{
-					if (num >= numBits)
-					{
-						return idx;
-					}
-
-					var test = bits[i];
-					var pos = i * numBitsPerStep;
-					num += endBit.Min(pos + test.TrailingZeroCount()) - pos;
-
-					if (test != 0)
-					{
-						break;
-					}
-				}
-
-				if (num >= numBits)
-				{
-					return idx;
-				}
-			}
-
-			return endBit;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int FindUint(ulong* ptr, int beginBit, int endBit, int numBits)
-		{
-			var bits = (uint*)ptr;
-			var numSteps = (numBits + 31) >> 5;
-			var numBitsPerStep = 32;
-			var maxBits = numSteps * numBitsPerStep;
-
-			for (int i = beginBit / numBitsPerStep, end = AlignUp(endBit, numBitsPerStep) / numBitsPerStep;
-			     i < end;
-			     ++i)
-			{
-				if (bits[i] != 0)
-				{
-					continue;
-				}
-
-				var idx = i * numBitsPerStep;
-				var num = endBit.Min(idx + numBitsPerStep) - idx;
-
-				if (idx != beginBit)
-				{
-					var test = bits[idx / numBitsPerStep - 1];
-					var newIdx = beginBit.Max(idx - test.LeadingZeroCount());
-
-					num += idx - newIdx;
-					idx = newIdx;
-				}
-
-				for (++i; i < end; ++i)
-				{
-					if (num >= numBits)
-					{
-						return idx;
-					}
-
-					var test = bits[i];
-					var pos = i * numBitsPerStep;
-					num += endBit.Min(pos + test.TrailingZeroCount()) - pos;
-
-					if (test != 0)
-					{
-						break;
-					}
-				}
-
-				if (num >= numBits)
-				{
-					return idx;
-				}
-			}
-
-			return endBit;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int FindUshort(ulong* ptr, int beginBit, int endBit, int numBits)
-		{
-			var bits = (ushort*)ptr;
-			var numSteps = (numBits + 15) >> 4;
-			var numBitsPerStep = 16;
-			var maxBits = numSteps * numBitsPerStep;
-
-			for (int i = beginBit / numBitsPerStep, end = AlignUp(endBit, numBitsPerStep) / numBitsPerStep;
-			     i < end;
-			     ++i)
-			{
-				if (bits[i] != 0)
-				{
-					continue;
-				}
-
-				var idx = i * numBitsPerStep;
-				var num = endBit.Min(idx + numBitsPerStep) - idx;
-
-				if (idx != beginBit)
-				{
-					var test = bits[idx / numBitsPerStep - 1];
-					var newIdx = beginBit.Max(idx - LeadingZeroCount(test));
-
-					num += idx - newIdx;
-					idx = newIdx;
-				}
-
-				for (++i; i < end; ++i)
-				{
-					if (num >= numBits)
-					{
-						return idx;
-					}
-
-					var test = bits[i];
-					var pos = i * numBitsPerStep;
-					num += endBit.Min(pos + TrailingZeroCount(test)) - pos;
-
-					if (test != 0)
-					{
-						break;
-					}
-				}
-
-				if (num >= numBits)
-				{
-					return idx;
-				}
-			}
-
-			return endBit;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int FindByte(ulong* ptr, int beginBit, int endBit, int numBits)
-		{
-			var bits = (byte*)ptr;
-			var numSteps = (numBits + 7) >> 3;
-			var numBitsPerStep = 8;
-			var maxBits = numSteps * numBitsPerStep;
-
-			for (int i = beginBit / numBitsPerStep, end = AlignUp(endBit, numBitsPerStep) / numBitsPerStep;
-			     i < end;
-			     ++i)
-			{
-				if (bits[i] != 0)
-				{
-					continue;
-				}
-
-				var idx = i * numBitsPerStep;
-				var num = endBit.Min(idx + numBitsPerStep) - idx;
-
-				if (idx != beginBit)
-				{
-					var test = bits[idx / numBitsPerStep - 1];
-					var newIdx = beginBit.Max(idx - LeadingZeroCount(test));
-
-					num += idx - newIdx;
-					idx = newIdx;
-				}
-
-				for (++i; i < end; ++i)
-				{
-					if (num >= numBits)
-					{
-						return idx;
-					}
-
-					var test = bits[i];
-					var pos = i * numBitsPerStep;
-					num += endBit.Min(pos + TrailingZeroCount(test)) - pos;
-
-					if (test != 0)
-					{
-						break;
-					}
-				}
-
-				if (num >= numBits)
-				{
-					return idx;
-				}
-			}
-
-			return endBit;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int FindUpto14Bits(ulong* ptr, int beginBit, int endBit, int numBits)
-		{
-			var bits = (byte*)ptr;
-
-			var bit = (byte)(beginBit & 7);
-			var beginMask = (byte)~(0xff << bit);
-
-			var lz = 0;
-			for (int begin = beginBit / 8, end = AlignUp(endBit, 8) / 8, i = begin; i < end; ++i)
-			{
-				var test = bits[i];
-				test |= i == begin ? beginMask : (byte)0;
-
-				if (test == 0xff)
-				{
-					continue;
-				}
-
-				var pos = i * 8;
-				var tz = endBit.Min(pos + TrailingZeroCount(test)) - pos;
-
-				if (lz + tz >= numBits)
-				{
-					return pos - lz;
-				}
-
-				lz = LeadingZeroCount(test);
-
-				var idx = pos + 8;
-				var newIdx = beginBit.Max(idx - lz);
-				lz = endBit.Min(idx) - newIdx;
-
-				if (lz >= numBits)
-				{
-					return newIdx;
-				}
-			}
-
-			return endBit;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int FindUpto6Bits(ulong* ptr, int beginBit, int endBit, int numBits)
-		{
-			var bits = (byte*)ptr;
-
-			var beginMask = (byte)~(0xff << (beginBit & 7));
-			var endMask = (byte)~(0xff >> ((8 - (endBit & 7)) & 7));
-
-			var mask = 1 << (numBits - 1);
-
-			for (int begin = beginBit / 8, end = AlignUp(endBit, 8) / 8, i = begin; i < end; ++i)
-			{
-				var test = bits[i];
-				test |= i == begin ? beginMask : (byte)0;
-				test |= i == end - 1 ? endMask : (byte)0;
-
-				if (test == 0xff)
-				{
-					continue;
-				}
-
-				for (int pos = i * 8, posEnd = pos + 7; pos < posEnd; ++pos)
-				{
-					var tz = TrailingZeroCount((byte)(test ^ 0xff));
-					test >>= tz;
-
-					pos += tz;
-
-					if ((test & mask) == 0)
-					{
-						return pos;
-					}
-
-					test >>= 1;
-				}
-			}
-
-			return endBit;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int FindWithBeginEnd(ulong* ptr, int beginBit, int endBit, int numBits)
-		{
-			int idx;
-
-			if (numBits >= 127)
-			{
-				idx = FindUlong(ptr, beginBit, endBit, numBits);
-				if (idx != endBit)
-				{
-					return idx;
-				}
-			}
-
-			if (numBits >= 63)
-			{
-				idx = FindUint(ptr, beginBit, endBit, numBits);
-				if (idx != endBit)
-				{
-					return idx;
-				}
-			}
-
-			if (numBits >= 128)
-			{
-				// early out - no smaller step will find this gap
-				return int.MaxValue;
-			}
-
-			if (numBits >= 31)
-			{
-				idx = FindUshort(ptr, beginBit, endBit, numBits);
-				if (idx != endBit)
-				{
-					return idx;
-				}
-			}
-
-			if (numBits >= 64)
-			{
-				// early out - no smaller step will find this gap
-				return int.MaxValue;
-			}
-
-			idx = FindByte(ptr, beginBit, endBit, numBits);
-			if (idx != endBit)
-			{
-				return idx;
-			}
-
-			if (numBits < 15)
-			{
-				idx = FindUpto14Bits(ptr, beginBit, endBit, numBits);
-
-				if (idx != endBit)
-				{
-					return idx;
-				}
-
-				if (numBits < 7)
-				{
-					// The worst case scenario when every byte boundary bit is set (pattern 0x81),
-					// and we're looking for 6 or less bits. It will rescan byte-by-byte to find
-					// any inner byte gap.
-					idx = FindUpto6Bits(ptr, beginBit, endBit, numBits);
-
-					if (idx != endBit)
-					{
-						return idx;
-					}
-				}
-			}
-
-			return int.MaxValue;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int Find(ulong* ptr, int pos, int count, int numBits)
-		{
-			var v = FindWithBeginEnd(ptr, pos, pos + count, numBits);
-			if (v == int.MaxValue) return -1;
-			return v;
-		}
-	}
-
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(UnsafeBitArrayDebugView))]
 	public unsafe struct MemBitArray
 	{
@@ -553,7 +43,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemBitArray(WorldState worldState, int numBits, ClearOptions options = ClearOptions.ClearMemory)
 		{
-			var sizeInBytes = Bitwise.AlignUp(numBits, 64) / 8;
+			var sizeInBytes = numBits.AlignUp(64) / 8;
 			ptr = worldState.MemAlloc(sizeInBytes);
 			length = numBits;
 
@@ -597,7 +87,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear(WorldState worldState)
 		{
-			var sizeInBytes = Bitwise.AlignUp(length, 64) / 8;
+			var sizeInBytes = length.AlignUp(64) / 8;
 			worldState.MemClear(ptr, 0, sizeInBytes);
 		}
 
@@ -609,11 +99,11 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Set(WorldState worldState, int pos, bool value)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
 			var idx = pos >> 6;
 			var shift = pos & 0x3f;
 			var mask = 1ul << shift;
-			var bits = (ptr[idx] & ~mask) | ((ulong)-Bitwise.FromBool(value) & mask);
+			var bits = (safePtr[idx] & ~mask) | ((ulong)-value.ToInt() & mask);
 			/*ref var p = ref ptr[idx];
 			ulong initialValue;
 			ulong targetValue;
@@ -621,7 +111,7 @@ namespace Sapientia.MemoryAllocator
 			    initialValue = p;
 			    targetValue = bits;
 			} while (initialValue != CompareExchange(ref p, targetValue, initialValue));*/
-			ptr[idx] = bits;
+			safePtr[idx] = bits;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -647,7 +137,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBits(WorldState worldState, int pos, bool value, int numBits)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
 			var end = length.Min(pos + numBits);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
@@ -655,7 +145,7 @@ namespace Sapientia.MemoryAllocator
 			var shiftE = end & 0x3f;
 			var maskB = 0xfffffffffffffffful << shiftB;
 			var maskE = 0xfffffffffffffffful >> (64 - shiftE);
-			var orBits = (ulong)-Bitwise.FromBool(value);
+			var orBits = (ulong)-value.ToInt();
 			var orBitsB = maskB & orBits;
 			var orBitsE = maskE & orBits;
 			var cmaskB = ~maskB;
@@ -666,18 +156,18 @@ namespace Sapientia.MemoryAllocator
 				var maskBe = maskB & maskE;
 				var cmaskBe = ~maskBe;
 				var orBitsBe = orBitsB & orBitsE;
-				rawPtr[idxB] = (rawPtr[idxB] & cmaskBe) | orBitsBe;
+				safePtr[idxB] = (safePtr[idxB] & cmaskBe) | orBitsBe;
 				return;
 			}
 
-			rawPtr[idxB] = (rawPtr[idxB] & cmaskB) | orBitsB;
+			safePtr[idxB] = (safePtr[idxB] & cmaskB) | orBitsB;
 
 			for (var idx = idxB + 1; idx < idxE; ++idx)
 			{
-				rawPtr[idx] = orBits;
+				safePtr[idx] = orBits;
 			}
 
-			rawPtr[idxE] = (rawPtr[idxE] & cmaskE) | orBitsE;
+			safePtr[idxE] = (safePtr[idxE] & cmaskE) | orBitsE;
 		}
 
 		/// <summary>
@@ -697,14 +187,14 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBits(WorldState worldState, int pos, ulong value, int numBits = 1)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
 			var idxB = pos >> 6;
 			var shiftB = pos & 0x3f;
 
 			if (shiftB + numBits <= 64)
 			{
 				var mask = 0xfffffffffffffffful >> (64 - numBits);
-				ptr[idxB] = Bitwise.ReplaceBits(ptr[idxB], shiftB, mask, value);
+				safePtr[idxB] = safePtr[idxB].ReplaceBits(shiftB, mask, value);
 
 				return;
 			}
@@ -714,11 +204,11 @@ namespace Sapientia.MemoryAllocator
 			var shiftE = end & 0x3f;
 
 			var maskB = 0xfffffffffffffffful >> shiftB;
-			ptr[idxB] = Bitwise.ReplaceBits(ptr[idxB], shiftB, maskB, value);
+			safePtr[idxB] = safePtr[idxB].ReplaceBits(shiftB, maskB, value);
 
 			var valueE = value >> (64 - shiftB);
 			var maskE = 0xfffffffffffffffful >> (64 - shiftE);
-			ptr[idxE] = Bitwise.ReplaceBits(ptr[idxE], 0, maskE, valueE);
+			safePtr[idxE] = safePtr[idxE].ReplaceBits(0, maskE, valueE);
 		}
 
 		/// <summary>
@@ -737,27 +227,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ulong GetBits(WorldState worldState, int pos, int numBits = 1)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
-			var idxB = pos >> 6;
-			var shiftB = pos & 0x3f;
-
-			if (shiftB + numBits <= 64)
-			{
-				var mask = 0xfffffffffffffffful >> (64 - numBits);
-				return Bitwise.ExtractBits(ptr[idxB], shiftB, mask);
-			}
-
-			var end = length.Min(pos + numBits);
-			var idxE = (end - 1) >> 6;
-			var shiftE = end & 0x3f;
-
-			var maskB = 0xfffffffffffffffful >> shiftB;
-			var valueB = Bitwise.ExtractBits(ptr[idxB], shiftB, maskB);
-
-			var maskE = 0xfffffffffffffffful >> (64 - shiftE);
-			var valueE = Bitwise.ExtractBits(ptr[idxE], 0, maskE);
-
-			return (valueE << (64 - shiftB)) | valueB;
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
+			return BitExt.GetBits(safePtr, length, pos, numBits);
 		}
 
 		/// <summary>
@@ -769,15 +240,12 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsSet(WorldState worldState, int pos)
 		{
-			var ptr = worldState.GetSafePtr<ulong>(this.ptr);
-			var idx = pos >> 6;
-			var shift = pos & 0x3f;
-			var mask = 1ul << shift;
-			return 0ul != (ptr[idx] & mask);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
+			return BitExt.IsSet(safePtr, pos);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal void CopyUlong(WorldState worldState, int dstPos, ref MemBitArray srcBitArray, int srcPos,
+		private void CopyUlong(WorldState worldState, int dstPos, ref MemBitArray srcBitArray, int srcPos,
 			int numBits)
 		{
 			SetBits(worldState, dstPos, srcBitArray.GetBits(worldState, srcPos, numBits), numBits);
@@ -905,9 +373,9 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Find(WorldState worldState, int pos, int numBits)
 		{
-			var safePtr = worldState.GetSafePtr<ulong>(this.ptr);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
 			var count = length - pos;
-			return Bitwise.Find(safePtr.ptr, pos, count, numBits);
+			return BitExt.Find(safePtr, pos, count, numBits);
 		}
 
 		/// <summary>
@@ -921,8 +389,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Find(WorldState worldState, int pos, int count, int numBits)
 		{
-			var safePtr = worldState.GetSafePtr<ulong>(this.ptr);
-			return Bitwise.Find(safePtr.ptr, pos, count, numBits);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
+			return BitExt.Find(safePtr, pos, count, numBits);
 		}
 
 		/// <summary>
@@ -935,35 +403,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestNone(WorldState worldState, int pos, int numBits = 1)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
-			var end = length.Min(pos + numBits);
-			var idxB = pos >> 6;
-			var shiftB = pos & 0x3f;
-			var idxE = (end - 1) >> 6;
-			var shiftE = end & 0x3f;
-			var maskB = 0xfffffffffffffffful << shiftB;
-			var maskE = 0xfffffffffffffffful >> (64 - shiftE);
-
-			if (idxB == idxE)
-			{
-				var mask = maskB & maskE;
-				return 0ul == (rawPtr[idxB] & mask);
-			}
-
-			if (0ul != (rawPtr[idxB] & maskB))
-			{
-				return false;
-			}
-
-			for (var idx = idxB + 1; idx < idxE; ++idx)
-			{
-				if (0ul != rawPtr[idx])
-				{
-					return false;
-				}
-			}
-
-			return 0ul == (rawPtr[idxE] & maskE);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
+			return BitExt.TestNone(safePtr, length, pos, numBits);
 		}
 
 		/// <summary>
@@ -976,35 +417,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestAny(WorldState worldState, int pos, int numBits = 1)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
-			var end = length.Min(pos + numBits);
-			var idxB = pos >> 6;
-			var shiftB = pos & 0x3f;
-			var idxE = (end - 1) >> 6;
-			var shiftE = end & 0x3f;
-			var maskB = 0xfffffffffffffffful << shiftB;
-			var maskE = 0xfffffffffffffffful >> (64 - shiftE);
-
-			if (idxB == idxE)
-			{
-				var mask = maskB & maskE;
-				return 0ul != (rawPtr[idxB] & mask);
-			}
-
-			if (0ul != (rawPtr[idxB] & maskB))
-			{
-				return true;
-			}
-
-			for (var idx = idxB + 1; idx < idxE; ++idx)
-			{
-				if (0ul != rawPtr[idx])
-				{
-					return true;
-				}
-			}
-
-			return 0ul != (rawPtr[idxE] & maskE);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
+			return BitExt.TestAny(safePtr, length, pos, numBits);
 		}
 
 		/// <summary>
@@ -1017,35 +431,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TestAll(WorldState worldState, int pos, int numBits = 1)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
-			var end = length.Min(pos + numBits);
-			var idxB = pos >> 6;
-			var shiftB = pos & 0x3f;
-			var idxE = (end - 1) >> 6;
-			var shiftE = end & 0x3f;
-			var maskB = 0xfffffffffffffffful << shiftB;
-			var maskE = 0xfffffffffffffffful >> (64 - shiftE);
-
-			if (idxB == idxE)
-			{
-				var mask = maskB & maskE;
-				return mask == (rawPtr[idxB] & mask);
-			}
-
-			if (maskB != (rawPtr[idxB] & maskB))
-			{
-				return false;
-			}
-
-			for (var idx = idxB + 1; idx < idxE; ++idx)
-			{
-				if (0xfffffffffffffffful != rawPtr[idx])
-				{
-					return false;
-				}
-			}
-
-			return maskE == (rawPtr[idxE] & maskE);
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
+			return BitExt.TestAll(safePtr, length, pos, numBits);
 		}
 
 		/// <summary>
@@ -1058,31 +445,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int CountBits(WorldState worldState, int pos, int numBits = 1)
 		{
-			var rawPtr = worldState.GetSafePtr<ulong>(ptr);
-			var end = length.Min(pos + numBits);
-			var idxB = pos >> 6;
-			var shiftB = pos & 0x3f;
-			var idxE = (end - 1) >> 6;
-			var shiftE = end & 0x3f;
-			var maskB = 0xfffffffffffffffful << shiftB;
-			var maskE = 0xfffffffffffffffful >> (64 - shiftE);
-
-			if (idxB == idxE)
-			{
-				var mask = maskB & maskE;
-				return (rawPtr[idxB] & mask).CountBits();
-			}
-
-			var count = (rawPtr[idxB] & maskB).CountBits();
-
-			for (var idx = idxB + 1; idx < idxE; ++idx)
-			{
-				count += rawPtr[idx].CountBits();
-			}
-
-			count += (rawPtr[idxE] & maskE).CountBits();
-
-			return count;
+			var safePtr = worldState.GetSafePtr<ulong>(ptr);
+			return BitExt.CountBits(safePtr, length, pos, numBits);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1090,8 +454,8 @@ namespace Sapientia.MemoryAllocator
 		{
 			var p = worldState.GetSafePtr<ulong>(ptr);
 			var p2 = worldState.GetSafePtr<ulong>(bits.ptr);
-			var length = this.length / 64;
-			for (var i = 0; i < length; ++i)
+			var arrayLength = length / 64;
+			for (var i = 0; i < arrayLength; ++i)
 			{
 				var val2 = p2[i];
 				p[i] &= val2;
@@ -1099,7 +463,7 @@ namespace Sapientia.MemoryAllocator
 		}
 	}
 
-	internal sealed unsafe class UnsafeBitArrayDebugView
+	internal sealed class UnsafeBitArrayDebugView
 	{
 		private MemBitArray _data;
 

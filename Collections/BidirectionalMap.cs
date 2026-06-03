@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using Sapientia.Pooling;
 
 namespace Sapientia.Collections
 {
-	public class BidirectionalMap<TFirst, TSecond> : IDisposable
+	public class BidirectionalMap<TFirst, TSecond> : IDisposable, IEnumerable<(TFirst, TSecond)>
 	{
 		private Dictionary<TFirst, TSecond> _firstToSecond;
 		private Dictionary<TSecond, TFirst> _secondToFirst;
+		private bool _pool;
 
 		public ICollection<TFirst> FirstValues => _secondToFirst.Values;
 		public ICollection<TSecond> SecondValues => _firstToSecond.Values;
@@ -33,10 +36,20 @@ namespace Sapientia.Collections
 			}
 		}
 
-		public BidirectionalMap()
+		public BidirectionalMap(bool pool = true)
 		{
-			_firstToSecond = new Dictionary<TFirst, TSecond>();
-			_secondToFirst = new Dictionary<TSecond, TFirst>();
+			_pool = pool;
+
+			if (pool)
+			{
+				_firstToSecond = DictionaryPool<TFirst, TSecond>.Get();
+				_secondToFirst = DictionaryPool<TSecond, TFirst>.Get();
+			}
+			else
+			{
+				_firstToSecond = new Dictionary<TFirst, TSecond>();
+				_secondToFirst = new Dictionary<TSecond, TFirst>();
+			}
 		}
 
 		public BidirectionalMap(int count)
@@ -47,8 +60,18 @@ namespace Sapientia.Collections
 
 		public void Dispose()
 		{
-			_firstToSecond = null!;
-			_secondToFirst = null!;
+			if (_pool)
+			{
+				StaticObjectPoolUtility.ReleaseAndSetNull(ref _firstToSecond);
+				StaticObjectPoolUtility.ReleaseAndSetNull(ref _secondToFirst);
+			}
+			else
+			{
+				Clear();
+
+				_firstToSecond = null!;
+				_secondToFirst = null!;
+			}
 		}
 
 		public void Clear()
@@ -95,5 +118,15 @@ namespace Sapientia.Collections
 			_firstToSecond.Remove(first);
 			_secondToFirst.Remove(second);
 		}
+
+		public IEnumerator<(TFirst, TSecond)> GetEnumerator()
+		{
+			foreach (var kvp in _firstToSecond)
+			{
+				yield return (kvp.Key, kvp.Value);
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 	}
 }

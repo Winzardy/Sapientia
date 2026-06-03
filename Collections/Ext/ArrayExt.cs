@@ -23,7 +23,7 @@ namespace Sapientia.Collections
 					if (!equatable.Equals(b[i]))
 						return false;
 				}
-				else if (!a[i].Equals(b[i]))
+				else if (!Equals(a[i], b[i]))
 					return false;
 			}
 			return true;
@@ -40,7 +40,8 @@ namespace Sapientia.Collections
 			{
 				Array.Copy(array, from + 1, array, from, to - from);
 			}
-			else return;
+			else
+				return;
 
 			array[to] = value;
 		}
@@ -207,11 +208,36 @@ namespace Sapientia.Collections
 			array[^1] = value;
 		}
 
+		public static T[] Add<T>(this T[] array, T value)
+		{
+			Expand(ref array, array.Length + 1);
+			array[^1] = value;
+			return array;
+		}
+
 		public static void AddRange<T>(ref T[] array, T[] values)
 		{
 			var destinationIndex = array.Length;
 			Expand(ref array, array.Length + values.Length);
 			Array.Copy(values, 0, array, destinationIndex, values.Length);
+		}
+
+		public static T[] RemoveAt<T>(this T[] source, int index)
+		{
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+			if (index < 0 || index >= source.Length)
+				throw new ArgumentOutOfRangeException(nameof(index));
+
+			var updated = new T[source.Length - 1];
+
+			if (index > 0)
+				Array.Copy(source, 0, updated, 0, index);
+
+			if (index < source.Length - 1)
+				Array.Copy(source, index + 1, updated, index, source.Length - index - 1);
+
+			return updated;
 		}
 
 		public static int IndexOf<T>(this T[] array, T element) => Array.IndexOf(array, element);

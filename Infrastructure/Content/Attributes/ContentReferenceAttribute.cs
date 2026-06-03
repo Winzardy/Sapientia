@@ -1,36 +1,48 @@
 ﻿using System;
 using System.Diagnostics;
+using UnityEngine;
 
 namespace Content
 {
 	[Conditional("UNITY_EDITOR")]
-	[AttributeUsage(AttributeTargets.Field)]
 	public class ContentReferenceAttribute :
 #if CLIENT
-		UnityEngine.PropertyAttribute
+		PropertyAttribute
 #else
 		Attribute
 #endif
 	{
-		public Type Type { get; }
-		public string TypeName { get; }
-		public bool Foldout { get; }
+		public Type Type { get; private set; }
+		public string TypeName { get; internal set;}
+		public bool InlineEditor { get; private set;}
 
-		public ContentReferenceAttribute(Type type, bool foldout = true)
+		public bool Dropdown { get; private set;}
+
+		public ContentReferenceAttribute(Type type, bool inlineEditor = true, bool dropdown = false)
 		{
 			Type = type;
-			Foldout = foldout;
+			InlineEditor = inlineEditor;
+			Dropdown = dropdown;
 		}
 
-		public ContentReferenceAttribute(string typeName, bool foldout = true)
+		public ContentReferenceAttribute(string typeName, bool inlineEditor = true, bool dropdown = false)
 		{
 			TypeName = typeName;
-			Foldout = foldout;
+			InlineEditor = inlineEditor;
+			Dropdown = dropdown;
 		}
 	}
 
 	[Conditional("UNITY_EDITOR")]
-	public class HideFoldoutAttribute : Attribute
+	public class ContentReferenceDrawerSettingsAttribute : Attribute
 	{
+		public bool InlineEditor { get; }
+		public bool Dropdown { get; }
+
+		public ContentReferenceDrawerSettingsAttribute(bool inlineEditor = true, bool dropdown = false)
+		{
+			InlineEditor = inlineEditor;
+			Dropdown = dropdown;
+		}
 	}
 }

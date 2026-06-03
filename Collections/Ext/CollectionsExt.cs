@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sapientia.Extensions;
-using Sapientia.Pooling;
 #if UNITY_5_3_OR_NEWER
 using Random = UnityEngine.Random;
 #endif
@@ -127,10 +126,16 @@ namespace Sapientia.Collections
 			return collection.Count == 0;
 		}
 
+		public static bool None<T>(this IEnumerable<T> source)
+		{
+			return source == null || !source.Any();
+		}
+
 		public static bool Any<T>(this ICollection<T> collection)
 			=> !collection.IsNullOrEmpty();
 
-		public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable)
+
+		public static bool IsNullOrEmpty<T>(this IEnumerable<T>? enumerable)
 		{
 			return enumerable == null || IsEmpty(enumerable);
 		}
@@ -323,7 +328,51 @@ namespace Sapientia.Collections
 			return Last(list);
 		}
 
+		public static bool TryGetFirst<T>(this IEnumerable<T> collection, Func<T, bool> predicate, out T found)
+		{
+			if (collection == null)
+				throw new ArgumentNullException(nameof(collection));
+
+			if (predicate == null)
+				throw new ArgumentNullException(nameof(predicate));
+
+			foreach (var item in collection)
+			{
+				if (predicate.Invoke(item))
+				{
+					found = item;
+					return true;
+				}
+			}
+
+			found = default;
+			return false;
+		}
+
+		public static int IndexOf<T>(this IEnumerable<T> enumerable, T item)
+		{
+			var index = 0;
+			var comparer = EqualityComparer<T>.Default;
+			foreach (var element in enumerable)
+			{
+				if (comparer.Equals(element, item))
+					return index;
+				index++;
+			}
+
+			return -1;
+		}
+
 		public static bool IsEmpty<T>(this IEnumerable<T> enumerable) => !enumerable.Any();
+
+		public static bool HasSingle<T>(this IEnumerable<T>? source)
+		{
+			if (source == null)
+				return false;
+
+			using var e = source.GetEnumerator();
+			return e.MoveNext() && !e.MoveNext();
+		}
 
 		public static List<T> AddRangeRepeated<T>(this List<T> list, T repeatedItem, int count)
 		{
@@ -392,7 +441,8 @@ namespace Sapientia.Collections
 
 		public static bool WithinBounds<T>(this ICollection<T> source, int index)
 		{
-			if (source == null) return false;
+			if (source == null)
+				return false;
 			return index >= 0 && index < source.Count;
 		}
 
@@ -404,34 +454,77 @@ namespace Sapientia.Collections
 			return list.ToArray();
 		}
 
+		public static void DisposeElements<T>(this IEnumerable<T>? enumerable, Action<T>? onDispose = null)
+			where T : IDisposable
+		{
+			if (enumerable == null)
+				return;
+
+			foreach (var item in enumerable)
+			{
+				item.Dispose();
+				onDispose?.Invoke(item);
+			}
+		}
+
+		public static void TryDisposeElements<TKey, TValue>(this IDictionary<TKey, TValue>? dictionary, Action<TValue>? onDispose = null)
+		{
+			if (dictionary == null)
+				return;
+
+			foreach (var item in dictionary.Values)
+			{
+				if (item is IDisposable disposable)
+				{
+					disposable.Dispose();
+					onDispose?.Invoke(item);
+				}
+			}
+		}
+
+		public static void DisposeElements<TKey, TValue>(this IDictionary<TKey, TValue>? dictionary, Action<TValue>? onDispose = null)
+			where TValue : IDisposable
+		{
+			if (dictionary == null)
+				return;
+
+			foreach (var item in dictionary.Values)
+			{
+				item.Dispose();
+				onDispose?.Invoke(item);
+			}
+		}
+
+		public static void TryDisposeElements<T>(this IEnumerable<T>? enumerable, Action<T>? onDispose = null)
+		{
+			if (enumerable == null)
+				return;
+
+			foreach (var item in enumerable)
+			{
+				if (item is IDisposable disposable)
+					disposable.Dispose();
+			}
+		}
+
+		public static void DisposeElementsAndClear<T>(this List<T> list, Action<T>? onDispose = null)
+			where T : IDisposable
+		{
+			DisposeElements(list, onDispose);
+			list.Clear();
+		}
+
+		public static bool TryRemoveFirstMatching<T>(this List<T> list, System.Predicate<T> predicate)
+		{
+			var matchingIndex = list.FindIndex(predicate);
+
+			if (matchingIndex < 0)
+				return false;
+
+			list.RemoveAt(matchingIndex);
+			return true;
+		}
+
 		public delegate bool Predicate<T>(in T value);
-	}
-
-	public ref struct RefEnumerator<T>
-		where T : struct
-	{
-		private readonly T[] _array;
-		private int _index;
-
-		public ref T Current => ref _array[_index];
-
-		public RefEnumerator(T[] array)
-		{
-			_array = array;
-			_index = -1;
-		}
-
-		public bool MoveNext()
-		{
-			_index++;
-			return _index < _array.Length;
-		}
-
-		public void Reset()
-		{
-			_index = -1;
-		}
-
-		public RefEnumerator<T> GetEnumerator() => this;
 	}
 }

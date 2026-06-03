@@ -6,7 +6,7 @@ using Sapientia;
 namespace Trading.UsagePass
 {
 	[Serializable]
-	public partial class UsagePassTradeCost : TradeCostWithReceipt<UsagePassTradeReceipt>, IResettableCost
+	public partial class UsagePassTradeCost : TradeCostWithReceipt<UsagePassTradeReceipt>, ITradeResettable
 	{
 		public const string ERROR_CATEGORY = "UsagePass";
 
@@ -19,13 +19,14 @@ namespace Trading.UsagePass
 			backend.ForceReset(recipeKey);
 		}
 
+#if CLIENT
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
 
-			var backend = board.Get<IUsagePassNode>();
+			var node = board.Get<IUsagePassNode>();
 			var recipeKey = GetReceiptKey(board.Id);
-			ref readonly var model = ref backend.GetModel(recipeKey);
+			ref readonly var model = ref node.GetState(recipeKey);
 			var tradingNode = board.Get<ITradingNode>();
 			var dateTime = tradingNode.DateTime;
 
@@ -48,14 +49,9 @@ namespace Trading.UsagePass
 			UsagePassTradeReceipt? receipt = new UsagePassTradeReceipt(dateTime.Ticks);
 			return Task.FromResult(receipt);
 		}
+#endif
 
 		protected override string GetReceiptKey(string tradeId) => UsagePassTradeReceiptUtility.ToRecipeKey(tradeId);
-
-		protected override bool CanRefund(Tradeboard board, out TradeCostRefundError? error)
-		{
-			error = null;
-			return true;
-		}
 
 		private BlackboardToken _token;
 

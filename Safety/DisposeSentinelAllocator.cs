@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Data;
+using Submodules.Sapientia.Memory;
 
 namespace Submodules.Sapientia.Safety
 {
@@ -15,7 +16,7 @@ namespace Submodules.Sapientia.Safety
 		{
 			return new DisposeSentinelAllocator
 			{
-				_versions = new UnsafeIndexAllocSparseSet<int>(8),
+				_versions = new UnsafeIndexAllocSparseSet<int>(MemoryManager.NoTrackMemoryId, 8),
 				_asyncValue =  new AsyncValue(),
 				_typeId = typeId,
 			};

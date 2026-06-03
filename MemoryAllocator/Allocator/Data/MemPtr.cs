@@ -35,6 +35,8 @@ namespace Sapientia.MemoryAllocator
 		public readonly bool IsValid() => zoneOffset != 0;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly bool IsZeroSized() => zoneOffset < 0;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool IsSized() => zoneOffset > 0;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(in MemPtr m1, in MemPtr m2)

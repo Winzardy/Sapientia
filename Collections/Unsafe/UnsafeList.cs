@@ -28,6 +28,7 @@ namespace Sapientia.Collections
 			if (capacity <= 0)
 			{
 				this = default;
+				this.memoryId = memoryId;
 				return;
 			}
 
@@ -52,7 +53,11 @@ namespace Sapientia.Collections
 		public ref T this[int index]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref (ptr + index).Value();
+			get
+			{
+				E.ASSERT(index >= 0 && index < count, "UnsafeList.this[]: Index is out of range.");
+				return ref (ptr + index).Value();
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -62,6 +67,13 @@ namespace Sapientia.Collections
 
 			ptr[count] = item;
 			count++;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetCount(int newCount)
+		{
+			EnsureCapacity(newCount);
+			count = newCount;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -170,6 +182,11 @@ namespace Sapientia.Collections
 					return arr;
 				}
 			}
+		}
+
+		public Span<T>.Enumerator GetEnumerator()
+		{
+			return GetSpan().GetEnumerator();
 		}
 	}
 }

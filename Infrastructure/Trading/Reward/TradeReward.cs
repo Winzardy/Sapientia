@@ -8,15 +8,28 @@ namespace Trading
 		/// <summary>
 		/// Участвует в сортировке в <see cref="TradeRewardCollection"/>
 		/// </summary>
-		protected internal virtual int Priority => TradeCostPriority.NORMAL;
+		protected internal virtual int Priority => TradeRewardPriority.NORMAL;
 
 		internal bool CanExecute(Tradeboard board, out TradeReceiveError? error) => CanReceive(board, out error);
-		internal bool Execute(Tradeboard board) => Receive(board);
+
+		internal bool Execute(Tradeboard board)
+		{
+			if (!board.IsTradeMode)
+				throw TradingDebug.Exception("Trade mode must be active before executing a trade...");
+
+			var receive = Receive(board);
+			board.RegisterInternal(this);
+			return receive;
+		}
 
 		/// <summary>
 		/// Доступно ли для получения? пример: нет места в инвентаре
 		/// </summary>
-		protected abstract bool CanReceive(Tradeboard board, out TradeReceiveError? error);
+		protected virtual bool CanReceive(Tradeboard board, out TradeReceiveError? error)
+		{
+			error = null;
+			return true;
+		}
 
 		/// <summary>
 		/// Выдать
@@ -33,8 +46,8 @@ namespace Trading
 		public TradeReceiveError(string category, int code, object rawData = null)
 		{
 			this.category = category;
-			this.code = code;
-			this.rawData = rawData;
+			this.code     = code;
+			this.rawData  = rawData;
 		}
 
 		public TradeReceiveError(string category, object rawData = null) : this(category, 0, rawData)
@@ -45,5 +58,14 @@ namespace Trading
 		public static TradeReceiveError? NotError => null;
 
 		public override string ToString() => $"TradeReceiveError: category: {category}, code: {code}, rawData: {rawData}";
+	}
+
+	public static class TradeRewardPriority
+	{
+		public const int VERY_HIGH = 1000;
+		public const int HIGH = 100;
+		public const int NORMAL = 0;
+		public const int LOW = -100;
+		public const int VERY_LOW = -1000;
 	}
 }

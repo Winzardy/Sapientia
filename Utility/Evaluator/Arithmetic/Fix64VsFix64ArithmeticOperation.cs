@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Sapientia.Deterministic;
 
 #if CLIENT
@@ -28,7 +29,7 @@ namespace Sapientia.Evaluators
 		[HorizontalGroup, HideLabel]
 #endif
 		[SerializeReference]
-		public Evaluator<TContext,Fix64> a;
+		public Evaluator<TContext, Fix64> a;
 
 #if CLIENT
 		[HorizontalGroup(OPERATOR_WIDTH), HideLabel]
@@ -38,7 +39,7 @@ namespace Sapientia.Evaluators
 #if CLIENT
 		[HorizontalGroup, HideLabel]
 #endif
-		public EvaluatedValue<TContext,Fix64> b;
+		public EvaluatedValue<TContext, Fix64> b;
 
 		protected override Fix64 OnEvaluate(TContext context)
 		{
@@ -67,6 +68,14 @@ namespace Sapientia.Evaluators
 			};
 
 			return $"{a1}{o}{b1}";
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			yield return a;
+			if (!b.IsConstant)
+				yield return b.evaluator;
 		}
 	}
 }

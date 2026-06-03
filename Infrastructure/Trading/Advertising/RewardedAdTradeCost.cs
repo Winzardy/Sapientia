@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Advertising;
 using Content;
+using JetBrains.Annotations;
 using Sapientia;
 using Sapientia.Evaluators;
 
@@ -23,13 +24,15 @@ namespace Trading.Advertising
 
 		public override int Priority => TradeCostPriority.VERY_HIGH;
 
-		public ContentReference<RewardedAdPlacementEntry> placement = "Default";
+		[NotNull]
+		public ContentReference<RewardedAdPlacementEntry> placement;
 
 		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
 
 		public EvaluatedValue<Blackboard, int> count = 1;
 
+#if CLIENT
 		protected override bool CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			error = null;
@@ -41,14 +44,14 @@ namespace Trading.Advertising
 					return true;
 			}
 
-			var success = AdManager.CanShow(placement, out var adError);
+			var success = AdManager.CanShow(placement, out var adErrorOrNull);
 
-			if (adError.HasValue)
+			if (adErrorOrNull.TryGetValue(out var adError))
 			{
-				if (adError.Value.code == AdShowErrorCode.NotLoaded && USE_AUTO_LOAD)
+				if (adError.code == AdShowErrorCode.NotLoaded && USE_AUTO_LOAD)
 					return true;
 
-				error = new TradePayError(ERROR_CATEGORY, (int) adError.Value.code, adError);
+				error = new TradePayError(ERROR_CATEGORY, (int) adError.code, adErrorOrNull);
 			}
 
 			return success;
@@ -72,10 +75,11 @@ namespace Trading.Advertising
 			if (result != AdShowResult.Success)
 				return null;
 
-			var dateTime = board.Get<IDateTimeProviderWithVirtual>()
-			   .DateTimeWithoutOffset;
+			var dateTime = board.Get<IVirtualTimeProvider>()
+				.SystemTime;
 			return new AdTradeReceipt(group, placement, dateTime.Ticks);
 		}
+#endif
 
 		private int GetCountInternal(Tradeboard board)
 		{
@@ -84,21 +88,10 @@ namespace Trading.Advertising
 
 		protected override string GetReceiptKey(string _) => placement.ToReceiptKey(group);
 
-		/// <summary>
-		/// <para>Никто не в силах вернуть потраченное время от рекламы T_T...</para>
-		/// Если только не запомнить что игрок полностью просмотрел рекламу и при следующем воспроизведении пропустить...
-		/// Но есть вопросики конечно
-		/// </summary>
-		protected override bool CanRefund(Tradeboard board, out TradeCostRefundError? error)
-		{
-			error = null;
-			return false;
-		}
-
 		public int GetAvailableCount(Tradeboard tradeboard)
 		{
 			return tradeboard.Get<IAdvertisingNode>()
-			   .GetTokenCount(group);
+				.GetTokenCount(group);
 		}
 
 		private BlackboardToken _token;

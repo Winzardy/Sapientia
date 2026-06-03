@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -52,7 +54,13 @@ namespace Sapientia.Extensions.Reflection
 
 		public static bool HasAttribute<T>(this Type type) where T : Attribute
 		{
-			return type.GetCustomAttribute<T>(true) != null;
+			return HasAttribute<T>(type, out _);
+		}
+
+		public static bool HasAttribute<T>(this Type type, out T attribute) where T : Attribute
+		{
+			attribute = CustomAttributeExtensions.GetCustomAttribute<T>(type, true);
+			return attribute != null;
 		}
 
 		public static bool IsProperty(this MethodInfo methodInfo)
@@ -102,9 +110,9 @@ namespace Sapientia.Extensions.Reflection
 				var genericDef = type.GetGenericTypeDefinition();
 
 				if (genericDef == typeof(List<>) ||
-				    genericDef == typeof(IEnumerable<>) ||
-				    genericDef == typeof(IList<>) ||
-				    genericDef == typeof(ICollection<>))
+					genericDef == typeof(IEnumerable<>) ||
+					genericDef == typeof(IList<>) ||
+					genericDef == typeof(ICollection<>))
 				{
 					return type.GetGenericArguments()[0];
 				}
@@ -113,6 +121,34 @@ namespace Sapientia.Extensions.Reflection
 				{
 					if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
 						return interfaceType.GetGenericArguments()[0];
+				}
+			}
+
+			return type;
+		}
+
+		/// <returns>Возвращает тип элемента коллекции рекурсивно!, если данный тип не коллекция вернет себя</returns>
+		public static Type GetFinalCollectionElementType(this Type type)
+		{
+			if (type.IsArray)
+				return GetFinalCollectionElementType(type.GetElementType());
+
+			if (type.IsGenericType)
+			{
+				var genericDef = type.GetGenericTypeDefinition();
+
+				if (genericDef == typeof(List<>) ||
+					genericDef == typeof(IEnumerable<>) ||
+					genericDef == typeof(IList<>) ||
+					genericDef == typeof(ICollection<>))
+				{
+					return GetFinalCollectionElementType(type.GetGenericArguments()[0]);
+				}
+
+				foreach (var interfaceType in type.GetInterfaces())
+				{
+					if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+						return GetFinalCollectionElementType(interfaceType.GetGenericArguments()[0]);
 				}
 			}
 
@@ -144,8 +180,8 @@ namespace Sapientia.Extensions.Reflection
 					}
 
 					if ((interfacesOnly && types[t].IsInterface) ||
-					    (!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
-						    !types[t].IsGenericType))
+						(!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
+							!types[t].IsGenericType))
 					{
 						typeList.Add(types[t]);
 					}
@@ -209,8 +245,8 @@ namespace Sapientia.Extensions.Reflection
 						continue;
 
 					if ((interfacesOnly && types[t].IsInterface) ||
-					    (!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
-						    !types[t].IsGenericType))
+						(!interfacesOnly && (includeInterfaces || !types[t].IsInterface) && !types[t].IsAbstract &&
+							!types[t].IsGenericType))
 					{
 						typeList.Add(types[t]);
 					}
@@ -359,7 +395,7 @@ namespace Sapientia.Extensions.Reflection
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "")
-						   .Replace($"{ARRAY_DATA_TERMINATOR}", ""));
+							.Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 
 						if (p + 1 == pathComponents.Length)
 						{
@@ -401,7 +437,7 @@ namespace Sapientia.Extensions.Reflection
 					if (p < pathComponents.Length - 1 && pathComponents[p + 1].StartsWith(ARRAY_DATA_BEGINNER))
 					{
 						var index = int.Parse(pathComponents[++p].Replace(ARRAY_DATA_BEGINNER, "")
-						   .Replace($"{ARRAY_DATA_TERMINATOR}", ""));
+							.Replace($"{ARRAY_DATA_TERMINATOR}", ""));
 						target = array.GetValue(index);
 					}
 				}
@@ -535,5 +571,37 @@ namespace Sapientia.Extensions.Reflection
 		}
 
 		public static bool IsPolymorphic(this Type type) => type.IsInterface || type.IsAbstract;
+
+		public static IEnumerable<T> GetObjectsByType<T>(this object obj)
+		{
+			if (obj is T t)
+				yield return t;
+
+			var type = obj.GetType();
+			foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+			{
+				var value = field.GetValue(obj);
+				if (value == null)
+					continue;
+
+				if (value == obj)
+					continue;
+
+				if (value is IEnumerable enumerable and not string)
+				{
+					foreach (var item in enumerable)
+						foreach (var i in GetObjectsByType<T>(item))
+							yield return i;
+				}
+				else
+				{
+					foreach (var i in GetObjectsByType<T>(value)
+						.Skip(1))
+					{
+						yield return i;
+					}
+				}
+			}
+		}
 	}
 }

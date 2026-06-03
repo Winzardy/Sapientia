@@ -4,25 +4,6 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IMemHashSetEnumerable<T>
-		where T: unmanaged, IEquatable<T>
-	{
-		public int LastIndex { get; }
-		public SafePtr<MemHashSet<T>.Slot> GetSlotPtr(WorldState worldState);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemHashSetEnumerator<T> GetEnumerator(WorldState worldState)
-		{
-			return new MemHashSetEnumerator<T>(GetSlotPtr(worldState), LastIndex);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemHashSetEnumerable<T> GetEnumerable(WorldState worldState)
-		{
-			return new (GetEnumerator(worldState));
-		}
-	}
-
 	public readonly ref struct MemHashSetEnumerable<T>
 		where T : unmanaged, IEquatable<T>
 	{

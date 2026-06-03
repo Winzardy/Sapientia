@@ -7,6 +7,7 @@ using Sapientia.Collections.FixedString;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
+using Submodules.Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator.State
 {
@@ -14,7 +15,7 @@ namespace Sapientia.MemoryAllocator.State
 	/// Доступ к настройкам в рантайме осуществляется через
 	/// <see cref="allocator.GetService{IConfigurationRuntime}"/>, если они заданы.
 	/// </summary>
-	public interface IConfigurationRuntime : IIndexedType
+	public interface IConfigurationRuntime : IWorldService
 	{
 	}
 
@@ -93,60 +94,20 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, int elementsCount) where T: unmanaged, IIndexedType
+		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, int elementsCount) where T : unmanaged, IComponent
 		{
-			return ref RegisterComponentSet<T>(worldState, ServiceRegistryContext.Create<T, ComponentSet>(), elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity);
+			return ref RegisterComponentSet<T>(worldState, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount) where T: unmanaged
-		{
-			return ref RegisterComponentSet<T>(worldState, context, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, int elementsCount, int entitiesCapacity) where T: unmanaged, IIndexedType
-		{
-			return ref RegisterComponentSet<T>(worldState, ServiceRegistryContext.Create<T, ComponentSet>(), elementsCount, entitiesCapacity);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount, int entitiesCapacity) where T: unmanaged
+		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, int elementsCount, int entitiesCapacity) where T : unmanaged, IComponent
 		{
 			var componentSetPtr = CreateComponentSet<T>(worldState, elementsCount, entitiesCapacity);
-			context.RegisterService(worldState, componentSetPtr);
+			worldState.RegisterComponentSet<T>(componentSetPtr);
 
 			return ref componentSetPtr.GetValue(worldState);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, int elementsCount, out ComponentSetPtr<T> componentSetPtr) where T: unmanaged, IComponent
-		{
-			return ref RegisterComponentSet<T>(worldState, ServiceRegistryContext.Create<T, ComponentSet>(), elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity, out componentSetPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount, out ComponentSetPtr<T> componentSetPtr) where T: unmanaged, IComponent
-		{
-			return ref RegisterComponentSet<T>(worldState, context, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity, out componentSetPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, int elementsCount, int entitiesCapacity, out ComponentSetPtr<T> componentSetPtr) where T: unmanaged, IComponent
-		{
-			return ref RegisterComponentSet<T>(worldState, ServiceRegistryContext.Create<T, ComponentSet>(), elementsCount, entitiesCapacity, out componentSetPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref ComponentSet RegisterComponentSet<T>(WorldState worldState, ServiceRegistryContext context, int elementsCount, int entitiesCapacity, out ComponentSetPtr<T> componentSetPtr) where T: unmanaged, IComponent
-		{
-			componentSetPtr = CreateComponentSet<T>(worldState, elementsCount, entitiesCapacity);
-			context.RegisterService(worldState, componentSetPtr);
-
-			return ref componentSetPtr.GetComponentSet(worldState);
-		}
-
-		public static CachedPtr<ComponentSet> CreateComponentSet<T>(WorldState worldState, int elementsCount, int entitiesCapacity) where T: unmanaged
+		private static CachedPtr<ComponentSet> CreateComponentSet<T>(WorldState worldState, int elementsCount, int entitiesCapacity) where T : unmanaged, IComponent
 		{
 			var componentSetPtr = CachedPtr<ComponentSet>.Create(worldState);
 			ref var componentSet = ref componentSetPtr.GetValue(worldState);
@@ -156,34 +117,6 @@ namespace Sapientia.MemoryAllocator.State
 #if DEBUG
 			componentSet.elementTypeName = typeof(T).Name;
 #endif
-
-			worldState.GetService<EntityStatePart>().AddSubscriber(worldState, (IndexedPtr)componentSetPtr);
-
-			return componentSetPtr;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CachedPtr<ComponentSet> RegisterComponentSet(WorldState worldState, ServiceRegistryContext context, int elementsCount)
-		{
-			var ptr = CreateComponentSet(worldState, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity);
-			context.RegisterService(worldState, (CachedPtr)ptr);
-
-			return ptr;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CachedPtr<ComponentSet> CreateComponentSet(WorldState worldState, int elementsCount)
-		{
-			return CreateComponentSet(worldState, elementsCount, worldState.GetService<EntityStatePart>().EntitiesCapacity);
-		}
-
-		public static CachedPtr<ComponentSet> CreateComponentSet(WorldState worldState, int elementsCount, int entitiesCapacity)
-		{
-			var componentSetPtr = CachedPtr<ComponentSet>.Create(worldState);
-			ref var componentSet = ref componentSetPtr.GetValue(worldState);
-
-			componentSet._elements = new MemSparseSet(worldState, TSize<ComponentSetElement>.size, elementsCount, entitiesCapacity);
-			componentSet._destroyHandlerProxy = default;
 
 			worldState.GetService<EntityStatePart>().AddSubscriber(worldState, (IndexedPtr)componentSetPtr);
 
@@ -280,6 +213,12 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool HasElementId(WorldState worldState, int entityId)
+		{
+			return _elements.Has(worldState, entityId);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool SetElement(WorldState worldState, Entity entity)
 		{
 			if (_elements.Has(worldState, entity.id))
@@ -291,7 +230,7 @@ namespace Sapientia.MemoryAllocator.State
 			_elements.EnsureGet<ComponentSetElement>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 			if (oldCapacity != _elements.Capacity)
-				UnityEngine.Debug.LogWarning($"ComponentSet was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+				LogExpandWarning(_elements.Count - 1, oldCapacity);
 #endif
 			return true;
 		}
@@ -305,7 +244,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref T TryGetElement<T>(WorldState worldState, Entity entity, out bool isExist) where T : unmanaged
+		public ref T TryGetElement<T>(WorldState worldState, Entity entity, out bool success) where T : unmanaged
 		{
 			if (_elements.Has(worldState, entity.id))
 			{
@@ -314,11 +253,11 @@ namespace Sapientia.MemoryAllocator.State
 				{
 					E.ASSERT(element.entity == entity);
 
-					isExist = true;
+					success = true;
 					return ref element.value;
 				}
 			}
-			isExist = false;
+			success = false;
 			return ref _elements.GetValuePtr<T>(worldState)[0];
 		}
 
@@ -341,7 +280,7 @@ namespace Sapientia.MemoryAllocator.State
 				ref var element = ref _elements.EnsureGet<ComponentSetElement<T>>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				if (oldCapacity != _elements.Capacity)
-					UnityEngine.Debug.LogWarning($"ComponentSet of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+					LogExpandWarning<T>(_elements.Count - 1, oldCapacity);
 #endif
 				element = new ComponentSetElement<T>(entity, default);
 
@@ -367,7 +306,7 @@ namespace Sapientia.MemoryAllocator.State
 			if (_elements.Has(worldState, entity.id))
 			{
 				ref var element = ref _elements.Get<ComponentSetElement<T>>(worldState, entity.id);
-				E.ASSERT(element.entity == entity);
+				E.ASSERT(element.entity == entity, "Попытка получить компонент для entity, который не соответствует сохранённому.");
 
 				return ref element.value;
 			}
@@ -379,7 +318,7 @@ namespace Sapientia.MemoryAllocator.State
 				ref var element = ref _elements.EnsureGet<ComponentSetElement<T>>(worldState, entity.id);
 #if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
 				if (oldCapacity != _elements.Capacity)
-					UnityEngine.Debug.LogWarning($"ComponentSet of {typeof(T).Name} was expanded. Count: {_elements.Count - 1}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}");
+					LogExpandWarning<T>(_elements.Count - 1, oldCapacity);
 #endif
 				element = new ComponentSetElement<T>(entity, default);
 
@@ -399,11 +338,41 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool RemoveSwapBackElement(WorldState worldState, Entity entity)
+		public void ClearFast()
+		{
+			_elements.ClearFast();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveSwapBackElements(WorldState worldState, Span<Entity> entities, bool handleDestroy = true)
+		{
+			if (handleDestroy && _destroyHandlerProxy.IsCreated)
+			{
+				var componentSetEntities = stackalloc void*[_elements.Count.Min(entities.Length)];
+				var componentSetEntitiesCount = 0;
+
+				foreach (var entity in entities)
+				{
+					if (!_elements.Has(worldState, entity.id))
+						continue;
+					componentSetEntities[componentSetEntitiesCount++] = _elements.GetValuePtr(worldState, entity.id).ptr;
+				}
+
+				_destroyHandlerProxy.EntityPtrArrayDestroyed(worldState, worldState, componentSetEntities, componentSetEntitiesCount);
+			}
+
+			foreach (var entity in entities)
+			{
+				_elements.RemoveSwapBack(worldState, entity.id);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool RemoveSwapBackElement(WorldState worldState, Entity entity, bool handleDestroy = true)
 		{
 			if (_elements.TryGetDenseId(worldState, entity.id, out var denseId))
 			{
-				if (_destroyHandlerProxy.IsCreated)
+				if (handleDestroy && _destroyHandlerProxy.IsCreated)
 				{
 					var safePtr = _elements.GetValuePtrByDenseId(worldState, denseId);
 					_destroyHandlerProxy.EntityArrayDestroyed(worldState, worldState, safePtr.ptr, 1);
@@ -440,6 +409,20 @@ namespace Sapientia.MemoryAllocator.State
 				_elements.RemoveSwapBack(worldState, entities[i].id);
 			}
 		}
+
+#if UNITY_EDITOR || (UNITY_5_3_OR_NEWER && DEBUG)
+		[Unity.Burst.BurstDiscard]
+		private void LogExpandWarning(int oldCount, int oldCapacity)
+		{
+			UnityEngine.Debug.LogWarning($"{nameof(ComponentSet)} расширился. 1) Посмотрите стек вызова; 2) Определите тип компонента; 3) Найдите место создания коллекции и установите туда новый Capacity [Count: {oldCount}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}].");
+		}
+
+		[Unity.Burst.BurstDiscard]
+		private void LogExpandWarning<T>(int oldCount, int oldCapacity)
+		{
+			UnityEngine.Debug.LogWarning($"{nameof(ComponentSet)}<{typeof(T).Name}> расширился. 1) Найдите место создания коллекции для {typeof(T).Name} и установите туда новый Capacity [Count: {oldCount}->{_elements.Count}; Capacity: {oldCapacity}->{_elements.Capacity}].");
+		}
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose(WorldState worldState)

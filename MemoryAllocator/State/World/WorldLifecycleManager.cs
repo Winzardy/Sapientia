@@ -23,7 +23,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return 0f;
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			return updateStatePart.stateUpdateData.resumeDelay;
 		}
 
@@ -31,7 +31,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return;
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			updateStatePart.ResumeSimulation();
 		}
 
@@ -39,13 +39,13 @@ namespace Sapientia.MemoryAllocator
 		{
 			if (!IsValid)
 				return;
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			updateStatePart.PauseSimulation();
 		}
 
 		public bool IsPaused()
 		{
-			var updateStatePart = _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			var updateStatePart = _world.worldState.GetService<UpdateLocalStatePart>();
 			return updateStatePart.IsPaused();
 		}
 
@@ -61,7 +61,7 @@ namespace Sapientia.MemoryAllocator
 			if (!IsValid)
 				return;
 
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			if (updateStatePart.IsPaused())
 				return;
 
@@ -76,7 +76,7 @@ namespace Sapientia.MemoryAllocator
 			var ticksToUpdate = (updateStatePart.worldTimeDebt / tickTime).FloorToInt_Positive();
 #if UNITY_EDITOR
 			if (ticksToUpdate > MAX_TICKS_PER_FRAME)
-				Debug.LogWarning($"{ticksToUpdate} ticks was scheduled in this frame.");
+				Debug.Log($"{ticksToUpdate} ticks was scheduled in this frame.");
 #endif
 
 			if (ticksToUpdate > 0)
@@ -107,7 +107,7 @@ namespace Sapientia.MemoryAllocator
 			if (!IsValid)
 				return;
 
-			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>(ServiceType.NoState);
+			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			if (!updateStatePart.ShouldLateUpdate())
 				return;
 

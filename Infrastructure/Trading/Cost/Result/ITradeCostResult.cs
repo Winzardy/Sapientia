@@ -6,5 +6,7 @@ namespace Trading.Result
 	/// </summary>
 	public interface ITradeCostResult
 	{
+		// TODO: merge...
+		public void Refund(Tradeboard board);
 	}
 }

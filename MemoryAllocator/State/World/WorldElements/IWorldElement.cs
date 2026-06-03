@@ -2,7 +2,7 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IWorldElement : IInterfaceProxyType
+	public interface IWorldElement : IInterfaceProxyType, IWorldService
 	{
 		public virtual void Initialize(WorldState worldState, IndexedPtr self) {}
 
@@ -16,6 +16,8 @@ namespace Sapientia.MemoryAllocator
 		/// Right before first world update
 		/// </summary>
 		public virtual void Start(WorldState worldState, IndexedPtr self) {}
+
+		public virtual void BeforeDispose(WorldState worldState, IndexedPtr self) {}
 
 		public virtual void Dispose(WorldState worldState, IndexedPtr self) {}
 	}

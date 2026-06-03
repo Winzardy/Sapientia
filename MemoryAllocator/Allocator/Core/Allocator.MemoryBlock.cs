@@ -11,7 +11,7 @@ namespace Sapientia.MemoryAllocator
 		{
 			public BlockId id;
 
-			public int prevBlockOffset;
+			public int prevBlockOffset; // Смещение к предыдущему блоку. Меньше нуля, иначе предыдущего блока нет.
 			public int blockSize; // Равен размеру структуры MemoryBlock + размер свободной памяти блока
 #if DEBUG
 			public int dataSize; // Размер, который был запрошен при аллокации

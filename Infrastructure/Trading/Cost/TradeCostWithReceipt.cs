@@ -18,6 +18,7 @@ namespace Trading
 			if (board.IsFetchMode)
 				return CanFetch(board, out error);
 #endif
+
 			if (!board.Contains<ITradingNode>())
 			{
 				TradingDebug.LogError("Not found trading node...");
@@ -59,10 +60,19 @@ namespace Trading
 
 		protected abstract string GetReceiptKey(string tradeId);
 
+#if CLIENT
 		protected abstract bool CanFetch(Tradeboard board, out TradePayError? error);
 
 		protected abstract Task<T?> FetchAsync(Tradeboard board, CancellationToken cancellationToken);
+#else
+		protected bool CanFetch(Tradeboard board, out TradePayError? error)
+		{
+			error = null;
+			return false;
+		}
 
+		protected Task<T?> FetchAsync(Tradeboard board, CancellationToken cancellationToken) => null;
+#endif
 		bool ITradeCostWithReceipt.CanFetch(Tradeboard board, out TradePayError? error)
 		{
 			OnBeforeFetchCheck(board);

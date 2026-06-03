@@ -13,7 +13,7 @@ namespace SharedLogic
 		public virtual string Id => _id ??= GetType().Name
 			.Remove(nameof(SharedNode));
 
-		internal ILogger Logger => _root.Logger;
+		protected ILogger Logger => _root.Logger;
 
 		void IInitializableNode.Initialize(ISharedRoot root)
 		{

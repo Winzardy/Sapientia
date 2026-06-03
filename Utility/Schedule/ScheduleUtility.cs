@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 
@@ -17,6 +18,12 @@ namespace Sapientia
 			return rawType.ToEnum<SchedulePointKind>();
 		}
 
+		public static SchedulePointDecode Decode<T>(this ref T point)
+			where T : struct, ISchedulePoint
+		{
+			return point.Code;
+		}
+
 		/// <inheritdoc cref="GetKind(long)"/>
 		public static SchedulePointKind GetKind<T>(this T point)
 			where T : struct, ISchedulePoint
@@ -28,8 +35,10 @@ namespace Sapientia
 		public static bool IsEmpty(this ScheduleScheme scheme)
 			=> scheme.points.IsNullOrEmpty();
 
-		public static int CalculatePassedPointCount(this ScheduleScheme schedule, DateTime utcAt, DateTime utcNow)
-			=> CalculatePassedPointCount(schedule.points, utcAt, utcNow);
+		public static int CalculatePassedPointCount(this in ScheduleScheme schedule, DateTime utcAt, DateTime utcNow)
+		{
+			return CalculatePassedPointCount(schedule.points, utcAt, utcNow);
+		}
 
 		public static int CalculatePassedPointCount<T>(this T[] points, DateTime utcAt, DateTime utcNow)
 			where T : struct, ISchedulePoint
@@ -37,8 +46,38 @@ namespace Sapientia
 			var count = 0;
 			for (var i = 0; i < points.Length; i++)
 			{
-				if (IsPassed(ref points[i], utcAt, utcNow))
-					count++;
+				count += CalculatePassedPointCount(ref points[i], utcAt, utcNow);
+			}
+
+			return count;
+		}
+
+		public static int CalculatePassedPointCount<T>(this ref T point, DateTime utcAt, DateTime utcNow)
+			where T : struct, ISchedulePoint
+		{
+			if (point.Kind == SchedulePointKind.Interval)
+			{
+				var decode = point.Decode();
+				var timeSpan = utcNow - utcAt;
+				if (timeSpan.TotalSeconds <= 0)
+					return 0;
+				return (int) (timeSpan.TotalSeconds / decode.sec);
+			}
+
+			var nextData = ToDateTime(ref point, utcAt);
+			var count = 0;
+			while (utcNow > nextData)
+			{
+				count++;
+				var dateTime = ToDateTime(ref point, nextData);
+				if (dateTime <= nextData)
+					throw new InvalidOperationException(
+						"Invalid SchedulePoint progression. " +
+						$"Next DateTime [ {dateTime:O} ] is not greater than previous [ {nextData:O} ] " +
+						$"(code: {point.Code}, utcAt: {utcAt:0}, utcNow: {utcNow:0})"
+					);
+
+				nextData = dateTime;
 			}
 
 			return count;
@@ -95,6 +134,13 @@ namespace Sapientia
 			return dateTime;
 		}
 
+		/// <returns>Интервал до ближайшей даты</returns>
+		public static TimeSpan GetRemaining(this ScheduleScheme scheme, DateTime utcAt, DateTime utcNow)
+		{
+			var scheduledDateTime = scheme.ToDateTime(utcAt);
+			return scheduledDateTime - utcNow;
+		}
+
 		public static DateTime ToDateTime<T>(this ref T point, DateTime utcAt)
 			where T : struct, ISchedulePoint
 			=> ToDateTime(point.Code, utcAt);
@@ -132,9 +178,9 @@ namespace Sapientia
 						dailyStart = dailyStart.AddDays(1);
 
 					return dailyStart
-					   .AddHours(decode.hr)
-					   .AddMinutes(decode.min)
-					   .AddSeconds(decode.sec);
+						.AddHours(decode.hr)
+						.AddMinutes(decode.min)
+						.AddSeconds(decode.sec);
 				}
 
 				case SchedulePointKind.Monthly:
@@ -145,14 +191,14 @@ namespace Sapientia
 					var sign = decode.sign ? 1 : -1;
 					if (!decode.sign)
 						monthlyStart = monthlyStart
-						   .AddMonths(1)
-						   .AddDays(-1);
+							.AddMonths(1)
+							.AddDays(-1);
 
 					var monthlyDate = monthlyStart
-					   .AddDays(sign * decode.day)
-					   .AddHours(decode.hr)
-					   .AddMinutes(decode.min)
-					   .AddSeconds(decode.sec);
+						.AddDays(sign * decode.day)
+						.AddHours(decode.hr)
+						.AddMinutes(decode.min)
+						.AddSeconds(decode.sec);
 
 					if (monthlyDate < utcAt)
 						monthlyDate = monthlyDate.AddMonths(1);
@@ -169,13 +215,13 @@ namespace Sapientia
 
 					if (!decode.sign)
 						yearlyDate = yearlyDate
-						   .AddMonths(1)
-						   .AddDays(-1);
+							.AddMonths(1)
+							.AddDays(-1);
 
 					yearlyDate = yearlyDate.AddDays(sign * decode.day)
-					   .AddHours(decode.hr)
-					   .AddMinutes(decode.min)
-					   .AddSeconds(decode.sec);
+						.AddHours(decode.hr)
+						.AddMinutes(decode.min)
+						.AddSeconds(decode.sec);
 
 					if (yearlyDate < utcAt)
 						yearlyDate = yearlyDate.AddYears(1);
@@ -191,10 +237,10 @@ namespace Sapientia
 					).AddDays(-daysSinceWeekStart);
 
 					var weeklyDate = weeklyStart
-					   .AddDays(decode.day)
-					   .AddHours(decode.hr)
-					   .AddMinutes(decode.min)
-					   .AddSeconds(decode.sec);
+						.AddDays(decode.day)
+						.AddHours(decode.hr)
+						.AddMinutes(decode.min)
+						.AddSeconds(decode.sec);
 
 					if (weeklyDate <= utcAt)
 						weeklyDate = weeklyDate.AddDays(7);

@@ -10,7 +10,7 @@ namespace Content
 	using Management;
 
 	// ReSharper disable once ClassNeverInstantiated.Global
-	public sealed class ContentManager : StaticProvider<ContentResolver>
+	public sealed class ContentManager : StaticWrapper<ContentResolver>
 	{
 #if UNITY_EDITOR
 
@@ -29,12 +29,6 @@ namespace Content
 #endif
 		internal static bool IsInitialized => resolver != null;
 
-		/// <summary>
-		///
-		/// </summary>
-		/// <param name="importer"></param>
-		/// <param name="token"></param>
-		/// <returns></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
 			=> resolver.PopulateAsync(importer, token);
@@ -176,11 +170,37 @@ namespace Content
 		public static string ToId<T>(in SerializableGuid guid) => resolver != null ? resolver.ToId<T>(in guid) : guid.ToString();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGet<T>(out T value)
+		{
+			if (Contains<T>())
+			{
+				value = Get<T>();
+				return true;
+			}
+
+			value = default;
+			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryGet<T>(string id, out T value)
 		{
 			if (Contains<T>(id))
 			{
 				value = Get<T>(id);
+				return true;
+			}
+
+			value = default;
+			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryGet<T>(SerializableGuid guid, out T value)
+		{
+			if (Contains<T>(guid))
+			{
+				value = Get<T>(guid);
 				return true;
 			}
 

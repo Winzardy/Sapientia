@@ -1,12 +1,24 @@
+#nullable disable
 using System;
 
 namespace Sapientia
 {
-	public interface IRequestClose
+	/// <summary>
+	/// Перехватывает вызов на закрытие и в итоге сам должен вызвать у себя CloseRequest
+	/// </summary>
+	public interface ICloseInterceptor : ICloseRequestor
 	{
-		public event Action RequestedClose;
-
-		public void RequestClose();
+		void RequestClose();
 	}
 
+	public interface ICloseRequestor
+	{
+
+		event Action CloseRequested;
+	}
+
+	public interface ICloseAvailability
+	{
+		bool CloseAvailable { get; }
+	}
 }

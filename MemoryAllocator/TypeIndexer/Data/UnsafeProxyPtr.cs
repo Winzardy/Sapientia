@@ -19,15 +19,15 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public UnsafeProxyPtr(UnsafeIndexedPtr indexedPtr)
 		{
-			proxy = IndexedTypes.GetProxy<T>(indexedPtr.typeIndex);
+			proxy = IndexedTypes.GetProxy<T>(indexedPtr.typeId);
 			this.indexedPtr = indexedPtr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public UnsafeProxyPtr(SafePtr ptr, TypeIndex typeIndex)
+		public UnsafeProxyPtr(SafePtr ptr, TypeId typeId)
 		{
-			proxy = IndexedTypes.GetProxy<T>(typeIndex);
-			indexedPtr = new UnsafeIndexedPtr(ptr, typeIndex);
+			proxy = IndexedTypes.GetProxy<T>(typeId);
+			indexedPtr = new UnsafeIndexedPtr(ptr, typeId);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -21,6 +21,11 @@ namespace Trading.Advertising
 	{
 		public ContentReference<RewardedAdPlacementEntry> placementRef;
 		public int count;
+
+		public void Refund(Tradeboard board)
+		{
+			// Можно выдавать билетики за просмотр рекламы
+		}
 	}
 
 	public class RewardedAdTradeCostResultHandle : TradeCostResultHandle<RewardedAdTradeCost>

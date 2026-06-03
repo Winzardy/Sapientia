@@ -13,6 +13,8 @@ namespace Sapientia.ServiceManagement
 			_supplier = supplier;
 		}
 
+#if !CLIENT && !UNITY_EDITOR
+		[Obsolete("Низя")]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService GetOrCreate<TService>() where TService : new()
 		{
@@ -22,11 +24,13 @@ namespace Sapientia.ServiceManagement
 			return ServiceLocator<TService>.GetOrCreate<TService>();
 		}
 
+		[Obsolete("Низя")]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void GetOrCreate<TService>(out TService service) where TService : new()
 		{
 			service = GetOrCreate<TService>();
 		}
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static TService Get<TService>()
@@ -78,6 +82,12 @@ namespace Sapientia.ServiceManagement
 		public static void UnRegisterAsService<TService>(this TService service)
 		{
 			ServiceLocator<TService>.UnRegister(service);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TService ReplaceService<TService>(this TService service)
+		{
+			return ServiceLocator<TService>.ReplaceService(service);
 		}
 
 		private static bool TryGetFromSupplier<TService>(out TService service)

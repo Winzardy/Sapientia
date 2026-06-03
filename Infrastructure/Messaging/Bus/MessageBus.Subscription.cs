@@ -15,7 +15,7 @@ namespace Messaging
 			/// Доставить сообщение
 			/// </summary>
 			/// <param name="message">Сообщение, подлежащее доставке</param>
-			public void Deliver<T>(ref T message) where T : struct;
+			void Deliver<T>(ref T message) where T : struct;
 		}
 
 		private class StrongMessageSubscription<TMessage> : IMessageSubscription where TMessage : struct

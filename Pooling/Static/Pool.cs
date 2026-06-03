@@ -15,19 +15,9 @@ namespace Sapientia.Pooling
 	{
 		static Pool() => StaticObjectPool.Initialize(new Policy());
 
-		public static T Get()
-		{
-			var obj = StaticObjectPool.Get<T>();
-			obj.OnGet();
-			return obj;
-		}
+		public static T Get() => StaticObjectPool.Get<T>();
 
-		public static PooledObject<T> Get(out T result)
-		{
-			var pooledObject = StaticObjectPool.Get(out result);
-			pooledObject.Obj.OnGet();
-			return pooledObject;
-		}
+		public static PooledObject<T> Get(out T result) => StaticObjectPool.Get(out result);
 
 		public static void Release(T obj) => StaticObjectPool.Release(obj);
 

@@ -151,6 +151,13 @@ namespace Submodules.Sapientia.Memory
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void MemCopy<T>(SafePtr<T> source, T* destination, int length) where T : unmanaged
+		{
+			source.AssertValidLength(length);
+			MemCopy<T>(source.ptr, destination, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemCopy<T>(T* source, T* destination, int length) where T: unmanaged
 		{
 			var size = length * TSize<T>.size;

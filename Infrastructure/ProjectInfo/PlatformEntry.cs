@@ -13,6 +13,7 @@ namespace ProjectInformation
 
 		public const string IOS = "iOS";
 		public const string ANDROID = "Android";
+		public const string WINDOWS_DEBUG = "Windows debug";
 	}
 
 	/// <summary>
@@ -25,11 +26,10 @@ namespace ProjectInformation
 
 		public PlatformEntry(string platform) => this.platform = platform;
 
+		public readonly bool IsDefined() => !platform.IsNullOrEmpty() || platform == PlatformType.UNDEFINED;
+
 		public static implicit operator string(PlatformEntry platform) => platform.platform;
 		public static implicit operator PlatformEntry(string name) => new(name);
-
-		public static implicit operator bool(PlatformEntry platform) =>
-			!platform.platform.IsNullOrEmpty() || platform.platform == PlatformType.UNDEFINED;
 
 		public override int GetHashCode() => platform?.GetHashCode() ?? 0;
 
@@ -42,6 +42,7 @@ namespace ProjectInformation
 		{
 			yield return PlatformType.ANDROID;
 			yield return PlatformType.IOS;
+			yield return PlatformType.WINDOWS_DEBUG;
 		}
 
 		public static string ToLabel(this in PlatformEntry entry) => GetLabel(entry);

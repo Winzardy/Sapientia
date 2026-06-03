@@ -9,7 +9,7 @@ namespace Sapientia.MemoryAllocator
 {
 	[StructLayout(LayoutKind.Sequential)]
 	[System.Diagnostics.DebuggerTypeProxyAttribute(typeof(MemArray<>.MemArrayProxy))]
-	public unsafe struct MemArray<T> : IMemListEnumerable<T> where T : unmanaged
+	public unsafe struct MemArray<T> where T : unmanaged
 	{
 		public static readonly MemArray<T> Empty = new () { innerArray = MemArray.Empty };
 
@@ -175,7 +175,10 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Resize(WorldState worldState, int newLength, ClearOptions options = ClearOptions.ClearMemory)
 		{
-			return innerArray.Resize<T>(worldState, newLength, options);
+			if (IsCreated)
+				return innerArray.Resize<T>(worldState, newLength, options);
+			this = new MemArray<T>(worldState, newLength, options);
+			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -217,6 +220,8 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
+			if (Count == 0)
+				return default;
 			return new MemListEnumerator<T>(GetValuePtr(worldState), Count);
 		}
 

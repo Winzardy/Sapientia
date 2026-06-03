@@ -17,6 +17,14 @@ namespace UnityEngine
 		{
 		}
 	}
+
+	[Conditional("CLIENT")]
+	public class SpaceAttribute: Attribute
+	{
+		public SpaceAttribute()
+		{
+		}
+	}
 }
 
 /// Надоело везде писать UnityEngine.SerializeReference и оборачивать в дефайны

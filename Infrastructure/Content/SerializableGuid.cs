@@ -59,7 +59,7 @@ namespace Content
 		public static SerializableGuid New() => Guid.NewGuid();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsEmpty() => guid == Guid.Empty;
+		public readonly bool IsEmpty() => guid == Guid.Empty;
 
 		public static bool TryParse(string str, out SerializableGuid guid)
 		{

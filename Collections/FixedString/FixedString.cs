@@ -512,7 +512,7 @@ namespace Sapientia.Collections.FixedString
 					sourceptr, source.Length);
 				if (error == CopyError.Truncation)
 				{
-#if UNITY_5_3_OR_NEWER
+#if UNITY_5_3_OR_NEWER && LOG_FIXED_STRING
 					UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
 #endif
 				}
@@ -1372,7 +1372,7 @@ namespace Sapientia.Collections.FixedString
 					sourceptr, source.Length);
 				if (error == CopyError.Truncation)
 				{
-#if UNITY_5_3_OR_NEWER
+#if UNITY_5_3_OR_NEWER && LOG_FIXED_STRING
 					UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
 #endif
 				}
@@ -2257,7 +2257,7 @@ namespace Sapientia.Collections.FixedString
 					sourceptr, source.Length);
 				if (error == CopyError.Truncation)
 				{
-#if UNITY_5_3_OR_NEWER
+#if UNITY_5_3_OR_NEWER && LOG_FIXED_STRING
 					UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
 #endif
 				}
@@ -3263,7 +3263,7 @@ namespace Sapientia.Collections.FixedString
 					sourceptr, source.Length);
 				if (error == CopyError.Truncation)
 				{
-#if UNITY_5_3_OR_NEWER
+#if UNITY_5_3_OR_NEWER && LOG_FIXED_STRING
 					UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
 #endif
 				}
@@ -5412,7 +5412,7 @@ namespace Sapientia.Collections.FixedString
 						sourceptr, source.Length);
 					if (error == CopyError.Truncation)
 					{
-#if UNITY_5_3_OR_NEWER
+#if UNITY_5_3_OR_NEWER && LOG_FIXED_STRING
 						UnityEngine.Debug.LogWarning($"Warning: {error} [string: \"{source}\"]");
 #endif
 					}

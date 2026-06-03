@@ -89,7 +89,12 @@ namespace Submodules.Sapientia.Memory
 		internal void Dispose()
 		{
 			_tracker.StartDisposeTrackingType();
+
 			var allocations = _tracker.GetAllocations();
+#if UNITY_5_3_OR_NEWER
+			UnityEngine.Debug.Log($"{nameof(MemoryManager)}.Dispose [id: {_id}({(MemoryType)(-_id)}), Allocations Count: {_tracker.AllocationCount}, Pointers to free: {allocations.Count}]");
+#endif
+
 			foreach (var entry in allocations)
 			{
 				var ptr = new SafePtr((void*)entry.key);
@@ -172,13 +177,25 @@ namespace Submodules.Sapientia.Memory
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void MemFree(SafePtr memory)
 		{
-			_tracker.Untrack(memory.ptr);
-
 #if UNITY_5_3_OR_NEWER && !FORCE_MARSHAL_ALLOC
 			Unity.Collections.LowLevel.Unsafe.UnsafeUtility.Free(memory.ptr, _unityAllocator);
 #else
 			Marshal.FreeHGlobal((IntPtr)memory.ptr);
 #endif
+			_tracker.Untrack(memory.ptr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SafePtr<T> MakeArray<T>(int length, int align, ClearOptions clearMemory = ClearOptions.ClearMemory) where T : unmanaged
+		{
+			E.ASSERT(length > 0, "Попытка аллокации массива нулевой или отрицательной длины");
+
+			var size = TSize<T>.size * length;
+			var ptr = MemAlloc(size, align);
+			if (clearMemory == ClearOptions.ClearMemory)
+				MemoryExt.MemClear(ptr, size);
+
+			return (SafePtr<T>)ptr;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

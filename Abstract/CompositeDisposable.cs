@@ -13,6 +13,7 @@ namespace Sapientia.Extensions
 
 		public virtual void Dispose()
 		{
+			BeforeDispose();
 			OnDisposeInternal();
 
 			if (_disposables?.IsNullOrEmpty() ?? true)
@@ -22,11 +23,18 @@ namespace Sapientia.Extensions
 				disposable.Dispose();
 
 			StaticObjectPoolUtility.ReleaseAndSetNull(ref _disposables);
+			AfterDispose();
 		}
 
 		protected virtual void OnDisposeInternal() => OnDispose();
 
 		protected virtual void OnDispose()
+		{
+		}
+		protected virtual void BeforeDispose()
+		{
+		}
+		protected virtual void AfterDispose()
 		{
 		}
 
@@ -150,8 +158,11 @@ namespace Sapientia.Extensions
 
 	public static class DisposeUtility
 	{
-		public static void DisposeAndSetNull<T>(ref T obj) where T : class, IDisposable
+		public static void DisposeAndSetNull<T>(ref T? obj) where T : class, IDisposable
 		{
+			if(obj == null)
+				return;
+
 			obj.Dispose();
 			obj = null!;
 		}

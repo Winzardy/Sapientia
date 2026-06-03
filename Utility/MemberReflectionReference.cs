@@ -6,7 +6,7 @@ using Sapientia.Extensions;
 namespace Sapientia.Reflection
 {
 	[Serializable]
-	public class MemberReflectionReference<T> : IMemberReflectionReference
+	public struct MemberReflectionReference<T> : IMemberReflectionReference
 	{
 		private T _cache;
 
@@ -145,6 +145,8 @@ namespace Sapientia.Reflection
 
 		public string ToString(bool type) =>
 			string.Join(".", steps) + (type ? $" ({typeof(T).Name})" : "");
+
+		public bool IsEmpty() => steps == null || steps.Length == 0;
 	}
 
 	[Serializable]

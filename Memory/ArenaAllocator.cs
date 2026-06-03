@@ -132,7 +132,7 @@ namespace Sapientia.Memory
 	/// <summary>
 	/// Предполагаем, что аргумент <see cref="offset"/> находится внутри аллокатора.
 	/// </summary>
-	public static class MonotonicAllocatorExt
+	public static class ArenaAllocatorExt
 	{
 		public static ref ArenaAllocator GetRelativeAllocator(this ref PtrOffset<ArenaAllocator> relativeOffset)
 		{

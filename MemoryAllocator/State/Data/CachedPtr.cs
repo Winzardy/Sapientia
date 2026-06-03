@@ -166,14 +166,7 @@ namespace Sapientia.MemoryAllocator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CachedPtr<T> Create(WorldState worldState)
-		{
-			var memPtr = worldState.MemAlloc<T>(out var cachedPtr);
-			return new CachedPtr<T>(worldState, memPtr, cachedPtr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CachedPtr<T> Create(WorldState worldState, in T value)
+		public static CachedPtr<T> Create(WorldState worldState, in T value = default)
 		{
 			var memPtr = worldState.MemAlloc<T>(out var cachedPtr);
 			return new CachedPtr<T>(worldState, memPtr, cachedPtr, value);

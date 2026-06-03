@@ -2,6 +2,8 @@ namespace Sapientia.MemoryAllocator.State
 {
 	public struct OptionalValue<TValue>
 	{
+		public static OptionalValue<TValue> Empty => default;
+
 		public TValue value;
 		private byte _isEnabled;
 
@@ -47,6 +49,14 @@ namespace Sapientia.MemoryAllocator.State
 		public static implicit operator OptionalValue<TValue>(TValue value)
 		{
 			return new OptionalValue<TValue>(value);
+		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = value.GetHashCode();
+			if (_isEnabled == 0)
+				hashCode = ~hashCode;
+			return hashCode;
 		}
 	}
 }

@@ -27,7 +27,6 @@ namespace Content.Management
 	{
 		private List<IContentEntry> _entries = new();
 
-
 		public void Dispose()
 		{
 			Clear();
@@ -35,6 +34,9 @@ namespace Content.Management
 
 		internal async Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
 		{
+#if CONTENT_ENTRY_BUFFER
+			ContentEntryBuffer.Clear();
+#endif
 			var entries = await importer.ImportAsync(token);
 
 			if (token.IsCancellationRequested)
@@ -49,6 +51,10 @@ namespace Content.Management
 
 			// Очищаем кеш, чтобы не забивать память лишними FieldInfo
 			FastReflection.Clear();
+#if CONTENT_ENTRY_BUFFER
+			// Внутри entry.Register происходит ContentEntryBuffer.Pop(remove:false), очистка тут!
+			ContentEntryBuffer.Clear();
+#endif
 		}
 
 		private void Clear()

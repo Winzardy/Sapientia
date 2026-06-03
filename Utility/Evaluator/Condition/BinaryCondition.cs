@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 #if CLIENT
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -47,6 +48,13 @@ namespace Sapientia.Conditions
 				LogicalOperator.And => a.IsFulfilled(context) && b.IsFulfilled(context),
 				_ => throw new ArgumentOutOfRangeException()
 			};
+		}
+
+		public override IEnumerator<IEvaluator> GetEnumerator()
+		{
+			yield return this;
+			yield return a;
+			yield return b;
 		}
 	}
 }

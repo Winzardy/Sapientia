@@ -3,25 +3,6 @@ using Sapientia.Data;
 
 namespace Sapientia.MemoryAllocator
 {
-	public interface IMemListEnumerable<T>
-		where T: unmanaged
-	{
-		public int Count { get; }
-		public SafePtr<T> GetValuePtr(WorldState worldState);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
-		{
-			return new MemListEnumerator<T>(GetValuePtr(worldState), 0, Count);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MemListEnumerable<T> GetEnumerable(WorldState worldState)
-		{
-			return new (GetEnumerator(worldState));
-		}
-	}
-
 	public readonly ref struct MemListEnumerable<T>
 		where T : unmanaged
 	{

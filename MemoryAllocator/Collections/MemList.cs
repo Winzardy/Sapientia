@@ -9,7 +9,7 @@ using Submodules.Sapientia.Memory;
 namespace Sapientia.MemoryAllocator
 {
 	[DebuggerTypeProxy(typeof(MemList<>.ListProxy))]
-	public struct MemList<T> : IMemListEnumerable<T> where T : unmanaged
+	public struct MemList<T> where T : unmanaged
 	{
 		private MemArray<T> _arr;
 		private int _count;
@@ -53,6 +53,11 @@ namespace Sapientia.MemoryAllocator
 		public MemList(WorldState worldState, MemListEnumerable<T> enumerable, int capacity) : this(worldState, capacity)
 		{
 			AddRange(worldState, enumerable);
+		}
+
+		public ref T Last(WorldState worldState)
+		{
+			return ref _arr[worldState, _count - 1];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -196,12 +201,23 @@ namespace Sapientia.MemoryAllocator
 		public readonly bool Contains<TU>(WorldState worldState, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			E.ASSERT(IsCreated);
-			for (int i = 0, cnt = _count; i < cnt; ++i)
+			for (var i = 0; i < _count; ++i)
 			{
 				if (obj.Equals(_arr[worldState, i]))
-				{
 					return true;
-				}
+			}
+
+			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool ContainsAny<TU>(WorldState worldState, Span<TU> objs) where TU : unmanaged, IEquatable<T>
+		{
+			E.ASSERT(IsCreated);
+			foreach (ref var obj in objs)
+			{
+				if (Contains(worldState, obj))
+					return true;
 			}
 
 			return false;
@@ -211,7 +227,7 @@ namespace Sapientia.MemoryAllocator
 		public bool Remove<TU>(WorldState worldState, TU obj) where TU : unmanaged, IEquatable<T>
 		{
 			E.ASSERT(IsCreated);
-			for (int i = 0, cnt = _count; i < cnt; ++i)
+			for (var i = 0; i < _count; ++i)
 			{
 				if (obj.Equals(_arr[worldState, i]))
 				{
@@ -226,7 +242,7 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveSwapBack<TU>(WorldState worldState, TU obj) where TU : unmanaged, IEquatable<T>
 		{
-			for (int i = 0, cnt = _count; i < cnt; ++i)
+			for (var i = 0; i < _count; ++i)
 			{
 				if (obj.Equals(_arr[worldState, i]))
 				{
@@ -244,18 +260,34 @@ namespace Sapientia.MemoryAllocator
 			if (index >= _count)
 				return false;
 
-			if (index == _count - 1)
+			var endCount = index + 1;
+			if (endCount != _count)
 			{
-				--_count;
-				_arr[worldState, _count] = default;
-				return true;
+				var ptr = _arr.innerArray.ptr.memPtr;
+				worldState.MemMove<T>(ptr, endCount, ptr, index, _count - endCount);
 			}
-
-			var ptr = _arr.innerArray.ptr.memPtr;
-			worldState.MemMove<T>(ptr, index + 1, ptr, index, (_count - index - 1));
 
 			--_count;
 			_arr[worldState, _count] = default;
+
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool RemoveAt(WorldState worldState, int index, int countToRemove)
+		{
+			var endCount = index + countToRemove;
+			if (endCount > _count)
+				return false;
+
+			if (endCount != _count)
+			{
+				var ptr = _arr.innerArray.ptr.memPtr;
+				worldState.MemMove<T>(ptr, endCount, ptr, index, (_count - endCount));
+			}
+
+			_count -= countToRemove;
+			_arr.Fill(worldState, default, _count, countToRemove);
 
 			return true;
 		}
@@ -269,6 +301,19 @@ namespace Sapientia.MemoryAllocator
 			--_count;
 			var last = _arr[worldState, _count];
 			_arr[worldState, index] = last;
+
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool RemoveAtSwapBack(WorldState worldState, int index, int countToRemove)
+		{
+			if (index + countToRemove > _count)
+				return false;
+
+			var ptr = _arr.innerArray.ptr.memPtr;
+			worldState.MemMove<T>(ptr, _count - countToRemove, ptr, index, countToRemove);
+			_count -= countToRemove;
 
 			return true;
 		}
@@ -349,7 +394,9 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemListEnumerator<T> GetEnumerator(WorldState worldState)
 		{
-			return new MemListEnumerator<T>(IsCreated ? GetValuePtr(worldState) : default,0 , Count);
+			if (Count == 0)
+				return default;
+			return new MemListEnumerator<T>(GetValuePtr(worldState),0 , Count);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,28 +1,22 @@
-using System.Collections;
 using System.Collections.Generic;
-using Trading.Result;
 
 namespace Trading
 {
-#if NEWTONSOFT
-	[Newtonsoft.Json.JsonObject] // иначе пытается сериализовать как список
-#endif
-	public partial class TradeRewardProgression : IEnumerable<TradeReward>
+	public partial class TradeRewardProgression
 	{
-		public IEnumerator<TradeReward> GetEnumerator()
-		{
-			foreach (var item in stages.Value)
-				yield return item.reward;
-		}
-
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-		public override IEnumerable<TradeReward> EnumerateActual(Tradeboard board)
+		protected internal override IEnumerable<TradeReward> EnumerateActualInternal(Tradeboard board)
 		{
 			foreach (var reward in GetCurrentStage(board)
-				        .reward
-				        .EnumerateActual(board))
+				.reward
+				.EnumerateActualInternal(board))
 				yield return reward;
+		}
+
+		public override IEnumerator<TradeReward> GetEnumerator()
+		{
+			yield return this;
+			for (int i = 0; i < stages.Length; i++)
+				yield return stages[i].reward;
 		}
 	}
 }

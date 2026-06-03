@@ -1,51 +1,43 @@
 using System;
-using System.ComponentModel;
 using Content;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Conditions;
-using Sapientia.Extensions;
-
-#if CLIENT
 using UnityEngine;
+#if CLIENT
+using UnityEngine.Serialization;
 #endif
 
 namespace Trading
 {
 	[Serializable]
-	public partial class TradeRewardProgression : TradeReward
+	public partial class TradeRewardProgression : TradeReward, ITradeFinishHandler, ITradeResettable
+#if CLIENT
+		, ISerializationCallbackReceiver
+#endif
 	{
-		private const string GROUP_CATALOG_ID = "TradeRewardProgression";
-		private const string KEY_FORMAT = "TradeRewardProgression_{0}";
-		private const string GUID_KEY_FORMAT = "{0}_{1}";
-
-		[NonSerialized]
-		private string _progressKeyCache;
-
-		public ContentEntry<TradeRewardProgressionStage[]> stages;
+		public TradeRewardProgressionStage[] stages;
 
 		/// <summary>
-		/// Условие при котором награда прогрессирует, если 'None', то прогрессирует всегда
+		/// Награда выбирается циклически по значению прогресса.
+		/// Например, если прогресс = 5, а наград всего 4,
+		/// будет выбрана награда с индексом 1 (5 % 4).
+		/// <br/>
+		/// В отличие от обычного поведения, где при превышении диапазона
+		/// выбирается последняя награда
 		/// </summary>
-		[SerializeReference]
-		public Condition<Blackboard> condition = new ObjectProviderBlackboardProxyEvaluator();
+		public bool cycle;
 
-		/// <summary>
-		/// Если использовать группу, то прогрессия будет связана по выбранной группе,
-		/// например награда из одной группы будет отмечаться по этой группе
-		///
-		/// <br/><br/>
-		/// P.S так же работает в связке с ценами!
-		/// </summary>
-		[ContextLabel(GROUP_CATALOG_ID)]
-		public Toggle<int> group;
-
-		public TradeProgressionScheme autoReset;
+		public TradeProgressionSchemeSource schemeSource;
+		public ContentEntry<TradeProgressionScheme> schemeEntry;
+		public SerializableGuid Key { get => schemeEntry.Guid; }
+		public ContentReference<TradeProgressionScheme> schemeReference;
 
 		public void Reset(Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
-			node.ResetProgress(GetProgressKey(board.Id), in autoReset);
+			var progressKey = GetProgressKey(out var scheme);
+			node.ResetProgress(progressKey, scheme);
 		}
 
 		protected override bool CanReceive(Tradeboard board, out TradeReceiveError? error)
@@ -57,45 +49,137 @@ namespace Trading
 		protected override bool Receive(Tradeboard board)
 		{
 			ref readonly var stage = ref GetCurrentStage(board);
-			var success = stage.reward
-			   .Execute(board);
+			var success = stage.reward.Execute(board);
 
 			if (success)
-				TryIncrementStage(in stage, board);
+				TryIncrementStageAfterReceive(in stage, board);
 
 			return success;
 		}
 
-		private ref readonly TradeRewardProgressionStage GetCurrentStage(Tradeboard board)
+		public ref readonly TradeRewardProgressionStage GetCurrentStage(Tradeboard board)
 		{
 			var node = board.Get<ITradingNode>();
-			var progressPoint = node.GetCurrentProgress(GetProgressKey(board.Id), autoReset);
-			var index = progressPoint >= stages.Value.Length ? ^1 : progressPoint;
-			return ref stages.Value.GetValueByIndex(index);
+			return ref GetCurrentStage(node);
+		}
+
+		public ref readonly TradeRewardProgressionStage GetCurrentStage(ITradingNode node)
+		{
+			var index = GetCurrentStageIndex(node);
+			return ref stages.GetValueByIndex(index);
+		}
+
+		public Index GetCurrentStageIndex(Tradeboard board)
+		{
+			var node = board.Get<ITradingNode>();
+			return GetCurrentStageIndex(node);
+		}
+
+		public Index GetCurrentStageIndex(ITradingNode node)
+		{
+			var key = GetProgressKey(out var scheme);
+			var progress = node.GetCurrentProgress(key, scheme);
+			var length = stages.Length;
+			return progress >= length ? cycle ? progress % length : ^1 : progress;
+		}
+
+		private void TryIncrementStageAfterReceive(in TradeRewardProgressionStage stage, Tradeboard board)
+		{
+			// Если награда под общим прогрессом ее инкремент отдельный в конце сделки
+			if (schemeSource != TradeProgressionSchemeSource.Local)
+				return;
+
+			TryIncrementStage(in stage, board);
+		}
+
+		public void OnTradeFinished(Tradeboard board)
+		{
+			if (schemeSource != TradeProgressionSchemeSource.Shared)
+				return;
+
+			var progressKey = GetProgressKey(out var scheme);
+
+			// Если прогресс уже был, игнорируем остальные
+			if (board.Contains<bool>(progressKey))
+				return;
+
+			TryIncrementStage(progressKey, scheme, board);
+			board.Register(true, progressKey);
 		}
 
 		private void TryIncrementStage(in TradeRewardProgressionStage stage, Tradeboard board)
 		{
-			var node = board.Get<ITradingNode>();
+			var progressKey = GetProgressKey(out var scheme);
+			var skipCondition = stage.useOverrideCondition;
+			if (!stage.overrideCondition.IsFulfilled(board))
+				return;
 
-			if (stage is {useOverrideCondition: true, overrideCondition: not null})
-			{
-				if (!stage.overrideCondition.IsFulfilled(board))
-					return;
-			}
-			else if (condition != null && !condition.IsFulfilled(board))
+			TryIncrementStage(progressKey, scheme, board, skipCondition);
+		}
+
+		private void TryIncrementStage(string key, TradeProgressionScheme targetScheme, Tradeboard board)
+		{
+			TryIncrementStage(key, targetScheme, board, false);
+		}
+
+		private void TryIncrementStage(string key, TradeProgressionScheme targetScheme, Tradeboard board, bool skipCondition)
+		{
+			if (!skipCondition && !targetScheme.condition.IsFulfilled(board))
 			{
 				return;
 			}
 
-			var progressKey = GetProgressKey(board.Id);
-			node.IncrementProgress(progressKey, autoReset);
+			var node = board.Get<ITradingNode>();
+			node.IncrementProgress(key, targetScheme);
 		}
 
-		private string GetProgressKey(string tradeId)
+		private string GetProgressKey(out TradeProgressionScheme scheme)
 		{
-			return _progressKeyCache ??= group ? KEY_FORMAT.Format(group) : GUID_KEY_FORMAT.Format(tradeId, stages.Guid);
+			if (schemeSource == TradeProgressionSchemeSource.Shared)
+			{
+				scheme = schemeReference.Read();
+				return schemeReference.guid;
+			}
+			else
+			{
+				scheme = schemeEntry;
+				return schemeEntry.Guid;
+			}
 		}
+
+#if CLIENT
+		[FormerlySerializedAs("autoReset")]
+		[HideInInspector]
+		public TradeProgressionScheme scheme;
+
+		[FormerlySerializedAs("stages")]
+		[HideInInspector]
+		public ContentEntry<TradeRewardProgressionStage[]> legacyStages;
+
+		[HideInInspector]
+		public bool migrated;
+
+		void ISerializationCallbackReceiver.OnBeforeSerialize()
+		{
+		}
+
+		void ISerializationCallbackReceiver.OnAfterDeserialize()
+		{
+			if (migrated)
+				return;
+			if (!legacyStages.IsValid() && scheme == null)
+				return;
+			stages = legacyStages.Value;
+			schemeEntry.SetValue(in scheme);
+			if (legacyStages.IsValid())
+			{
+				schemeEntry.SetGuid(legacyStages.Guid);
+				legacyStages.RegenerateGuid();
+			}
+
+			migrated = true;
+		}
+#endif
 	}
 
 	[Serializable]

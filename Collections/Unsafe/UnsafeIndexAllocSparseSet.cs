@@ -85,8 +85,8 @@ namespace Sapientia.Collections
 			if (_ids.count <= 0)
 				_ids.Add(_nextIdToAllocate++);
 
+			var id = _ids[_ids.count - 1];
 			_ids.count--;
-			var id = _ids[_ids.count];
 
 			_sparseSet.EnsureGet(id);
 			return id;
@@ -137,6 +137,11 @@ namespace Sapientia.Collections
 			_ids.Clear();
 			_sparseSet.ClearFast();
 			_nextIdToAllocate = 0;
+		}
+
+		public Span<T>.Enumerator GetEnumerator()
+		{
+			return GetValuesSpan().GetEnumerator();
 		}
 	}
 }

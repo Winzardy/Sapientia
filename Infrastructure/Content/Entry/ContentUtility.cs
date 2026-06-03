@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace Content
 {
 	public static class ContentUtility
@@ -32,13 +30,17 @@ namespace Content
 			if (UnityEngine.Application.isPlaying)
 #endif
 				if (index >= 0
-				    && ContentManager.TryGetEntry<T>(index, out var entryByIndex)
-				    && entryByIndex == guid)
+					&& ContentManager.TryGetEntry<T>(index, out var entryByIndex)
+					&& entryByIndex == guid)
 				{
 					return ref entryByIndex.Value;
 				}
 
 			var entryByGuid = ContentManager.GetEntry<T>(in guid);
+
+			if (entryByGuid is null)
+				return ref ContentDefaultEmptyValue<T>.value;
+
 			index = entryByGuid.Index;
 			return ref entryByGuid.Value;
 		}
@@ -60,14 +62,23 @@ namespace Content
 			if (UnityEngine.Application.isPlaying)
 #endif
 				if (index >= 0
-				    && ContentManager.TryGetEntry<T>(index, out var entryByIndex)
-				    && entryByIndex == guid)
+					&& ContentManager.TryGetEntry<T>(index, out var entryByIndex)
+					&& entryByIndex == guid)
 				{
 					return ref entryByIndex.Value;
 				}
 
 			var entryByGuid = ContentManager.GetEntry<T>(in guid);
+
+			if (entryByGuid is null)
+				return ref ContentDefaultEmptyValue<T>.value;
+
 			return ref entryByGuid.Value;
 		}
+	}
+
+	public static class ContentDefaultEmptyValue<T>
+	{
+		public static readonly T value = default;
 	}
 }

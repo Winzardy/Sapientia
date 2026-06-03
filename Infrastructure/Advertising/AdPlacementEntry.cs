@@ -13,14 +13,14 @@ using Sapientia.Extensions;
 namespace Advertising
 {
 	[Serializable]
-	[Constants]
+	[Constants(UseGuid = true)]
 	public class InterstitialAdPlacementEntry : AdPlacementEntry
 	{
 		public override AdPlacementType Type => AdPlacementType.Interstitial;
 	}
 
 	[Serializable]
-	[Constants]
+	[Constants(UseGuid = true)]
 	public class RewardedAdPlacementEntry : AdPlacementEntry
 	{
 		public override AdPlacementType Type => AdPlacementType.Rewarded;
@@ -54,14 +54,13 @@ namespace Advertising
 		// TODO: добавить Dictionary<Condition, UsageLimitEntry>
 		// нужно для случаев если хотим переопределить лимит по условиям
 
-
 		public string GetName(in PlatformEntry platform)
 		{
 #if ENABLE_AD_EMPTY_CHECK
 			if (id.IsNullOrEmpty())
 				throw new Exception("AdPlacementEntry name is empty!");
 #endif
-			if (platform && platformToName.TryGetValue(platform, out var name))
+			if (platform.IsDefined() && platformToName.TryGetValue(platform, out var name))
 				return name;
 
 			return useCustomName ? customName : id;
@@ -78,15 +77,5 @@ namespace Advertising
 		void IExternallyIdentifiable.SetId(string id) => this.id = id;
 	}
 
-	public static class AdPlacementEntryUtility
-	{
-		public static bool CanShow<T>(this T entry, out AdShowError? error) where T : AdPlacementEntry
-			=> AdManager.CanShow(entry, out error);
 
-		public static bool Show<T>(this T entry, bool autoLoad = true) where T : AdPlacementEntry
-			=> AdManager.Show(entry, autoLoad);
-
-		public static bool Load<T>(this T entry) where T : AdPlacementEntry
-			=> AdManager.Load(entry);
-	}
 }

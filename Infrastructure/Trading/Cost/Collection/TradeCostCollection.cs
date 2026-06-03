@@ -52,7 +52,6 @@ namespace Trading
 
 		protected override bool Pay(Tradeboard board)
 		{
-			using (ListPool<TradeCost>.Get(out var paid))
 			using (ListPool<TradeCost>.Get(out var sorted))
 			{
 				try
@@ -64,11 +63,9 @@ namespace Trading
 					{
 						if (!item.Execute(board))
 						{
-							Refund(board, paid);
+							board.RefundResult();
 							return false;
 						}
-
-						paid.Add(item);
 					}
 
 					return true;
@@ -76,7 +73,7 @@ namespace Trading
 				catch (Exception e)
 				{
 					TradingDebug.LogException(e);
-					Refund(board, paid);
+					board.RefundResult();
 					throw;
 				}
 			}

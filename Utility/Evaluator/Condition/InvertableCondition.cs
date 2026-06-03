@@ -7,8 +7,8 @@ namespace Sapientia.Conditions
 	{
 		public bool invert;
 
-		public override bool IsFulfilled(T context) => invert
-			? !base.IsFulfilled(context)
-			: base.IsFulfilled(context);
+		protected override bool EvaluateInternal(T context) => invert
+			? !base.EvaluateInternal(context)
+			: base.EvaluateInternal(context);
 	}
 }

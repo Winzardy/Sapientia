@@ -1,11 +1,10 @@
-using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Collections;
 using Sapientia.Extensions;
 
 namespace Sapientia.MemoryAllocator
 {
-	public partial struct Allocator : IDisposable
+	public partial struct Allocator
 	{
 		private UnsafeList<MemoryZone> _zonesList;
 		private UnsafeList<MemoryBlockPtrCollection> _freeBlockPools;
@@ -58,15 +57,15 @@ namespace Sapientia.MemoryAllocator
 
 		public void Dispose()
 		{
-			for (var i = 0; i < _freeBlockPools.count; i++)
+			foreach (ref var pool in _freeBlockPools)
 			{
-				_freeBlockPools[i].Dispose();
+				pool.Dispose();
 			}
 			_freeBlockPools.Dispose();
 
-			for (var i = 0; i < _zonesList.count; i++)
+			foreach (ref var zone in _zonesList)
 			{
-				_zonesList[i].Dispose();
+				zone.Dispose();
 			}
 			_zonesList.Dispose();
 

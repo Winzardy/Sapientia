@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Sapientia.Collections;
 using Sapientia.JsonConverters;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sapientia.Extensions
 {
@@ -37,7 +36,7 @@ namespace Sapientia.Extensions
 				LogError($"[JsonSerializer] path: {args.ErrorContext.Path}, msg: {args.ErrorContext.Error.Message}");
 				args.ErrorContext.Handled = true;
 			},
-			MissingMemberHandling = MissingMemberHandling.Error,
+			MissingMemberHandling = MissingMemberHandling.Ignore,
 			SerializationBinder = new CustomSerializationBinder(),
 			TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
 #if UNITY_EDITOR
@@ -57,8 +56,7 @@ namespace Sapientia.Extensions
 
 		private static readonly JsonSerializerSettings JSON_SETTINGS_AUTO_TYPED_INDENTED = new(JSON_SETTINGS_DEFAULT)
 		{
-			TypeNameHandling = TypeNameHandling.Auto,
-			Formatting = Formatting.Indented,
+			TypeNameHandling = TypeNameHandling.Auto, Formatting = Formatting.Indented,
 		};
 
 		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED = new(JSON_SETTINGS_DEFAULT)
@@ -68,8 +66,7 @@ namespace Sapientia.Extensions
 
 		private static readonly JsonSerializerSettings JSON_SETTINGS_FULL_TYPED_INDENTED = new(JSON_SETTINGS_DEFAULT)
 		{
-			TypeNameHandling = TypeNameHandling.All,
-			Formatting = Formatting.Indented,
+			TypeNameHandling = TypeNameHandling.All, Formatting = Formatting.Indented,
 		};
 
 		public static string ToJson<T>(this T from, SerializationType serializationType = SerializationType.Cut)
@@ -246,26 +243,6 @@ namespace Sapientia.Extensions
 			}
 		}
 
-		public static SimpleList<T>? ListFromJsonLines<T>(this SimpleList<string> lines)
-		{
-			var result = new SimpleList<T>();
-
-			try
-			{
-				for (var i = 0; i < lines.Count; i++)
-				{
-					var value = lines[i].FromJson<T>();
-					result.Add(value);
-				}
-
-				return result;
-			}
-			catch (Exception e)
-			{
-				return default;
-			}
-		}
-
 		public static void LogError(string message)
 		{
 #if UNITY_EDITOR
@@ -288,46 +265,6 @@ namespace Sapientia.Extensions
 			{
 				NewtonsoftJsonUtility.LogError($"[{nameof(ErrorTraceWriter)}][{level}] {message} {ex}");
 			}
-		}
-	}
-
-	public class CustomSerializationBinder : DefaultSerializationBinder
-	{
-		private static readonly ConcurrentDictionary<string, string> _rawToMatch = new();
-
-		public override Type BindToType(string assemblyName, string typeName)
-		{
-			if (_rawToMatch.TryGetValue(assemblyName, out var correctAssemblyName))
-				return base.BindToType(correctAssemblyName, typeName);
-			try
-			{
-				return base.BindToType(assemblyName, typeName);
-			}
-			catch
-			{
-				var match = AppDomain.CurrentDomain
-					.GetAssemblies()
-					.Select(a => new {Assembly = a, Type = a.GetType(typeName, throwOnError: false)})
-					.FirstOrDefault(x => x.Type != null);
-
-				if (match == null)
-					throw new JsonSerializationException(
-						$"Unable to resolve type '{typeName}' from any loaded assembly (original assembly: {assemblyName})");
-
-				correctAssemblyName = match.Assembly.GetName().Name;
-				_rawToMatch[assemblyName] = correctAssemblyName;
-
-				return base.BindToType(correctAssemblyName, typeName);
-			}
-		}
-
-		public override void BindToName(Type serializedType, out string? assemblyName, out string? typeName)
-		{
-			base.BindToName(serializedType, out var rawAssemblyName, out typeName);
-			var name = Assembly.GetAssembly(serializedType).GetName().Name;
-			if (rawAssemblyName != null)
-				_rawToMatch[rawAssemblyName] = name;
-			assemblyName = name;
 		}
 	}
 }

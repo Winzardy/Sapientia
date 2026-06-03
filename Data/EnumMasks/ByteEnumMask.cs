@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Sapientia.Extensions;
 
 namespace Sapientia.Data
@@ -97,6 +98,19 @@ namespace Sapientia.Data
 		{
 			AssertValue(value);
 			mask &= (byte)~(1 << value);
+		}
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.Append($"{typeof(T).Name}: ");
+			for (var i = 0; i < EnumValues<T>.ENUM_LENGHT; i++)
+			{
+				var has = Has(EnumValues<T>.VALUES[i]);
+				var name = EnumNames<T>.NAMES[i];
+				sb.Append($"{name}-{has}; ");
+			}
+			return sb.ToString();
 		}
 
 		public static ByteEnumMask<T> operator |(ByteEnumMask<T> a, ByteEnumMask<T> b)

@@ -3,7 +3,8 @@ using System.Runtime.CompilerServices;
 
 namespace Submodules.Sapientia.Data
 {
-	public struct Id : IEquatable<Id>
+	[Serializable]
+	public struct Id : IEquatable<Id>, IComparable<Id>
 	{
 		public static readonly Id Invalid = new Id
 		{
@@ -57,16 +58,20 @@ namespace Submodules.Sapientia.Data
 			};
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object obj)
+		public int CompareTo(Id other)
 		{
-			return obj is Id other && Equals(other);
+			return id.CompareTo(other.id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			return id;
+		}
+
+		public override string ToString()
+		{
+			return ((int)this).ToString();
 		}
 	}
 }

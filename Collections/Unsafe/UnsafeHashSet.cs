@@ -11,14 +11,14 @@ using Submodules.Sapientia.Memory;
 namespace Sapientia.Collections
 {
 	[DebuggerTypeProxy(typeof(UnsafeHashSet<>.HashSetProxy))]
-	public struct UnsafeHashSet<T> : IEnumerable<UnsafeHashSet<T>.Slot>, IEnumerable<SafePtr<UnsafeHashSet<T>.Slot>>, IDisposable
+	public struct UnsafeHashSet<T> : IDisposable
 		where T : unmanaged, IEquatable<T>
 	{
 		public struct Slot
 		{
 			internal int hashCode; // Lower 31 bits of hash code, -1 if unused
 			internal int next; // Index of next entry, -1 if last
-			internal T value;
+			public T value;
 		}
 
 		private const int _hashCodeMask = 0x7FFFFFFF;
@@ -393,21 +393,9 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<SafePtr<Slot>> IEnumerable<SafePtr<Slot>>.GetEnumerator()
+		public SlotEnumerator GetSlotEnumerator()
 		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator<Slot> IEnumerable<Slot>.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
+			return new SlotEnumerator(GetSlotPtr(), LastIndex);
 		}
 
 		private class HashSetProxy
@@ -432,13 +420,10 @@ namespace Sapientia.Collections
 #if DEBUG
 					var arr = new T[_hashSet.Count];
 					var i = 0;
-					var e = _hashSet.GetEnumerator();
-					while (e.MoveNext())
+					foreach (var value in _hashSet)
 					{
-						arr[i++] = e.Current.value;
+						arr[i++] = value;
 					}
-
-					e.Dispose();
 
 					return arr;
 #else
@@ -448,16 +433,47 @@ namespace Sapientia.Collections
 			}
 		}
 
+		public ref struct Enumerator
+		{
+			private SlotEnumerator _slotEnumerator;
 
-		public struct Enumerator :
-			IEnumerator<Slot>,
-			IEnumerator<SafePtr<Slot>>
+			internal Enumerator(SafePtr<Slot> entries, int count)
+			{
+				_slotEnumerator = new SlotEnumerator(entries, count);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public bool MoveNext()
+			{
+				return _slotEnumerator.MoveNext();
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Reset()
+			{
+				_slotEnumerator.Reset();
+			}
+
+			public ref T Current
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => ref _slotEnumerator.Current.value;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Dispose()
+			{
+				_slotEnumerator.Dispose();
+			}
+		}
+
+		public ref struct SlotEnumerator
 		{
 			private readonly SafePtr<Slot> _entries;
 			private readonly int _count;
 			private int _index;
 
-			internal Enumerator(SafePtr<Slot> entries, int count)
+			internal SlotEnumerator(SafePtr<Slot> entries, int count)
 			{
 				_entries = entries;
 				_count = count;
@@ -483,22 +499,10 @@ namespace Sapientia.Collections
 				_index = -1;
 			}
 
-			object IEnumerator.Current
+			public ref Slot Current
 			{
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => Current;
-			}
-
-			SafePtr<Slot> IEnumerator<SafePtr<Slot>>.Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => _entries + _index;
-			}
-
-			public Slot Current
-			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => (_entries + _index).Value();
+				get => ref (_entries + _index).Value();
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

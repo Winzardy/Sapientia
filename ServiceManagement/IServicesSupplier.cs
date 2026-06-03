@@ -1,10 +1,9 @@
-using System.Collections.Generic;
+using Sapientia;
 
 namespace Game.App.ServiceManagement
 {
-	public interface IServicesSupplier
+	public interface IServicesSupplier : IObjectsProvider
 	{
-		T Get<T>();
 		bool TryGet<T>(out T service);
 	}
 }

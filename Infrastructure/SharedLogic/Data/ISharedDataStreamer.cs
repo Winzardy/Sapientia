@@ -9,7 +9,6 @@ namespace SharedLogic
 	/// </remarks>
 	public interface ISharedDataStreamer : ISharedDataReader, ISharedDataWriter
 	{
-		public void Load(string json);
 		public string Save();
 
 		/// <summary>
