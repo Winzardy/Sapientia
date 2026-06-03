@@ -6,7 +6,7 @@ namespace Sapientia.LogicGraph.Logic
 {
 	public struct CompiledGraph
 	{
-		public PtrOffset<ArenaAllocator> allocatorOffset;
+		public PtrOffset<BumpHeader> allocatorOffset;
 
 		public PtrOffset<Id<Blueprint>> blueprints;
 		public int blueprintsCount;

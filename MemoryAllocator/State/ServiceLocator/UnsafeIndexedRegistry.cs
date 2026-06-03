@@ -125,7 +125,7 @@ namespace Sapientia.MemoryAllocator
 			if (length > 0)
 			{
 				var ptr = result._payloads.ptr;
-				stream.Read(ref ptr, length);
+				stream.Read(ptr, length);
 			}
 			return result;
 		}

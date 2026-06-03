@@ -13,7 +13,7 @@ namespace Sapientia.LogicGraph.Logic
 	/// </summary>
 	public struct CompiledBlueprint
 	{
-		public PtrOffset<ArenaAllocator> allocatorOffset;
+		public PtrOffset<BumpHeader> allocatorOffset;
 
 		public int version;
 		public Id<Blueprint> id;
@@ -69,7 +69,7 @@ namespace Sapientia.LogicGraph.Logic
 			return size;
 		}
 
-		public static PtrOffset<CompiledBlueprint> Compile(ref ArenaAllocator allocator, Blueprint blueprint)
+		public static PtrOffset<CompiledBlueprint> Compile(ref BumpHeader allocator, Blueprint blueprint)
 		{
 			var result = allocator.MemAlloc<CompiledBlueprint>();
 			ref var compiled = ref allocator.GetRef(result);

@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator
 				allocator._zonesList.Add(new MemoryZone(default, zoneSize));
 				var zoneMemoryPtr = allocator._zonesList[i].memory;
 
-				stream.Read(ref zoneMemoryPtr, zoneSize);
+				stream.Read(zoneMemoryPtr, zoneSize);
 			}
 
 			var blockCollectionsCount = stream.Read<int>();
@@ -69,7 +69,7 @@ namespace Sapientia.MemoryAllocator
 				freeBlocks.Count = blocksCount;
 
 				var arrayPtr = freeBlocks.GetInnerArray();
-				stream.Read(ref arrayPtr, blocksCount);
+				stream.Read(arrayPtr, blocksCount);
 			}
 
 			return allocator;

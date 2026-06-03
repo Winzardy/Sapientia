@@ -70,14 +70,14 @@ namespace Sapientia.Memory
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Read(ref SafePtr value, int length)
+		public void Read(SafePtr value, int length)
 		{
 			var ptr = GetPointerAndMove(length);
 			MemoryExt.MemCopy(ptr, value, length);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Read<T>(ref SafePtr<T> value, int length) where T : unmanaged
+		public void Read<T>(SafePtr<T> value, int length) where T : unmanaged
 		{
 			var size = TSize<T>.size * length;
 			var ptr = GetPointerAndMove(size);
