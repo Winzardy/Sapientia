@@ -1,142 +1,121 @@
 #if UNITY_EDITOR
-using Content;
-using Content.ScriptableObjects;
+using System.IO;
+using System.Linq;
+using Content.ScriptableObjects.Editor;
 using Content.ScriptableObjects.ScaleTables;
 using NReco.Csv;
 using Sapientia.Deterministic;
 using Sapientia.Extensions;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using UnityEditor;
+using Sapientia.Pooling;
 using UnityEditor.AssetImporters;
-using UnityEngine;
 
 namespace Sapientia.ScaleTables.Editor
 {
 	[ScriptedImporter(version: 1, ext: "slt")]
-	public class ScaleTableImporter : ScriptedImporter
+	public class ScaleTableImporter : ContentScriptedImporter<ScaleTableScriptableObject, ScaleTableConfig>
 	{
-		public const string DELIMITER = ",";
+		private const string DELIMITER = ",";
 
-		public override void OnImportAsset(AssetImportContext ctx)
+		protected override bool TryCreateValue(AssetImportContext ctx, out ScaleTableConfig value)
 		{
-			var id = Path.GetFileNameWithoutExtension(ctx.assetPath);
-			if (id.IsNullOrEmpty())
+			using (ListPool<ScaleTableRow>.Get(out var tableRows))
+			using (ListPool<Fix64>.Get(out var valuesBuffer))
 			{
-				ctx.LogImportError($"Id for scale table is empty");
-				return;
-			}
-
-			var tableRows = new List<ScaleTableRow>();
-
-			using (var streamRdr = new StreamReader(ctx.assetPath))
-			{
-				int lineIndex = 0;
-				int valuesRowSize = 0;
-
-				var valuesBuffer = new List<Fix64>();
-				var reader = new CsvReader(streamRdr, DELIMITER);
-
-				while (reader.Read())
+				using (var streamRdr = new StreamReader(ctx.assetPath))
 				{
-					valuesBuffer.Clear();
+					var lineIndex = 0;
+					var valuesRowSize = 0;
 
-					if (reader.IsEmptyLine())
+					var reader = new CsvReader(streamRdr, DELIMITER);
+
+					while (reader.Read())
 					{
-						ctx.LogImportError(
-							"Invalid scale table format - " +
-							$"empty line detected - [ {lineIndex} ]");
+						valuesBuffer.Clear();
 
-						lineIndex++;
-						continue;
-					}
-
-					if (lineIndex == 0 && !IsValidScaleRow(reader))
-					{
-						ctx.LogImportError(
-							"Invalid scale table format - " +
-							"make sure scale row exists");
-
-						lineIndex++;
-						continue;
-					}
-
-					if (!IsValidRowKey(reader))
-					{
-						ctx.LogImportError(
-							"Invalid scale table format - " +
-							"make sure row has identifier");
-
-						lineIndex++;
-						continue;
-					}
-
-					if (lineIndex == 0)
-					{
-						valuesRowSize = reader.FieldsCount;
-					}
-
-					var rowKey = reader[0];
-					var parsedValue = Fix64.Zero;
-
-					for (int i = 1; i < valuesRowSize; i++)
-					{
-						if (lineIndex == 0 && reader[i].IsNullOrWhiteSpace())
+						if (reader.IsEmptyLine())
 						{
-							ctx.LogImportWarning(
-								$"Scale row contains " +
-								$"empty cell at index [ {i} ], " +
-								$"turnicating to [ {i - 1} ]");
+							ctx.LogImportError(
+								"Invalid scale table format - " +
+								$"empty line detected - [ {lineIndex} ]");
 
-							valuesRowSize = i;
-							break;
+							lineIndex++;
+							continue;
 						}
 
-						// will parse all the added values
-						// and fill remaining with the last parsed value
-						// (in case row is only partially filled)
-						if (i < reader.FieldsCount)
+						if (lineIndex == 0 && !IsValidScaleRow(reader))
 						{
-							if (Fix64.TryParse(reader[i], out var parsed))
+							ctx.LogImportError(
+								"Invalid scale table format - " +
+								"make sure scale row exists");
+
+							lineIndex++;
+							continue;
+						}
+
+						if (!IsValidRowKey(reader))
+						{
+							ctx.LogImportError(
+								"Invalid scale table format - " +
+								"make sure row has identifier");
+
+							lineIndex++;
+							continue;
+						}
+
+						if (lineIndex == 0)
+						{
+							valuesRowSize = reader.FieldsCount;
+						}
+
+						var rowKey = reader[0];
+						var parsedValue = Fix64.Zero;
+
+						for (var i = 1; i < valuesRowSize; i++)
+						{
+							if (lineIndex == 0 && reader[i].IsNullOrWhiteSpace())
 							{
-								parsedValue = parsed;
+								ctx.LogImportWarning(
+									$"Scale row contains " +
+									$"empty cell at index [ {i} ], " +
+									$"turnicating to [ {i - 1} ]");
+
+								valuesRowSize = i;
+								break;
 							}
+
+							// will parse all the added values
+							// and fill remaining with the last parsed value
+							// (in case row is only partially filled)
+							if (i < reader.FieldsCount)
+							{
+								if (Fix64.TryParse(reader[i], out var parsed))
+								{
+									parsedValue = parsed;
+								}
+							}
+
+							valuesBuffer.Add(parsedValue);
 						}
 
-						valuesBuffer.Add(parsedValue);
+						var row = new ScaleTableRow
+						{
+							key = rowKey,
+							identifier = Path.GetFileName(rowKey),
+							values = valuesBuffer.ToArray()
+						};
+
+						tableRows.Add(row);
+						lineIndex++;
 					}
-
-					var row = new ScaleTableRow
-					{
-						key        = rowKey,
-						identifier = Path.GetFileName(rowKey),
-						values     = valuesBuffer.ToArray()
-					};
-
-					tableRows.Add(row);
-					lineIndex++;
 				}
+
+				value = new ScaleTableConfig
+				{
+					scaleRow = tableRows.First(),
+					valueRows = tableRows.Skip(1).ToArray()
+				};
+				return true;
 			}
-
-			var path = ctx.assetPath;
-			var guid = AssetDatabase.AssetPathToGUID(path);
-
-			var asset = ScriptableObject.CreateInstance<ScaleTableScriptableObject>();
-			var serializableGuid = SerializableGuid.Parse(guid);
-			if (!asset.ForceCreateEntry(serializableGuid, id))
-				asset.SetId(id);
-
-			var config = new ScaleTableConfig
-			{
-				scaleRow  = tableRows.First(),
-				valueRows = tableRows.Skip(1).ToArray()
-			};
-
-			asset.SetValue(config, false);
-
-			ctx.AddObjectToAsset(nameof(ScaleTableScriptableObject), asset);
-			ctx.SetMainObject(asset);
 		}
 
 		private bool IsValidScaleRow(CsvReader reader)
