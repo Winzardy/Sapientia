@@ -17,6 +17,7 @@
 
 		public const string CONSTANTS_MENU = TOOLS_MENU + "Constants/";
 		public const string DATABASE_MENU = TOOLS_MENU + "Database/";
+		public const string VALIDATION_MENU = TOOLS_MENU + "Validation/";
 
 		public const string DATABASE_ITEM_NAME = "/Database";
 		public const string FULL_CREATE_MENU = "Assets/Create/" + GROUP_NAME + "/";
