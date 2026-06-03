@@ -17,7 +17,6 @@ namespace Sapientia.Memory
 		public readonly Id<MemoryManager> memoryId;
 
 		public bool IsValid => header.IsValid;
-		public SafePtr<BumpHeader> Ptr => header;
 		public ref BumpHeader Value => ref header.Value();
 
 		/// <param name="reservedSize">Размер под данные (без заголовка) — заголовок добавляется поверх.</param>
