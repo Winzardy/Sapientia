@@ -2,7 +2,7 @@ using Sapientia.Data;
 using Sapientia.Memory;
 using Submodules.Sapientia.Data;
 
-namespace Sapientia.LogicGraph.Logic
+namespace Sapientia.LogicGraph
 {
 	public struct CompiledGraph
 	{

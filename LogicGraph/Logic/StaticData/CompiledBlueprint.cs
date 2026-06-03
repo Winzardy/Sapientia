@@ -6,7 +6,7 @@ using Sapientia.LogicGraph.Data;
 using Sapientia.Memory;
 using Submodules.Sapientia.Data;
 
-namespace Sapientia.LogicGraph.Logic
+namespace Sapientia.LogicGraph
 {
 	/// <summary>
 	/// Статические данные блюпринта

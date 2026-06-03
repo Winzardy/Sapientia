@@ -2,7 +2,7 @@ using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.Memory;
 
-namespace Sapientia.LogicGraph.Logic
+namespace Sapientia.LogicGraph
 {
 	public interface ILogicNode<TInput, TOutput, TState> : ILogicNode<TInput, TOutput>
 		where TInput : unmanaged

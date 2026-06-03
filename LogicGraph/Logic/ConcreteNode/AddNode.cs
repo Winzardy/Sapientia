@@ -2,7 +2,7 @@ using System;
 using Sapientia.Data;
 using Sapientia.Extensions;
 
-namespace Sapientia.LogicGraph.Logic
+namespace Sapientia.LogicGraph
 {
 	[Serializable]
 	// Набросал чисто чтобы примерно было понятно как пришивать к логике

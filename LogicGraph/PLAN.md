@@ -23,7 +23,7 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 | # | Phase | Concept | Depends on | Status |
 |---|---|---|---|---|
 | 0 | Test harness | EditMode test asmdef + smoke test; establish the loop | — | ☑ |
-| 1 | Universal `ArenaAllocator` | backend-agnostic block provider (raw `MemoryExt` ⟷ main `Allocator`) | 0 | ☐ |
+| 1 | `BumpHeader` + wrappers | memory-agnostic bump header + raw/`Allocator` block-provider wrappers | 0 | ☑ |
 | 2 | Five-scope layout | per-node compile-time sizing + layout of all 5 scope blocks; `static` keyed by (id,version) | 1 | ☐ |
 | 3 | `NodesScope` entity | scope lifecycle, per-usage static-cache/persistent, instance bound to (id,version), type-indexed context registry | 2 | ☐ |
 | 4 | Blueprint manager | versioning, lazy compile, recompile-on-new-version, runtime add/remove, retain-old-for-live-instances | 3 | ☐ |
@@ -69,6 +69,35 @@ batchmode test command exist for CI-less local runs, or is running tests a manua
 ---
 
 ### Phase 1 — Universal `ArenaAllocator` backend
+
+**Status: done (2026-06-04).** Shipped, but the **design diverged from the plan below** (gated and
+agreed during implementation). Instead of a tagged-struct backend with a cached base re-resolved on
+`WorldState.Version` change, the final shape is:
+- **`ArenaAllocator` → renamed `BumpHeader`** (`Memory/BumpAllocator/BumpHeader.cs`) and made
+  **memory-agnostic + position-independent**: it owns no backing memory and stores **no absolute
+  pointer** — the base is derived from the struct's own address (`Memory => this.AsSafePtr(_reservedSize)`,
+  the header lives at byte 0 of its block). So a move/serialize/deserialize needs **no re-resolve and no
+  version cache** — the "cached base / `ResolveBase` on version change" mechanism was dropped as unneeded.
+  `BumpHeader.Create(SafePtr, int)` only lays out the header in a caller-provided block.
+- **Two thin wrapper structs own allocation/free** (the "block provider"):
+  `RawBumpAllocator` (`Memory/BumpAllocator/`, raw `MemoryExt` via `Id<MemoryManager>`, base never moves —
+  standalone/server/tests/binary) and `MemBumpAllocator` (`MemoryAllocator/BumpAllocator/`, main
+  `Allocator` via a stable `MemPtr`, resolves the header from `WorldState` each access — for `*persistent`
+  that rides the world snapshot). `Create` allocates, `Dispose` frees.
+- **Assembly split resolved without moving `BumpHeader`:** `BumpHeader` + `RawBumpAllocator` stay in
+  `Sapientia`; `MemBumpAllocator` lives in `Sapientia.MemoryAllocator` (which already references
+  `Sapientia`). No new asmdef, no circular dependency.
+- **Open sub-questions resolved:** (1) the raw path keeps a fully context-free API — `BumpHeader` takes no
+  `WorldState` at all; (2) `MemBumpAllocator` stores only a `MemPtr` and resolves via `WorldState` — no
+  kind-enum/tagged struct needed.
+- **Tests run in PlayMode** (`Sapientia.LogicGraph.Tests` asmdef converted) so `MemoryManagerController`
+  auto-initializes via `[RuntimeInitializeOnLoadMethod]`. Tests: `BumpHeaderSmokeTests`,
+  `BumpAllocatorTests` (raw monotonic/serialize + world round-trip/dispose/snapshot-re-resolve) — green.
+- **Side fix:** standalone `WorldState` serialize/deserialize needed a fix (`WorldManager`/`WorldState`)
+  for the snapshot re-resolve test to pass.
+
+> The plan text below is the **original pre-implementation sketch**, kept for context; the Status block
+> above is what actually shipped.
 
 **Goal.** Make `ArenaAllocator` work over **either** backing memory source without changing its bump +
 `PtrOffset` layout model. See the design write-up in [CLAUDE.md §8 → Active design decisions](CLAUDE.md).

@@ -1,7 +1,7 @@
 using Sapientia.Data;
 using Submodules.Sapientia.Data;
 
-namespace Sapientia.LogicGraph.Logic
+namespace Sapientia.LogicGraph
 {
 	public struct LogicGraph
 	{

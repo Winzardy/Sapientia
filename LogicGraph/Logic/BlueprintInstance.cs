@@ -3,7 +3,7 @@ using Sapientia.MemoryAllocator;
 using Submodules.Sapientia.Data;
 using Submodules.Sapientia.Memory;
 
-namespace Sapientia.LogicGraph.Logic
+namespace Sapientia.LogicGraph
 {
 	public struct BlueprintInstance
 	{

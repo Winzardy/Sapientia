@@ -86,7 +86,7 @@ Authoring side (managed):
 
 Compiler / compiled data (unmanaged, in arena):
 - `Logic/StaticData/BlueprintCompiler.cs:8` — **`BlueprintCompiler`**: top-level compiled container.
-  **Start here for the build path.** `CompileAll(Blueprint[])` (`:15`) sizes & creates one `ArenaAllocator`, lays out a per-`Id<Blueprint>` table, compiles each blueprint. `Serialize`/`Deserialize` (`:54`,`:74`) round-trip the whole arena blob.
+  **Start here for the build path.** `CompileAll(Blueprint[])` (`:15`) sizes & creates one `RawBumpAllocator` (bump arena), lays out a per-`Id<Blueprint>` table, compiles each blueprint. `Serialize`/`Deserialize` (`:54`,`:74`) round-trip the whole arena blob.
 - `Logic/StaticData/CompiledBlueprint.cs:14` — **`CompiledBlueprint`**: the static, shared-across-instances
   blob for one blueprint. `Compile`/`SetupBlueprint` (`:72`,`:83`) lay out node headers, node bodies,
   edge tables, default edge data, and default node state, and wire each input to the output it connects to.
@@ -123,7 +123,7 @@ parts onto the project's mental model:
   `CompiledBlueprint`/`BlueprintCompiler` (compile + read). The `unmanaged`, Burst-compiled behavior.
 - **View:** none.
 - **Compiled static data:** `CompiledBlueprint`/`BlueprintCompiler` blob — **read-only, shared by all
-  instances** of a blueprint, held in a *separate* standalone `ArenaAllocator` (not the `WorldState` arena — see §7).
+  instances** of a blueprint, held in a *separate* standalone `RawBumpAllocator` (a `BumpHeader` over raw memory, not the `WorldState` arena — see §7).
 
 ### Five data scopes (the authoritative state model)
 
@@ -208,7 +208,7 @@ found here; grep), so there is **no tick wiring yet** — it is currently a set 
    sized by `CompiledBlueprint.CalculateSizeToReserve` (`CompiledBlueprint.cs:51`), then `CompiledBlueprint.Compile`
    → `SetupBlueprint` (`:72`,`:83`) lays out and wires each blueprint. Output: `SafePtr<BlueprintCompiler>`.
 3. **(Optional) Serialize** — the compiled arena blob is written/read via `BlueprintCompiler.Serialize`/`Deserialize`
-   (`:54`,`:74`) and `ArenaAllocator.Serialize`/`Deserialize`.
+   (`:54`,`:74`) and `RawBumpAllocator`/`BumpHeader.Serialize`.
 4. **Instantiate** — `BlueprintInstance.Create(worldState, compiledBlueprint, instanceId)`
    (`BlueprintInstance.cs:20`) allocates an instance state buffer in `WorldState` and copies compiled defaults in.
 5. **Run (per evaluation)** — intended: `BeginRun(edges)` → invoke each node's Burst `DoNode` function
@@ -220,9 +220,10 @@ found here; grep), so there is **no tick wiring yet** — it is currently a set 
 ## 6. Dependencies
 
 - **Depends-on:**
-  - [MemoryAllocator](../MemoryAllocator/CLAUDE.md) — `ArenaAllocator` (`Memory/ArenaAllocator.cs:12`, the
-    bump allocator backing all compiled data), `WorldState`/`CachedPtr`/`MemAlloc` for instances
-    (`BlueprintInstance.cs:20`,`:28`).
+  - [MemoryAllocator](../MemoryAllocator/CLAUDE.md) — `BumpHeader` (`Memory/BumpAllocator/BumpHeader.cs`,
+    the position-independent bump-allocator header backing all compiled data) + the
+    `RawBumpAllocator` / `MemBumpAllocator` block-provider wrappers, `WorldState`/`CachedPtr`/`MemAlloc`
+    for instances (`BlueprintInstance.cs:20`,`:28`).
   - [Data](../Data/CLAUDE.md) — `SafePtr`/`SafePtr<T>`, `PtrOffset`/`PtrOffset<T>` (the
     relative-offset model that makes the blob position-independent), `Id<T>`, `ByteEnumMask<T>` (edge header flags).
   - `Sapientia.TypeIndexer` (part of `Sapientia.MemoryAllocator`) — `NodeTypeId` intends to use
@@ -235,18 +236,23 @@ found here; grep), so there is **no tick wiring yet** — it is currently a set 
 
 ## 7. Gotchas & invariants
 
-- **Two distinct allocators.** Compiled, *static, shared* data lives in a **standalone `ArenaAllocator`**
-  created by `BlueprintCompiler.CompileAll` (`BlueprintCompiler.cs:33`); *mutable, per-instance* data lives
-  in the **`WorldState` arena** (`BlueprintInstance.cs:28`). Do not confuse the two — they have different
-  lifetimes and owners, and an instance points into both.
+- **Two distinct allocators.** Compiled, *static, shared* data lives in a **standalone `RawBumpAllocator`**
+  (a `BumpHeader` over raw `MemoryExt`) created by `BlueprintCompiler.CompileAll` (`BlueprintCompiler.cs:33`);
+  *mutable, per-instance* data lives in the **`WorldState` arena** (`BlueprintInstance.cs:28`). Do not
+  confuse the two — they have different lifetimes and owners, and an instance points into both. (The
+  `Allocator`-backed counterpart of the raw wrapper is `MemBumpAllocator`, used for `*persistent` that rides
+  the world snapshot — Phase 3+.)
 - **Everything is relative-offset / position-independent.** Compiled data never stores raw pointers; it
   stores `PtrOffset`/`PtrOffset<T>` (byte offsets) and reaches the allocator through a *self-relative*
-  `PtrOffset<ArenaAllocator> allocatorOffset` (`CompiledBlueprint.cs:16`, set via
-  `ArenaAllocator.CreateRelativeOffset`, `ArenaAllocator.cs:93`). This is what makes the whole arena
-  serializable as one blob and relocatable. **Invariant:** never cache a `SafePtr` into compiled data
-  across a serialize/deserialize or a move — re-derive from the offset.
-- **`ArenaAllocator` is bump-only, fixed-size, never frees.** `MemAlloc` just advances `_rover`
-  (`ArenaAllocator.cs:33`); `Dispose` frees the whole block. So `CalculateSizeToReserve`
+  `PtrOffset<BumpHeader> allocatorOffset` (`CompiledBlueprint.cs:16`, set via
+  `BumpHeader.CreateRelativeOffset`). `BumpHeader` itself is position-independent — its base is derived from
+  the struct's own address (`Memory => this.AsSafePtr(_reservedSize)`, header at byte 0), so it stores no
+  absolute pointer. This is what makes the whole arena serializable as one blob and relocatable.
+  **Invariant:** never cache a `SafePtr` into compiled data across a serialize/deserialize or a move —
+  re-derive from the offset. **Corollary:** never copy a `BumpHeader` by value (that moves `&this` off its
+  block) — touch it only through `SafePtr<BumpHeader>`/`PtrOffset<BumpHeader>`/`ref`.
+- **`BumpHeader` is bump-only, fixed-size, never frees individual objects.** `MemAlloc` just advances
+  `_rover`; the owning wrapper's `Dispose` frees the whole block. So `CalculateSizeToReserve`
   (`CompiledBlueprint.cs:51`) **must** exactly account for every `MemAlloc` in `SetupBlueprint`, or the arena
   overflows / under-reserves. The two are kept in lockstep by hand (numbered comments `// 1..5` in both
   methods) — **change them together**.
@@ -389,7 +395,15 @@ Big design pieces from the clarifications/board **entirely absent from code** (t
 
 ### Active design decisions (in progress)
 
-**Universal `ArenaAllocator` backend** (decided direction 2026-06-03; not yet implemented).
+**Universal `ArenaAllocator` backend** — ✅ **implemented in Phase 1 (2026-06-04)** as `BumpHeader` +
+`RawBumpAllocator` / `MemBumpAllocator` (see [PLAN.md → Phase 1 status](PLAN.md)). The direction below is
+kept for context but **diverged**: `BumpHeader` (`Memory/BumpAllocator/BumpHeader.cs`) is
+**position-independent** — its base is derived from the struct's own address (header at byte 0 of its
+block), so it stores **no absolute pointer** and needs **no cached base / version re-resolve**. It owns no
+memory; allocation/free live in two thin wrappers — `RawBumpAllocator` (raw `MemoryExt`) and
+`MemBumpAllocator` (`MemoryAllocator/BumpAllocator/`, main `Allocator` via a stable `MemPtr`, resolved from
+`WorldState` per access). The tagged-struct/cached-base mechanism sketched below was dropped as unneeded.
+
 Blob/state scopes (`static`, `*cache`, fixed-size `persistent`) are laid out with `ArenaAllocator`, but
 today it (a) takes its backing block only from raw `MemoryExt.MemAlloc` and (b) resolves only through a
 fixed `SafePtr` (`ArenaAllocator.cs:26`,`:70`). It must become **backend-agnostic** so the same layout

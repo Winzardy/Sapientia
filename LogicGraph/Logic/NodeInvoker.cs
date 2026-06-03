@@ -1,6 +1,7 @@
+#if UNITY_5_3_OR_NEWER
 using Unity.Burst;
 
-namespace Sapientia.LogicGraph.Logic
+namespace Sapientia.LogicGraph
 {
 	public static class NodeInvoker
 	{
@@ -23,3 +24,4 @@ namespace Sapientia.LogicGraph.Logic
 
 	}
 }
+#endif

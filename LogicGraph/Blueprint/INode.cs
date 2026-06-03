@@ -2,7 +2,6 @@ using System;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.LogicGraph.Data;
-using Sapientia.LogicGraph.Logic;
 using Sapientia.Memory;
 
 namespace Sapientia.LogicGraph
