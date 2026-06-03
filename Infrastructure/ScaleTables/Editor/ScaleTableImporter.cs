@@ -124,7 +124,7 @@ namespace Sapientia.ScaleTables.Editor
 
 			var asset = ScriptableObject.CreateInstance<ScaleTableScriptableObject>();
 			var serializableGuid = SerializableGuid.Parse(guid);
-			if (!asset.ForceCreateEntry(serializableGuid))
+			if (!asset.ForceCreateEntry(serializableGuid, id))
 				asset.SetId(id);
 
 			var config = new ScaleTableConfig
