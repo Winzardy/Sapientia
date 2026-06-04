@@ -41,3 +41,10 @@ play mode, поэтому отдельный bootstrap не нужен. `defineC
 - `BumpAllocatorTests.Raw_*` — монотонность смещений и serialize/deserialize raw-арены.
 - `BumpAllocatorTests.World_*` — allocator-арена (через `MemPtr`): round-trip, dispose и резолв после
   переезда блока + смены версии мира (snapshot).
+- `LayoutTests.*` (Фаза 2) — раскладка 5 областей: размеры блоков == сумма выровненных размеров нод,
+  выравнивание/non-overlap офсетов, паддинг слотов, lockstep (резерв == bump), zero-size, адресуемость
+  static-слайсов. Stub-ноды объявляют только `DataSizes` (`StubNode`).
+- `InstanceScopeTests.*` (Фаза 2) — блоки инстанса: аллокация/обнуление обоих блоков, `ResetCache`
+  (cache обнуляется, persistent выживает), zero-size, освобождение на `Dispose`.
+- `BumpArrayTests.*` (Фаза 2) — коллекция `BumpArray<T>` (массив в bump-арене: `PtrOffset` + длина):
+  round-trip элементов, пустой массив невалиден.

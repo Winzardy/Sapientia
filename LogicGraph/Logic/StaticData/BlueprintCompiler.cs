@@ -7,10 +7,9 @@ namespace Sapientia.LogicGraph
 {
 	public struct BlueprintCompiler
 	{
-		private PtrOffset<BumpHeader> _allocatorOffset;
+		private RelativePtr<BumpHeader> _allocatorRef;
 
-		private PtrOffset<PtrOffset<CompiledBlueprint>> _compiledBlueprints;
-		private int _blueprintsCount;
+		private BumpArray<RelativePtr<CompiledBlueprint>> _compiledBlueprints;
 
 		public static SafePtr<BlueprintCompiler> CompileAll(Blueprint[] blueprints)
 		{
@@ -37,15 +36,14 @@ namespace Sapientia.LogicGraph
 			var result = allocator.GetPtr(compilerOffset);
 
 			ref var compiler = ref result.Value();
-			allocator.CreateRelativeOffset(ref compiler._allocatorOffset);
-			compiler._blueprintsCount = blueprintsCount;
-			compiler._compiledBlueprints = allocator.MemAlloc<PtrOffset<CompiledBlueprint>>(blueprintsCount);
+			allocator.SetupRelativePtr(ref compiler._allocatorRef);
+			compiler._compiledBlueprints.Alloc(ref allocator, blueprintsCount);
 
-			var compiledBlueprints = allocator.GetPtr(compiler._compiledBlueprints);
+			var compiledBlueprints = compiler._compiledBlueprints.GetSpan();
 			foreach (var blueprint in blueprints)
 			{
-				var compiled = CompiledBlueprint.Compile(ref allocator, blueprint);
-				compiledBlueprints[blueprint.id] = compiled;
+				var compiled = CompiledBlueprint.Compile(ref allocator, blueprint, out _);
+				compiledBlueprints[blueprint.id].SetPtr(compiled);
 			}
 
 			return result;
@@ -53,22 +51,18 @@ namespace Sapientia.LogicGraph
 
 		public void Serialize(ref StreamBufferWriter stream)
 		{
-			// Т.к. _allocatorOffset - это смещение от себя до аллокатора,
+			// Т.к. _allocatorRef - это смещение от себя до аллокатора,
 			// то чтобы получить смещение от аллокатора до себя - нужно взять отрицательное значение
-			var compilerOffset = -_allocatorOffset;
+			var compilerOffset = -(PtrOffset)_allocatorRef;
 			stream.Write(compilerOffset);
-			_allocatorOffset.GetRelativeAllocator().Serialize(ref stream);
+			_allocatorRef.GetValue().Serialize(ref stream);
 		}
 
 		public ref CompiledBlueprint GetCompiledBlueprint(Id<Blueprint> blueprintId)
 		{
-			ref var allocator = ref _allocatorOffset.GetRelativeAllocator();
-			var blueprints = allocator.GetPtr(_compiledBlueprints);
-
 			E.ASSERT(blueprintId.IsValid);
-			var compilerOffset = blueprints[blueprintId];
-			E.ASSERT(compilerOffset.isValid);
-			return ref allocator.GetRef(compilerOffset);
+			var blueprints = _compiledBlueprints.GetSpan();
+			return ref blueprints[blueprintId].GetValue();
 		}
 
 		public static SafePtr<BlueprintCompiler> Deserialize(ref StreamBufferReader stream)

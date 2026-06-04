@@ -24,7 +24,7 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 |---|---|---|---|---|
 | 0 | Test harness | EditMode test asmdef + smoke test; establish the loop | — | ☑ |
 | 1 | `BumpHeader` + wrappers | memory-agnostic bump header + raw/`Allocator` block-provider wrappers | 0 | ☑ |
-| 2 | Five-scope layout | per-node compile-time sizing + layout of all 5 scope blocks; `static` keyed by (id,version) | 1 | ☐ |
+| 2 | Five-scope layout | per-node compile-time sizing + layout of all 5 scope blocks; `static` keyed by (id,version) | 1 | ☑ |
 | 3 | `NodesScope` entity | scope lifecycle, per-usage static-cache/persistent, instance bound to (id,version), type-indexed context registry | 2 | ☐ |
 | 4 | Blueprint manager | versioning, lazy compile, recompile-on-new-version, runtime add/remove, retain-old-for-live-instances | 3 | ☐ |
 | 5 | Save/load persistent | serialize `*persistent`; re-wire allocator refs (`CachedPtr` pattern) | 4 | ☐ |

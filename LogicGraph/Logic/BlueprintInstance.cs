@@ -11,39 +11,60 @@ namespace Sapientia.LogicGraph
 		public Id<Blueprint> blueprintId;
 		public Id<BlueprintInstance> instanceId;
 
-		// Данные стейтов нод
-		public CachedPtr nodesState;
-
-		// Данные инпутов/аутпутов обновляются при каждой итерации вычислений инстанса
-		public SafePtr<EdgeDataHeader> edgesData;
+		// Долгоживущие данные инстанса (instance persistent) — не обнуляются между run'ами.
+		public CachedPtr instancePersistent;
+		// Кеш инстанса (instance cache) — обнуляется каждый run (ResetCache).
+		public CachedPtr instanceCache;
 
 		public static CachedPtr<BlueprintInstance> Create(WorldState worldState, in CompiledBlueprint compiledBlueprint, Id<BlueprintInstance> instanceId)
 		{
 			var resultPtr = CachedPtr<BlueprintInstance>.Create(worldState);
 
+			// Аллоцируем блоки до получения ref на инстанс — чтобы не держать ref через аллокации.
+			var instancePersistent = AllocBlock(worldState, compiledBlueprint.GetBlockSize(DataLayout.InstancePersistent));
+			var instanceCache = AllocBlock(worldState, compiledBlueprint.GetBlockSize(DataLayout.InstanceCache));
+
 			ref var result = ref resultPtr.GetValue(worldState);
 			result.version = compiledBlueprint.version;
 			result.blueprintId = compiledBlueprint.id;
 			result.instanceId = instanceId;
-			result.nodesState = worldState.MemAlloc(compiledBlueprint.nodesStateSize, out var nodesStatePtr);
-			MemoryExt.MemCopy(compiledBlueprint.NodesStatePtr, nodesStatePtr, compiledBlueprint.nodesStateSize);
+			result.instancePersistent = instancePersistent;
+			result.instanceCache = instanceCache;
 
 			return resultPtr;
 		}
 
-		public void BeginRun(SafePtr<EdgeDataHeader> newEdgesData)
+		/// <summary>
+		/// Аллоцирует обнулённый блок области в worldState. Нулевой размер -> невалидный <see cref="CachedPtr"/>
+		/// (нода/блюпринт не занимает эту область — zero-size раскладывается чисто, без выделения).
+		/// </summary>
+		private static CachedPtr AllocBlock(WorldState worldState, int size)
 		{
-			edgesData = newEdgesData;
+			if (size <= 0)
+				return CachedPtr.Invalid;
+
+			var memPtr = worldState.MemAlloc(size, out var ptr);
+			// Основной Allocator не гарантирует обнуление — чистим под детерминизм reset/persistent.
+			MemoryExt.MemClear(ptr, size);
+			return new CachedPtr(worldState, ptr, memPtr);
 		}
 
-		public void EndRun()
+		/// <summary>Обнуляет блок instance cache (вызывается перед каждым run'ом). Persistent не трогает.</summary>
+		public void ResetCache(WorldState worldState, in CompiledBlueprint compiledBlueprint)
 		{
-			edgesData = default;
+			if (!instanceCache.IsValid())
+				return;
+
+			var size = compiledBlueprint.GetBlockSize(DataLayout.InstanceCache);
+			MemoryExt.MemClear(instanceCache.GetPtr(worldState), size);
 		}
 
-		public void ResetEdges(in CompiledBlueprint compiledBlueprint)
+		public void Dispose(WorldState worldState)
 		{
-			MemoryExt.MemCopy(compiledBlueprint.EdgesDataPtr, edgesData, compiledBlueprint.edgesDataSize);
+			if (instanceCache.IsValid())
+				instanceCache.Dispose(worldState);
+			if (instancePersistent.IsValid())
+				instancePersistent.Dispose(worldState);
 		}
 	}
 }

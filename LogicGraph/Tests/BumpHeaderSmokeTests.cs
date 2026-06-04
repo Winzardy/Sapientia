@@ -29,7 +29,7 @@ namespace Sapientia.LogicGraph.Tests
 				ref var slot = ref header.MemAlloc<int>(out var offset);
 				slot = 42;
 
-				Assert.AreEqual(42, header.GetRef(offset), "Значение, записанное по смещению в арене, не прочиталось обратно.");
+				Assert.AreEqual(42, header.GetValue(offset), "Значение, записанное по смещению в арене, не прочиталось обратно.");
 			}
 			finally
 			{

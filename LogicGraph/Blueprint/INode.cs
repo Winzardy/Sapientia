@@ -42,6 +42,12 @@ namespace Sapientia.LogicGraph
 	{
 		public NodeTypeId NodeTypeId { get; }
 
+		/// <summary>
+		/// Размеры всех 5 областей данных ноды (фаза 2, sizing-only). По умолчанию все нули — нода ничего
+		/// не занимает. Не зависит от модели портов (<see cref="GetInputs"/> и т.п., которая дозреет к M9).
+		/// </summary>
+		public DataSizes DataSizes => default;
+
 		public NodeInput[] GetInputs();
 		public NodeOutput[] GetOutputs();
 		public NodeBody[] GetBodies();

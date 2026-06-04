@@ -38,6 +38,12 @@ namespace Sapientia.Memory
 		public static int HeaderSize => TSize<BumpHeader>.size;
 
 		/// <summary>
+		/// Сколько байт блока уже занято (позиция _rover, включая сам заголовок). Read-only — нужно прежде
+		/// всего тестам lockstep, чтобы независимо сверить фактический bump с расчётным резервом.
+		/// </summary>
+		public int UsedBytes => _rover.byteOffset;
+
+		/// <summary>
 		/// Размещает заголовок в начале уже выделенного блока <paramref name="memory"/> полным размером
 		/// <paramref name="reservedSize"/> байт (включая место под сам заголовок). Память НЕ выделяется —
 		/// это делает обёртка.
@@ -81,7 +87,16 @@ namespace Sapientia.Memory
 		{
 			var size = TSize<T>.size;
 			offset = MemAlloc(size);
-			return ref GetRef(offset);
+			return ref GetValue(offset);
+		}
+
+		public ref T MemAlloc<T>(out PtrOffset<T> offset, out SafePtr<T> ptr)
+			where T : unmanaged
+		{
+			var size = TSize<T>.size;
+			offset = MemAlloc(size);
+			ptr = GetPtr(offset);
+			return ref ptr.Value();
 		}
 
 		public PtrOffset<T> MemAlloc<T>(int count)
@@ -89,6 +104,14 @@ namespace Sapientia.Memory
 		{
 			var size = TSize<T>.size;
 			return MemAlloc(size * count);
+		}
+
+		public SafePtr<T> MemAlloc<T>(int count, out PtrOffset<T> offset)
+			where T : unmanaged
+		{
+			var size = TSize<T>.size;
+			offset = MemAlloc(size * count);
+			return GetPtr(offset);
 		}
 
 		public SafePtr GetPtr(PtrOffset offset)
@@ -102,21 +125,21 @@ namespace Sapientia.Memory
 			return Memory + offset;
 		}
 
-		public ref T GetRef<T>(PtrOffset<T> offset)
+		public ref T GetValue<T>(PtrOffset<T> offset)
 			where T : unmanaged
 		{
 			return ref (Memory + offset).Value();
 		}
 
-		public ref T GetRef<T>(PtrOffset offset)
+		public ref T GetValue<T>(PtrOffset offset)
 			where T : unmanaged
 		{
 			return ref (Memory + offset).Value<T>();
 		}
 
-		public void CreateRelativeOffset(ref PtrOffset<BumpHeader> relativeOffset)
+		public void SetupRelativePtr(ref RelativePtr<BumpHeader> relativeOffset)
 		{
-			relativeOffset = (Memory - (SafePtr)relativeOffset.AsSafePtr());
+			relativeOffset.SetPtr(Memory);
 		}
 
 		public void Serialize(ref StreamBufferWriter stream)
@@ -141,60 +164,55 @@ namespace Sapientia.Memory
 	/// </summary>
 	public static class BumpHeaderExt
 	{
-		public static ref BumpHeader GetRelativeAllocator(this ref PtrOffset<BumpHeader> relativeOffset)
+		public static PtrOffset MemAlloc(this ref RelativePtr<BumpHeader> relativeOffset, int size)
 		{
-			return ref ((SafePtr)relativeOffset.AsSafePtr() + relativeOffset).Value();
+			return relativeOffset.GetValue().MemAlloc(size);
 		}
 
-		public static PtrOffset MemAlloc(this ref PtrOffset<BumpHeader> relativeOffset, int size)
+		public static PtrOffset MemAlloc(this ref RelativePtr<BumpHeader> relativeOffset, int size, int count)
 		{
-			return relativeOffset.GetRelativeAllocator().MemAlloc(size);
+			return relativeOffset.GetValue().MemAlloc(size, count);
 		}
 
-		public static PtrOffset MemAlloc(this ref PtrOffset<BumpHeader> relativeOffset, int size, int count)
-		{
-			return relativeOffset.GetRelativeAllocator().MemAlloc(size, count);
-		}
-
-		public static PtrOffset<T> MemAlloc<T>(this ref PtrOffset<BumpHeader> relativeOffset)
+		public static PtrOffset<T> MemAlloc<T>(this ref RelativePtr<BumpHeader> relativeOffset)
 			where T : unmanaged
 		{
-			return relativeOffset.GetRelativeAllocator().MemAlloc<T>();
+			return relativeOffset.GetValue().MemAlloc<T>();
 		}
 
-		public static ref T MemAlloc<T>(this ref PtrOffset<BumpHeader> relativeOffset, out PtrOffset<T> offset)
+		public static ref T MemAlloc<T>(this ref RelativePtr<BumpHeader> relativeOffset, out PtrOffset<T> offset)
 			where T : unmanaged
 		{
-			return ref relativeOffset.GetRelativeAllocator().MemAlloc(out offset);
+			return ref relativeOffset.GetValue().MemAlloc(out offset);
 		}
 
-		public static PtrOffset<T> MemAlloc<T>(this ref PtrOffset<BumpHeader> relativeOffset, int count)
+		public static PtrOffset<T> MemAlloc<T>(this ref RelativePtr<BumpHeader> relativeOffset, int count)
 			where T : unmanaged
 		{
-			return relativeOffset.GetRelativeAllocator().MemAlloc<T>(count);
+			return relativeOffset.GetValue().MemAlloc<T>(count);
 		}
 
-		public static SafePtr GetPtr(this ref PtrOffset<BumpHeader> relativeOffset, PtrOffset offset)
+		public static SafePtr GetPtr(this ref RelativePtr<BumpHeader> relativeOffset, PtrOffset offset)
 		{
-			return relativeOffset.GetRelativeAllocator().GetPtr(offset);
+			return relativeOffset.GetValue().GetPtr(offset);
 		}
 
-		public static SafePtr<T> GetPtr<T>(this ref PtrOffset<BumpHeader> relativeOffset, PtrOffset<T> offset)
+		public static SafePtr<T> GetPtr<T>(this ref RelativePtr<BumpHeader> relativeOffset, PtrOffset<T> offset)
 			where T : unmanaged
 		{
-			return relativeOffset.GetRelativeAllocator().GetPtr<T>(offset);
+			return relativeOffset.GetValue().GetPtr<T>(offset);
 		}
 
-		public static ref T GetRef<T>(this ref PtrOffset<BumpHeader> relativeOffset, PtrOffset<T> offset)
+		public static ref T GetRef<T>(this ref RelativePtr<BumpHeader> relativeOffset, PtrOffset<T> offset)
 			where T : unmanaged
 		{
-			return ref relativeOffset.GetRelativeAllocator().GetRef<T>(offset);
+			return ref relativeOffset.GetValue().GetValue<T>(offset);
 		}
 
-		public static ref T GetRef<T>(this ref PtrOffset<BumpHeader> relativeOffset, PtrOffset offset)
+		public static ref T GetRef<T>(this ref RelativePtr<BumpHeader> relativeOffset, PtrOffset offset)
 			where T : unmanaged
 		{
-			return ref relativeOffset.GetRelativeAllocator().GetRef<T>(offset);
+			return ref relativeOffset.GetValue().GetValue<T>(offset);
 		}
 	}
 }

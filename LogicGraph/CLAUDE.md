@@ -134,10 +134,10 @@ Nodes and blueprints carry data in **5 distinct scopes**, separated along two ax
 | Scope | Owner | Mutable | Reset each run | Unique per | Backing freed when | Code seed |
 |---|---|---|---|---|---|---|
 | **static** | blueprint manager | no | — | **(blueprint id, version)** (**deduped**; global) | no instance references it | `CompiledBlueprint` (`CompiledBlueprint.cs:14`) ✅ |
-| **static cache** | scope | yes | yes | compiled node × **usage-site** (**not** deduped) | scope `Dispose` | — ✗ |
-| **static persistent** | scope | yes | no | compiled node × **usage-site** | scope `Dispose` | — ✗ |
-| **instance cache** | instance | yes | yes | instance | instance `Dispose` | `BlueprintInstance.edgesData` (`BlueprintInstance.cs:18`) ◐ |
-| **instance persistent** | instance | yes | no | instance | instance `Dispose` | `BlueprintInstance.nodesState` (`BlueprintInstance.cs:15`) ◐ |
+| **static cache** | scope | yes | yes | compiled node × **usage-site** (**not** deduped) | scope `Dispose` | size+offsets in `CompiledBlueprint` (`DataSizes`/`NodeLayoutOffsets`); block-owner = Phase 3 ◐ |
+| **static persistent** | scope | yes | no | compiled node × **usage-site** | scope `Dispose` | size+offsets in `CompiledBlueprint`; block-owner = Phase 3 ◐ |
+| **instance cache** | instance | yes | yes | instance | instance `Dispose` | `BlueprintInstance.instanceCache` (`BlueprintInstance.cs:17`, `CachedPtr`; alloc+`ResetCache`) ◐ |
+| **instance persistent** | instance | yes | no | instance | instance `Dispose` | `BlueprintInstance.instancePersistent` (`BlueprintInstance.cs:15`, `CachedPtr`; alloc) ◐ |
 
 > **`static` is owned by the blueprint manager (global), not by a scope** — compiled once per
 > **(id, version)** and shared across all scopes (this is the dedup). Scopes own only the mutable
@@ -631,8 +631,8 @@ Use this as the canonical end-to-end target when wiring the runtime.
 | Ambient context registry on scope, by type (#14) | `IndexedPtr`/`TypeIndexer`; `WorldState.ServiceRegistry` precedent | ✗ no scope registry |
 | Blueprint manager: versioning, lazy compile, runtime mutation (#11) | `version` fields on `Blueprint`/`CompiledBlueprint`/`BlueprintInstance` | ✗ no manager |
 | Instance bound to `(id, version)`; `version` ≈ generation (#11) | `BlueprintInstance.blueprintId`+`version` (`BlueprintInstance.cs:10`) | ◐ fields only; no staleness check |
-| 5 data scopes (#8) | `CompiledBlueprint` + `BlueprintInstance` | ◐ `static` + `instance cache`/`instance persistent` partial; `static cache`/`static persistent` absent |
-| Per-scope fixed layout + allocator-backed inner arrays (#8) | `CalculateSizeToReserve` | ◐ static only |
+| 5 data scopes (#8) | `CompiledBlueprint` (`DataSizes`/`NodeLayoutOffsets`/`blockSizes`) + `BlueprintInstance` | ◐ **Phase 2**: all 5 sized & laid out at compile time; `static` + `instance cache`/`instance persistent` blocks allocated; `static cache`/`static persistent` get size+offsets but their block-owner (scope) is Phase 3 |
+| Per-scope fixed layout + allocator-backed inner arrays (#8) | `CalculateLayoutSizeToReserve`/`SetupLayout` (`CompiledBlueprint.cs:212`,`:246`) | ◐ **Phase 2**: per-node fixed slot sizing + aligned offsets for all 5 scopes (lockstep-tested); allocator-backed *inner* arrays/refs still later |
 | Save/load `*persistent` graph state (#10) | `BlueprintCompiler.Serialize` (static blob) | ✗ instance state save/load absent |
 | Pull-based memo (`Is Calculated`) | `EdgeDataHeader.IsCalculated` | ◐ declared, not used at runtime |
 | Codegen (node ⇒ partials, switch) | `AddNode` hand-sketch | ✗ generator absent |

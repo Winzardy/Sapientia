@@ -54,7 +54,7 @@ namespace Sapientia.LogicGraph.Tests
 			reader.Dispose();
 			try
 			{
-				Assert.AreEqual(777, restored.Value.GetRef(offset), "Значение не пережило serialize/deserialize raw-арены.");
+				Assert.AreEqual(777, restored.Value.GetValue(offset), "Значение не пережило serialize/deserialize raw-арены.");
 			}
 			finally
 			{
@@ -76,7 +76,7 @@ namespace Sapientia.LogicGraph.Tests
 				ref var slot = ref header.MemAlloc<int>(out var offset);
 				slot = 99;
 
-				Assert.AreEqual(99, arena.GetValue(worldState).GetRef(offset), "Значение не прочиталось обратно из allocator-арены.");
+				Assert.AreEqual(99, arena.GetValue(worldState).GetValue(offset), "Значение не прочиталось обратно из allocator-арены.");
 
 				arena.Dispose(worldState);
 			}
@@ -132,7 +132,7 @@ namespace Sapientia.LogicGraph.Tests
 				{
 					// Тот же handle (MemPtr стабилен), новый WorldState с переехавшей базой —
 					// position-independent BumpHeader должен прочитать значение без re-resolve.
-					Assert.AreEqual(1234, arena.GetValue(restoredWorld).GetRef(offset),
+					Assert.AreEqual(1234, arena.GetValue(restoredWorld).GetValue(offset),
 						"Значение не прочиталось после переезда блока и смены версии мира.");
 				}
 				finally

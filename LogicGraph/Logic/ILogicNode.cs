@@ -11,9 +11,9 @@ namespace Sapientia.LogicGraph
 	{
 		void ILogicNode.DoBurst(ref CompiledBlueprint compiledBlueprint, ref NodeHeader nodeHeader, NodeId nodeId)
 		{
-			ref var allocator = ref compiledBlueprint.allocatorOffset.GetRelativeAllocator();
-			ref var input = ref allocator.GetRef<TInput>(compiledBlueprint.edgeToData + nodeHeader.inputs);
-			ref var output = ref allocator.GetRef<TOutput>(compiledBlueprint.edgeToData + nodeHeader.outputs);
+			ref var allocator = ref compiledBlueprint.allocatorOffset.GetValue();
+			ref var input = ref allocator.GetValue<TInput>(compiledBlueprint.edgeToData + nodeHeader.inputs);
+			ref var output = ref allocator.GetValue<TOutput>(compiledBlueprint.edgeToData + nodeHeader.outputs);
 
 			TState state = default;
 			DoBurst(ref compiledBlueprint, nodeId, input, output, state.AsSafePtr());
@@ -33,9 +33,9 @@ namespace Sapientia.LogicGraph
 	{
 		void ILogicNode.DoBurst(ref CompiledBlueprint compiledBlueprint, ref NodeHeader nodeHeader, NodeId nodeId)
 		{
-			ref var allocator = ref compiledBlueprint.allocatorOffset.GetRelativeAllocator();
-			ref var input = ref allocator.GetRef<TInput>(compiledBlueprint.edgeToData + nodeHeader.inputs);
-			ref var output = ref allocator.GetRef<TOutput>(compiledBlueprint.edgeToData + nodeHeader.outputs);
+			ref var allocator = ref compiledBlueprint.allocatorOffset.GetValue();
+			ref var input = ref allocator.GetValue<TInput>(compiledBlueprint.edgeToData + nodeHeader.inputs);
+			ref var output = ref allocator.GetValue<TOutput>(compiledBlueprint.edgeToData + nodeHeader.outputs);
 
 			DoBurst(ref compiledBlueprint, nodeId, input, output);
 		}

@@ -13,7 +13,7 @@ namespace Sapientia.LogicGraph
 	/// </summary>
 	public struct CompiledBlueprint
 	{
-		public PtrOffset<BumpHeader> allocatorOffset;
+		public RelativePtr<BumpHeader> allocatorOffset;
 
 		public int version;
 		public Id<Blueprint> id;
@@ -48,6 +48,18 @@ namespace Sapientia.LogicGraph
 		public int nodesStateSize;
 		public SafePtr NodesStatePtr => allocatorOffset.GetPtr(nodesState);
 
+		// ─────────────────────────── Phase 2: раскладка 5 областей ───────────────────────────
+		// Независимый от модели портов (legacy-поля/методы выше) sizing-only слой. Описывает, где лежит
+		// слайс каждой ноды в каждой из 5 областей. Реально аллоцируется здесь только static-блок;
+		// static cache/persistent заводит scope (Фаза 3), instance cache/persistent — инстанс.
+
+		/// <summary>Полный размер блока каждой из 5 областей (сумма выровненных слотов всех нод).</summary>
+		public DataSizes blockSizes;
+		/// <summary>Таблица офсетов слайса каждой ноды по всем 5 областям (живёт в static-арене).</summary>
+		public BumpArray<NodeLayoutOffsets> nodeLayoutOffsets;
+		/// <summary>Сам блок static-области (живёт в static-арене).</summary>
+		public PtrOffset staticBlock;
+
 		public static int CalculateSizeToReserve(Blueprint blueprint)
 		{
 			var size = TSize<CompiledBlueprint>.size;
@@ -69,12 +81,11 @@ namespace Sapientia.LogicGraph
 			return size;
 		}
 
-		public static PtrOffset<CompiledBlueprint> Compile(ref BumpHeader allocator, Blueprint blueprint)
+		public static SafePtr<CompiledBlueprint> Compile(ref BumpHeader allocator, Blueprint blueprint, out PtrOffset<CompiledBlueprint> offset)
 		{
-			var result = allocator.MemAlloc<CompiledBlueprint>();
-			ref var compiled = ref allocator.GetRef(result);
+			ref var compiled = ref allocator.MemAlloc(out offset, out var result);
 
-			allocator.CreateRelativeOffset(ref compiled.allocatorOffset);
+			allocator.SetupRelativePtr(ref compiled.allocatorOffset);
 			compiled.SetupBlueprint(blueprint);
 
 			return result;
@@ -82,7 +93,7 @@ namespace Sapientia.LogicGraph
 
 		private void SetupBlueprint(Blueprint blueprint)
 		{
-			ref var allocator = ref allocatorOffset.GetRelativeAllocator();
+			ref var allocator = ref allocatorOffset.GetValue();
 
 			version = blueprint.version;
 			id = blueprint.id;
@@ -117,7 +128,7 @@ namespace Sapientia.LogicGraph
 				if (blueprint.outputs[i].IsPreCalculated)
 				{
 					// Устанавливаем дефолтное значение, оно всегда будет считаться вычисленным
-					allocator.GetRef(edgesStateRover).IsCalculated = true;
+					allocator.GetValue(edgesStateRover).IsCalculated = true;
 				}
 				outputIdToOffset[i] = edgesStateRover - edgesData;
 				edgesStateRover++;
@@ -190,6 +201,98 @@ namespace Sapientia.LogicGraph
 			where T : unmanaged, ILogicNode
 		{
 			return ref allocatorOffset.GetPtr<T>(nodeBodies + bodyPtr).Value();
+		}
+
+		// ─────────────────────────── Phase 2: компиляция раскладки 5 областей ───────────────────────────
+
+		/// <summary>
+		/// Сколько байт зарезервировать в static-арене под scope-раскладку. Держится в lockstep с
+		/// <see cref="SetupLayout"/> по нумерованным шагам (1..3) — менять только вместе.
+		/// </summary>
+		public static int CalculateLayoutSizeToReserve(Blueprint blueprint)
+		{
+			var size = TSize<CompiledBlueprint>.size; // 1. сама структура
+
+			var nodesCount = blueprint.nodes.Length;
+			if (nodesCount > 0)
+				size += TSize<NodeLayoutOffsets>.size * nodesCount; // 2. таблица офсетов нод
+
+			var staticBlockSize = 0;
+			foreach (var node in blueprint.nodes)
+				staticBlockSize += node.DataSizes.GetAligned(DataLayout.Static);
+			size += staticBlockSize; // 3. блок static-области
+
+			return size;
+		}
+
+		/// <summary>
+		/// Standalone-компиляция одного блюпринта в собственную raw-арену (sizing-only,
+		/// без модели портов). Владение ареной — на вызывающем (Dispose).
+		/// </summary>
+		public static RawBumpAllocator CompileLayout(Blueprint blueprint, out PtrOffset<CompiledBlueprint> offset)
+		{
+			var reservedSize = CalculateLayoutSizeToReserve(blueprint);
+			var arena = new RawBumpAllocator(reservedSize);
+
+			ref var allocator = ref arena.Value;
+			ref var compiled = ref allocator.MemAlloc(out offset); // 1. структура
+
+			allocator.SetupRelativePtr(ref compiled.allocatorOffset);
+			compiled.SetupLayout(blueprint);
+
+			return arena;
+		}
+
+		private void SetupLayout(Blueprint blueprint)
+		{
+			ref var allocator = ref allocatorOffset.GetValue();
+
+			// Ключ static-блока — (id, version).
+			version = blueprint.version;
+			id = blueprint.id;
+
+			var nodes = blueprint.nodes;
+			var nodeCount = nodes.Length;
+			if (nodeCount == 0)
+				return;
+
+			nodeLayoutOffsets.Alloc(ref allocator, nodeCount); // 2. таблица офсетов нод (in-place, self-relative)
+			var offsetsPtr = nodeLayoutOffsets.GetSpan();
+
+			// Офсет ноды в каждой области = текущая сумма выровненных слотов (blockSizes до этой ноды).
+			for (var i = 0; i < nodes.Length; i++)
+			{
+				ref var nodeOffsets = ref offsetsPtr[i];
+				for (var l = 0; l < DataSizes.Count; l++)
+					nodeOffsets[l] = new PtrOffset(blockSizes[l]);
+				blockSizes += nodes[i].DataSizes.GetAligned();
+			}
+
+			// 3. Сам блок static-области (остальные 4 области заводят их владельцы — scope/instance).
+			var staticBlockSize = blockSizes[DataLayout.Static];
+			if (staticBlockSize > 0)
+				staticBlock = allocator.MemAlloc(staticBlockSize);
+		}
+
+		public int GetBlockSize(DataLayout scope)
+		{
+			return blockSizes[scope];
+		}
+
+		/// <summary>Офсет слайса ноды внутри блока заданной области.</summary>
+		/// <remarks>Использует self-relative <see cref="allocatorOffset"/> — вызывать только через
+		/// ref/арена-указатель; на копии по значению (в т.ч. defensive-copy от <c>in</c>) адрес сломается.</remarks>
+		public PtrOffset GetNodeOffset(NodeId nodeId, DataLayout scope)
+		{
+			return nodeLayoutOffsets.Get(nodeId)[scope];
+		}
+
+		/// <summary>Абсолютный адрес слайса ноды в static-блоке (static-область живёт в этой же арене).</summary>
+		/// <remarks>См. <see cref="GetNodeOffset"/>: вызывать только через ref/арена-указатель.</remarks>
+		public SafePtr GetStaticNodeSlice(NodeId nodeId)
+		{
+			var slice = staticBlock + GetNodeOffset(nodeId, DataLayout.Static);
+			return allocatorOffset.GetPtr(slice);
 		}
 	}
 
