@@ -24,7 +24,7 @@ namespace Content
 		private static ContentResolver resolver
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _instance;
+			get => _instance ?? throw ContentDebug.Exception("ContentManager is not initialized...");
 		}
 #endif
 		internal static bool IsInitialized => resolver != null;

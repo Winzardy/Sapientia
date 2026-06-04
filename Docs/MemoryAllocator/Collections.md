@@ -1,10 +1,10 @@
 # Collections — Mem-collections (allocator-backed)
 
-> Parent: [Sapientia root](../../CLAUDE.md). Siblings: [MemoryAllocator](../CLAUDE.md) · [State / World / Entity](../State/CLAUDE.md).
+> Parent: [Sapientia root](../../CLAUDE.md). Siblings: [MemoryAllocator](../MemoryAllocator.md) · [State / World / Entity](State.md).
 
 ## 1. Purpose
 
-The `Mem*` collections are the **allocator-backed container library**: `unmanaged` struct collections whose backing storage lives in the `Allocator` arena ([MemoryAllocator](../CLAUDE.md)) and is addressed by `MemPtr`/`CachedPtr`. They are the data structures every StatePart, component, and service uses to hold simulation state — so they inherit the no-GC, deterministic, serializable properties of the arena. They are *not* `System.Collections` replacements you can use casually: nearly every method takes a `WorldState` (or `Allocator`) argument because the collection struct itself stores only handles, not pointers.
+The `Mem*` collections are the **allocator-backed container library**: `unmanaged` struct collections whose backing storage lives in the `Allocator` arena ([MemoryAllocator](../MemoryAllocator.md)) and is addressed by `MemPtr`/`CachedPtr`. They are the data structures every StatePart, component, and service uses to hold simulation state — so they inherit the no-GC, deterministic, serializable properties of the arena. They are *not* `System.Collections` replacements you can use casually: nearly every method takes a `WorldState` (or `Allocator`) argument because the collection struct itself stores only handles, not pointers.
 
 ## 2. Where it lives
 

@@ -1,7 +1,7 @@
 # MemoryAllocator — Allocator deep-dive
 
 > The single most important foundation doc. Every reviewer relies on these invariants.
-> Parent: [Sapientia root](../CLAUDE.md). Siblings: [Collections](Collections/CLAUDE.md) · [State / World / Entity](State/CLAUDE.md).
+> Parent: [Sapientia root](../CLAUDE.md). Siblings: [Collections](MemoryAllocator/Collections.md) · [State / World / Entity](MemoryAllocator/State.md).
 
 ## 1. Purpose
 
@@ -47,7 +47,7 @@ This is the **memory layer** under everything. There is no Data/State/Logic/View
 ## 6. Dependencies
 
 - **Depends-on:** `MemoryManager`/`MemoryExt` (`UnsafeUtility`), `UnsafeList` (`Collections/Unsafe/UnsafeList.cs`), `TSize<T>`/`TAlign<T>`, `E.ASSERT`.
-- **Depended-by:** all `Mem*` collections ([Collections](Collections/CLAUDE.md)), `WorldStateData.allocator` (`State/World/WorldState/WorldStateData.cs:11`), and therefore all StateParts/components/services.
+- **Depended-by:** all `Mem*` collections ([Collections](MemoryAllocator/Collections.md)), `WorldStateData.allocator` (`State/World/WorldState/WorldStateData.cs:11`), and therefore all StateParts/components/services.
 
 ## 7. Gotchas & invariants — `MemPtr` vs `SafePtr` (critical)
 

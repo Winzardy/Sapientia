@@ -1,7 +1,7 @@
 # State — World / WorldState / Entity / ComponentSet
 
 > The ECS-style simulation model. Parent: [Sapientia root](../../CLAUDE.md).
-> Siblings: [MemoryAllocator](../CLAUDE.md) · [Collections](../Collections/CLAUDE.md).
+> Siblings: [MemoryAllocator](../MemoryAllocator.md) · [Collections](Collections.md).
 
 ## 1. Purpose
 
@@ -59,7 +59,7 @@ This is the **State layer** gameplay plugs into (its own Data/State/Logic/View i
 
 ## 6. Dependencies
 
-- **Depends-on:** [Allocator](../CLAUDE.md) (arena), [Collections](../Collections/CLAUDE.md) (`MemArray`/`MemSparseSet`/`MemList`), `TypeIndexer` (`IndexedTypes`/`TypeId` — initialized by a generator, see §8), `ProxyPtr` + generated `*Proxy` types for virtual dispatch.
+- **Depends-on:** [Allocator](../MemoryAllocator.md) (arena), [Collections](Collections.md) (`MemArray`/`MemSparseSet`/`MemList`), `TypeIndexer` (`IndexedTypes`/`TypeId` — initialized by a generator, see §8), `ProxyPtr` + generated `*Proxy` types for virtual dispatch.
 - **Depended-by:** all `Game.Core` StateParts/Systems/Logic and the runtime builder (`GameWorldBuilder` derives from `WorldBuilder`; see [Architecture](../../../../../Docs/Core/ARCHITECTURE.md)).
 
 ## 7. Gotchas & invariants
@@ -94,7 +94,7 @@ So an `Entity` is **8 bytes**: `id` (u16) and `generation` (u16) packed into `_r
 - `IndexedTypes` is populated by generated code (`../TypeIndexer/Generator/*`, `_scripts.generated/InterfaceProxyGenerator/*`). If the generator hasn't run / types changed, `TypeId<TBase>.Count` and registry sizes can be wrong → a full domain reload is required (`UnsafeIndexedRegistry.cs:27` note).
 
 ### Pointer staleness & versioning
-- StateParts/components are stored as `CachedPtr`/`IndexedPtr` (`MemPtr` + version). After serialize/deserialize, `WorldStateData.version` increments, invalidating every cached `SafePtr`; access re-resolves via `WorldState.UpdateSafePtr` (`World/WorldState/WorldState.Ptr.cs:10`). Holding a bare `SafePtr` to a service across a snapshot is a use-after-free. See [MemoryAllocator](../CLAUDE.md) §7.
+- StateParts/components are stored as `CachedPtr`/`IndexedPtr` (`MemPtr` + version). After serialize/deserialize, `WorldStateData.version` increments, invalidating every cached `SafePtr`; access re-resolves via `WorldState.UpdateSafePtr` (`World/WorldState/WorldState.Ptr.cs:10`). Holding a bare `SafePtr` to a service across a snapshot is a use-after-free. See [MemoryAllocator](../MemoryAllocator.md) §7.
 - `noStateServiceRegistry` (Logic structs) is **not** serialized — anything you store there is gone after load and must be re-created (`WorldStateData.cs:62`,`:79`).
 
 ### Roles: StatePart vs System vs Logic
