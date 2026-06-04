@@ -1,9 +1,9 @@
 # Sapientia
 
 > Foundation library. Code is the source of truth — every claim below cites `file_path:line`.
-> Nested deep-dives: [MemoryAllocator](MemoryAllocator/CLAUDE.md) · [Arena Collections](MemoryAllocator/Collections/CLAUDE.md) · [State / World / Entity](MemoryAllocator/State/CLAUDE.md).
+> Nested deep-dives: [MemoryAllocator](Docs/MemoryAllocator.md) · [Arena Collections](Docs/MemoryAllocator/Collections.md) · [State / World / Entity](Docs/MemoryAllocator/State.md).
 >
-> Module docs: [Collections (off-arena)](Collections/CLAUDE.md) · [Data (ptr wrappers / Id / Events)](Data/CLAUDE.md) · [ServiceManagement (legacy ServiceLocator)](ServiceManagement/CLAUDE.md) · [Safety (DisposeSentinel)](Safety/CLAUDE.md) · [Pooling](Pooling/CLAUDE.md).
+> Module docs: [Collections (off-arena)](Docs/Collections.md) · [Data (ptr wrappers / Id / Events)](Docs/Data.md) · [ServiceManagement (legacy ServiceLocator)](Docs/ServiceManagement.md) · [Safety (DisposeSentinel)](Docs/Safety.md) · [Pooling](Docs/Pooling.md).
 
 ## 1. Purpose
 
@@ -17,7 +17,7 @@ Sapientia is the **unmanaged, data-oriented core** that the whole game simulatio
 
 ## 3. Key types & entry points
 
-- `MemoryAllocator/Allocator/Core/Allocator.cs:7` — the arena allocator (zone/block model). **Start here for memory.** See [MemoryAllocator](MemoryAllocator/CLAUDE.md).
+- `MemoryAllocator/Allocator/Core/Allocator.cs:7` — the arena allocator (zone/block model). **Start here for memory.** See [MemoryAllocator](Docs/MemoryAllocator.md).
 - `MemoryAllocator/Allocator/Data/MemPtr.cs:8` — `MemPtr` (zoneId + zoneOffset): the *stable* handle into allocator memory.
 - `Data/SafePtr.cs:16` / `Data/SafePtr.cs:227` — `SafePtr` / `SafePtr<T>`: the *raw, bounds-checked* pointer; goes stale on resize/serialize.
 - `MemoryAllocator/State/World/World.cs:10` — `World` (managed class): lifecycle + tick driver. **Start here for the simulation loop.**
@@ -26,15 +26,15 @@ Sapientia is the **unmanaged, data-oriented core** that the whole game simulatio
 - `MemoryAllocator/State/ComponentSets/ComponentSet.cs:80` — `ComponentSet` (the renamed "Archetype"; sparse-set component storage).
 - `MemoryAllocator/TypeIndexer/IndexedTypes.cs:25` — `IndexedTypes`: the type→index registry (replaces the old `ServiceLocator`).
 - `MemoryAllocator/State/World/WorldBuilder/WorldBuilder.cs:8` — `WorldBuilder`: abstract base for registering StateParts/Systems and building a `World`.
-- See [State / World / Entity](MemoryAllocator/State/CLAUDE.md) for the full model.
+- See [State / World / Entity](Docs/MemoryAllocator/State.md) for the full model.
 
 ## 4. Layer this library provides
 
 Sapientia is plumbing, not a Data/State/Logic/View gameplay feature. It provides the **substrate** those layers sit on:
 
-- **Memory layer:** `Allocator` (arena) + `MemoryManager` (raw OS/Unity allocation) + `MemPtr`/`SafePtr`/`CachedPtr` handles. See [MemoryAllocator](MemoryAllocator/CLAUDE.md).
-- **Collection layer:** allocator-backed `Mem*` containers. See [Collections](MemoryAllocator/Collections/CLAUDE.md).
-- **State layer:** `World`/`WorldState`/`Entity`/`ComponentSet`/`IWorldStatePart`/`IWorldSystem` — the ECS-style model gameplay `*StatePart` and `*System` structs plug into. See [State / World / Entity](MemoryAllocator/State/CLAUDE.md).
+- **Memory layer:** `Allocator` (arena) + `MemoryManager` (raw OS/Unity allocation) + `MemPtr`/`SafePtr`/`CachedPtr` handles. See [MemoryAllocator](Docs/MemoryAllocator.md).
+- **Collection layer:** allocator-backed `Mem*` containers. See [Collections](Docs/MemoryAllocator/Collections.md).
+- **State layer:** `World`/`WorldState`/`Entity`/`ComponentSet`/`IWorldStatePart`/`IWorldSystem` — the ECS-style model gameplay `*StatePart` and `*System` structs plug into. See [State / World / Entity](Docs/MemoryAllocator/State.md).
 - **Type/proxy layer:** `TypeIndexer` (`IIndexedType`, `TypeId`, `ProxyPtr`, generated `*Proxy` types) — gives `unmanaged` structs interface-like virtual dispatch without boxing/GC.
 - **Infrastructure/Utility:** `Infrastructure/` (Trading, Messaging, Content, ScaleTables, SharedLogic — partly server-shared), `Utility/` (Evaluator, Blackboard, Fix64, Csv, Schedule), `Pooling/`, `Safety/` (`DisposeSentinel`). These are out of the deep-doc scope but live in the same submodule.
 
@@ -57,8 +57,8 @@ The world is built and driven from `Game.Core` (`GameWorldBuilder`/`GameRuntime`
 ## 7. Gotchas & invariants
 
 - **Determinism:** the simulation advances by ticks with caller-supplied `deltaTime` (`World.Update`); `worldState.Tick` counts updates, `worldState.Time` accumulates time (`WorldStateData.cs:36`). All state is `unmanaged` → no GC pauses. Do **not** introduce wall-clock or `UnityEngine.Random` into simulation code (see `CONVENTIONS.md`).
-- **Pointer staleness is the #1 hazard.** `MemPtr` is stable; raw `SafePtr` is not. The allocator may move blocks on resize, and serialization bumps `WorldState.Version`, after which all cached `SafePtr`s are invalid. Always re-derive via `CachedPtr` / `WorldState.GetSafePtr`. Details in [MemoryAllocator](MemoryAllocator/CLAUDE.md) §7.
-- **Entity use-after-free** is caught by **generation** (`Entity.generation`): a reused id gets a new generation, so a stale `Entity` fails `IsEntityExist` / `IsValid`. See [State](MemoryAllocator/State/CLAUDE.md) §7.
+- **Pointer staleness is the #1 hazard.** `MemPtr` is stable; raw `SafePtr` is not. The allocator may move blocks on resize, and serialization bumps `WorldState.Version`, after which all cached `SafePtr`s are invalid. Always re-derive via `CachedPtr` / `WorldState.GetSafePtr`. Details in [MemoryAllocator](Docs/MemoryAllocator.md) §7.
+- **Entity use-after-free** is caught by **generation** (`Entity.generation`): a reused id gets a new generation, so a stale `Entity` fails `IsEntityExist` / `IsValid`. See [State](Docs/MemoryAllocator/State.md) §7.
 - **`DEBUG` vs release behavior diverges:** `SafePtr` carries bounds (`lowBound`/`hiBound`) and asserts only under `DEBUG` (`Data/SafePtr.cs:20`); release builds skip the checks entirely. Many `E.ASSERT` invariants are compiled out in release.
 - **Thread-safety:** the world model is single-threaded by design. `WorldManager` uses thread-static "current world" context (`WorldManager.cs:150`). `MemoryManager` exposes `NoTrack*`/`Temp` ids for parallel raw allocation but notes tracking is not supported in parallel (`Memory/MemoryManager.cs:33`).
 - **Terminology evolution (vs obsolete Notion):** the old Notion architecture page (`Docs/Reference/Notion/architecture-obsolete.md`) calls component storage "Archetype" and uses a class `WorldElement` + a `ServiceLocator`. Today the code uses **`ComponentSet`** (struct, `ComponentSet.cs:80`), **`unmanaged struct` StateParts/Systems** (`IWorldStatePart`/`IWorldSystem`), and the **`TypeIndexer`/`IndexedTypes` registry** (`IndexedTypes.cs:25`). Treat that Notion page as **stale**; this doc reflects current code.

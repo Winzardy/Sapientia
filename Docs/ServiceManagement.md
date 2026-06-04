@@ -1,7 +1,7 @@
 # ServiceManagement — Legacy global service locator
 
 > LEGACY module. For the in-world registry (current architecture) see
-> [State / World / Entity](../MemoryAllocator/State/CLAUDE.md) and the `TypeIndexer`/`IndexedTypes`
+> [State / World / Entity](MemoryAllocator/State.md) and the `TypeIndexer`/`IndexedTypes`
 > discussion in the root [Sapientia CLAUDE.md §7](../CLAUDE.md).
 > Parent: [Sapientia root](../CLAUDE.md).
 
@@ -65,7 +65,7 @@ No lifecycle hooks. Services are registered/unregistered imperatively by callers
 - **Depended-by:**
   - `Game.Core` application-layer bootstrappers and managed singletons (platform services, asset loaders, UI managers) that pre-date / don't need a `WorldState`.
   - Any system that calls `ServiceLocator.Get<T>()` without a `WorldState` reference.
-- **Contrast with `TypeIndexer` / `IndexedTypes`** ([MemoryAllocator/State/CLAUDE.md §7](../MemoryAllocator/State/CLAUDE.md)): `TypeIndexer` is the **in-world** registry for `IIndexedType`-tagged unmanaged types; it is sized at build time by code-gen and stored inside `WorldState`. `ServiceLocator` is a **process-global** registry for managed objects with no world affinity. They are complementary, not interchangeable.
+- **Contrast with `TypeIndexer` / `IndexedTypes`** ([MemoryAllocator/State/CLAUDE.md §7](MemoryAllocator/State.md)): `TypeIndexer` is the **in-world** registry for `IIndexedType`-tagged unmanaged types; it is sized at build time by code-gen and stored inside `WorldState`. `ServiceLocator` is a **process-global** registry for managed objects with no world affinity. They are complementary, not interchangeable.
 
 ## 7. Gotchas & invariants
 

@@ -2,7 +2,7 @@
 
 > Plumbing module. No gameplay logic here — these are the primitive value types and managed-bridge
 > utilities the rest of Sapientia and `Game.Core` are built on.
-> Parent: [Sapientia root](../CLAUDE.md). Allocator pointer context: [MemoryAllocator](../MemoryAllocator/CLAUDE.md).
+> Parent: [Sapientia root](../CLAUDE.md). Allocator pointer context: [MemoryAllocator](MemoryAllocator.md).
 
 ## 1. Purpose
 
@@ -62,7 +62,7 @@ This module is **plumbing**, not simulation state. It has no `StatePart`, no `Sy
 - `Data/Unions/Union64.cs:6` — `Union64`: 8-byte variant.
 - `Data/SerializableDateTime.cs:11` — `SerializableDateTime`: UTC ticks wrapper, `Survivor.Interop` namespace.
 
-> **Note:** `ProxyPtr<T>` lives at `MemoryAllocator/State/Data/ProxyPtr.cs:25`, not in this folder, despite being closely related. See [State/World/Entity](../MemoryAllocator/State/CLAUDE.md).
+> **Note:** `ProxyPtr<T>` lives at `MemoryAllocator/State/Data/ProxyPtr.cs:25`, not in this folder, despite being closely related. See [State/World/Entity](MemoryAllocator/State.md).
 
 ## 4. Data / State / Logic / View breakdown
 
@@ -82,7 +82,7 @@ No lifecycle. Types here are instantiated on demand by callers. `AsyncClass` sub
   - `Sapientia.Collections.SimpleList` (used by `DelayableAction<TContext>` context queue and `ServiceLocator` subscriber list).
   - `Submodules.Sapientia.Safety.DisposeSentinel` (used by `SentinelPtr`/`SentinelPtr<T>`).
   - `Unity.Burst` (conditional `[BurstDiscard]` on `AsyncValue`'s thread-id path) and `Unity.Collections.LowLevel.Unsafe.NativeDisableUnsafePtrRestrictionAttribute` (guarded by `UNITY_5_3_OR_NEWER`).
-- **Depended-by:** [MemoryAllocator](../MemoryAllocator/CLAUDE.md) (`SafePtr` is the arena's dereference type), [ServiceManagement](../ServiceManagement/CLAUDE.md) (`AsyncValue`/`AsyncClass`), and the entirety of `Game.Core` runtime (masks, toggles, ids, events).
+- **Depended-by:** [MemoryAllocator](MemoryAllocator.md) (`SafePtr` is the arena's dereference type), [ServiceManagement](ServiceManagement.md) (`AsyncValue`/`AsyncClass`), and the entirety of `Game.Core` runtime (masks, toggles, ids, events).
 
 ## 7. Gotchas & invariants
 
@@ -90,7 +90,7 @@ No lifecycle. Types here are instantiated on demand by callers. `AsyncClass` sub
 
 `SafePtr` is a **raw pointer**. In DEBUG it carries `lowBound`/`hiBound` for range assertions; in Release it is just the pointer and all bounds checks are compiled away (`SafePtr.cs:128`–`:130`). Key invariants:
 
-- **Goes stale on any allocator move** (realloc, zone growth, deserialize) — see [MemoryAllocator §7](../MemoryAllocator/CLAUDE.md).
+- **Goes stale on any allocator move** (realloc, zone growth, deserialize) — see [MemoryAllocator §7](MemoryAllocator.md).
 - `IsValid` is only `ptr != null` — a stale non-null pointer passes this check silently.
 - `SafePtr(void* ptr)` (single-arg ctor, `SafePtr.cs:54`) sets `lowBound`/`hiBound` to `null` in DEBUG — bounds asserts will always pass (no bounds known). Use the size-carrying overloads when you need range checks.
 - Arithmetic operators (`+`, `-`, `++`, `--`) re-assert bounds in DEBUG but are no-ops in Release.
@@ -143,4 +143,4 @@ No `TODO`/`BUG`/`HACK`/`FIXME` markers found in `Data/` source files (grep confi
 - `SafePtr(void* ptr)` single-arg ctor (`Data/SafePtr.cs:54`): sets both `lowBound` and `hiBound` to `null` in DEBUG, so bounds assertions always pass for `SafePtr`s created this way — the bounds-check safety mechanism is silently disabled.
 - `SerializableDateTime` is in namespace `Survivor.Interop` but physically lives in `Data/` (`Data/SerializableDateTime.cs:5`) — layering inconsistency.
 
-**Note on `ProxyPtr`:** The stray code at `MemoryAllocator/State/Data/ProxyPtr.cs:8` (`public class SomeClass : ISomeInterface{}` and `public interface ISomeInterface{}`) is in a file inside `MemoryAllocator/State/Data/`, **not** inside this `Data/` folder. Confirmed present at that path. See [State/World/Entity §8](../MemoryAllocator/State/CLAUDE.md) and the root [CLAUDE.md §8](../CLAUDE.md).
+**Note on `ProxyPtr`:** The stray code at `MemoryAllocator/State/Data/ProxyPtr.cs:8` (`public class SomeClass : ISomeInterface{}` and `public interface ISomeInterface{}`) is in a file inside `MemoryAllocator/State/Data/`, **not** inside this `Data/` folder. Confirmed present at that path. See [State/World/Entity §8](MemoryAllocator/State.md) and the root [CLAUDE.md §8](../CLAUDE.md).

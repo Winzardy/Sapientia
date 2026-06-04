@@ -1,11 +1,11 @@
 # Safety — DisposeSentinel
 
 > Code is the source of truth. Every concrete claim below cites `file_path:line`.
-> Parent: [Sapientia root](../CLAUDE.md). Related: [MemoryAllocator](../MemoryAllocator/CLAUDE.md).
+> Parent: [Sapientia root](../CLAUDE.md). Related: [MemoryAllocator](MemoryAllocator.md).
 
 ## 1. Purpose
 
-`Safety/` is a **plumbing subsystem** — it provides a lightweight, type-partitioned **lifetime-tracking token** (`DisposeSentinel`) that can be embedded into any unmanaged or managed resource to detect use-after-free, double-dispose, and leak patterns at runtime. There is no gameplay logic here. The sentinel is a generation-versioned handle: when an allocation is created it receives a live sentinel; when it is disposed the sentinel's version is bumped and the slot released, so any stale copy held by an old caller will fail `IsValid()`. This gives the same generation-guard principle that [`Entity`](../MemoryAllocator/State/CLAUDE.md) uses for ECS object lifetime, applied to arbitrary resource types.
+`Safety/` is a **plumbing subsystem** — it provides a lightweight, type-partitioned **lifetime-tracking token** (`DisposeSentinel`) that can be embedded into any unmanaged or managed resource to detect use-after-free, double-dispose, and leak patterns at runtime. There is no gameplay logic here. The sentinel is a generation-versioned handle: when an allocation is created it receives a live sentinel; when it is disposed the sentinel's version is bumped and the slot released, so any stale copy held by an old caller will fail `IsValid()`. This gives the same generation-guard principle that [`Entity`](MemoryAllocator/State.md) uses for ECS object lifetime, applied to arbitrary resource types.
 
 ## 2. Where it lives
 
