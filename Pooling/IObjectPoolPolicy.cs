@@ -2,9 +2,9 @@ namespace Sapientia.Pooling
 {
 	public interface IObjectPoolPolicy<T>
 	{
-		public T Create();
-		public void OnGet(T obj);
-		public void OnRelease(T obj);
-		public void OnDispose(T obj);
+		T Create();
+		void OnGet(T obj);
+		void OnRelease(T obj);
+		void OnDispose(T obj);
 	}
 }
