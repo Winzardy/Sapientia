@@ -42,7 +42,7 @@ namespace Trading
 		protected override void OnRelease()
 		{
 			StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _restoreSources);
-			BlackboardToken.ReleaseAndSetNull(ref _registerRestoreToken);
+			_registerRestoreToken = null;
 
 			_id = null;
 			_restoreSources?.Clear();
