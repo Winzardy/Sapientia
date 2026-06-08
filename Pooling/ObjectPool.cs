@@ -18,7 +18,12 @@ namespace Sapientia.Pooling
 	public class ObjectPool<T> : IObjectPool<T>, IDisposable
 		where T : class
 	{
-		protected static readonly int DEFAULT_CAPACITY = Environment.ProcessorCount * 3;
+		protected static readonly int DEFAULT_CAPACITY =
+#if UNITY_EDITOR
+			Environment.ProcessorCount;
+#else
+			Environment.ProcessorCount * 3;
+#endif
 
 		private readonly ConcurrentQueue<T> _queue;
 		private readonly IObjectPoolPolicy<T> _policy;

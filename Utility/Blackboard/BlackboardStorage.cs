@@ -110,6 +110,7 @@ namespace Sapientia
 			}
 
 			Pool<ValueEntry>.Release(entry!);
+			token.PreparePoolRelease();
 			Pool<BlackboardToken<T>>.Release(token);
 		}
 

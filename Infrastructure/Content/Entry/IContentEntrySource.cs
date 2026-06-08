@@ -11,6 +11,8 @@ namespace Content
 	{
 		IUniqueContentEntry UniqueContentEntry { get; }
 
+		long CreationOrder { get => long.MaxValue; }
+
 		ref readonly SerializableGuid Guid { get => ref UniqueContentEntry.Guid; }
 	}
 

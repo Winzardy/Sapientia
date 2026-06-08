@@ -20,21 +20,29 @@ namespace Sapientia
 		private int _generation;
 		private BlackboardStorage<T>? _storage;
 		private string? _key;
+		private bool _suppressDispose;
 
-		public Type ValueType => typeof(T);
+		public Type ValueType { get => typeof(T); }
 
-		int ISubscriptionToken.Generation => _generation;
+		int ISubscriptionToken.Generation { get => _generation; }
 
-		internal Blackboard? Blackboard => _storage!.Blackboard;
-		internal string? Key => _key;
+		internal Blackboard? Blackboard { get => _storage!.Blackboard; }
+		internal string? Key { get => _key; }
 
 		internal void Bind(BlackboardStorage<T> storage, string? key)
 		{
 			_storage = storage;
-			_key     = key;
+			_key = key;
+			_suppressDispose = false;
 		}
 
-		public void Dispose() => Release(true);
+		public void Dispose()
+		{
+			if (_suppressDispose || _storage == null)
+				return;
+
+			Release(true);
+		}
 
 		/// <inheritdoc/>
 		public void Release(bool solo)
@@ -50,8 +58,22 @@ namespace Sapientia
 
 		void IPoolable.Release()
 		{
+			if (!_suppressDispose)
+				Clear();
+
+			_suppressDispose = false;
+		}
+
+		internal void PreparePoolRelease()
+		{
+			Clear();
+			_suppressDispose = true;
+		}
+
+		private void Clear()
+		{
 			_storage = null;
-			_key     = null;
+			_key = null;
 
 			_generation++;
 		}
