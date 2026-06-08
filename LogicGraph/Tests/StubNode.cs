@@ -36,10 +36,16 @@ namespace Sapientia.LogicGraph.Tests
 	{
 		public static Blueprint Of(params INode[] nodes)
 		{
+			return Of(1, 1, nodes);
+		}
+
+		/// <summary>Сборка с явными id/version (для мульти-bp/будущих фаз).</summary>
+		public static Blueprint Of(int id, int version, params INode[] nodes)
+		{
 			return new Blueprint
 			{
-				id = 1,
-				version = 1,
+				id = id,
+				version = version,
 				nodes = nodes,
 			};
 		}

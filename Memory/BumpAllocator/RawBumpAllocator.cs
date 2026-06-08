@@ -67,6 +67,8 @@ namespace Sapientia.Memory
 
 		public void Dispose()
 		{
+			if (!IsValid)
+				return;
 			memoryId.GetManager().MemFree((SafePtr)header);
 			this = default;
 		}

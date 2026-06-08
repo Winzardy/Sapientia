@@ -25,9 +25,14 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 | 0 | Test harness | EditMode test asmdef + smoke test; establish the loop | — | ☑ |
 | 1 | `BumpHeader` + wrappers | memory-agnostic bump header + raw/`Allocator` block-provider wrappers | 0 | ☑ |
 | 2 | Five-scope layout | per-node compile-time sizing + layout of all 5 scope blocks; `static` keyed by (id,version) | 1 | ☑ |
-| 3 | `NodesScope` entity | scope lifecycle, per-usage static-cache/persistent, instance bound to (id,version), type-indexed context registry | 2 | ☐ |
-| 4 | Blueprint manager | versioning, lazy compile, recompile-on-new-version, runtime add/remove, retain-old-for-live-instances | 3 | ☐ |
+| 3 | Compiled-blueprint storage | `CompiledBlueprintStorage` (evolved `BlueprintCompiler`): batch `Add(arena, offsets)`, dedup + coexisting versions by `(id,version)`, jump-by-id lookup; never removes (Dispose-only) | 2 | ☑ |
+| 4 | `ExecutionScope` | exec domain on the DB: per-blueprint **lazy** managers (own static cache/persistent) + instance lifecycle; off-allocator, worldState-agnostic via factory | 3 | ☐ |
 | 5 | Save/load persistent | serialize `*persistent`; re-wire allocator refs (`CachedPtr` pattern) | 4 | ☐ |
+
+> **Реордер (2026-06-07):** scope строится поверх БД, поэтому Фаза 3 ↔ старая Фаза 4 поменялись местами:
+> Фаза 3 = Compiled-blueprint DB/manager (эволюция `BlueprintCompiler`), Фаза 4 = `ExecutionScope` (бывшая
+> Фаза 3, переделывается поверх БД: массив ленивых per-blueprint менеджеров, индексируемый по
+> `Id<CompiledBlueprint>`). Ambient context на scope не хранится — передаётся в методы исполнения (M7).
 | M6 | Node dispatch + dual backend | Burst fn-pointer registry by index + managed path + version gate | 5 | ☐ milestone |
 | M7 | Orchestrator | dependency scheduling + Burst/non-Burst passes + parallelism | M6 | ☐ milestone |
 | M8 | Memoized evaluation | pull-based `Is Calculated` gating | M7 | ☐ milestone |

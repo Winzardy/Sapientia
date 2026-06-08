@@ -301,6 +301,21 @@ found here; grep), so there is **no tick wiring yet** — it is currently a set 
 
 **This system is unfinished; the items below are the design surface to work through together, not bugs to silently fix.**
 
+**Phase 3 progress (2026-06-08) + follow-ups:**
+- **`BlueprintCompiler` removed**, superseded by **`CompiledBlueprintStorage`** (`Logic/StaticData/CompiledBlueprintStorage.cs`)
+  — off-allocator store of compiled blobs keyed by `(Id<Blueprint>, version)`; batch `Add(arena, offsets)`,
+  dedup, coexisting versions, jump-by-id; **never removes** (Dispose-only). `LogicGraph` stub now holds a
+  `CompiledBlueprintStorage`. **Prose refs to `BlueprintCompiler` in §3/§5/§6/§7 are stale** — pending a
+  fuller CLAUDE.md reconciliation.
+- **Scope → state invariant** (decided 2026-06-08): **off-state** = `Static`, `StaticCache`, `InstanceCache`
+  (off-allocator); **in-state (snapshot)** = `StaticPersistent`, `InstancePersistent` (allocator/world).
+  Phase-3 storage (Static) is off-allocator ✓.
+- **Follow-up (Phase 2 code):** `BlueprintInstance.instanceCache` is currently allocated in `worldState`
+  (in-state), contradicting "InstanceCache off-state" — move it off-allocator (likely during the Phase-4
+  instance rework).
+- **Phase reorder:** Phase 3 = storage, **Phase 4 = `ExecutionScope`** (built on the storage; worldState-agnostic,
+  off-allocator, context passed into execution methods at M7). See `Plan/phase-3/` for the authoritative detail.
+
 Stubs / not-yet-implemented:
 - `INode.GetInputs/GetOutputs/GetBodies/GetStates` default impls all `throw new NotImplementedException()`
   (`Blueprint/INode.cs:24`–`:39`). The author's own comment (`:23`, Russian) questions whether ports should
@@ -615,11 +630,11 @@ Use this as the canonical end-to-end target when wiring the runtime.
 |---|---|---|
 | Node graph authoring (#1) | `Blueprint` (`Blueprint.cs:7`) | ✅ skeleton |
 | Compile to unmanaged `static` blob (#2, scope `static`) | `CompiledBlueprint` (`CompiledBlueprint.cs:14`) | ✅ compiles (blocked by `INode` stubs) |
-| Binary save / serialize | `BlueprintCompiler.Serialize` (`BlueprintCompiler.cs:54`) | ◐ serialize only; no transfer |
+| Binary save / serialize | — (was `BlueprintCompiler.Serialize`) | ✗ **`BlueprintCompiler` removed in Phase 3**; per-arena serialize will return in Phase 5/M11 on `CompiledBlueprintStorage` |
 | Server→client transfer + **version gate** (#3.1) | `version` fields | ✗ check absent |
 | Burst functions compiled at startup, **by index** (#3.2) | `NodeInvoker.CompileDoNode` + `NodeTypeId` | ◐ no registry; `NodeTypeId` stubbed |
 | Dual backend: Burst **and** plain .NET, deterministic (#3.3) | `NodeInvoker` (Burst only) | ✗ no managed path |
-| Bake from config (#1) | `BlueprintCompiler` (`BlueprintCompiler.cs:15`) | ◐ no config source wired |
+| Bake from config (#1) | `CompiledBlueprint.CompileLayout` → `CompiledBlueprintStorage.Add` | ◐ compile-then-store path exists; no config source wired |
 | Node = data + I/O function (#4) | `INode` / `ILogicNode` | ◐ port methods throw |
 | Blueprint **as a node** / nesting (#5.1) | — | ✗ absent |
 | Blueprint I/O = explicit input/output nodes, multiple typed entry points (#13) | `LogicGraph`/`CompiledGraph`; `Start`/`Exit` board nodes | ✗ empty stubs |
@@ -629,7 +644,7 @@ Use this as the canonical end-to-end target when wiring the runtime.
 | **Orchestrator**: deps + parallel + Burst/non-Burst (#7) | `NodeInvoker.DoNode` only | ✗ no scheduler |
 | `Scope` entity / lifecycle (#9) | `LogicGraph`/`CompiledGraph` | ✗ stubs |
 | Ambient context registry on scope, by type (#14) | `IndexedPtr`/`TypeIndexer`; `WorldState.ServiceRegistry` precedent | ✗ no scope registry |
-| Blueprint manager: versioning, lazy compile, runtime mutation (#11) | `version` fields on `Blueprint`/`CompiledBlueprint`/`BlueprintInstance` | ✗ no manager |
+| Compiled-blueprint storage / versioning (#11) | `CompiledBlueprintStorage` (`Logic/StaticData/CompiledBlueprintStorage.cs`) | ◐ **Phase 3**: off-allocator store of compiled blobs, batch `Add(arena, offsets)`, dedup + coexisting versions keyed by `(Id<Blueprint>, version)`, jump-by-id lookup; **never removes** (Dispose-only). No lazy-compile (eager/external), no recompile-retain-free. Lifecycle/retain → scope (Phase 4) |
 | Instance bound to `(id, version)`; `version` ≈ generation (#11) | `BlueprintInstance.blueprintId`+`version` (`BlueprintInstance.cs:10`) | ◐ fields only; no staleness check |
 | 5 data scopes (#8) | `CompiledBlueprint` (`DataSizes`/`NodeLayoutOffsets`/`blockSizes`) + `BlueprintInstance` | ◐ **Phase 2**: all 5 sized & laid out at compile time; `static` + `instance cache`/`instance persistent` blocks allocated; `static cache`/`static persistent` get size+offsets but their block-owner (scope) is Phase 3 |
 | Per-scope fixed layout + allocator-backed inner arrays (#8) | `CalculateLayoutSizeToReserve`/`SetupLayout` (`CompiledBlueprint.cs:212`,`:246`) | ◐ **Phase 2**: per-node fixed slot sizing + aligned offsets for all 5 scopes (lockstep-tested); allocator-backed *inner* arrays/refs still later |

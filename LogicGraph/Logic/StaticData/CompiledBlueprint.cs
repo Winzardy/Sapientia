@@ -15,7 +15,7 @@ namespace Sapientia.LogicGraph
 	{
 		public RelativePtr<BumpHeader> allocatorOffset;
 
-		public int version;
+		public Id version;
 		public Id<Blueprint> id;
 
 		public PtrOffset<NodeHeader> nodeHeaders;
@@ -274,17 +274,17 @@ namespace Sapientia.LogicGraph
 				staticBlock = allocator.MemAlloc(staticBlockSize);
 		}
 
-		public int GetBlockSize(DataLayout scope)
+		public readonly int GetBlockSize(DataLayout dataLayout)
 		{
-			return blockSizes[scope];
+			return blockSizes[dataLayout];
 		}
 
 		/// <summary>Офсет слайса ноды внутри блока заданной области.</summary>
 		/// <remarks>Использует self-relative <see cref="allocatorOffset"/> — вызывать только через
 		/// ref/арена-указатель; на копии по значению (в т.ч. defensive-copy от <c>in</c>) адрес сломается.</remarks>
-		public PtrOffset GetNodeOffset(NodeId nodeId, DataLayout scope)
+		public PtrOffset GetNodeOffset(NodeId nodeId, DataLayout dataLayout)
 		{
-			return nodeLayoutOffsets.Get(nodeId)[scope];
+			return nodeLayoutOffsets.Get(nodeId)[dataLayout];
 		}
 
 		/// <summary>Абсолютный адрес слайса ноды в static-блоке (static-область живёт в этой же арене).</summary>
