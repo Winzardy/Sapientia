@@ -16,11 +16,42 @@ namespace Content
 
 		private string _id;
 
+		public override ref readonly T Value
+		{
+			get => ref redirect.IsEmpty()
+				? ref BaseValue
+				: ref redirect.Read();
+		}
+
+		public ref readonly T BaseValue => ref base.Value;
+
 		/// <summary>
 		/// Индексация (only runtime)
 		/// </summary>
 		[NonSerialized]
 		private int _index;
+
+#if CLIENT
+		[SerializeField]
+		[HideInInspector]
+		[CanBeEmpty]
+#endif
+		protected ContentReference<T> redirect;
+
+		public ContentReference<T> Redirect
+		{
+			get => redirect;
+			set
+			{
+				if (value.guid == guid)
+				{
+					ContentDebug.LogError("Content can't redirect to itself");
+					return;
+				}
+
+				redirect = value;
+			}
+		}
 
 		/// <inheritdoc cref="UniqueContentEntry{T}._index"/>
 		public int Index => _index;

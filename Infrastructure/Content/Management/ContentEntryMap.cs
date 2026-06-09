@@ -43,7 +43,7 @@ namespace Content.Management
 				}
 			}
 
-			if (entry.Value is IExternallyIdentifiable identifiable)
+			if (entry.BaseValue is IExternallyIdentifiable identifiable)
 			{
 				if (entry.ValueType.IsValueType)
 				{
