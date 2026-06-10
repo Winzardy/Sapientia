@@ -4,7 +4,8 @@
     "references": [
         "Sapientia",
         "UnityEditor.UI",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Content"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
