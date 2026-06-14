@@ -1,5 +1,10 @@
 # LogicGraph — implementation plan
 
+> **Снимок как-построено: [Plan/STATE.md](Plan/STATE.md)** — единый источник правды о том, что реально в
+> коде на 2026-06-14 (Static/Runtime 3-региона + каркас runtime/cache/execution). Читать первым; этот
+> PLAN.md — роадмап, CLAUDE.md — дизайн-навигатор (его §3/§4/§7 описывают **до-рефакторную** 5-scope/edge
+> модель — устарели, см. STATE.md).
+>
 > Living roadmap for building out the LogicGraph system. Design intent and the code↔design status
 > live in [CLAUDE.md](CLAUDE.md); this file is the **phased execution plan**. The **per-phase working
 > pattern** (plan → gate → implement → self-review → packet → your review → fixes → close) is the
@@ -8,7 +13,9 @@
 > **Decisions locked (2026-06-03):** verification = **EditMode unit tests** (harness introduced in
 > Phase 0); plan = **foundation detailed, later phases as milestones**; delivery = **each phase is a
 > cohesive set of changes left uncommitted in the working tree** — you review the diff and commit.
-> Sapientia is a submodule ("orchestrator handles git"), so Claude does **not** commit here.
+> Sapientia is a submodule ("orchestrator handles git"), so Claude does **not** commit here by default.
+> *(Исключение — снимок 2026-06-14: по явному запросу пользователя зафиксирован коммитом + push в
+> `rnd/nodes_graph`, чтобы продолжить работу в другом чате. См. [Plan/STATE.md](Plan/STATE.md).)*
 
 ## How phases are sized
 
@@ -26,15 +33,15 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 | 1 | `BumpHeader` + wrappers | memory-agnostic bump header + raw/`Allocator` block-provider wrappers | 0 | ☑ |
 | 2 | Five-scope layout | per-node compile-time sizing + layout of all 5 scope blocks; `static` keyed by (id,version) | 1 | ☑ |
 | 3 | Compiled-blueprint storage | `CompiledBlueprintStorage` (evolved `BlueprintCompiler`): batch `Add(arena, offsets)`, dedup + coexisting versions by `(id,version)`, jump-by-id lookup; never removes (Dispose-only) | 2 | ☑ |
-| 4 | `ExecutionScope` | exec domain on the DB: per-blueprint **lazy** managers (own static cache/persistent) + instance lifecycle; off-allocator, worldState-agnostic via factory | 3 | ☐ |
-| 5 | Save/load persistent | serialize `*persistent`; re-wire allocator refs (`CachedPtr` pattern) | 4 | ☐ |
+| 4 | Static/Runtime 3-region model | **переосмыслена** (см. STATE.md): 5 scope → 3 региона `Static/Cache/Persistence`; снос edge-модели; Static = Data+Map(`RegionPtr`); instance identity (`BlueprintInstanceHeader/Storage/Id` + generation); **каркас** runtime/cache/execution (`DataCache`/`CacheHeader`/`ExecutionGraph`/`NodeMapHeader` — компилируется, поведения нет). `ExecutionScope` отложен (проектируется последним) | 3 | ◐ static-модель done; runtime-каркас + 8 развилок → M6/M7 |
+| 5 | Save/load persistent | слой **State** (`Persistence`+`Static`→`Runtime`), **не** снапшот мира; рантайм off-allocator | 4 | ☐ |
 
 > **Реордер (2026-06-07):** scope строится поверх БД, поэтому Фаза 3 ↔ старая Фаза 4 поменялись местами:
 > Фаза 3 = Compiled-blueprint DB/manager (эволюция `BlueprintCompiler`), Фаза 4 = `ExecutionScope` (бывшая
 > Фаза 3, переделывается поверх БД: массив ленивых per-blueprint менеджеров, индексируемый по
 > `Id<CompiledBlueprint>`). Ambient context на scope не хранится — передаётся в методы исполнения (M7).
-| M6 | Node dispatch + dual backend | Burst fn-pointer registry by index + managed path + version gate | 5 | ☐ milestone |
-| M7 | Orchestrator | dependency scheduling + Burst/non-Burst passes + parallelism | M6 | ☐ milestone |
+| M6 | Node dispatch + dual backend | Burst fn-pointer registry by index + managed path + version gate; диспатч на Static.Map (`runtimeType`/`NodeState` wiring) | 5 | ◐ каркас (`ExecutionGraph` runtimes) |
+| M7 | Orchestrator | dependency scheduling + Burst/non-Burst passes + parallelism | M6 | ◐ каркас (`ExecutionGraph`/`NodeMapHeader`/`ExecutionBatch` — поведение не реализовано, см. STATE.md §4) |
 | M8 | Memoized evaluation | pull-based `Is Calculated` gating | M7 | ☐ milestone |
 | M9 | Typed + composable blueprints | `Graph<TIn,TOut>`, blueprint-as-node, capability interfaces | M7 | ☐ milestone |
 | M10 | Codegen | node ⇒ managed/logic partials + dispatch switch | M6,M9 | ☐ milestone |

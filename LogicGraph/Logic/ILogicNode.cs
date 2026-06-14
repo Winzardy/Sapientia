@@ -1,50 +1,12 @@
-using Sapientia.Data;
-using Sapientia.Extensions;
-using Sapientia.Memory;
+using Sapientia.TypeIndexer;
 
 namespace Sapientia.LogicGraph
 {
-	public interface ILogicNode<TInput, TOutput, TState> : ILogicNode<TInput, TOutput>
-		where TInput : unmanaged
-		where TOutput : unmanaged
-		where TState : unmanaged
+	/// <summary>
+	/// Маркер unmanaged-тела ноды (logic-сторона). Старые DoBurst-овэрлоды снесены вместе с edge-моделью —
+	/// диспатч/исполнение пересобираются на Static.Map (региональные указатели) в M6.
+	/// </summary>
+	public interface ILogicNode : IIndexedType
 	{
-		void ILogicNode.DoBurst(ref CompiledBlueprint compiledBlueprint, ref NodeHeader nodeHeader, NodeId nodeId)
-		{
-			ref var allocator = ref compiledBlueprint.allocatorOffset.GetValue();
-			ref var input = ref allocator.GetValue<TInput>(compiledBlueprint.edgeToData + nodeHeader.inputs);
-			ref var output = ref allocator.GetValue<TOutput>(compiledBlueprint.edgeToData + nodeHeader.outputs);
-
-			TState state = default;
-			DoBurst(ref compiledBlueprint, nodeId, input, output, state.AsSafePtr());
-		}
-
-		public void DoBurst(ref CompiledBlueprint compiledBlueprint, NodeId nodeId, in TInput input, in TOutput output, SafePtr<TState> state);
-
-		void ILogicNode<TInput, TOutput>.DoBurst(ref CompiledBlueprint compiledBlueprint, NodeId nodeId, in TInput input, in TOutput output)
-		{
-			throw new System.NotImplementedException();
-		}
-	}
-
-	public interface ILogicNode<TInput, TOutput> : ILogicNode
-		where TInput: unmanaged
-		where TOutput: unmanaged
-	{
-		void ILogicNode.DoBurst(ref CompiledBlueprint compiledBlueprint, ref NodeHeader nodeHeader, NodeId nodeId)
-		{
-			ref var allocator = ref compiledBlueprint.allocatorOffset.GetValue();
-			ref var input = ref allocator.GetValue<TInput>(compiledBlueprint.edgeToData + nodeHeader.inputs);
-			ref var output = ref allocator.GetValue<TOutput>(compiledBlueprint.edgeToData + nodeHeader.outputs);
-
-			DoBurst(ref compiledBlueprint, nodeId, input, output);
-		}
-
-		public void DoBurst(ref CompiledBlueprint compiledBlueprint, NodeId nodeId, in TInput input, in TOutput output);
-	}
-
-	public interface ILogicNode
-	{
-		public void DoBurst(ref CompiledBlueprint compiledBlueprint, ref NodeHeader nodeHeader, NodeId nodeId);
 	}
 }

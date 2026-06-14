@@ -1,5 +1,13 @@
 # LogicGraph
 
+> **🛑 ЧАСТИЧНО УСТАРЕЛО (2026-06-14). Снимок как-построено: [Plan/STATE.md](Plan/STATE.md) — читать
+> первым.** После Фазы 4 модель переосмыслена: **5 scope → 3 региона** (`MemoryRegion{Static,Cache,
+> Persistence}`); **edge-модель снесена** (`CompiledBlueprint`/`EdgeData`/`NodeInvoker`/`AddNode` удалены),
+> заменена Static.Map (`RegionPtr`); рантайм — **off-allocator** (персистентность через будущий слой
+> **State**, не снапшот мира). Поэтому **§3 (key types), §4 (five data scopes), §7 (edges/cache),
+> §8/«status map»** ниже описывают **до-рефакторную** модель и устарели — сверять с STATE.md. Концепции
+> верхнего уровня (#1–#14 в Design reference: оркестратор, версии, контекст, composability) — в силе.
+
 > **⚠️ Work-in-progress / greenfield.** This is a *started, not finished* system. Several entry
 > points are stubs (`throw new NotImplementedException()`), the type-index wiring is commented out,
 > and the example node (`AddNode`) is explicitly a hand-sketch marked *"Тут кодогенерация"* (codegen

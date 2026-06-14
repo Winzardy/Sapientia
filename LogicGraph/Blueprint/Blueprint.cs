@@ -18,12 +18,11 @@ namespace Sapientia.LogicGraph
 		[SerializeReference]
 		public INode[] nodes;
 
-		// Кеш
+		// Кеш связей: источник каждого In (по нему строится Static.Map) и обратная топология (для шедулинга).
 		public Dictionary<NodeInput, NodeOutput> inputToOutput = new ();
 		public Dictionary<NodeOutput, NodeInput[]> outputToInputs = new ();
 
-		// ноды лежать по порядку
+		// Все аутпуты графа по порядку; отсюда берутся константы (IsPreCalculated) для Static-региона.
 		public NodeOutput[] outputs;
-		public Dictionary<NodeOutput, int> outputToIndexMap = new ();
 	}
 }

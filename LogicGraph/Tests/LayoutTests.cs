@@ -6,30 +6,32 @@ using Sapientia.Memory;
 namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
-	/// Фаза 2: раскладка 5 областей в скомпилированном блюпринте (sizing-only, stub-ноды).
-	/// Проверяют размеры блоков, выравнивание/non-overlap офсетов, инвариант lockstep
-	/// (расчётный резерв == фактический bump), чистоту zero-size и адресуемость static-слайсов.
+	/// Раскладка регионов в Static-заголовке (sizing-only, stub-ноды). Проверяют суммарные размеры блоков,
+	/// выравнивание/non-overlap per-node офсетов <b>Persistence</b> (Static-слайсы — отдельные аллокации,
+	/// адресуются напрямую; Cache per-node офсет на заголовке не хранится — ушёл в DataCache, проверяется только
+	/// суммарный размер блока), lockstep (резерв == bump), чистоту zero-size.
 	/// </summary>
 	public class LayoutTests
 	{
+
 		[Test]
 		public void Layout_PerNodeSizesSumToBlockSizes()
 		{
 			// Все размеры кратны DataSizes.Alignment(8) — сумма сырых размеров == размер блока.
 			var bp = StubBlueprint.Of(
-				new StubNode(staticSize: 16, staticCacheSize: 8, staticPersistentSize: 24, instanceCacheSize: 8, instancePersistentSize: 16),
-				new StubNode(staticSize: 8, staticCacheSize: 16, staticPersistentSize: 8, instanceCacheSize: 24, instancePersistentSize: 8));
-			var arena = CompiledBlueprint.CompileLayout(bp, out var offset);
+				new StubNode(staticSize: 16, cacheSize: 8, persistanceSize: 24),
+				new StubNode(staticSize: 8, cacheSize: 16, persistanceSize: 8));
+			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
 				for (var s = 0; s < DataSizes.Count; s++)
 				{
-					var scope = s.ToEnum<DataLayout>();
+					var region = s.ToEnum<MemoryRegion>();
 					var expected = 0;
 					foreach (var node in bp.nodes)
-						expected += node.DataSizes[scope];
-					Assert.AreEqual(expected, compiled.GetBlockSize(scope), $"Блок {scope} не равен сумме размеров нод.");
+						expected += node.DataSizes[region];
+					Assert.AreEqual(expected, compiled.GetBlockSize(region), $"Блок {region} не равен сумме размеров нод.");
 				}
 			}
 			finally
@@ -42,30 +44,28 @@ namespace Sapientia.LogicGraph.Tests
 		public void Layout_OffsetsAlignedAndNonOverlapping()
 		{
 			var bp = StubBlueprint.Of(
-				new StubNode(staticSize: 4, staticCacheSize: 12, staticPersistentSize: 1, instanceCacheSize: 0, instancePersistentSize: 32),
-				new StubNode(staticSize: 8, staticCacheSize: 4, staticPersistentSize: 16, instanceCacheSize: 8, instancePersistentSize: 1),
-				new StubNode(staticSize: 1, staticCacheSize: 0, staticPersistentSize: 7, instanceCacheSize: 24, instancePersistentSize: 8));
-			var arena = CompiledBlueprint.CompileLayout(bp, out var offset);
+				new StubNode(staticSize: 4, cacheSize: 12, persistanceSize: 1),
+				new StubNode(staticSize: 8, cacheSize: 4, persistanceSize: 16),
+				new StubNode(staticSize: 1, cacheSize: 0, persistanceSize: 7));
+			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				for (var s = 0; s < DataSizes.Count; s++)
+				// Per-node офсеты хранятся только для Persistence (Cache — per-instance через DataCache).
+				const MemoryRegion region = MemoryRegion.Persistence;
+				var prevEnd = 0;
+				for (var n = 0; n < bp.nodes.Length; n++)
 				{
-					var scope = s.ToEnum<DataLayout>();
-					var prevEnd = 0;
-					for (var n = 0; n < bp.nodes.Length; n++)
-					{
-						var off = compiled.GetNodeOffset(n, scope).byteOffset;
-						var rawSize = bp.nodes[n].DataSizes[scope];
+					var off = compiled.GetNodePersistenceOffset(n).byteOffset;
+					var rawSize = bp.nodes[n].DataSizes[region];
 
-						Assert.AreEqual(0, off % DataSizes.Alignment, $"Офсет ноды {n} области {scope} не выровнен.");
-						Assert.GreaterOrEqual(off, prevEnd, $"Офсет ноды {n} области {scope} перекрывает предыдущую.");
-						Assert.LessOrEqual(off + rawSize, compiled.GetBlockSize(scope), $"Слайс ноды {n} области {scope} выходит за блок.");
+					Assert.AreEqual(0, off % DataSizes.Alignment, $"Офсет ноды {n} региона {region} не выровнен.");
+					Assert.GreaterOrEqual(off, prevEnd, $"Офсет ноды {n} региона {region} перекрывает предыдущую.");
+					Assert.LessOrEqual(off + rawSize, compiled.GetBlockSize(region), $"Слайс ноды {n} региона {region} выходит за блок.");
 
-						prevEnd = off + rawSize.AlignUp(DataSizes.Alignment);
-					}
-					Assert.AreEqual(prevEnd, compiled.GetBlockSize(scope), $"Сумма слотов области {scope} != размер блока.");
+					prevEnd = off + rawSize.AlignUp(DataSizes.Alignment);
 				}
+				Assert.AreEqual(prevEnd, compiled.GetBlockSize(region), $"Сумма слотов региона {region} != размер блока.");
 			}
 			finally
 			{
@@ -76,19 +76,19 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Layout_AlignmentPadsSlots()
 		{
-			// Не кратные 8 размеры -> блок == сумма AlignUp(size); офсеты идут по выровненным слотам.
+			// Не кратные 8 размеры -> блок == сумма AlignUp(size); per-node офсеты Persistence идут по выровненным слотам.
 			var bp = StubBlueprint.Of(
-				new StubNode(staticSize: 1),  // слот 8
-				new StubNode(staticSize: 9),  // слот 16
-				new StubNode(staticSize: 8)); // слот 8
-			var arena = CompiledBlueprint.CompileLayout(bp, out var offset);
+				new StubNode(persistanceSize: 1),  // слот 8
+				new StubNode(persistanceSize: 9),  // слот 16
+				new StubNode(persistanceSize: 8)); // слот 8
+			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				Assert.AreEqual(8 + 16 + 8, compiled.GetBlockSize(DataLayout.Static));
-				Assert.AreEqual(0, compiled.GetNodeOffset(0, DataLayout.Static).byteOffset);
-				Assert.AreEqual(8, compiled.GetNodeOffset(1, DataLayout.Static).byteOffset);
-				Assert.AreEqual(24, compiled.GetNodeOffset(2, DataLayout.Static).byteOffset);
+				Assert.AreEqual(8 + 16 + 8, compiled.GetBlockSize(MemoryRegion.Persistence));
+				Assert.AreEqual(0, compiled.GetNodePersistenceOffset(0).byteOffset);
+				Assert.AreEqual(8, compiled.GetNodePersistenceOffset(1).byteOffset);
+				Assert.AreEqual(24, compiled.GetNodePersistenceOffset(2).byteOffset);
 			}
 			finally
 			{
@@ -101,28 +101,27 @@ namespace Sapientia.LogicGraph.Tests
 		{
 			// Покрываем асимметричные формы, где lockstep легче всего сломать (находки adversarial-review).
 			AssertLockstep(StubBlueprint.Of(
-				new StubNode(staticSize: 16, staticCacheSize: 8, instancePersistentSize: 24),
-				new StubNode(staticSize: 8, instanceCacheSize: 16)));
-			// static-блок нулевой, но другие области заняты (таблица офсетов есть, static-блок не выделяется).
+				new StubNode(staticSize: 16, cacheSize: 8, persistanceSize: 24),
+				new StubNode(staticSize: 8, cacheSize: 16)));
 			AssertLockstep(StubBlueprint.Of(
-				new StubNode(staticCacheSize: 8, instanceCacheSize: 16, instancePersistentSize: 8),
-				new StubNode(instancePersistentSize: 24)));
-			// Все области нулевые, но ноды есть.
+				new StubNode(cacheSize: 8, persistanceSize: 8),
+				new StubNode(persistanceSize: 24)));
+			// Все регионы нулевые, но ноды есть.
 			AssertLockstep(StubBlueprint.Of(new StubNode(), new StubNode()));
 			// Нод нет вовсе (только структура).
 			AssertLockstep(StubBlueprint.Of(System.Array.Empty<INode>()));
-			// Только static.
+			// Только Static (отдельный слайс).
 			AssertLockstep(StubBlueprint.Of(new StubNode(staticSize: 1)));
 		}
 
 		private static void AssertLockstep(Blueprint bp)
 		{
-			var reserve = CompiledBlueprint.CalculateLayoutSizeToReserve(bp);
-			var arena = CompiledBlueprint.CompileLayout(bp, out _);
+			var reserve = CompiledBlueprintHeader.CalculateLayoutSizeToReserve(bp);
+			var arena = CompiledBlueprintHeader.CompileLayout(bp, out _);
 			try
 			{
 				var used = arena.Value.UsedBytes - BumpHeader.HeaderSize;
-				Assert.AreEqual(reserve, used, $"Резерв scope-раскладки разошёлся с фактическим bump (нод: {bp.nodes.Length}).");
+				Assert.AreEqual(reserve, used, $"Резерв раскладки разошёлся с фактическим bump (нод: {bp.nodes.Length}).");
 			}
 			finally
 			{
@@ -133,21 +132,18 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Layout_ZeroSizeNodesLayoutCleanly()
 		{
-			// Все области нулевые: блоки нулевые, static-блок не выделяется, без ассертов MemAlloc.
+			// Все регионы нулевые: блоки нулевые, static-слайсы не выделяются, без ассертов MemAlloc.
 			var bp = StubBlueprint.Of(new StubNode(), new StubNode());
 
-			var reserve = CompiledBlueprint.CalculateLayoutSizeToReserve(bp);
-			var arena = CompiledBlueprint.CompileLayout(bp, out var offset);
+			var reserve = CompiledBlueprintHeader.CalculateLayoutSizeToReserve(bp);
+			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
 				for (var s = 0; s < DataSizes.Count; s++)
-				{
-					var scope = s.ToEnum<DataLayout>();
-					Assert.AreEqual(0, compiled.GetBlockSize(scope));
-					Assert.AreEqual(0, compiled.GetNodeOffset(0, scope).byteOffset);
-					Assert.AreEqual(0, compiled.GetNodeOffset(1, scope).byteOffset);
-				}
+					Assert.AreEqual(0, compiled.GetBlockSize(s.ToEnum<MemoryRegion>()));
+				Assert.AreEqual(0, compiled.GetNodePersistenceOffset(0).byteOffset);
+				Assert.AreEqual(0, compiled.GetNodePersistenceOffset(1).byteOffset);
 				Assert.AreEqual(reserve, arena.Value.UsedBytes - BumpHeader.HeaderSize, "Lockstep сломан на zero-size графе.");
 			}
 			finally
@@ -163,12 +159,12 @@ namespace Sapientia.LogicGraph.Tests
 				new StubNode(staticSize: 8),
 				new StubNode(staticSize: 8),
 				new StubNode(staticSize: 8));
-			var arena = CompiledBlueprint.CompileLayout(bp, out var offset);
+			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
 
-				// Пишем уникальное значение в начало слайса каждой ноды.
+				// Пишем уникальное значение в начало слайса каждой ноды (прямой self-relative адрес).
 				for (var n = 0; n < bp.nodes.Length; n++)
 					compiled.GetStaticNodeSlice(n).Value<long>() = 1000 + n;
 

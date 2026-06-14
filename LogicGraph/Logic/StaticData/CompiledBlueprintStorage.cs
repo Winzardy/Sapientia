@@ -9,10 +9,10 @@ namespace Sapientia.LogicGraph
 {
 	/// <summary>
 	/// Хранилище («БД») скомпилированных блюпринтов. <b>Ничего не знает об authoring-<c>Blueprint</c> и о
-	/// компиляции</b> — на вход приходят уже готовые <see cref="CompiledBlueprint"/> вместе со своими
+	/// компиляции</b> — на вход приходят уже готовые <see cref="CompiledBlueprintHeader"/> вместе со своими
 	/// аренами (<see cref="Add"/>); компиляция — забота вызывающего
-	/// (<see cref="CompiledBlueprint.CompileLayout"/>). Адресация версии — по <c>(Id&lt;Blueprint&gt;,
-	/// version)</c>, которые сторедж читает из самого <see cref="CompiledBlueprint"/>.
+	/// (<see cref="CompiledBlueprintHeader.CompileLayout"/>). Адресация версии — по <c>(Id&lt;Blueprint&gt;,
+	/// version)</c>, которые сторедж читает из самого <see cref="CompiledBlueprintHeader"/>.
 	///
 	/// <b>Ничего не удаляется по одной</b>: версии только добавляются (сосуществуют), ресурсы освобождаются
 	/// единым <see cref="Dispose"/> на выходе из приложения/PlayMode.
@@ -29,7 +29,7 @@ namespace Sapientia.LogicGraph
 		{
 			public Id version;
 			public Id<RawBumpAllocator> arenaId; // индекс в _arenas
-			public PtrOffset<CompiledBlueprint> offset;
+			public PtrOffset<CompiledBlueprintHeader> offset;
 		}
 
 		private struct RootSlot
@@ -76,29 +76,29 @@ namespace Sapientia.LogicGraph
 
 		/// <summary>
 		/// Удобная перегрузка для одной скомпилированной ноды-блюпринта: оборачивает <paramref name="offset"/>
-		/// в span из одного элемента и зовёт батчевый <see cref="Add(RawBumpAllocator, Span{PtrOffset{CompiledBlueprint}})"/>.
+		/// в span из одного элемента и зовёт батчевый <see cref="Add(RawBumpAllocator, Span{PtrOffset{CompiledBlueprintHeader}})"/>.
 		/// </summary>
-		public void Add(RawBumpAllocator arena, PtrOffset<CompiledBlueprint> offset)
+		public void Add(RawBumpAllocator arena, PtrOffset<CompiledBlueprintHeader> offset)
 		{
 			Add(arena, offset.AsSpan());
 		}
 
 		/// <summary>
 		/// Принимает арену-<b>батч</b>: одна <paramref name="arena"/> с одним или несколькими
-		/// <see cref="CompiledBlueprint"/> по <paramref name="offsets"/>. Для каждого <c>(id, version)</c>
+		/// <see cref="CompiledBlueprintHeader"/> по <paramref name="offsets"/>. Для каждого <c>(id, version)</c>
 		/// читаются из самого блоба; версии с невалидным <c>version</c> пропускаются; дубли по
 		/// <c>(id, version)</c> пропускаются. Новая версия блюпринта становится текущей, прежняя уходит в
 		/// список старых (продолжает жить). Арена кладётся в <see cref="_arenas"/>, если добавлен хотя бы
 		/// один блюпринт; иначе (всё дубли/невалидно) — освобождается. <b>Владение ареной переходит стореджу.</b>
 		/// </summary>
-		public void Add(RawBumpAllocator arena, Span<PtrOffset<CompiledBlueprint>> offsets)
+		public void Add(RawBumpAllocator arena, Span<PtrOffset<CompiledBlueprintHeader>> offsets)
 		{
 			var maxBlueprintId = default(Id<Blueprint>);
 			foreach (var offset in offsets)
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				if (maxBlueprintId < compiled.id)
-					maxBlueprintId = compiled.id;
+				if (maxBlueprintId < compiled.blueprintKey.id)
+					maxBlueprintId = compiled.blueprintKey.id;
 			}
 
 			// +1: индекс = (int)blueprintId доходит до maxBlueprintId, значит нужен count = max + 1.
@@ -109,8 +109,8 @@ namespace Sapientia.LogicGraph
 			foreach (var offset in offsets)
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				var blueprintId = compiled.id;
-				var version = compiled.version;
+				var blueprintId = compiled.blueprintKey.id;
+				var version = compiled.blueprintKey.version;
 
 				if (!version.IsValid)
 					continue;
@@ -145,24 +145,24 @@ namespace Sapientia.LogicGraph
 				arena.Dispose();
 		}
 
-		/// <summary>Есть ли в хранилище версия <c>(blueprintId, version)</c> (текущая или старая).</summary>
-		public bool Has(Id<Blueprint> blueprintId, int version)
+		/// <summary>Есть ли в хранилище версия <paramref name="blueprintId"/> (текущая или старая).</summary>
+		public bool Has(VersionedId<Blueprint> blueprintId)
 		{
-			if (blueprintId < 0 || blueprintId >= _blueprints.count)
+			if (!blueprintId.id.IsValid || blueprintId.id >= _blueprints.count)
 				return false;
 
-			ref var root = ref _blueprints[blueprintId];
-			return root.HasVersion(version);
+			ref var root = ref _blueprints[blueprintId.id];
+			return root.HasVersion(blueprintId.version);
 		}
 
-		/// <summary>Доступ к static-данным версии (jump-by-blueprintId + walk по старым). Вызывать на существующей
-		/// <c>(blueprintId, version)</c> (см. <see cref="Has"/>); DEBUG-assert ловит обращение к несуществующей.</summary>
-		public ref CompiledBlueprint Get(Id<Blueprint> blueprintId, Id version)
+		/// <summary>Доступ к static-данным версии (jump-by-id + walk по старым). Вызывать на существующей
+		/// <paramref name="blueprintId"/> (см. <see cref="Has"/>); DEBUG-assert ловит обращение к несуществующей.</summary>
+		public ref CompiledBlueprintHeader Get(VersionedId<Blueprint> blueprintId)
 		{
-			ref var root = ref _blueprints[blueprintId];
+			ref var root = ref _blueprints[blueprintId.id];
 
 			// Быстрый путь — текущая версия (1 jump).
-			if (root.HasSlot && root.slot.version == version)
+			if (root.HasSlot && root.slot.version == blueprintId.version)
 				return ref ResolveSlot(root.slot);
 
 			// Иначе — среди старых.
@@ -171,12 +171,12 @@ namespace Sapientia.LogicGraph
 				var span = root.next.GetSpan();
 				for (var i = 0; i < span.Length; i++)
 				{
-					if (span[i].version == version)
+					if (span[i].version == blueprintId.version)
 						return ref ResolveSlot(span[i]);
 				}
 			}
 
-			E.ASSERT(false, "[CompiledBlueprintStorage] Get на несуществующей (blueprintId, version).");
+			E.ASSERT(false, "[CompiledBlueprintStorage] Get на несуществующем blueprintId (VersionedId).");
 			// Недостижимо в DEBUG (assert бросает); контракт release — вызывать на существующей версии.
 			return ref ResolveSlot(root.slot);
 		}
@@ -200,7 +200,7 @@ namespace Sapientia.LogicGraph
 			this = default;
 		}
 
-		private ref CompiledBlueprint ResolveSlot(Slot slot)
+		private ref CompiledBlueprintHeader ResolveSlot(Slot slot)
 		{
 			return ref _arenas[slot.arenaId].Value.GetValue(slot.offset);
 		}

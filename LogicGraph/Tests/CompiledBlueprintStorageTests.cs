@@ -1,13 +1,14 @@
 #if UNITY_5_4_OR_NEWER
 using NUnit.Framework;
+using Sapientia.Data;
 using Submodules.Sapientia.Data;
 
 namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
 	/// Фаза 3: <see cref="CompiledBlueprintStorage"/>. Сторедж ничего не знает о <c>Blueprint</c> —
-	/// принимает уже скомпилированные <see cref="CompiledBlueprint"/> с аренами (<see cref="CompiledBlueprintStorage.Add"/>);
-	/// компиляция здесь, в тесте, через <see cref="CompiledBlueprint.CompileLayout"/>. Off-allocator,
+	/// принимает уже скомпилированные <see cref="CompiledBlueprintHeader"/> с аренами (<see cref="CompiledBlueprintStorage.Add"/>);
+	/// компиляция здесь, в тесте, через <see cref="CompiledBlueprintHeader.CompileLayout"/>. Off-allocator,
 	/// worldState не нужен. Ничего не удаляется по одной — только Dispose. Проверяют Add/Count/Has/Get,
 	/// дедуп, рантайм-add нового id, сосуществование версий, Dispose.
 	/// </summary>
@@ -18,10 +19,16 @@ namespace Sapientia.LogicGraph.Tests
 			return StubBlueprint.Of(id, version, new StubNode(staticSize: 8));
 		}
 
+		// Ключ версии блюпринта (id + version) для Has/Get.
+		private static VersionedId<Blueprint> Key(int id, int version)
+		{
+			return new VersionedId<Blueprint>(id, version);
+		}
+
 		// Компилируем снаружи и отдаём в сторедж (владение ареной переходит стореджу).
 		private static void Add(ref CompiledBlueprintStorage storage, int id, int version)
 		{
-			var arena = CompiledBlueprint.CompileLayout(Bp(id, version), out var offset);
+			var arena = CompiledBlueprintHeader.CompileLayout(Bp(id, version), out var offset);
 			storage.Add(arena, offset);
 		}
 
@@ -35,14 +42,14 @@ namespace Sapientia.LogicGraph.Tests
 				Add(ref storage, 2, 1);
 
 				Assert.AreEqual(2, storage.Count, "Должно быть 2 compiled.");
-				Assert.IsTrue(storage.Has(1, 1), "bp(1,1) не найден.");
-				Assert.IsTrue(storage.Has(2, 1), "bp(2,1) не найден.");
-				Assert.IsFalse(storage.Has(1, 2), "Несуществующая версия → false.");
-				Assert.IsFalse(storage.Has(3, 1), "Несуществующий id → false.");
+				Assert.IsTrue(storage.Has(Key(1, 1)), "bp(1,1) не найден.");
+				Assert.IsTrue(storage.Has(Key(2, 1)), "bp(2,1) не найден.");
+				Assert.IsFalse(storage.Has(Key(1, 2)), "Несуществующая версия → false.");
+				Assert.IsFalse(storage.Has(Key(3, 1)), "Несуществующий id → false.");
 
-				ref var compiled = ref storage.Get(1, 1);
-				Assert.AreEqual((Id<Blueprint>)1, compiled.id, "Неверный id у compiled.");
-				Assert.AreEqual(1, (int)compiled.version, "Неверная version у compiled.");
+				ref var compiled = ref storage.Get(Key(1, 1));
+				Assert.AreEqual((Id<Blueprint>)1, compiled.blueprintKey.id, "Неверный id у compiled.");
+				Assert.AreEqual(1, (int)compiled.blueprintKey.version, "Неверная version у compiled.");
 			}
 			finally
 			{
@@ -59,7 +66,7 @@ namespace Sapientia.LogicGraph.Tests
 				Add(ref storage, 1, 1);
 				Add(ref storage, 1, 1); // та же (id,version) → дедуп (входная арена освобождается)
 
-				Assert.IsTrue(storage.Has(1, 1));
+				Assert.IsTrue(storage.Has(Key(1, 1)));
 				Assert.AreEqual(1, storage.Count, "Дедуп не должен создавать второй compiled.");
 			}
 			finally
@@ -75,7 +82,7 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				Add(ref storage, 5, 1); // новый id за пределами начальной ёмкости
-				Assert.IsTrue(storage.Has(5, 1), "Новый id должен резолвиться (список вырос).");
+				Assert.IsTrue(storage.Has(Key(5, 1)), "Новый id должен резолвиться (список вырос).");
 				Assert.AreEqual(1, storage.Count);
 			}
 			finally
@@ -95,11 +102,11 @@ namespace Sapientia.LogicGraph.Tests
 				Add(ref storage, 1, 3); // текущая
 
 				// Ничего не удаляется — все версии живут и резолвятся (jump-by-id + walk по старым).
-				Assert.IsTrue(storage.Has(1, 1) && storage.Has(1, 2) && storage.Has(1, 3), "Все версии живы.");
+				Assert.IsTrue(storage.Has(Key(1, 1)) && storage.Has(Key(1, 2)) && storage.Has(Key(1, 3)), "Все версии живы.");
 				Assert.AreEqual(3, storage.Count);
-				Assert.AreEqual(1, (int)storage.Get(1, 1).version, "v1 (старая) резолвится.");
-				Assert.AreEqual(2, (int)storage.Get(1, 2).version, "v2 (старая) резолвится.");
-				Assert.AreEqual(3, (int)storage.Get(1, 3).version, "v3 (текущая) резолвится.");
+				Assert.AreEqual(1, (int)storage.Get(Key(1, 1)).blueprintKey.version, "v1 (старая) резолвится.");
+				Assert.AreEqual(2, (int)storage.Get(Key(1, 2)).blueprintKey.version, "v2 (старая) резолвится.");
+				Assert.AreEqual(3, (int)storage.Get(Key(1, 3)).blueprintKey.version, "v3 (текущая) резолвится.");
 			}
 			finally
 			{
