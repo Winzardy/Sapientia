@@ -15,6 +15,11 @@ namespace Sapientia.Data
 			this.isValid = true;
 		}
 
+		public void SetPtr(SafePtr dataPtr)
+		{
+			this = (RelativePtr)(dataPtr - (SafePtr)this.AsSafePtr());
+		}
+
 		public unsafe SafePtr GetPtr()
 		{
 			E.ASSERT(isValid);
@@ -23,9 +28,25 @@ namespace Sapientia.Data
 			return basePtr;
 		}
 
+		public unsafe SafePtr<T> GetPtr<T>() where T: unmanaged
+		{
+			E.ASSERT(isValid);
+			var fieldPtr = (SafePtr)this.AsSafePtr();
+			var basePtr = new SafePtr<T>(fieldPtr.ptr + byteOffset, 1);
+			return basePtr;
+		}
+
+		public unsafe SafePtr<T> GetPtr<T>(PtrOffset<T> offset) where T: unmanaged
+		{
+			E.ASSERT(isValid);
+			var fieldPtr = (SafePtr)this.AsSafePtr();
+			var basePtr = new SafePtr<T>(fieldPtr.ptr + byteOffset + offset.byteOffset, 1);
+			return basePtr;
+		}
+
 		public ref T GetValue<T>() where T: unmanaged
 		{
-			return ref GetPtr().Value<T>();
+			return ref GetPtr<T>().Value();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,7 +90,7 @@ namespace Sapientia.Data
 		{
 			E.ASSERT(isValid);
 			var fieldPtr = (SafePtr)this.AsSafePtr();
-			var basePtr = new SafePtr(fieldPtr.ptr + byteOffset);
+			var basePtr = new SafePtr<T>(fieldPtr.ptr + byteOffset, 1);
 			return basePtr;
 		}
 
