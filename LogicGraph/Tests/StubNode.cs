@@ -15,13 +15,15 @@ namespace Sapientia.LogicGraph.Tests
 		private readonly NodeInput[] _inputs;
 		private readonly NodeOutput[] _outputs;
 		private readonly RuntimeType _runtimeType;
+		private readonly TypeId<INodeContext>[] _contextTypes;
 
-		public StubNode(int staticSize = 0, int cacheSize = 0, int persistanceSize = 0, NodeInput[] inputs = null, NodeOutput[] outputs = null, RuntimeType runtimeType = RuntimeType.Unmanaged)
+		public StubNode(int staticSize = 0, int cacheSize = 0, int persistanceSize = 0, NodeInput[] inputs = null, NodeOutput[] outputs = null, RuntimeType runtimeType = RuntimeType.Unmanaged, TypeId<INodeContext>[] contextTypes = null)
 		{
 			_sizes = new DataSizes(staticSize, cacheSize, persistanceSize);
 			_inputs = inputs ?? Array.Empty<NodeInput>();
 			_outputs = outputs ?? Array.Empty<NodeOutput>();
 			_runtimeType = runtimeType;
+			_contextTypes = contextTypes ?? Array.Empty<TypeId<INodeContext>>();
 		}
 
 		public TypeId<INode> NodeTypeId => default;
@@ -30,6 +32,7 @@ namespace Sapientia.LogicGraph.Tests
 
 		public NodeInput[] GetInputs() => _inputs;
 		public NodeOutput[] GetOutputs() => _outputs;
+		public TypeId<INodeContext>[] GetContextTypes() => _contextTypes;
 	}
 
 	/// <summary>Хелпер сборки тестового блюпринта из stub-нод (связи — через <see cref="Blueprint.inputToOutput"/>).</summary>

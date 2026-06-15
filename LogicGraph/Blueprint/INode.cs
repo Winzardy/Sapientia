@@ -1,3 +1,4 @@
+using System;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.TypeIndexer;
@@ -27,6 +28,13 @@ namespace Sapientia.LogicGraph
 		// Скорее всего инпуты/аутпуты не должны передаваться из ноды, возможно их нужно получать из блюпринта, хз
 		public NodeInput[] GetInputs();
 		public NodeOutput[] GetOutputs();
+
+		/// <summary>
+		/// Типы ambient-контекста (<c>TypeId&lt;INodeContext&gt;</c>), которые нода достаёт при исполнении. По умолчанию
+		/// пусто. Компилятор собирает union по всем нодам (дедуп) в <c>CompiledBlueprintHeader.contextTypes</c> (4E);
+		/// на скомпилированной ноде список не хранится. Резолв «тип → указатель» — через <c>ExecutionScope</c> (4F).
+		/// </summary>
+		public TypeId<INodeContext>[] GetContextTypes() => Array.Empty<TypeId<INodeContext>>();
 	}
 
 	public class NodeInput<T> : NodeInput where T : unmanaged

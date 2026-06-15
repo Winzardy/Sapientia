@@ -1,3 +1,4 @@
+using System;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.Memory;
@@ -20,7 +21,8 @@ namespace Sapientia.LogicGraph
 	/// в run'е читает нода.</item>
 	/// <item><b>Map (топология)</b> — <see cref="nodesMap"/>: граф связей нод для шедулинга (предшественники/
 	/// потомки + корни).</item>
-	/// <item>ContextType — следующий инкремент.</item>
+	/// <item><b>ContextType</b> — <see cref="contextTypes"/>: дедуп-union типов ambient-контекста
+	/// (<c>TypeId&lt;INodeContext&gt;</c>), нужных нодам; реестр-владелец наполняет <c>ExecutionScope</c> (4F).</item>
 	/// </list>
 	/// Static-данные адресуются self-relative (<see cref="RelativePtr{T}"/>/<see cref="BumpArray{T}"/>), отдельный
 	/// указатель на арену не нужен. Cache/Persistence только размечаются (размеры/офсеты, <see cref="blockSizes"/>) —
@@ -42,6 +44,11 @@ namespace Sapientia.LogicGraph
 
 		/// <summary>Топология связей нод (граф зависимостей) для шедулинга. Заполняет <see cref="BlueprintCompiler"/>.</summary>
 		public NodeMapHeader nodesMap;
+
+		/// <summary>Дедуплицированный union типов ambient-контекста (<c>TypeId&lt;INodeContext&gt;</c>), нужных нодам
+		/// блюпринта (4E). Инстанс-агностичен (дедуп вместе с блобом); сортирован по id (детерминизм). На
+		/// скомпилированной ноде не хранится; реестр-владелец «тип → указатель» — <c>ExecutionScope</c> (4F). Self-relative.</summary>
+		public BumpArray<TypeId<INodeContext>> contextTypes;
 
 		public readonly int NodesCount => nodes.Length;
 
@@ -112,6 +119,15 @@ namespace Sapientia.LogicGraph
 		public Id<NodeHeader> GetStartNode(int index)
 		{
 			return nodesMap.startNodes.Get(index);
+		}
+
+		/// <summary>Все типы ambient-контекста (<c>TypeId&lt;INodeContext&gt;</c>) одним span'ом — дедуп-union,
+		/// сортированный по id (пригоден под бинарный поиск тип→локальный индекс). Пусто → пустой span.</summary>
+		/// <remarks>Вызывать только через ref/арена-указатель: self-relative <see cref="BumpArray{T}"/>; span
+		/// валиден, пока блоб жив и не перемещён (на копии по значению адрес сломается).</remarks>
+		public ReadOnlySpan<TypeId<INodeContext>> GetContextTypes()
+		{
+			return contextTypes.GetSpan();
 		}
 	}
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Sapientia.Memory;
+using Sapientia.TypeIndexer;
 using Submodules.Sapientia.Data;
 
 namespace Sapientia.LogicGraph
@@ -46,6 +47,9 @@ namespace Sapientia.LogicGraph
 			for (var i = 0; i < nodeCount; i++)
 				size += (adjacency.preds[i].Length + adjacency.succs[i].Length) * TSize<Id<NodeHeader>>.size; // 5b. рёбра
 			size += adjacency.startNodes.Length * TSize<Id<NodeHeader>>.size; // 5c. корни
+
+			// 7. contextTypes: дедуп-union типов ambient-контекста (шаг 6 — флаги NodeState — памяти не занимает).
+			size += TSize<TypeId<INodeContext>>.size * BuildContextTypes(blueprint).Length;
 
 			return size;
 		}
@@ -107,6 +111,9 @@ namespace Sapientia.LogicGraph
 
 			// 6. Флаги нод (NodeState) — после Map (Multiple читает топологию). Не влияют на sizing (вне lockstep).
 			SetupNodeFlags(ref compiled, blueprint);
+
+			// 7. Типы ambient-контекста (дедуп-union по нодам) — для ExecutionScope (4F). На ноде не хранятся.
+			SetupContextTypes(ref compiled, ref allocator, blueprint);
 		}
 
 		/// <summary>
@@ -297,6 +304,57 @@ namespace Sapientia.LogicGraph
 					return true;
 			}
 			return false;
+		}
+
+		/// <summary>
+		/// Бейкает в блоб дедуп-union типов ambient-контекста (<see cref="CompiledBlueprintHeader.contextTypes"/>):
+		/// собирает <c>TypeId&lt;INodeContext&gt;</c> со всех нод (см. <see cref="BuildContextTypes"/>) — то же разбиение,
+		/// что в <see cref="CalculateLayoutSizeToReserve"/> (lockstep). Пустой union — аллокации нет (<c>contextTypes</c>
+		/// остаётся <c>default</c>, <see cref="CompiledBlueprintHeader.GetContextTypes"/> возвращает пустой span).
+		/// </summary>
+		private static void SetupContextTypes(ref CompiledBlueprintHeader compiled, ref BumpHeader allocator, Blueprint blueprint)
+		{
+			var contextTypes = BuildContextTypes(blueprint);
+			if (contextTypes.Length == 0)
+				return;
+
+			compiled.contextTypes.Alloc(ref allocator, contextTypes.Length);
+			for (var i = 0; i < contextTypes.Length; i++)
+				compiled.contextTypes.Get(i) = contextTypes[i];
+		}
+
+		/// <summary>
+		/// Собирает дедуплицированный, сортированный по id union типов ambient-контекста (<c>TypeId&lt;INodeContext&gt;</c>)
+		/// со всех нод блюпринта (<see cref="INode.GetContextTypes"/>). Дедуп — по id (через <see cref="HashSet{T}"/>),
+		/// порядок — по возрастанию id (детерминизм). <b>Единый источник</b> разбиения для sizing (шаг 7) и заполнения
+		/// (<see cref="SetupContextTypes"/>) — lockstep.
+		/// </summary>
+		private static TypeId<INodeContext>[] BuildContextTypes(Blueprint blueprint)
+		{
+			HashSet<int> ids = null;
+			foreach (var node in blueprint.nodes)
+			{
+				var types = node.GetContextTypes();
+				if (types == null)
+					continue;
+				foreach (var type in types)
+				{
+					ids ??= new HashSet<int>();
+					ids.Add(type); // TypeId<INodeContext> → int (id)
+				}
+			}
+
+			if (ids == null)
+				return Array.Empty<TypeId<INodeContext>>();
+
+			var sorted = new int[ids.Count];
+			ids.CopyTo(sorted);
+			Array.Sort(sorted);
+
+			var result = new TypeId<INodeContext>[sorted.Length];
+			for (var i = 0; i < sorted.Length; i++)
+				result[i] = sorted[i]; // int → TypeId<INodeContext>
+			return result;
 		}
 
 		/// <summary>Пишет указатель Map в слот: Static — self-relative (SetPtr на месте), иначе — офсет в блоке.</summary>

@@ -22,8 +22,9 @@
 
 - **Static** — read-only, единственный экземпляр на приложение (дедуп по `VersionedId<Blueprint>`),
   живёт в собственной bump-арене. Состав: **Data** (на ноду: индекс метода + прямая self-relative ссылка
-  на static-слайс) + **Map** (на ноду блок In/Out как массив `RegionPtr`) + **ContextType** (`TypeId[]` —
-  ещё не сделано). Компиляция — managed-путь (editor/server), не Burst.
+  на static-слайс) + **Map** (на ноду блок In/Out как массив `RegionPtr`) + **ContextType**
+  (`BumpArray<TypeId<INodeContext>>` — дедуп-union по нодам, сортирован по id; **4E done**). Компиляция —
+  managed-путь (editor/server), не Burst.
 - **Runtime** — per-instance, **вся память off-allocator** (персистентность — через будущий слой **State**,
   не через снапшот мира ⇒ `World`/`CachedPtr`/`MemPtr` для рантайма не нужны). Состав: **Cache** (сброс
   каждый run), **Persistence** (постоянные данные нод), **Map** (топология для шедулинга), **Context**.
@@ -37,7 +38,8 @@
 
 | Файл | Что | Статус |
 |---|---|---|
-| [CompiledBlueprintHeader.cs](../Logic/StaticData/CompiledBlueprintHeader.cs) | Static-блоб — **чистая рантайм-структура** (о authoring-`Blueprint` не знает): `nodes: BumpArray<NodeHeader>`, `blockSizes: DataSizes`, `blueprintKey: VersionedId<Blueprint>` (тег идентичности), `nodesMap`; аксессоры `GetStaticNodeSlice`/`GetNodeInOut`/`GetNodePersistenceOffset`/`GetBlockSize`/`GetNodeRelatives`/`GetNodeInDegree`/`StartNode*` | ✅ |
+| [CompiledBlueprintHeader.cs](../Logic/StaticData/CompiledBlueprintHeader.cs) | Static-блоб — **чистая рантайм-структура** (о authoring-`Blueprint` не знает): `nodes: BumpArray<NodeHeader>`, `blockSizes: DataSizes`, `blueprintKey: VersionedId<Blueprint>` (тег идентичности), `nodesMap`, `contextTypes: BumpArray<TypeId<INodeContext>>` (4E); аксессоры `GetStaticNodeSlice`/`GetNodeInOut`/`GetNodePersistenceOffset`/`GetBlockSize`/`GetNodeRelatives`/`GetNodeInDegree`/`StartNode*`/`GetContextTypes` (span) | ✅ |
+| [INodeContext.cs](../Blueprint/INodeContext.cs) | Маркер категории ambient-контекста: `interface INodeContext : IIndexedType`. Нода объявляет нужные контексты как `TypeId<INodeContext>[]` (`INode.GetContextTypes`); компилятор бейкает дедуп-union в блоб | ✅ **(4E)** |
 | [BlueprintCompiler.cs](../Logic/StaticData/BlueprintCompiler.cs) | **Вся компиляция** `Blueprint → CompiledBlueprintHeader` (единственное место, знающее об authoring): `CalculateLayoutSizeToReserve`⟷`SetupLayout`/`SetupMap`/`BuildNodeMap` (lockstep), `BuildAdjacency`. Выделен из заголовка (ревью 4A) | ✅ |
 | [NodeHeader.cs](../Logic/StaticData/NodeHeader.cs) | На ноду: `typeId`, `runtimeType` (форк 8: из `INode.RuntimeType`), `state: ByteEnumMask<NodeState>` (форк 7), `staticData: RelativePtr`, `persistence: PtrOffset`, `inOut: PtrOffset`; `enum NodeState : byte {HasCache=0, Multiple=1}` (члены — индексы бит, не `[Flags]`) | ✅ **(4D)** |
 | [RegionPtr.cs](../Blueprint/RegionPtr.cs) | Указатель Map одного In/Out: `{ MemoryRegion region; RelativePtr<byte> data }`. Static → self-relative (резолв на месте), Cache/Persistence → `data.byteOffset` = офсет в блоке региона | ✅ |
@@ -98,7 +100,8 @@
   (8 развилок решены, разбивка 4A–4F, wave-модель). **Готово: 4A** (`NodeMapHeader` топология + `BlueprintCompiler`),
   **4B** (`ExecutionGraph` батч-DAG + детерминированный обход), **4C** (`CacheHeader` ячейки + read/write/link),
   **4D** (`runtimeType`/`NodeState` wiring: `INode.RuntimeType` → `NodeHeader.runtimeType`; `ByteEnumMask<NodeState>`
-  флаги `HasCache`/`Multiple` в `SetupNodeFlags`). **Осталось: 4E** (ContextType — следующий), **4F** (`ExecutionScope`).
+  флаги `HasCache`/`Multiple` в `SetupNodeFlags`), **4E** (ContextType: ноды → `TypeId<INodeContext>[]`, дедуп-union
+  бейкается в `CompiledBlueprintHeader.contextTypes`). **Осталось: 4F** (`ExecutionScope` — следующий).
   Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheHeaderTests` (+обновлённые `MapTests`).
 - ⬜ **ExecutionScope** (коннектор Static↔Runtime↔Context) — **спроектировать последним**, когда runtime-слой
   устаканится (директива пользователя). Прошлые наброски `ExecutionScope`/`MemorySource` в plan.md —
@@ -148,8 +151,11 @@
 4. ✅ **(4D)** Wiring `runtimeType`/`NodeState` (форки 7,8): `INode.RuntimeType` (default `Unmanaged`) →
    `NodeHeader.runtimeType`; флаги `NodeState` (`HasCache` по региону Out'ов, `Multiple` по fan-out `relatives.outputs`)
    битовой маской `ByteEnumMask<NodeState>` в `SetupNodeFlags` (после `BuildNodeMap`, вне lockstep).
-5. 🔄 **(4E — следующий)** `ContextType` на Static → Runtime `Context`.
-6. **(4F)** `ExecutionScope` (коннектор) — в самом конце.
+5. ✅ **(4E)** `ContextType`: маркер `INodeContext : IIndexedType`; ноды объявляют `TypeId<INodeContext>[]`
+   (`INode.GetContextTypes`); компилятор бейкает дедуп-union (сорт. по id) в `CompiledBlueprintHeader.contextTypes`
+   (`BumpArray`, span-аксессор; lockstep шаг 7). На ноде не хранится; runtime-реестр-владелец — 4F.
+6. 🔄 **(4F — следующий)** `ExecutionScope` (коннектор Static↔Runtime↔Context: владелец per-instance памяти
+   + runtime-реестр «тип → указатель») — в самом конце.
 7. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
 
 ---
