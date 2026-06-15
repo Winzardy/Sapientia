@@ -45,6 +45,8 @@ namespace Sapientia.LogicGraph
 	public class NodeOutput<T> : NodeOutput where T : unmanaged
 	{
 		public override int DataSize => TSize<T>.size;
+		/// <summary>Размер ячейки <see cref="DataCache{T}"/> (тег+payload) — слот Cache-Out'а (форк 1). Для T≤8 = 16.</summary>
+		public override int CacheCellSize => TSize<DataCache<T>>.size;
 		public override bool IsPreCalculated => false;
 		public virtual T DefaultValue => default;
 
@@ -57,6 +59,13 @@ namespace Sapientia.LogicGraph
 	public abstract class NodeOutput
 	{
 		public abstract int DataSize { get; }
+
+		/// <summary>
+		/// Размер слота Out'а в <b>Cache</b>-регионе: для Cache-Out'ов это размер ячейки <see cref="DataCache{T}"/>
+		/// (тег+payload, см. <see cref="NodeOutput{T}"/>), а не сырого значения. Static/Persistence используют
+		/// <see cref="DataSize"/>. По умолчанию = <see cref="DataSize"/>.
+		/// </summary>
+		public virtual int CacheCellSize => DataSize;
 
 		/// <summary>
 		/// True если это просто дефолтное значение и не является выходом никакой ноды (Только входом для инпута).

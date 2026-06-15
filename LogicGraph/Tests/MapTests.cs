@@ -38,7 +38,7 @@ namespace Sapientia.LogicGraph.Tests
 		public void Map_OutRegionDerivedFromPortType()
 		{
 			var bp = StubBlueprint.Of(
-				new StubNode(cacheSize: 8, outputs: new NodeOutput[] { new NodeOutput<long>() }),
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { new NodeOutput<long>() }),
 				new StubNode(persistanceSize: 8, outputs: new NodeOutput[] { new NodeStateOutput<long>() }),
 				new StubNode(staticSize: 8, outputs: new NodeOutput[] { new ConstOutput<long>(7) }));
 			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
@@ -70,9 +70,9 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Map_MultipleOutsStackAlignedWithinSlice()
 		{
-			// Два Cache-out'а одной ноды: офсеты от головы слайса, шаг выровнен (long → 8, int → слот 8).
+			// Два Cache-out'а одной ноды: офсеты от головы слайса, шаг = ячейка DataCache (тег+payload = 16).
 			var bp = StubBlueprint.Of(
-				new StubNode(cacheSize: 24, outputs: new NodeOutput[] { new NodeOutput<long>(), new NodeOutput<int>() }));
+				new StubNode(cacheSize: 32, outputs: new NodeOutput[] { new NodeOutput<long>(), new NodeOutput<int>() }));
 			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
@@ -83,7 +83,7 @@ namespace Sapientia.LogicGraph.Tests
 				ref var o0 = ref Port(block, 0);
 				ref var o1 = ref Port(block, 1);
 				Assert.AreEqual(sliceStart, o0.data.byteOffset);
-				Assert.AreEqual(sliceStart + 8, o1.data.byteOffset, "Второй Out должен лечь за выровненным слотом первого.");
+				Assert.AreEqual(sliceStart + 16, o1.data.byteOffset, "Второй Out должен лечь за ячейкой первого (16 байт).");
 				Assert.AreEqual(MemoryRegion.Cache, o1.region);
 			}
 			finally
@@ -99,7 +99,7 @@ namespace Sapientia.LogicGraph.Tests
 			var aOut = new NodeOutput<long>();
 			var bIn = new NodeInput<long>();
 			var bp = StubBlueprint.Of(
-				new StubNode(cacheSize: 8, outputs: new NodeOutput[] { aOut }),
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { aOut }),
 				new StubNode(inputs: new NodeInput[] { bIn }));
 			bp.inputToOutput[bIn] = aOut;
 
@@ -154,7 +154,7 @@ namespace Sapientia.LogicGraph.Tests
 			var aOut = new NodeOutput<long>();
 			var bIn = new NodeInput<long>();
 			var connected = StubBlueprint.Of(
-				new StubNode(cacheSize: 8, outputs: new NodeOutput[] { aOut }),
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { aOut }),
 				new StubNode(inputs: new NodeInput[] { bIn }),
 				new StubNode());
 			connected.inputToOutput[bIn] = aOut;

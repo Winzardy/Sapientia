@@ -50,8 +50,8 @@ namespace Sapientia.LogicGraph.Tests
 			var bOut = new NodeOutput<long>();
 			var cIn = new NodeInput<long>();
 			var bp = StubBlueprint.Of(
-				new StubNode(cacheSize: 8, outputs: new NodeOutput[] { aOut }),
-				new StubNode(cacheSize: 8, inputs: new NodeInput[] { bIn }, outputs: new NodeOutput[] { bOut }),
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { aOut }),
+				new StubNode(cacheSize: 16, inputs: new NodeInput[] { bIn }, outputs: new NodeOutput[] { bOut }),
 				new StubNode(inputs: new NodeInput[] { cIn }));
 			bp.inputToOutput[bIn] = aOut;
 			bp.inputToOutput[cIn] = bOut;
@@ -97,9 +97,9 @@ namespace Sapientia.LogicGraph.Tests
 			var dInB = new NodeInput<long>();
 			var dInC = new NodeInput<long>();
 			var bp = StubBlueprint.Of(
-				new StubNode(cacheSize: 8, outputs: new NodeOutput[] { aOut }),
-				new StubNode(cacheSize: 8, inputs: new NodeInput[] { bIn }, outputs: new NodeOutput[] { bOut }),
-				new StubNode(cacheSize: 8, inputs: new NodeInput[] { cIn }, outputs: new NodeOutput[] { cOut }),
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { aOut }),
+				new StubNode(cacheSize: 16, inputs: new NodeInput[] { bIn }, outputs: new NodeOutput[] { bOut }),
+				new StubNode(cacheSize: 16, inputs: new NodeInput[] { cIn }, outputs: new NodeOutput[] { cOut }),
 				new StubNode(inputs: new NodeInput[] { dInB, dInC }));
 			bp.inputToOutput[bIn] = aOut;
 			bp.inputToOutput[cIn] = aOut;
@@ -166,7 +166,7 @@ namespace Sapientia.LogicGraph.Tests
 			var bIn1 = new NodeInput<long>();
 			var bIn2 = new NodeInput<long>();
 			var bp = StubBlueprint.Of(
-				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { aOut1, aOut2 }),
+				new StubNode(cacheSize: 32, outputs: new NodeOutput[] { aOut1, aOut2 }),
 				new StubNode(inputs: new NodeInput[] { bIn1, bIn2 }));
 			bp.inputToOutput[bIn1] = aOut1;
 			bp.inputToOutput[bIn2] = aOut2;
@@ -245,7 +245,7 @@ namespace Sapientia.LogicGraph.Tests
 			var aOut = new NodeOutput<long>();
 			var aIn = new NodeInput<long>();
 			var bp = StubBlueprint.Of(
-				new StubNode(cacheSize: 8, inputs: new NodeInput[] { aIn }, outputs: new NodeOutput[] { aOut }));
+				new StubNode(cacheSize: 16, inputs: new NodeInput[] { aIn }, outputs: new NodeOutput[] { aOut }));
 			bp.inputToOutput[aIn] = aOut;
 
 			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
@@ -291,7 +291,7 @@ namespace Sapientia.LogicGraph.Tests
 			var aOut = new NodeOutput<long>();
 			var bIn = new NodeInput<long>();
 			var chain = StubBlueprint.Of(
-				new StubNode(cacheSize: 8, outputs: new NodeOutput[] { aOut }),
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { aOut }),
 				new StubNode(inputs: new NodeInput[] { bIn }));
 			chain.inputToOutput[bIn] = aOut;
 			AssertLockstep(chain);
@@ -304,8 +304,8 @@ namespace Sapientia.LogicGraph.Tests
 			var dOut = new NodeOutput<long>();
 			var eIn = new NodeInput<long>();
 			var diamondLike = StubBlueprint.Of(
-				new StubNode(cacheSize: 8, outputs: new NodeOutput[] { cOut }),
-				new StubNode(cacheSize: 8, inputs: new NodeInput[] { dInA }, outputs: new NodeOutput[] { dOut }),
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { cOut }),
+				new StubNode(cacheSize: 16, inputs: new NodeInput[] { dInA }, outputs: new NodeOutput[] { dOut }),
 				new StubNode(inputs: new NodeInput[] { dInB, eIn }));
 			diamondLike.inputToOutput[dInA] = cOut;
 			diamondLike.inputToOutput[dInB] = cOut;

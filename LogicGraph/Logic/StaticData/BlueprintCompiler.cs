@@ -136,13 +136,15 @@ namespace Sapientia.LogicGraph
 					{
 						var region = GetOutputRegion(output);
 						var regionIndex = region.ToInt();
+						// Cache-Out занимает ячейку DataCache (тег+payload, форк 1); Static/Persistence — сырой размер.
+						var slotSize = region == MemoryRegion.Cache ? output.CacheCellSize : output.DataSize;
 
-						E.ASSERT(localRover[regionIndex] + output.DataSize <= declaredSizes[region],
-							"[BlueprintCompiler] Out'ы ноды не помещаются в её слайс региона (DataSizes меньше суммы Out'ов).");
+						E.ASSERT(localRover[regionIndex] + slotSize <= declaredSizes[region],
+							"[BlueprintCompiler] Out'ы ноды не помещаются в её слайс региона (DataSizes меньше суммы Out'ов/ячеек).");
 						E.ASSERT(!outTarget.ContainsKey(output), "[BlueprintCompiler] Один Out принадлежит двум нодам.");
 
 						var intra = localRover[regionIndex];
-						localRover[regionIndex] += output.DataSize.AlignUp(DataSizes.Alignment);
+						localRover[regionIndex] += slotSize.AlignUp(DataSizes.Alignment);
 
 						if (region == MemoryRegion.Static)
 						{
