@@ -39,7 +39,7 @@
 |---|---|---|
 | [CompiledBlueprintHeader.cs](../Logic/StaticData/CompiledBlueprintHeader.cs) | Static-блоб — **чистая рантайм-структура** (о authoring-`Blueprint` не знает): `nodes: BumpArray<NodeHeader>`, `blockSizes: DataSizes`, `blueprintKey: VersionedId<Blueprint>` (тег идентичности), `nodesMap`; аксессоры `GetStaticNodeSlice`/`GetNodeInOut`/`GetNodePersistenceOffset`/`GetBlockSize`/`GetNodeRelatives`/`GetNodeInDegree`/`StartNode*` | ✅ |
 | [BlueprintCompiler.cs](../Logic/StaticData/BlueprintCompiler.cs) | **Вся компиляция** `Blueprint → CompiledBlueprintHeader` (единственное место, знающее об authoring): `CalculateLayoutSizeToReserve`⟷`SetupLayout`/`SetupMap`/`BuildNodeMap` (lockstep), `BuildAdjacency`. Выделен из заголовка (ревью 4A) | ✅ |
-| [NodeHeader.cs](../Logic/StaticData/NodeHeader.cs) | На ноду: `typeId`, `runtimeType`, `staticData: RelativePtr`, `persistence: PtrOffset`, `inOut: PtrOffset`; `enum NodeState : [Flags] byte {None, HasCache, Multiple}` | ✅ (см. форк 7, 8) |
+| [NodeHeader.cs](../Logic/StaticData/NodeHeader.cs) | На ноду: `typeId`, `runtimeType` (форк 8: из `INode.RuntimeType`), `state: ByteEnumMask<NodeState>` (форк 7), `staticData: RelativePtr`, `persistence: PtrOffset`, `inOut: PtrOffset`; `enum NodeState : byte {HasCache=0, Multiple=1}` (члены — индексы бит, не `[Flags]`) | ✅ **(4D)** |
 | [RegionPtr.cs](../Blueprint/RegionPtr.cs) | Указатель Map одного In/Out: `{ MemoryRegion region; RelativePtr<byte> data }`. Static → self-relative (резолв на месте), Cache/Persistence → `data.byteOffset` = офсет в блоке региона | ✅ |
 | [MemoryRegion.cs](../Blueprint/MemoryRegion.cs) | `MemoryRegion{Static,Cache,Persistence}` + `DataSizes` (3-региона fixed-буфер, `Alignment=8`) | ✅ |
 | [CompiledBlueprintStorage.cs](../Logic/StaticData/CompiledBlueprintStorage.cs) | «БД» скомпилированных блобов: `Add(arena, offsets)`, дедуп + сосуществование версий по `(id,version)`, jump-by-id, never-remove (Dispose-only) | ✅ (Фаза 3) |
@@ -96,8 +96,9 @@
   Покрыто `BlueprintInstanceStorageTests`/`InstanceScopeTests`.
 - 🟢 **Runtime/Cache/Execution** — доделывается по под-фазам, см. [phase-4/runtime/README.md](phase-4/runtime/README.md)
   (8 развилок решены, разбивка 4A–4F, wave-модель). **Готово: 4A** (`NodeMapHeader` топология + `BlueprintCompiler`),
-  **4B** (`ExecutionGraph` батч-DAG + детерминированный обход), **4C** (`CacheHeader` ячейки + read/write/link).
-  **Осталось: 4D** (`runtimeType`/`NodeState` wiring — следующий), **4E** (ContextType), **4F** (`ExecutionScope`).
+  **4B** (`ExecutionGraph` батч-DAG + детерминированный обход), **4C** (`CacheHeader` ячейки + read/write/link),
+  **4D** (`runtimeType`/`NodeState` wiring: `INode.RuntimeType` → `NodeHeader.runtimeType`; `ByteEnumMask<NodeState>`
+  флаги `HasCache`/`Multiple` в `SetupNodeFlags`). **Осталось: 4E** (ContextType — следующий), **4F** (`ExecutionScope`).
   Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheHeaderTests` (+обновлённые `MapTests`).
 - ⬜ **ExecutionScope** (коннектор Static↔Runtime↔Context) — **спроектировать последним**, когда runtime-слой
   устаканится (директива пользователя). Прошлые наброски `ExecutionScope`/`MemorySource` в plan.md —
@@ -144,8 +145,10 @@
    синхронный `remainingDeps`/`inDegree`; снос `IterationTo`/курсора/`iterationsToSchedule`/`AsyncValue` (форки 2,5,6).
 3. ✅ **(4C)** `CacheHeader`: per-instance Cache-блок (ячейки `DataCache`), read/write/`Is-Calculated`-мемоизация,
    резолв link (passthrough); Cache-layout по cell-size; wiring `NodeIn`/`NodeOut` (форк 1).
-4. 🔄 **(4D — следующий)** Wiring `runtimeType`/`NodeState` (форки 7,8) + `INode.RuntimeType`.
-5. **(4E)** `ContextType` на Static → Runtime `Context`.
+4. ✅ **(4D)** Wiring `runtimeType`/`NodeState` (форки 7,8): `INode.RuntimeType` (default `Unmanaged`) →
+   `NodeHeader.runtimeType`; флаги `NodeState` (`HasCache` по региону Out'ов, `Multiple` по fan-out `relatives.outputs`)
+   битовой маской `ByteEnumMask<NodeState>` в `SetupNodeFlags` (после `BuildNodeMap`, вне lockstep).
+5. 🔄 **(4E — следующий)** `ContextType` на Static → Runtime `Context`.
 6. **(4F)** `ExecutionScope` (коннектор) — в самом конце.
 7. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
 

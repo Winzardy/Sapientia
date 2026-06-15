@@ -14,16 +14,19 @@ namespace Sapientia.LogicGraph.Tests
 		private readonly DataSizes _sizes;
 		private readonly NodeInput[] _inputs;
 		private readonly NodeOutput[] _outputs;
+		private readonly RuntimeType _runtimeType;
 
-		public StubNode(int staticSize = 0, int cacheSize = 0, int persistanceSize = 0, NodeInput[] inputs = null, NodeOutput[] outputs = null)
+		public StubNode(int staticSize = 0, int cacheSize = 0, int persistanceSize = 0, NodeInput[] inputs = null, NodeOutput[] outputs = null, RuntimeType runtimeType = RuntimeType.Unmanaged)
 		{
 			_sizes = new DataSizes(staticSize, cacheSize, persistanceSize);
 			_inputs = inputs ?? Array.Empty<NodeInput>();
 			_outputs = outputs ?? Array.Empty<NodeOutput>();
+			_runtimeType = runtimeType;
 		}
 
 		public TypeId<INode> NodeTypeId => default;
 		public DataSizes DataSizes => _sizes;
+		public RuntimeType RuntimeType => _runtimeType;
 
 		public NodeInput[] GetInputs() => _inputs;
 		public NodeOutput[] GetOutputs() => _outputs;

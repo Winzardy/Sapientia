@@ -28,8 +28,8 @@
 | **[4A — NodeMapHeader](A-nodemap/plan.md)** | Топология (relatives + startNodes) в Static-блобе + `BuildAdjacency` (lockstep) + тесты; выделен `BlueprintCompiler` | 3, 4 (Build) | ✅ одобрено (не закоммичено) |
 | **[4B — ExecutionGraph](B-execution/plan.md)** | `Inject` (инстанцирование батч-DAG из Static), детерминированный батч-ордеринг + `Dispose`; снос `IterationTo`/курсора/`iterationsToSchedule`/`AsyncValue`; синхронный `int`. **Батч = линейная цепочка** нод | 2, 4 (Inject), 5, 6 | ✅ одобрено |
 | **[4C — CacheHeader](C-cache/plan.md)** | alloc/read/write Cache-блока (ячейки `DataCache`), Is-Calculated-мемоизация, резолв link (passthrough); wiring `NodeIn`/`NodeOut` | 1 | ✅ одобрено |
-| **4D — runtimeType/NodeState** | `INode.RuntimeType` + флаги `NodeState` (`HasCache`/`Multiple`) в `SetupLayout` | 7, 8 | 🔄 next |
-| 4E — ContextType | Static `TypeId[]` → Runtime `Context` | — | ☐ todo |
+| **4D — runtimeType/NodeState** | `INode.RuntimeType` (default `Unmanaged`) → `NodeHeader.runtimeType`; флаги `NodeState` (`HasCache`/`Multiple`) битовой маской `ByteEnumMask<NodeState>` в `SetupNodeFlags` (после `BuildNodeMap`) | 7, 8 | ✅ (закоммичено, не запушено) |
+| **4E — ContextType** | Static `TypeId[]` → Runtime `Context` | — | 🔄 next |
 | 4F — ExecutionScope | Коннектор Static↔Runtime↔Context — **проектируется последним** | — | ☐ todo |
 
 ## Wave-модель исполнения (директива пользователя — для 4B/M7)

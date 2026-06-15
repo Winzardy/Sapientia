@@ -83,7 +83,7 @@ namespace Sapientia.LogicGraph
 			{
 				ref var header = ref compiled.nodes.Get(i);
 				header.typeId = bpNodes[i].NodeTypeId;
-				// TODO(runtimeType): заполнять из ноды (нужен INode.RuntimeType) — для оркестратора (M7), пока default.
+				header.runtimeType = bpNodes[i].RuntimeType; // форк 8: бэкенд исполнения (бакетинг батчей — M7)
 				// Cache-офсет ноды на заголовке не храним (Cache уходит в DataCache, per-instance) — считаем
 				// при сборке Map локально (см. SetupMap). Persistence остаётся per-node офсетом блока.
 				header.persistence = new PtrOffset(compiled.blockSizes[MemoryRegion.Persistence]);
@@ -104,6 +104,9 @@ namespace Sapientia.LogicGraph
 
 			// 5. Топология (relatives + startNodes) — инстанс-агностична, бейкается в блоб.
 			BuildNodeMap(ref compiled, ref allocator, blueprint);
+
+			// 6. Флаги нод (NodeState) — после Map (Multiple читает топологию). Не влияют на sizing (вне lockstep).
+			SetupNodeFlags(ref compiled, blueprint);
 		}
 
 		/// <summary>
@@ -254,6 +257,46 @@ namespace Sapientia.LogicGraph
 			compiled.nodesMap.startNodes.Alloc(ref allocator, roots.Length);
 			for (var k = 0; k < roots.Length; k++)
 				compiled.nodesMap.startNodes.Get(k) = (Id<NodeHeader>)roots[k];
+		}
+
+		/// <summary>
+		/// Выставляет флаги <see cref="NodeState"/> на ноду (форк 7): <see cref="NodeState.HasCache"/> — есть хотя бы
+		/// один Out в Cache-регионе (мемоизация Is-Calculated, M8); <see cref="NodeState.Multiple"/> — fan-out, Out'ы
+		/// ноды читают ≥2 потребителя (<c>relatives.outputs.Length > 1</c>). Топология уже забейкана
+		/// (<see cref="BuildNodeMap"/>); флаги на sizing не влияют (поле в уже аллоцированном <see cref="NodeHeader"/>).
+		/// </summary>
+		private static void SetupNodeFlags(ref CompiledBlueprintHeader compiled, Blueprint blueprint)
+		{
+			var bpNodes = blueprint.nodes;
+			for (var i = 0; i < bpNodes.Length; i++)
+			{
+				var state = new ByteEnumMask<NodeState>();
+
+				if (HasCacheOut(bpNodes[i]))
+					state.Add(NodeState.HasCache);
+
+				// Multiple — fan-out по топологии: relatives.outputs — дедуп нод-потребителей (Length безопасен на копии).
+				if (compiled.GetNodeRelatives(i).outputs.Length > 1)
+					state.Add(NodeState.Multiple);
+
+				ref var header = ref compiled.nodes.Get(i);
+				header.state = state;
+			}
+		}
+
+		/// <summary>True, если у ноды есть хотя бы один Out, попадающий в Cache-регион (тот же критерий региона,
+		/// что и в <see cref="SetupMap"/> — <see cref="GetOutputRegion"/>).</summary>
+		private static bool HasCacheOut(INode node)
+		{
+			var outputs = node.GetOutputs();
+			if (outputs == null)
+				return false;
+			foreach (var output in outputs)
+			{
+				if (output != null && GetOutputRegion(output) == MemoryRegion.Cache)
+					return true;
+			}
+			return false;
 		}
 
 		/// <summary>Пишет указатель Map в слот: Static — self-relative (SetPtr на месте), иначе — офсет в блоке.</summary>

@@ -20,6 +20,10 @@ namespace Sapientia.LogicGraph
 		/// </summary>
 		public DataSizes DataSizes => default;
 
+		/// <summary>Бэкенд исполнения ноды (форк 8): по умолчанию Burst-unmanaged. Пишется в
+		/// <c>NodeHeader.runtimeType</c> на компиляции; бакетинг батчей по нему / чередование Burst↔Managed — M7.</summary>
+		public RuntimeType RuntimeType => RuntimeType.Unmanaged;
+
 		// Скорее всего инпуты/аутпуты не должны передаваться из ноды, возможно их нужно получать из блюпринта, хз
 		public NodeInput[] GetInputs();
 		public NodeOutput[] GetOutputs();
