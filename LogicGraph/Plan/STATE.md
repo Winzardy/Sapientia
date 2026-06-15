@@ -61,8 +61,9 @@
 | [BlueprintInstanceStorage.cs](../Logic/BlueprintInstanceStorage.cs) | Хранилище живых инстансов: `UnsafeIndexAllocSparseSet` + per-slot **generation** (staleness); `Add/Has/TryGet/Remove/Values/Dispose` | ✅ |
 | [BlueprintInstanceId.cs](../Logic/BlueprintInstanceId.cs) | Хендл `{Id id; int generation; long _raw}` (explicit layout, `IEquatable`); `generation==0` — невалид | ✅ |
 | [NodeInstanceId.cs](../Logic/NodeInstanceId.cs) | `{BlueprintInstanceId blueprintId; Id<NodeHeader> nodeId}` — адрес ноды конкретного инстанса | ✅ |
-| [ExecutionScope.cs](../Logic/ExecutionScope.cs) | **Коннектор/владелец per-instance памяти** (4F-1): `_instances: BlueprintInstanceStorage` + `_cache: UnsafeList<InstanceCache>` + `_memory: UnsafeList<InstancePersistence>` (по id). `Create`/`CreateInstance(ref storage, bp)`/`Has`/`GetInstanceCache(ref)`/`GetInstancePersistent(ref)`/`ResetInstanceCache`/`ResetAllCache`/`DisposeInstance`/`Dispose`. Читает блоб из `CompiledBlueprintStorage` (передаётся, не хранит). Context-реестр — **4F-2** | ✅ **(4F-1)** |
+| [ExecutionScope.cs](../Logic/ExecutionScope.cs) | **Коннектор/владелец per-instance памяти** (4F-1): `_instances: BlueprintInstanceStorage` + `_cache: UnsafeList<InstanceCache>` + `_memory: UnsafeList<InstancePersistence>` (по id) + `_contexts: ContextRegistry<INodeContext>` (4F-2). `Create`/`CreateInstance(ref storage, bp)`/`Has`/`GetInstanceCache(ref)`/`GetInstancePersistent(ref)`/`ResetInstanceCache`/`ResetAllCache`/`DisposeInstance`/`Dispose` + generic `SetContext<T>`/`GetContext<T>`/`HasContext<T>`. Читает блоб из `CompiledBlueprintStorage` (передаётся, не хранит) | ✅ **(4F-1, 4F-2)** |
 | [InstancePersistence.cs](../Logic/RuntimeData/InstancePersistence.cs) | Per-instance Persistence (стейт) поверх `UnsafeArray<byte>`: `Create(memoryId, size)`/`GetPtr`/`Dispose`/`IsValid`/`Size`. Фикс-размер, не растёт (динамика — через контекст) | ✅ **(4F-1)** |
+| [ContextRegistry.cs](../Logic/RuntimeData/ContextRegistry.cs) | **Ambient-context-реестр scope'а** (4F-2), generic по категории: `ContextRegistry<TContext> where TContext : IIndexedType` (scope: `INodeContext`). `UnsafeArray<SafePtr>` размера `TypeId<TContext>.Count`, **владеет** памятью контекстов (lazy `MemAlloc(TSize<T>)` при `SetContext<T>`). API generic-only: `SetContext<T>(in T)`/`GetContext<T>()→readonly ref T`/`HasContext<T>()`/`Dispose`. Без id-based/count. Резолв нодой в run'е — M7 | ✅ **(4F-2)** |
 | [LogicGraph.cs](../Logic/LogicGraph.cs) | `{CompiledBlueprintStorage storage; Id<Blueprint> entryBlueprintId}` | 🟡 поля |
 | [CompiledGraph.cs](../Logic/StaticData/CompiledGraph.cs) | Поля-заглушка | 🟡 stub |
 
@@ -105,10 +106,14 @@
   флаги `HasCache`/`Multiple` в `SetupNodeFlags`), **4E** (ContextType: ноды → `TypeId<INodeContext>[]`, дедуп-union
   бейкается в `CompiledBlueprintHeader.contextTypes`), **4F-1** (`ExecutionScope` — владелец per-instance памяти:
   `InstanceCache`/`InstancePersistence` поверх `UnsafeArray`; `CreateInstance`/`Dispose`/`Reset`/`Get*`; кеш-раскладка
-  переделана — `DataCache` метаданные + значения раздельно). **Осталось: 4F-2** (context-реестр на scope — следующий).
-  Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheTests` (+обновлённые `MapTests`/`LayoutTests`). **Долг 4F-1:**
-  дуальная кеш-раскладка в компиляторе (старые `DataSizes.Cache`/`CacheCellSize`/Cache-`RegionPtr` ↔ новые
-  `cacheCellCount`/`cacheValuesSize`) — свести; `LayoutTests`/`MapTests` ожидания по Cache сверить.
+  переделана — `DataCache` метаданные + значения раздельно), **4F-2** (`ContextRegistry<TContext>` — ambient-context-реестр
+  на scope: владеет памятью контекстов, generic-only `SetContext<T>`/`GetContext<T>`→`readonly ref T`/`HasContext<T>`).
+  **Осталось: 4F-3** (долг 4F-1 — кеш-раскладка). Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheTests`
+  (+обновлённые `MapTests`/`LayoutTests`); context — `ContextRegistryTests`/`ExecutionScopeTests` (round-trip под
+  `Assert.Ignore`: `IndexedTypes` не init в EditMode). **Долг 4F-1 → 4F-3:** дуальная кеш-раскладка в компиляторе
+  (старые `DataSizes.Cache`/`CacheCellSize`/Cache-`RegionPtr` ↔ новые `cacheCellCount`/`cacheValuesSize`) — свести
+  (развилка: как Cache-порт получает cell+value офсеты); `LayoutTests`/`MapTests` ожидания по Cache сверить; чистка
+  dead-code `BumpHeader.Reset/Size`/`RawBumpAllocator.Size`.
 
 ---
 
@@ -161,9 +166,13 @@
    заводит `InstanceCache` + `InstancePersistence` (оба поверх `UnsafeArray<byte>`/`UnsafeArray<DataCache>`, off-allocator),
    трекает в `BlueprintInstanceStorage`; `Get*`/`Reset*`/`DisposeInstance`/`Dispose`. Кеш переделан: `DataCache` —
    только метаданные (state + valueOffset + link, union), значения — отдельный `UnsafeArray<byte>`.
-7. 🔄 **(4F-2 — следующий)** Context-реестр на `ExecutionScope`: массив `SafePtr[TypeId<INodeContext>.Count]`
-   (или по `contextTypes`), `SetContext<T>`/`GetContext<T>`. **+ долг 4F-1:** свести дуальную кеш-раскладку в компиляторе.
-8. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
+7. ✅ **(4F-2)** Context-реестр на `ExecutionScope`: `ContextRegistry<TContext>` (generic по категории; scope:
+   `INodeContext`) — `UnsafeArray<SafePtr>` размера `TypeId<TContext>.Count`, **владеет** памятью контекстов (lazy
+   `MemAlloc(TSize<T>)` при set). Generic-only API: `SetContext<T>(in T)`/`GetContext<T>()`→`readonly ref T`/`HasContext<T>()`.
+   Без id-based/count (решение пользователя). Round-trip тесты под `Assert.Ignore` (`IndexedTypes` не init в EditMode).
+8. 🔄 **(4F-3 — следующий)** Долг 4F-1: свести дуальную кеш-раскладку в компиляторе (развилка — как Cache-порт получает
+   два офсета cell+value); сверить `LayoutTests`/`MapTests`; вычистить dead-code `BumpHeader.Reset/Size`/`RawBumpAllocator.Size`.
+9. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
 
 ---
 

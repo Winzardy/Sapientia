@@ -22,13 +22,15 @@ namespace Sapientia.LogicGraph
 	/// </summary>
 	/// <remarks>Runtime off-allocator, транзиентно. <see cref="InstanceCache"/>/<see cref="InstancePersistence"/> позиционно-независимы
 	/// (резолв через хендл своей арены) — потому хранятся прямо в списках по id. Ambient-context-реестр
-	/// («тип → указатель», по <see cref="CompiledBlueprintHeader.GetContextTypes"/>) — следующий инкремент (4F-2).</remarks>
+	/// («тип контекста → указатель», по <see cref="CompiledBlueprintHeader.GetContextTypes"/>) — на scope, общий для всех
+	/// инстансов домена (<see cref="_contexts"/>, 4F-2): реестр сам владеет памятью контекстов.</remarks>
 	public struct ExecutionScope : IDisposable
 	{
 		private Id<MemoryManager> _memoryId;
 		private BlueprintInstanceStorage _instances;  // identity + generation-staleness
 		private UnsafeList<InstanceCache> _cache;              // транзиентный кеш по id (ОТДЕЛЬНО от стейта)
 		private UnsafeList<InstancePersistence> _memory;       // стейт (InstancePersistence) по id
+		private ContextRegistry<INodeContext> _contexts;       // ambient-context на scope (тип контекста → указатель)
 
 		public readonly bool IsCreated => _instances.IsCreated;
 		public readonly int InstanceCount => _instances.Count;
@@ -42,6 +44,7 @@ namespace Sapientia.LogicGraph
 				_instances = new BlueprintInstanceStorage(cap),
 				_cache = new UnsafeList<InstanceCache>(memoryId, cap),
 				_memory = new UnsafeList<InstancePersistence>(memoryId, cap),
+				_contexts = ContextRegistry<INodeContext>.Create(memoryId),
 			};
 		}
 
@@ -103,6 +106,26 @@ namespace Sapientia.LogicGraph
 				_cache[i].Reset();
 		}
 
+		// ─────────────────────────── Ambient context (на scope) ───────────────────────────
+
+		/// <summary>Кладёт ambient-контекст <typeparamref name="T"/> по значению (реестр выделяет память и копирует).</summary>
+		public void SetContext<T>(in T value) where T : unmanaged, INodeContext
+		{
+			_contexts.SetContext(value);
+		}
+
+		/// <summary><c>readonly ref</c> на ambient-контекст <typeparamref name="T"/> (read-only; задать — <see cref="SetContext{T}"/>). Резолв нодой в run'е — M7.</summary>
+		public readonly ref readonly T GetContext<T>() where T : unmanaged, INodeContext
+		{
+			return ref _contexts.GetContext<T>();
+		}
+
+		/// <summary>Задан ли ambient-контекст <typeparamref name="T"/>.</summary>
+		public readonly bool HasContext<T>() where T : INodeContext
+		{
+			return _contexts.HasContext<T>();
+		}
+
 		/// <summary>Уничтожает инстанс: освобождает его <see cref="InstanceCache"/> и <see cref="InstancePersistence"/> и снимает с трека. No-op для stale/неизвестного.</summary>
 		public void DisposeInstance(BlueprintInstanceId id)
 		{
@@ -133,6 +156,7 @@ namespace Sapientia.LogicGraph
 			_cache.Dispose();
 			_memory.Dispose();
 			_instances.Dispose();
+			_contexts.Dispose();
 			this = default;
 		}
 	}

@@ -35,6 +35,13 @@ namespace Sapientia.LogicGraph.Tests
 		public TypeId<INodeContext>[] GetContextTypes() => _contextTypes;
 	}
 
+	/// <summary>Тестовый ambient-контекст (unmanaged). В EditMode <b>не зарегистрирован</b> в <c>IndexedTypes</c>
+	/// (<c>TypeId&lt;INodeContext&gt;.Count</c> = 0) ⇒ функциональные round-trip тесты реестра идут под <c>Assert.Ignore</c>.</summary>
+	internal struct StubContext : INodeContext
+	{
+		public long value;
+	}
+
 	/// <summary>Хелпер сборки тестового блюпринта из stub-нод (связи — через <see cref="Blueprint.inputToOutput"/>).</summary>
 	internal static class StubBlueprint
 	{
