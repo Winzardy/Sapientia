@@ -1,6 +1,6 @@
 # 03 — ExecutionGraphTests
 
-**Статус: ☐ todo** · Под-фаза [4B](../plan.md).
+**Статус: ✅ done** · Под-фаза [4B](../plan.md).
 
 ## Цель
 
