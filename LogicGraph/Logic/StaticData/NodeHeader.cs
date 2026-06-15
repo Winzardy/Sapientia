@@ -35,7 +35,7 @@ namespace Sapientia.LogicGraph
 		/// </summary>
 		public RelativePtr staticData;
 
-		/// <summary>Офсет слайса ноды в блоке Persistence-региона (база — у владельца Runtime-памяти).</summary>
+		/// <summary>Офсет слайса ноды в блоке InstancePersistence-региона (база — у владельца Runtime-памяти).</summary>
 		public PtrOffset persistence;
 		/// <summary>
 		/// Блок In/Out ноды — <b>массив байт</b> (заполняется на компиляции; во время run'а нода читает его как

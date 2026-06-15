@@ -13,7 +13,7 @@ namespace Sapientia.LogicGraph
 		Static = 0,
 		/// <summary>Runtime.Cache инстанса: данные на время исполнения, сбрасывается перед каждым run'ом (RW).</summary>
 		Cache = 1,
-		/// <summary>Runtime.Persistence инстанса: постоянные данные нод; сохраняются через State (RW).</summary>
+		/// <summary>Runtime.InstancePersistence инстанса: постоянные данные нод; сохраняются через State (RW).</summary>
 		Persistence = 2,
 	}
 

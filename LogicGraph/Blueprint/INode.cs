@@ -15,7 +15,7 @@ namespace Sapientia.LogicGraph
 		public TypeId<INode> NodeTypeId { get; }
 
 		/// <summary>
-		/// Размеры трёх регионов данных ноды (Static/Cache/Persistence, sizing-only). По умолчанию все нули —
+		/// Размеры трёх регионов данных ноды (Static/Cache/InstancePersistence, sizing-only). По умолчанию все нули —
 		/// нода ничего не занимает. Out'ы ноды размещаются в голове слайса соответствующего региона и обязаны
 		/// помещаться в объявленный размер.
 		/// </summary>
@@ -46,7 +46,7 @@ namespace Sapientia.LogicGraph
 	}
 
 	/// <summary>
-	/// Out, значение которого живёт в Persistence-регионе (мутабельный стейт ноды, переживает run'ы;
+	/// Out, значение которого живёт в InstancePersistence-регионе (мутабельный стейт ноды, переживает run'ы;
 	/// другие ноды могут его читать/менять через указатель Map).
 	/// </summary>
 	public class NodeStateOutput<T> : NodeOutput<T> where T : unmanaged
@@ -57,8 +57,9 @@ namespace Sapientia.LogicGraph
 	public class NodeOutput<T> : NodeOutput where T : unmanaged
 	{
 		public override int DataSize => TSize<T>.size;
-		/// <summary>Размер ячейки <see cref="DataCache{T}"/> (тег+payload) — слот Cache-Out'а (форк 1). Для T≤8 = 16.</summary>
-		public override int CacheCellSize => TSize<DataCache<T>>.size;
+		/// <summary>Размер одной ячейки метаданных <see cref="DataCache"/> (тег + офсеты, без значения; значение —
+		/// отдельным блоком, размер = <see cref="DataSize"/>). Слот Cache-Out'а в массиве метаданных.</summary>
+		public override int CacheCellSize => TSize<DataCache>.size;
 		public override bool IsPreCalculated => false;
 		public virtual T DefaultValue => default;
 
@@ -74,7 +75,7 @@ namespace Sapientia.LogicGraph
 
 		/// <summary>
 		/// Размер слота Out'а в <b>Cache</b>-регионе: для Cache-Out'ов это размер ячейки <see cref="DataCache{T}"/>
-		/// (тег+payload, см. <see cref="NodeOutput{T}"/>), а не сырого значения. Static/Persistence используют
+		/// (тег+payload, см. <see cref="NodeOutput{T}"/>), а не сырого значения. Static/InstancePersistence используют
 		/// <see cref="DataSize"/>. По умолчанию = <see cref="DataSize"/>.
 		/// </summary>
 		public virtual int CacheCellSize => DataSize;
@@ -85,7 +86,7 @@ namespace Sapientia.LogicGraph
 		/// </summary>
 		public abstract bool IsPreCalculated { get; }
 
-		/// <summary>True если значение живёт в Persistence-регионе (см. <see cref="NodeStateOutput{T}"/>); иначе — Cache.</summary>
+		/// <summary>True если значение живёт в InstancePersistence-регионе (см. <see cref="NodeStateOutput{T}"/>); иначе — Cache.</summary>
 		public virtual bool IsPersistent => false;
 
 		/// <summary>Записывает дефолтное значение по адресу размещения (бейк в Static при компиляции).</summary>

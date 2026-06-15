@@ -61,18 +61,20 @@
 | [BlueprintInstanceStorage.cs](../Logic/BlueprintInstanceStorage.cs) | Хранилище живых инстансов: `UnsafeIndexAllocSparseSet` + per-slot **generation** (staleness); `Add/Has/TryGet/Remove/Values/Dispose` | ✅ |
 | [BlueprintInstanceId.cs](../Logic/BlueprintInstanceId.cs) | Хендл `{Id id; int generation; long _raw}` (explicit layout, `IEquatable`); `generation==0` — невалид | ✅ |
 | [NodeInstanceId.cs](../Logic/NodeInstanceId.cs) | `{BlueprintInstanceId blueprintId; Id<NodeHeader> nodeId}` — адрес ноды конкретного инстанса | ✅ |
+| [ExecutionScope.cs](../Logic/ExecutionScope.cs) | **Коннектор/владелец per-instance памяти** (4F-1): `_instances: BlueprintInstanceStorage` + `_cache: UnsafeList<InstanceCache>` + `_memory: UnsafeList<InstancePersistence>` (по id). `Create`/`CreateInstance(ref storage, bp)`/`Has`/`GetInstanceCache(ref)`/`GetInstancePersistent(ref)`/`ResetInstanceCache`/`ResetAllCache`/`DisposeInstance`/`Dispose`. Читает блоб из `CompiledBlueprintStorage` (передаётся, не хранит). Context-реестр — **4F-2** | ✅ **(4F-1)** |
+| [InstancePersistence.cs](../Logic/RuntimeData/InstancePersistence.cs) | Per-instance Persistence (стейт) поверх `UnsafeArray<byte>`: `Create(memoryId, size)`/`GetPtr`/`Dispose`/`IsValid`/`Size`. Фикс-размер, не растёт (динамика — через контекст) | ✅ **(4F-1)** |
 | [LogicGraph.cs](../Logic/LogicGraph.cs) | `{CompiledBlueprintStorage storage; Id<Blueprint> entryBlueprintId}` | 🟡 поля |
 | [CompiledGraph.cs](../Logic/StaticData/CompiledGraph.cs) | Поля-заглушка | 🟡 stub |
 
-### Cache — per-instance кеш In/Out (✅ 4C: ячейки + поведение)
+### Cache — per-instance кеш In/Out (✅ 4C поведение; 🔧 4F-1 раскладка переделана: метаданные + значения раздельно)
 
 | Файл | Что | Статус |
 |---|---|---|
-| [DataCache.cs](../Logic/CacheData/DataCache.cs) | Ячейка кеша порта: `[Explicit]` union `{state: CacheState @0; value: T / link: PtrOffset<DataCache<T>> @8}`; `CacheState{Uninitialized,Value,Link}`. Тег 1 байт @0, payload @8 | ✅ |
-| [CacheHeader.cs](../Logic/CacheData/CacheHeader.cs) | Per-instance Cache (массив ячеек): `Setup`/`Reset`/`GetCache`/`Read`/`Write`/`ResolveLink`/`IsCalculated`/`WriteLink`; `dataCache: RelativePtr` (self-relative на блок ячеек), `cellsSize`. Резолв link — по офсету от базы + release-safe hop-cap | ✅ **(4C-2)** |
-| [CacheHandler.cs](../Logic/CacheData/CacheHandler.cs) | `{PtrOffset<DataCache<T>> offset}` — типизированный офсет ячейки | ✅ |
-| [NodeIn.cs](../Logic/CacheData/NodeIn.cs) / [NodeOut.cs](../Logic/CacheData/NodeOut.cs) | `Read`/`Write`/`IsCalculated(ref CacheHeader)` через `CacheHeader` | ✅ **(4C-2)** |
-| Cache-layout (`BlueprintCompiler`/`NodeOutput.CacheCellSize`) | Cache-Out пакуется по `TSize<DataCache<T>>` (cell-size); `DataSizes.Cache` — в cell-байтах | ✅ **(4C-1)** |
+| [DataCache.cs](../Logic/CacheData/DataCache.cs) | **Метаданные** ячейки (без `T`, без значения): `[Explicit]` union `{state: CacheState @0; valueOffset: PtrOffset / link: PtrOffset<DataCache> @8}` (взаимоисключающи по `state`). 16 байт | ✅ **(4F-1)** |
+| [InstanceCache.cs](../Logic/CacheData/InstanceCache.cs) | Per-instance Cache = **два раздельных off-allocator-блока**: `_cells: UnsafeArray<DataCache>` (метаданные) + `_values: UnsafeArray<byte>` (значения). `Create(memoryId, cellCount, valuesSize)`/`Read`/`Write`/`IsCalculated`/`ResolveLink`/`WriteLink`/`Reset`(=`_cells.Clear`)/`Dispose`. `Write` пишет значение в `_values` и запоминает `cell.valueOffset`. Позиционно-независим (бывш. `CacheHeader`) | ✅ **(4F-1)** |
+| [CacheHandler.cs](../Logic/CacheData/CacheHandler.cs) | `{PtrOffset<DataCache> cell; PtrOffset value}` — офсет ячейки метаданных + офсет значения | ✅ **(4F-1)** |
+| [NodeIn.cs](../Logic/CacheData/NodeIn.cs) / [NodeOut.cs](../Logic/CacheData/NodeOut.cs) | `Read`/`Write`/`IsCalculated(ref InstanceCache)` через `InstanceCache` | ✅ |
+| Cache-layout (`BlueprintCompiler`) | На компиляции считаются `CompiledBlueprintHeader.cacheCellCount`/`cacheValuesSize` (по Cache-Out: +1 ячейка, += `DataSize`); `ExecutionScope` ими создаёт `InstanceCache`. ⚠️ Старая per-node раскладка (`DataSizes.Cache`/`CacheCellSize`/Cache-`RegionPtr` офсеты) ещё сосуществует — **сверить/вычистить** | 🔧 **(4F-1, есть долг)** |
 
 ### Execution — оркестратор (✅ 4B: батч-DAG + детерминированный обход; параллелизм/диспатч — M6/M7)
 
@@ -101,11 +103,12 @@
   **4B** (`ExecutionGraph` батч-DAG + детерминированный обход), **4C** (`CacheHeader` ячейки + read/write/link),
   **4D** (`runtimeType`/`NodeState` wiring: `INode.RuntimeType` → `NodeHeader.runtimeType`; `ByteEnumMask<NodeState>`
   флаги `HasCache`/`Multiple` в `SetupNodeFlags`), **4E** (ContextType: ноды → `TypeId<INodeContext>[]`, дедуп-union
-  бейкается в `CompiledBlueprintHeader.contextTypes`). **Осталось: 4F** (`ExecutionScope` — следующий).
-  Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheHeaderTests` (+обновлённые `MapTests`).
-- ⬜ **ExecutionScope** (коннектор Static↔Runtime↔Context) — **спроектировать последним**, когда runtime-слой
-  устаканится (директива пользователя). Прошлые наброски `ExecutionScope`/`MemorySource` в plan.md —
-  **исторические**, под 5-scope модель; пересобрать под 3-региона/off-allocator.
+  бейкается в `CompiledBlueprintHeader.contextTypes`), **4F-1** (`ExecutionScope` — владелец per-instance памяти:
+  `InstanceCache`/`InstancePersistence` поверх `UnsafeArray`; `CreateInstance`/`Dispose`/`Reset`/`Get*`; кеш-раскладка
+  переделана — `DataCache` метаданные + значения раздельно). **Осталось: 4F-2** (context-реестр на scope — следующий).
+  Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheTests` (+обновлённые `MapTests`/`LayoutTests`). **Долг 4F-1:**
+  дуальная кеш-раскладка в компиляторе (старые `DataSizes.Cache`/`CacheCellSize`/Cache-`RegionPtr` ↔ новые
+  `cacheCellCount`/`cacheValuesSize`) — свести; `LayoutTests`/`MapTests` ожидания по Cache сверить.
 
 ---
 
@@ -154,9 +157,13 @@
 5. ✅ **(4E)** `ContextType`: маркер `INodeContext : IIndexedType`; ноды объявляют `TypeId<INodeContext>[]`
    (`INode.GetContextTypes`); компилятор бейкает дедуп-union (сорт. по id) в `CompiledBlueprintHeader.contextTypes`
    (`BumpArray`, span-аксессор; lockstep шаг 7). На ноде не хранится; runtime-реестр-владелец — 4F.
-6. 🔄 **(4F — следующий)** `ExecutionScope` (коннектор Static↔Runtime↔Context: владелец per-instance памяти
-   + runtime-реестр «тип → указатель») — в самом конце.
-7. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
+6. ✅ **(4F-1)** `ExecutionScope` — владелец per-instance памяти + трекер инстансов: `CreateInstance(ref storage, bp)`
+   заводит `InstanceCache` + `InstancePersistence` (оба поверх `UnsafeArray<byte>`/`UnsafeArray<DataCache>`, off-allocator),
+   трекает в `BlueprintInstanceStorage`; `Get*`/`Reset*`/`DisposeInstance`/`Dispose`. Кеш переделан: `DataCache` —
+   только метаданные (state + valueOffset + link, union), значения — отдельный `UnsafeArray<byte>`.
+7. 🔄 **(4F-2 — следующий)** Context-реестр на `ExecutionScope`: массив `SafePtr[TypeId<INodeContext>.Count]`
+   (или по `contextTypes`), `SetContext<T>`/`GetContext<T>`. **+ долг 4F-1:** свести дуальную кеш-раскладку в компиляторе.
+8. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
 
 ---
 

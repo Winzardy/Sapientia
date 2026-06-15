@@ -9,8 +9,8 @@ namespace Sapientia.LogicGraph.Tests
 	/// <summary>
 	/// Static.Map: на ноду блок In/Out (массив <see cref="RegionPtr"/>: In'ы, затем Out'ы), на который указывает
 	/// <see cref="NodeHeader.inOut"/> (офсет от позиции заголовка). Проверяют: вывод региона из типа порта
-	/// (precalculated → Static, persistent → Persistence, иначе Cache), размещение Out'ов (Static — слайсы нод с
-	/// бейком дефолта; Cache/Persistence — офсетом в блоке), что In указывает на данные источника, lockstep.
+	/// (precalculated → Static, persistent → InstancePersistence, иначе Cache), размещение Out'ов (Static — слайсы нод с
+	/// бейком дефолта; Cache/InstancePersistence — офсетом в блоке), что In указывает на данные источника, lockstep.
 	/// </summary>
 	public class MapTests
 	{
@@ -51,7 +51,7 @@ namespace Sapientia.LogicGraph.Tests
 				Assert.AreEqual(MemoryRegion.Cache, cacheOut.region);
 				Assert.AreEqual(0, cacheOut.data.byteOffset);
 
-				// NodeStateOutput → Persistence.
+				// NodeStateOutput → InstancePersistence.
 				ref var persistentOut = ref Port(compiled.GetNodeInOut(1), 0);
 				Assert.AreEqual(MemoryRegion.Persistence, persistentOut.region);
 				Assert.AreEqual(compiled.GetNodePersistenceOffset(1).byteOffset, persistentOut.data.byteOffset);

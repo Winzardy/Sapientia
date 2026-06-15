@@ -30,7 +30,8 @@
 | **[4C — CacheHeader](C-cache/plan.md)** | alloc/read/write Cache-блока (ячейки `DataCache`), Is-Calculated-мемоизация, резолв link (passthrough); wiring `NodeIn`/`NodeOut` | 1 | ✅ одобрено |
 | **4D — runtimeType/NodeState** | `INode.RuntimeType` (default `Unmanaged`) → `NodeHeader.runtimeType`; флаги `NodeState` (`HasCache`/`Multiple`) битовой маской `ByteEnumMask<NodeState>` в `SetupNodeFlags` (после `BuildNodeMap`) | 7, 8 | ✅ (закоммичено, не запушено) |
 | **4E — ContextType** | Ноды объявляют `TypeId<INodeContext>[]`; компилятор бейкает дедуп-union в `CompiledBlueprintHeader.contextTypes` (`BumpArray`, сортирован по id, span-аксессор `GetContextTypes`); на ноде не хранится. Маркер категории `INodeContext : IIndexedType`. Runtime-реестр-владелец — 4F | — | ✅ (закоммичено, не запушено) |
-| **4F — ExecutionScope** | Коннектор Static↔Runtime↔Context (владелец per-instance памяти + runtime-реестр «тип → указатель») — **проектируется последним** | — | 🔄 next |
+| **4F-1 — ExecutionScope (память+lifecycle)** | Владелец per-instance памяти + трекер инстансов: `CreateInstance`/`Dispose`/`Reset`/`Get*` поверх `BlueprintInstanceStorage`. `InstanceCache`/`InstancePersistence` — обёртки над `UnsafeArray<byte>`/`UnsafeArray<DataCache>` (off-allocator). Кеш переделан: `DataCache` = метаданные (state+valueOffset+link, union), значения отдельно | — | ✅ (закоммичено, не запушено) |
+| **4F-2 — Context-реестр** | Реестр «тип → указатель» на `ExecutionScope`: массив `SafePtr[TypeId<INodeContext>.Count]`, `SetContext<T>`/`GetContext<T>`. **+ долг 4F-1:** свести дуальную кеш-раскладку компилятора | — | 🔄 next |
 
 ## Wave-модель исполнения (директива пользователя — для 4B/M7)
 

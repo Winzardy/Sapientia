@@ -15,7 +15,7 @@ namespace Sapientia.LogicGraph
 	/// знающее об authoring-стороне), а здесь только поля блоба + рантайм-аксессоры. Состав:
 	/// <list type="bullet">
 	/// <item><b>Data</b> — на ноду (<see cref="NodeHeader"/>): индекс метода + прямая ссылка на static-слайс
-	/// (<see cref="NodeHeader.staticData"/>, без общего static-массива) + офсеты слайсов в Cache/Persistence.</item>
+	/// (<see cref="NodeHeader.staticData"/>, без общего static-массива) + офсеты слайсов в Cache/InstancePersistence.</item>
 	/// <item><b>Map</b> — на ноду блок In/Out (массив <see cref="RegionPtr"/>, In'ы затем Out'ы), на который
 	/// указывает <see cref="NodeHeader.inOut"/> (офсет от позиции заголовка). Заполняется только на компиляции;
 	/// в run'е читает нода.</item>
@@ -25,7 +25,7 @@ namespace Sapientia.LogicGraph
 	/// (<c>TypeId&lt;INodeContext&gt;</c>), нужных нодам; реестр-владелец наполняет <c>ExecutionScope</c> (4F).</item>
 	/// </list>
 	/// Static-данные адресуются self-relative (<see cref="RelativePtr{T}"/>/<see cref="BumpArray{T}"/>), отдельный
-	/// указатель на арену не нужен. Cache/Persistence только размечаются (размеры/офсеты, <see cref="blockSizes"/>) —
+	/// указатель на арену не нужен. Cache/InstancePersistence только размечаются (размеры/офсеты, <see cref="blockSizes"/>) —
 	/// их память заводит владелец Runtime-данных.
 	/// </summary>
 	public struct CompiledBlueprintHeader
@@ -35,11 +35,16 @@ namespace Sapientia.LogicGraph
 		public VersionedId<Blueprint> blueprintKey;
 
 		/// <summary>Полный размер блока каждого региона (для Static — суммарные байты слайсов+констант; для
-		/// Cache/Persistence — размер блока, который аллоцирует владелец Runtime-памяти).</summary>
+		/// InstancePersistence — размер блока, который аллоцирует владелец Runtime-памяти).</summary>
 		public DataSizes blockSizes;
 
+		/// <summary>Раскладка Cache инстанса (<c>InstanceCache</c> — два раздельных блока): число ячеек метаданных
+		/// (<see cref="DataCache"/>) и суммарный размер блока значений в байтах. Считает <see cref="BlueprintCompiler"/>.</summary>
+		public int cacheCellCount;
+		public int cacheValuesSize;
+
 		/// <summary>На ноду (по <see cref="Id{NodeHeader}"/>): индекс метода, ссылка на static-слайс,
-		/// офсеты Cache/Persistence, указатель на блок In/Out. Self-relative.</summary>
+		/// офсеты Cache/InstancePersistence, указатель на блок In/Out. Self-relative.</summary>
 		public BumpArray<NodeHeader> nodes;
 
 		/// <summary>Топология связей нод (граф зависимостей) для шедулинга. Заполняет <see cref="BlueprintCompiler"/>.</summary>
@@ -65,7 +70,7 @@ namespace Sapientia.LogicGraph
 			return nodes.Get(nodeId).typeId;
 		}
 
-		/// <summary>Офсет слайса ноды в блоке Persistence (Static — <see cref="GetStaticNodeSlice"/>;
+		/// <summary>Офсет слайса ноды в блоке InstancePersistence (Static — <see cref="GetStaticNodeSlice"/>;
 		/// Cache — per-instance через DataCache, не хранится на заголовке).</summary>
 		public PtrOffset GetNodePersistenceOffset(Id<NodeHeader> nodeId)
 		{

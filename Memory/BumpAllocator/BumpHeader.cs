@@ -37,6 +37,8 @@ namespace Sapientia.Memory
 		/// </summary>
 		public static int HeaderSize => TSize<BumpHeader>.size;
 
+		public int Size => _reservedSize - HeaderSize;
+
 		/// <summary>
 		/// Сколько байт блока уже занято (позиция _rover, включая сам заголовок). Read-only — нужно прежде
 		/// всего тестам lockstep, чтобы независимо сверить фактический bump с расчётным резервом.

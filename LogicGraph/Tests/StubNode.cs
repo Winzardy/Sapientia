@@ -6,7 +6,7 @@ namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
 	/// Минимальная нода-заглушка для тестов: объявляет размеры трёх регионов
-	/// (<see cref="DataSizes"/>: Static/Cache/Persistence) и, опционально, порты In/Out
+	/// (<see cref="DataSizes"/>: Static/Cache/InstancePersistence) и, опционально, порты In/Out
 	/// (для тестов Static.Map). Поведения нет.
 	/// </summary>
 	internal sealed class StubNode : INode

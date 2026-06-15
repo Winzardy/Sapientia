@@ -7,7 +7,7 @@ namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
 	/// Раскладка регионов в Static-заголовке (sizing-only, stub-ноды). Проверяют суммарные размеры блоков,
-	/// выравнивание/non-overlap per-node офсетов <b>Persistence</b> (Static-слайсы — отдельные аллокации,
+	/// выравнивание/non-overlap per-node офсетов <b>InstancePersistence</b> (Static-слайсы — отдельные аллокации,
 	/// адресуются напрямую; Cache per-node офсет на заголовке не хранится — ушёл в DataCache, проверяется только
 	/// суммарный размер блока), lockstep (резерв == bump), чистоту zero-size.
 	/// </summary>
@@ -51,7 +51,7 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				// Per-node офсеты хранятся только для Persistence (Cache — per-instance через DataCache).
+				// Per-node офсеты хранятся только для InstancePersistence (Cache — per-instance через DataCache).
 				const MemoryRegion region = MemoryRegion.Persistence;
 				var prevEnd = 0;
 				for (var n = 0; n < bp.nodes.Length; n++)
@@ -76,7 +76,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Layout_AlignmentPadsSlots()
 		{
-			// Не кратные 8 размеры -> блок == сумма AlignUp(size); per-node офсеты Persistence идут по выровненным слотам.
+			// Не кратные 8 размеры -> блок == сумма AlignUp(size); per-node офсеты InstancePersistence идут по выровненным слотам.
 			var bp = StubBlueprint.Of(
 				new StubNode(persistanceSize: 1),  // слот 8
 				new StubNode(persistanceSize: 9),  // слот 16
