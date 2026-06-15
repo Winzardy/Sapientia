@@ -41,7 +41,7 @@ namespace Sapientia.LogicGraph.Tests
 				new StubNode(cacheSize: 8, outputs: new NodeOutput[] { new NodeOutput<long>() }),
 				new StubNode(persistanceSize: 8, outputs: new NodeOutput[] { new NodeStateOutput<long>() }),
 				new StubNode(staticSize: 8, outputs: new NodeOutput[] { new ConstOutput<long>(7) }));
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -73,7 +73,7 @@ namespace Sapientia.LogicGraph.Tests
 			// Два Cache-out'а одной ноды: офсеты от головы слайса, шаг выровнен (long → 8, int → слот 8).
 			var bp = StubBlueprint.Of(
 				new StubNode(cacheSize: 24, outputs: new NodeOutput[] { new NodeOutput<long>(), new NodeOutput<int>() }));
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -103,7 +103,7 @@ namespace Sapientia.LogicGraph.Tests
 				new StubNode(inputs: new NodeInput[] { bIn }));
 			bp.inputToOutput[bIn] = aOut;
 
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -129,7 +129,7 @@ namespace Sapientia.LogicGraph.Tests
 			bp.outputs = new NodeOutput[] { constOut };
 			bp.inputToOutput[bIn] = constOut;
 
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -179,7 +179,7 @@ namespace Sapientia.LogicGraph.Tests
 
 			AssertLockstep(bp);
 
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -196,8 +196,8 @@ namespace Sapientia.LogicGraph.Tests
 
 		private static void AssertLockstep(Blueprint bp)
 		{
-			var reserve = CompiledBlueprintHeader.CalculateLayoutSizeToReserve(bp);
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out _);
+			var reserve = BlueprintCompiler.CalculateLayoutSizeToReserve(bp);
+			var arena = BlueprintCompiler.CompileLayout(bp, out _);
 			try
 			{
 				var used = arena.Value.UsedBytes - BumpHeader.HeaderSize;
@@ -213,7 +213,7 @@ namespace Sapientia.LogicGraph.Tests
 		public void Map_NoPortsInOutInvalid()
 		{
 			var bp = StubBlueprint.Of(new StubNode(staticSize: 8), new StubNode());
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);

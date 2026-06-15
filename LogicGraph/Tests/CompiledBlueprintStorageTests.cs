@@ -8,7 +8,7 @@ namespace Sapientia.LogicGraph.Tests
 	/// <summary>
 	/// Фаза 3: <see cref="CompiledBlueprintStorage"/>. Сторедж ничего не знает о <c>Blueprint</c> —
 	/// принимает уже скомпилированные <see cref="CompiledBlueprintHeader"/> с аренами (<see cref="CompiledBlueprintStorage.Add"/>);
-	/// компиляция здесь, в тесте, через <see cref="CompiledBlueprintHeader.CompileLayout"/>. Off-allocator,
+	/// компиляция здесь, в тесте, через <see cref="BlueprintCompiler.CompileLayout"/>. Off-allocator,
 	/// worldState не нужен. Ничего не удаляется по одной — только Dispose. Проверяют Add/Count/Has/Get,
 	/// дедуп, рантайм-add нового id, сосуществование версий, Dispose.
 	/// </summary>
@@ -28,7 +28,7 @@ namespace Sapientia.LogicGraph.Tests
 		// Компилируем снаружи и отдаём в сторедж (владение ареной переходит стореджу).
 		private static void Add(ref CompiledBlueprintStorage storage, int id, int version)
 		{
-			var arena = CompiledBlueprintHeader.CompileLayout(Bp(id, version), out var offset);
+			var arena = BlueprintCompiler.CompileLayout(Bp(id, version), out var offset);
 			storage.Add(arena, offset);
 		}
 

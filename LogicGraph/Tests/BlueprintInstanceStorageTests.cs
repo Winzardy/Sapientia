@@ -15,7 +15,7 @@ namespace Sapientia.LogicGraph.Tests
 	{
 		private static RawBumpAllocator Compile(out PtrOffset<CompiledBlueprintHeader> offset)
 		{
-			return CompiledBlueprintHeader.CompileLayout(StubBlueprint.Of(1, 1, new StubNode(cacheSize: 16)), out offset);
+			return BlueprintCompiler.CompileLayout(StubBlueprint.Of(1, 1, new StubNode(cacheSize: 16)), out offset);
 		}
 
 		[Test]

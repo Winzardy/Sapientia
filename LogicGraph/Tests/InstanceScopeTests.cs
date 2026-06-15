@@ -16,7 +16,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Instance_CreateWiresIdentityAndOffsets()
 		{
-			var arena = CompiledBlueprintHeader.CompileLayout(StubBlueprint.Of(7, 3, new StubNode(cacheSize: 16)), out var offset);
+			var arena = BlueprintCompiler.CompileLayout(StubBlueprint.Of(7, 3, new StubNode(cacheSize: 16)), out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);

@@ -11,7 +11,7 @@ namespace Sapientia.LogicGraph
 	/// Хранилище («БД») скомпилированных блюпринтов. <b>Ничего не знает об authoring-<c>Blueprint</c> и о
 	/// компиляции</b> — на вход приходят уже готовые <see cref="CompiledBlueprintHeader"/> вместе со своими
 	/// аренами (<see cref="Add"/>); компиляция — забота вызывающего
-	/// (<see cref="CompiledBlueprintHeader.CompileLayout"/>). Адресация версии — по <c>(Id&lt;Blueprint&gt;,
+	/// (<see cref="BlueprintCompiler.CompileLayout"/>). Адресация версии — по <c>(Id&lt;Blueprint&gt;,
 	/// version)</c>, которые сторедж читает из самого <see cref="CompiledBlueprintHeader"/>.
 	///
 	/// <b>Ничего не удаляется по одной</b>: версии только добавляются (сосуществуют), ресурсы освобождаются

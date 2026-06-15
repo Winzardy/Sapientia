@@ -37,12 +37,13 @@
 
 | Файл | Что | Статус |
 |---|---|---|
-| [CompiledBlueprintHeader.cs](../Logic/StaticData/CompiledBlueprintHeader.cs) | Static-блоб: `CalculateLayoutSizeToReserve`⟷`SetupLayout`/`SetupMap` (lockstep), `nodes: BumpArray<NodeHeader>`, `blockSizes: DataSizes`, `blueprintKey: VersionedId<Blueprint>`; аксессоры `GetStaticNodeSlice`/`GetNodeInOut`/`GetNodePersistenceOffset`/`GetBlockSize` | ✅ |
+| [CompiledBlueprintHeader.cs](../Logic/StaticData/CompiledBlueprintHeader.cs) | Static-блоб — **чистая рантайм-структура** (о authoring-`Blueprint` не знает): `nodes: BumpArray<NodeHeader>`, `blockSizes: DataSizes`, `blueprintKey: VersionedId<Blueprint>` (тег идентичности), `nodesMap`; аксессоры `GetStaticNodeSlice`/`GetNodeInOut`/`GetNodePersistenceOffset`/`GetBlockSize`/`GetNodeRelatives`/`GetNodeInDegree`/`StartNode*` | ✅ |
+| [BlueprintCompiler.cs](../Logic/StaticData/BlueprintCompiler.cs) | **Вся компиляция** `Blueprint → CompiledBlueprintHeader` (единственное место, знающее об authoring): `CalculateLayoutSizeToReserve`⟷`SetupLayout`/`SetupMap`/`BuildNodeMap` (lockstep), `BuildAdjacency`. Выделен из заголовка (ревью 4A) | ✅ |
 | [NodeHeader.cs](../Logic/StaticData/NodeHeader.cs) | На ноду: `typeId`, `runtimeType`, `staticData: RelativePtr`, `persistence: PtrOffset`, `inOut: PtrOffset`; `enum NodeState : [Flags] byte {None, HasCache, Multiple}` | ✅ (см. форк 7, 8) |
 | [RegionPtr.cs](../Blueprint/RegionPtr.cs) | Указатель Map одного In/Out: `{ MemoryRegion region; RelativePtr<byte> data }`. Static → self-relative (резолв на месте), Cache/Persistence → `data.byteOffset` = офсет в блоке региона | ✅ |
 | [MemoryRegion.cs](../Blueprint/MemoryRegion.cs) | `MemoryRegion{Static,Cache,Persistence}` + `DataSizes` (3-региона fixed-буфер, `Alignment=8`) | ✅ |
 | [CompiledBlueprintStorage.cs](../Logic/StaticData/CompiledBlueprintStorage.cs) | «БД» скомпилированных блобов: `Add(arena, offsets)`, дедуп + сосуществование версий по `(id,version)`, jump-by-id, never-remove (Dispose-only) | ✅ (Фаза 3) |
-| [NodeMapHeader.cs](../Logic/StaticData/NodeMapHeader.cs) | Граф связей для шедулинга: `relatives: RelativePtr<NodeRelativesHeader>`, `NodeRelativesHeader{inputs/outputs: BumpArray<Id<NodeHeader>>}` | 🟡 **stub**: только поля + комментарий; методы Build/Inject не написаны; поле `nodesMap` в `CompiledBlueprintHeader` **не аллоцируется** (см. форк 3) |
+| [NodeMapHeader.cs](../Logic/StaticData/NodeMapHeader.cs) | Топология (граф связей) для шедулинга: `relatives: BumpArray<NodeRelativesHeader>` (per-node), `startNodes: BumpArray<Id<NodeHeader>>`; `NodeRelativesHeader{inputs/outputs: BumpArray<Id<NodeHeader>>}` + `InDegree` | ✅ **(4A)**: бейкается в блоб из связей (дедуп по ноде, precalc/висячий/самопетля рёбер не дают), lockstep; покрыто `NodeMapTests`. Build — компиляция (форки 3,4 решены); Inject — 4B |
 
 **Map строится из связей** (`Blueprint.inputToOutput` + порты): регион Out выводится из типа порта
 (`IsPreCalculated`→Static с бейком дефолта, `IsPersistent`→Persistence, иначе Cache); In копирует указатель
@@ -92,18 +93,25 @@
   (дедуп/версии). Покрыто `LayoutTests`/`MapTests`/`CompiledBlueprintStorageTests`.
 - ✅ **Instance identity/lifecycle**: `BlueprintInstanceHeader`/`Storage`/`Id` с generation-staleness.
   Покрыто `BlueprintInstanceStorageTests`/`InstanceScopeTests`.
-- 🟡 **Runtime/Cache/Execution** — **только каркас (компилируется, поведения нет)**: `DataCache` раскладка
-  есть, но `CacheHeader` не аллоцирует/не пишет/не резолвит link; `ExecutionGraph` не шедулит (двигает
-  курсор); `NodeMapHeader` без методов и не аллоцируется в блобе; `runtimeType`/`NodeState` не заполняются.
+- 🟡 **Runtime/Cache/Execution** — доделывается по под-фазам, см. [phase-4/runtime/README.md](phase-4/runtime/README.md)
+  (8 развилок решены, разбивка 4A–4F, wave-модель). **4A done** (`NodeMapHeader` топология в блобе +
+  выделен `BlueprintCompiler`). Осталось: `ExecutionGraph` шедулинг (4B, план готов), `CacheHeader`
+  alloc/read/write/link (4C), `runtimeType`/`NodeState` wiring (4D), ContextType (4E), `ExecutionScope` (4F).
 - ⬜ **ExecutionScope** (коннектор Static↔Runtime↔Context) — **спроектировать последним**, когда runtime-слой
   устаканится (директива пользователя). Прошлые наброски `ExecutionScope`/`MemorySource` в plan.md —
   **исторические**, под 5-scope модель; пересобрать под 3-региона/off-allocator.
 
 ---
 
-## 4. Открытые развилки (нужны решения пользователя)
+## 4. Открытые развилки
 
-Доделка runtime/cache/execution заблокирована этими решениями (в скобках — моя рекомендация):
+> **РЕШЕНЫ (2026-06-15).** Все 8 развилок закрыты пользователем; решения + разбивка на под-фазы —
+> [phase-4/runtime/README.md](phase-4/runtime/README.md). Кратко: 1 Cache=`DataCache`-ячейки (4C);
+> 2 синхронный `int`+inDegree (потоки по startBatches); 3,4 топология в блобе, Build=компиляция/Inject=runtime
+> (4A done); 5 `IterationTo` снести; 6 `iterationsToSchedule`=буфер следующего wave (4D/M7); 7 `NodeState`
+> HasCache/Multiple; 8 `INode.RuntimeType` (4D). Ниже — исходная формулировка (история).
+
+Доделка runtime/cache/execution была заблокирована этими решениями (в скобках — рекомендация, теперь принятая):
 
 1. **CacheData ↔ RegionPtr.** `DataCache<T>` — это per-instance value-слой Cache-региона (мемоизация
    `Is-Calculated` + passthrough-link), а `RegionPtr` — статическая разводка Map. → *inOut Cache-портов
@@ -129,9 +137,9 @@
 
 ## 5. Следующие шаги (после решений по §4)
 
-1. `NodeMapHeader`: аллокация в блобе (форк 3) + `BuildBatches` из `inputToOutput` (топосортировка в батчи).
-2. `ExecutionGraph`: реальный шедулинг (`inDegree`/декремент, `startBatches`, джоб-порог), `Dispose`,
-   чистка `IterationTo`/`iterationsToSchedule` (форки 2,5,6).
+1. ✅ **(4A done)** `NodeMapHeader`: топология (relatives+startNodes) в блобе из `inputToOutput`; выделен `BlueprintCompiler`.
+2. 🔄 **(4B, план готов)** `ExecutionGraph`: батч-DAG (батч=линейная цепочка) + детерминированный обход + `Dispose`;
+   синхронный `remainingDeps`/`inDegree`; снос `IterationTo`/курсора/`iterationsToSchedule`/`AsyncValue` (форки 2,5,6).
 3. `CacheHeader`: alloc per-instance Cache-блока, read/write/`Is-Calculated`-мемоизация, резолв link
    (passthrough) — форк 1.
 4. Wiring `runtimeType`/`NodeState` (форки 7,8) + `INode.RuntimeType`.

@@ -21,7 +21,7 @@ namespace Sapientia.LogicGraph.Tests
 			var bp = StubBlueprint.Of(
 				new StubNode(staticSize: 16, cacheSize: 8, persistanceSize: 24),
 				new StubNode(staticSize: 8, cacheSize: 16, persistanceSize: 8));
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -47,7 +47,7 @@ namespace Sapientia.LogicGraph.Tests
 				new StubNode(staticSize: 4, cacheSize: 12, persistanceSize: 1),
 				new StubNode(staticSize: 8, cacheSize: 4, persistanceSize: 16),
 				new StubNode(staticSize: 1, cacheSize: 0, persistanceSize: 7));
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -81,7 +81,7 @@ namespace Sapientia.LogicGraph.Tests
 				new StubNode(persistanceSize: 1),  // слот 8
 				new StubNode(persistanceSize: 9),  // слот 16
 				new StubNode(persistanceSize: 8)); // слот 8
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -116,8 +116,8 @@ namespace Sapientia.LogicGraph.Tests
 
 		private static void AssertLockstep(Blueprint bp)
 		{
-			var reserve = CompiledBlueprintHeader.CalculateLayoutSizeToReserve(bp);
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out _);
+			var reserve = BlueprintCompiler.CalculateLayoutSizeToReserve(bp);
+			var arena = BlueprintCompiler.CompileLayout(bp, out _);
 			try
 			{
 				var used = arena.Value.UsedBytes - BumpHeader.HeaderSize;
@@ -135,8 +135,8 @@ namespace Sapientia.LogicGraph.Tests
 			// Все регионы нулевые: блоки нулевые, static-слайсы не выделяются, без ассертов MemAlloc.
 			var bp = StubBlueprint.Of(new StubNode(), new StubNode());
 
-			var reserve = CompiledBlueprintHeader.CalculateLayoutSizeToReserve(bp);
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var reserve = BlueprintCompiler.CalculateLayoutSizeToReserve(bp);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
@@ -159,7 +159,7 @@ namespace Sapientia.LogicGraph.Tests
 				new StubNode(staticSize: 8),
 				new StubNode(staticSize: 8),
 				new StubNode(staticSize: 8));
-			var arena = CompiledBlueprintHeader.CompileLayout(bp, out var offset);
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
