@@ -1,6 +1,7 @@
 # Под-фаза 4C — CacheHeader (Cache-регион = ячейки DataCache)
 
-**Статус: 🔄 in progress (план, гейт).** Развилка 1 (CacheData ↔ RegionPtr). Обзор — [../README.md](../README.md).
+**Статус: ✅ одобрено пользователем (4C-1 закоммичено cc5f920; 4C-2 коммитится).** Развилка 1 (CacheData ↔ RegionPtr).
+Обзор — [../README.md](../README.md).
 
 ## Цель
 
@@ -67,9 +68,9 @@ public struct NodeOut<T> { public CacheHandler<T> output; /* Write через Ca
 
 | # | Таска | Статус |
 |---|---|---|
-| 01 | layout: Cache=ячейки в `BlueprintCompiler` + `NodeOutput.CacheCellSize` + stub/`MapTests` (4C-1) | ✅ реализовано (на ревью) |
-| 02 | `CacheHeader` поведение: Setup/Reset/Get/Read/Write/ResolveLink (4C-2) | ☐ |
-| 03 | wiring `NodeIn`/`NodeOut` + тесты (4C-2) | ☐ |
+| 01 | layout: Cache=ячейки в `BlueprintCompiler` + `NodeOutput.CacheCellSize` + stub/`MapTests` (4C-1) | ✅ done |
+| 02 | `CacheHeader` поведение: Setup/Reset/Get/Read/Write/ResolveLink (4C-2) | ✅ done |
+| 03 | wiring `NodeIn`/`NodeOut` + тесты (4C-2) | ✅ done |
 
 > **4C-1 done (на ревью):** `NodeOutput.CacheCellSize` (= `TSize<DataCache<T>>`); `BlueprintCompiler.SetupMap`
 > пакует Cache-Out по cell-size; stub-размеры Cache-Out'ов и `MapTests`-офсеты приведены к ячейкам (16/32).

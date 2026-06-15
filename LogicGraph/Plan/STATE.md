@@ -62,20 +62,21 @@
 | [LogicGraph.cs](../Logic/LogicGraph.cs) | `{CompiledBlueprintStorage storage; Id<Blueprint> entryBlueprintId}` | 🟡 поля |
 | [CompiledGraph.cs](../Logic/StaticData/CompiledGraph.cs) | Поля-заглушка | 🟡 stub |
 
-### Cache — per-instance кеш In/Out (🟡 каркас, alloc/read/write/link не реализованы)
+### Cache — per-instance кеш In/Out (✅ 4C: ячейки + поведение)
 
 | Файл | Что | Статус |
 |---|---|---|
-| [DataCache.cs](../Logic/CacheData/DataCache.cs) | Ячейка кеша порта: `[Explicit]` union `{state: CacheState @0; value: T / link: PtrOffset<DataCache<T>> @8}`; `CacheState{Uninitialized,Value,Link}`. Тег 1 байт @0, payload @8 (выравнивание под любой `T`, совпадает с `DataSizes.Alignment=8`) | ✅ раскладка |
-| [CacheHeader.cs](../Logic/CacheData/CacheHeader.cs) | `dataCache: RelativePtr`; `GetCachePtr/GetCache<T>(CacheHandler<T>)` | 🟡 **shell**: нет Alloc/записи/резолва link/мемоизации |
-| [CacheHandler.cs](../Logic/CacheData/CacheHandler.cs) | `{PtrOffset<DataCache<T>> offset}` | 🟡 поле |
-| [NodeIn.cs](../Logic/CacheData/NodeIn.cs) / [NodeOut.cs](../Logic/CacheData/NodeOut.cs) | `{CacheHandler<T>}` — типизированные обёртки порта | 🟡 поля, без поведения |
+| [DataCache.cs](../Logic/CacheData/DataCache.cs) | Ячейка кеша порта: `[Explicit]` union `{state: CacheState @0; value: T / link: PtrOffset<DataCache<T>> @8}`; `CacheState{Uninitialized,Value,Link}`. Тег 1 байт @0, payload @8 | ✅ |
+| [CacheHeader.cs](../Logic/CacheData/CacheHeader.cs) | Per-instance Cache (массив ячеек): `Setup`/`Reset`/`GetCache`/`Read`/`Write`/`ResolveLink`/`IsCalculated`/`WriteLink`; `dataCache: RelativePtr` (self-relative на блок ячеек), `cellsSize`. Резолв link — по офсету от базы + release-safe hop-cap | ✅ **(4C-2)** |
+| [CacheHandler.cs](../Logic/CacheData/CacheHandler.cs) | `{PtrOffset<DataCache<T>> offset}` — типизированный офсет ячейки | ✅ |
+| [NodeIn.cs](../Logic/CacheData/NodeIn.cs) / [NodeOut.cs](../Logic/CacheData/NodeOut.cs) | `Read`/`Write`/`IsCalculated(ref CacheHeader)` через `CacheHeader` | ✅ **(4C-2)** |
+| Cache-layout (`BlueprintCompiler`/`NodeOutput.CacheCellSize`) | Cache-Out пакуется по `TSize<DataCache<T>>` (cell-size); `DataSizes.Cache` — в cell-байтах | ✅ **(4C-1)** |
 
-### Execution — оркестратор (🟡 каркас, шедулинг не реализован)
+### Execution — оркестратор (✅ 4B: батч-DAG + детерминированный обход; параллелизм/диспатч — M6/M7)
 
 | Файл | Что | Статус |
 |---|---|---|
-| [ExecutionGraph.cs](../Logic/RuntimeData/Execution/ExecutionGraph.cs) | DAG-оркестратор: `runtimes: UnsafeArray<ExecutionRuntime>` (Unmanaged/Managed), `currentIteration`, `TryRun(runtimeType, parallelCount)` — **сейчас только продвигает курсор**. Типы `ExecutionIteration` (`Run` пуст), `ExecutionBatch` (`previousBatchesCount: AsyncValue<int>`, `nextBatches`, `nodesOrder: NodeInstanceId[]`), `RuntimeType{Unmanaged,Managed}` | 🟡 **stub**: `IterationTo` мёртв, `iterationsToSchedule` не используется (см. форки 2,5,6) |
+| [ExecutionGraph.cs](../Logic/RuntimeData/Execution/ExecutionGraph.cs) | Батч-DAG: `Inject(ref compiled, BlueprintInstanceId)` — chain-декомпозиция Static-топологии (батч = линейная цепочка); `Drain(Span<NodeInstanceId>)` — детерминированный обход (ready-queue, single-thread); `ResetDeps`/`Dispose`. `ExecutionBatch{ inDegree, remainingDeps (синхронный int), nextBatches, nodesOrder }`. `enum RuntimeType{Unmanaged,Managed}` (для 4D/M7). Снесён мёртвый каркас (`IterationTo`/курсор/`AsyncValue`/`iterationsToSchedule`) | ✅ **(4B)** (тела нод не исполняются — M6) |
 
 ### Снесено (по ходу рефактора)
 
@@ -93,10 +94,11 @@
   (дедуп/версии). Покрыто `LayoutTests`/`MapTests`/`CompiledBlueprintStorageTests`.
 - ✅ **Instance identity/lifecycle**: `BlueprintInstanceHeader`/`Storage`/`Id` с generation-staleness.
   Покрыто `BlueprintInstanceStorageTests`/`InstanceScopeTests`.
-- 🟡 **Runtime/Cache/Execution** — доделывается по под-фазам, см. [phase-4/runtime/README.md](phase-4/runtime/README.md)
-  (8 развилок решены, разбивка 4A–4F, wave-модель). **4A done** (`NodeMapHeader` топология в блобе +
-  выделен `BlueprintCompiler`). Осталось: `ExecutionGraph` шедулинг (4B, план готов), `CacheHeader`
-  alloc/read/write/link (4C), `runtimeType`/`NodeState` wiring (4D), ContextType (4E), `ExecutionScope` (4F).
+- 🟢 **Runtime/Cache/Execution** — доделывается по под-фазам, см. [phase-4/runtime/README.md](phase-4/runtime/README.md)
+  (8 развилок решены, разбивка 4A–4F, wave-модель). **Готово: 4A** (`NodeMapHeader` топология + `BlueprintCompiler`),
+  **4B** (`ExecutionGraph` батч-DAG + детерминированный обход), **4C** (`CacheHeader` ячейки + read/write/link).
+  **Осталось: 4D** (`runtimeType`/`NodeState` wiring — следующий), **4E** (ContextType), **4F** (`ExecutionScope`).
+  Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheHeaderTests` (+обновлённые `MapTests`).
 - ⬜ **ExecutionScope** (коннектор Static↔Runtime↔Context) — **спроектировать последним**, когда runtime-слой
   устаканится (директива пользователя). Прошлые наброски `ExecutionScope`/`MemorySource` в plan.md —
   **исторические**, под 5-scope модель; пересобрать под 3-региона/off-allocator.
@@ -137,14 +139,14 @@
 
 ## 5. Следующие шаги (после решений по §4)
 
-1. ✅ **(4A done)** `NodeMapHeader`: топология (relatives+startNodes) в блобе из `inputToOutput`; выделен `BlueprintCompiler`.
-2. 🔄 **(4B, план готов)** `ExecutionGraph`: батч-DAG (батч=линейная цепочка) + детерминированный обход + `Dispose`;
+1. ✅ **(4A)** `NodeMapHeader`: топология (relatives+startNodes) в блобе из `inputToOutput`; выделен `BlueprintCompiler`.
+2. ✅ **(4B)** `ExecutionGraph`: батч-DAG (батч=линейная цепочка) + детерминированный обход + `Dispose`;
    синхронный `remainingDeps`/`inDegree`; снос `IterationTo`/курсора/`iterationsToSchedule`/`AsyncValue` (форки 2,5,6).
-3. `CacheHeader`: alloc per-instance Cache-блока, read/write/`Is-Calculated`-мемоизация, резолв link
-   (passthrough) — форк 1.
-4. Wiring `runtimeType`/`NodeState` (форки 7,8) + `INode.RuntimeType`.
-5. `ContextType` на Static → Runtime `Context`.
-6. **`ExecutionScope`** (коннектор) — в самом конце.
+3. ✅ **(4C)** `CacheHeader`: per-instance Cache-блок (ячейки `DataCache`), read/write/`Is-Calculated`-мемоизация,
+   резолв link (passthrough); Cache-layout по cell-size; wiring `NodeIn`/`NodeOut` (форк 1).
+4. 🔄 **(4D — следующий)** Wiring `runtimeType`/`NodeState` (форки 7,8) + `INode.RuntimeType`.
+5. **(4E)** `ContextType` на Static → Runtime `Context`.
+6. **(4F)** `ExecutionScope` (коннектор) — в самом конце.
 7. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
 
 ---
