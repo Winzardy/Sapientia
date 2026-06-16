@@ -182,8 +182,16 @@
    закрыта; layout `NodeHeader` не изменился). ✅ **M6-B**: контракт исполнения — `NodeContext` (seam резолва
    static-слайс/Cache/Persistence/Map) + `ILogicNode.Execute(ref NodeContext)` + адаптер `NodeInvoker.Execute<T>`/
    `Compile<T>` (`FunctionPointer<ExecuteFn>` под `#if UNITY`, managed `GetManaged<T>` в .NET). Диспатч по
-   fn-pointer-индексу, без vtable; `body.Execute` девиртуализуется (constrained, `unmanaged T`). Реестр по индексу
-   / Burst-таблица / version gate — M6-C…F.
+   fn-pointer-индексу, без vtable; `body.Execute` девиртуализуется (constrained, `unmanaged T`).
+   ✅ **M6-C**: `NodeFunctionRegistry` — function-table по ordinal `TypeId<ILogicNode>`. **Инстанс** (`struct :
+   IDisposable`, не статика/`SharedStatic` — тот капризен в эдиторе): `Build(bool buildManaged=true)` компилит
+   `FunctionPointer` раз/тип (источник типов — `IndexedTypes.GetContextChildren(typeof(ILogicNode))`, reflection
+   `MakeGenericMethod`, интерим до кодогена M10), `Create(...)` — из готовой таблицы (тесты/M10). Burst-таблица =
+   off-allocator `UnsafeArray<FunctionPointer<ExecuteFn>>` (под `#if UNITY`, читается из Burst; передаётся как
+   `BurstTable`), managed-таблица = `ExecuteFn[]` (.NET-путь). `Dispose` освобождает off-allocator буфер (сам код FP
+   — domain-lifetime Burst, освобождать нечем/незачем). Покрыто `NodeFunctionRegistryTests` (managed round-trip
+   реально; Build/Burst — под `Assert.Ignore`, IndexedTypes не init в EditMode). Интеграция в `ExecutionScope` +
+   прогон `Drain` через диспетчер — **M6-F**; выбор бэкенда по `runtimeType` + детерминизм — **M6-D**; version gate — **M6-E**.
 
 ---
 
@@ -198,3 +206,10 @@
 - `generation` — `int` (wrap на ~2^31, не практично). Slab-store не шринкается (память на `Dispose`).
 - Self-relative (`RelativePtr`/`BumpArray`/`inOut`-офсет) **нельзя** трогать на копии по значению (в т.ч.
   defensive-copy от `in`) — только через ref/арена-указатель.
+- **M6-C `NodeFunctionRegistry.Build` — IL2CPP/AOT-интерим.** Сборка через reflection (`MakeGenericMethod`
+  `Compile<T>`/`GetManaged<T>`) работает в редакторе (Mono)/plain .NET (JIT), но под IL2CPP инстанциация для
+  типа, не упомянутого статически, может быть вырезана линкером ⇒ нужен генерируемый initializer (**M10**, как у
+  `TypeIndexer`) либо `[Preserve]`/link.xml. Также: `BurstCompiler.CompileFunctionPointer` дёргать **один раз/тип**
+  (каждый вызов пиннит `GCHandle`, не освобождается до domain reload) — реестр это и обеспечивает (`Build` раз → таблица).
+- **M6-C: Burst-таблица сейчас компилит ВСЕ logic-типы** (в C нет managed-тел). Пропуск Burst-компиляции для
+  `RuntimeType.Managed`-нод + выбор бэкенда — **M6-D** (иначе `CompileFunctionPointer` на managed-теле упадёт).
