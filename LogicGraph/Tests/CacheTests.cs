@@ -1,32 +1,39 @@
 #if UNITY_5_4_OR_NEWER
 using NUnit.Framework;
+using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
 
 namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
-	/// 4F: <see cref="InstanceCache"/> — per-instance Cache (метаданные <see cref="DataCache"/> + значения раздельно):
+	/// 4F: <see cref="InstanceCache"/> — per-instance Cache (метаданные <see cref="CacheLink"/> + значения раздельно):
 	/// write/read + мемоизация Is-Calculated + reset + резолв passthrough-link. Два off-allocator-блока
 	/// (<see cref="InstanceCache.Create"/>/<see cref="InstanceCache.Dispose"/>); позиционно-независима.
 	/// </summary>
 	public class CacheTests
 	{
-		private static int CellSize => TSize<DataCache>.size;
+		private static int CellSize => TSize<CacheLink>.size;
 
-		/// <summary>Хендл ячейки <paramref name="index"/>: метаданные по index*CellSize, значение по index*8 (long).</summary>
+		/// <summary>Хендл ячейки <paramref name="index"/>: офсет ячейки по index*CellSize (значение — через забейканный valueOffset).</summary>
 		private static CacheHandler<long> H(int index)
 		{
 			return new CacheHandler<long>
 			{
-				cell = new PtrOffset<DataCache>(index * CellSize),
-				value = new PtrOffset(index * sizeof(long)),
+				cell = new PtrOffset<CacheLink>(index * CellSize),
 			};
 		}
 
 		private static InstanceCache Create(int cellCount)
 		{
-			return InstanceCache.Create(default, cellCount, cellCount * sizeof(long));
+			// Шаблон ячеек: valueOffset[i] = i*sizeof(long) (как разложил бы компилятор), state = Uninitialized.
+			var template = new UnsafeArray<CacheLink>(default, cellCount);
+			for (var i = 0; i < cellCount; i++)
+				template[i].valueOffset = new PtrOffset(i * sizeof(long));
+
+			var cache = InstanceCache.Create(default, cellCount, cellCount * sizeof(long), template.ptr);
+			template.Dispose(); // InstanceCache держит собственную копию шаблона
+			return cache;
 		}
 
 		[Test]
@@ -103,7 +110,7 @@ namespace Sapientia.LogicGraph.Tests
 		public void Cache_EmptyIsValidFalseAndResetNoop()
 		{
 			// cellCount <= 0 ⇒ пустой Cache (нода без Cache-портов): невалиден, Reset — no-op (без краша).
-			var cache = InstanceCache.Create(default, 0, 0);
+			var cache = InstanceCache.Create(default, 0, 0, default);
 			Assert.IsFalse(cache.IsValid, "Пустой Cache невалиден.");
 			cache.Reset();   // не должно бросать
 			cache.Dispose(); // идемпотентно

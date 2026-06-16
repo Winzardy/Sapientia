@@ -57,9 +57,9 @@ namespace Sapientia.LogicGraph
 	public class NodeOutput<T> : NodeOutput where T : unmanaged
 	{
 		public override int DataSize => TSize<T>.size;
-		/// <summary>Размер одной ячейки метаданных <see cref="DataCache"/> (тег + офсеты, без значения; значение —
+		/// <summary>Размер одной ячейки метаданных <see cref="CacheLink"/> (тег + офсеты, без значения; значение —
 		/// отдельным блоком, размер = <see cref="DataSize"/>). Слот Cache-Out'а в массиве метаданных.</summary>
-		public override int CacheCellSize => TSize<DataCache>.size;
+		public override int CacheCellSize => TSize<CacheLink>.size;
 		public override bool IsPreCalculated => false;
 		public virtual T DefaultValue => default;
 
@@ -74,7 +74,7 @@ namespace Sapientia.LogicGraph
 		public abstract int DataSize { get; }
 
 		/// <summary>
-		/// Размер слота Out'а в <b>Cache</b>-регионе: для Cache-Out'ов это размер ячейки <see cref="DataCache{T}"/>
+		/// Размер слота Out'а в <b>Cache</b>-регионе: для Cache-Out'ов это размер ячейки <see cref="CacheLink"/>
 		/// (тег+payload, см. <see cref="NodeOutput{T}"/>), а не сырого значения. Static/InstancePersistence используют
 		/// <see cref="DataSize"/>. По умолчанию = <see cref="DataSize"/>.
 		/// </summary>

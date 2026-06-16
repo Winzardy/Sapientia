@@ -34,7 +34,7 @@ namespace Sapientia.LogicGraph
 		/// <summary>Указатель на блок Persistence. <c>default</c> (невалидный) — у блюпринта нет Persistence.</summary>
 		public readonly SafePtr GetPtr()
 		{
-			return (SafePtr)_block.ptr;
+			return _block.ptr;
 		}
 
 		/// <summary>Освобождает блок Persistence. Идемпотентно (no-op для пустого/уже освобождённого).</summary>

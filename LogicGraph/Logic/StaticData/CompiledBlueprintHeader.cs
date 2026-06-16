@@ -39,7 +39,7 @@ namespace Sapientia.LogicGraph
 		public DataSizes blockSizes;
 
 		/// <summary>Раскладка Cache инстанса (<c>InstanceCache</c> — два раздельных блока): число ячеек метаданных
-		/// (<see cref="DataCache"/>) и суммарный размер блока значений в байтах. Считает <see cref="BlueprintCompiler"/>.</summary>
+		/// (<see cref="CacheLink"/>) и суммарный размер блока значений в байтах. Считает <see cref="BlueprintCompiler"/>.</summary>
 		public int cacheCellCount;
 		public int cacheValuesSize;
 
@@ -54,6 +54,12 @@ namespace Sapientia.LogicGraph
 		/// блюпринта (4E). Инстанс-агностичен (дедуп вместе с блобом); сортирован по id (детерминизм). На
 		/// скомпилированной ноде не хранится; реестр-владелец «тип → указатель» — <c>ExecutionScope</c> (4F). Self-relative.</summary>
 		public BumpArray<TypeId<INodeContext>> contextTypes;
+
+		/// <summary>Шаблон Cache-ячеек инстанса (<b>индекс = ordinal</b> = <see cref="RegionPtr.cacheData"/> Cache-порта):
+		/// каждая ячейка с забейканным <c>valueOffset</c> (офсет значения в <c>_values</c>) и <c>state = Uninitialized</c>.
+		/// <c>InstanceCache</c> создаёт/сбрасывает свой <c>_cells</c> простым копированием этого массива (Reset = copy).
+		/// Self-relative; пусто, если Cache-Out'ов нет.</summary>
+		public BumpArray<CacheLink> cacheCellsTemplate;
 
 		public readonly int NodesCount => nodes.Length;
 
@@ -71,7 +77,7 @@ namespace Sapientia.LogicGraph
 		}
 
 		/// <summary>Офсет слайса ноды в блоке InstancePersistence (Static — <see cref="GetStaticNodeSlice"/>;
-		/// Cache — per-instance через DataCache, не хранится на заголовке).</summary>
+		/// Cache — per-instance через CacheLink, не хранится на заголовке).</summary>
 		public PtrOffset GetNodePersistenceOffset(Id<NodeHeader> nodeId)
 		{
 			return nodes.Get(nodeId).persistence;
@@ -133,6 +139,15 @@ namespace Sapientia.LogicGraph
 		public ReadOnlySpan<TypeId<INodeContext>> GetContextTypes()
 		{
 			return contextTypes.GetSpan();
+		}
+
+		/// <summary>Указатель на шаблон Cache-ячеек (<see cref="cacheCellsTemplate"/>) для копирования в <c>InstanceCache</c>
+		/// при создании/сбросе. Пусто (<see cref="cacheCellCount"/> == 0) → <c>default</c>.</summary>
+		/// <remarks>Вызывать только через ref/арена-указатель: self-relative <see cref="BumpArray{T}"/>; блоб стабилен
+		/// (off-allocator), но указатель не пережить move/serialize — копировать сразу.</remarks>
+		public SafePtr<CacheLink> GetCacheCellsTemplate()
+		{
+			return cacheCellCount > 0 ? cacheCellsTemplate.GetPtr() : default;
 		}
 	}
 }

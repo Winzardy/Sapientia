@@ -51,6 +51,9 @@ namespace Sapientia.LogicGraph
 			// 7. contextTypes: дедуп-union типов ambient-контекста (шаг 6 — флаги NodeState — памяти не занимает).
 			size += TSize<TypeId<INodeContext>>.size * BuildContextTypes(blueprint).Length;
 
+			// 8. cacheCellsTemplate: шаблон Cache-ячеек (по ordinal) с забейканным valueOffset. Значения — per-instance off-allocator.
+			size += TSize<CacheLink>.size * CountCacheCells(blueprint);
+
 			return size;
 		}
 
@@ -88,7 +91,7 @@ namespace Sapientia.LogicGraph
 				ref var header = ref compiled.nodes.Get(i);
 				header.typeId = bpNodes[i].NodeTypeId;
 				header.runtimeType = bpNodes[i].RuntimeType; // форк 8: бэкенд исполнения (бакетинг батчей — M7)
-				// Cache-офсет ноды на заголовке не храним (Cache уходит в DataCache, per-instance) — считаем
+				// Cache-офсет ноды на заголовке не храним (Cache уходит в CacheLink, per-instance) — считаем
 				// при сборке Map локально (см. SetupMap). InstancePersistence остаётся per-node офсетом блока.
 				header.persistence = new PtrOffset(compiled.blockSizes[MemoryRegion.Persistence]);
 
@@ -118,71 +121,88 @@ namespace Sapientia.LogicGraph
 
 		/// <summary>
 		/// Строит блоки In/Out нод (массив <see cref="RegionPtr"/> на ноду, <see cref="NodeHeader.inOut"/>) по связям
-		/// блюпринта: размещает Out'ы нод (Static — в их static-слайсах с
-		/// бейком дефолта; Cache/InstancePersistence — офсетом в блоке региона), константы — отдельными аллокациями (с
-		/// бейком), затем для каждого In записывает указатель его источника (<see cref="Blueprint.inputToOutput"/>).
+		/// блюпринта: размещает Out'ы нод (Static — в их static-слайсах с бейком дефолта; Cache — ordinal ячейки в
+		/// <see cref="RegionPtr.cacheData"/> + valueOffset в шаблоне <see cref="CompiledBlueprintHeader.cacheCellsTemplate"/>;
+		/// InstancePersistence — офсетом слайса в <see cref="RegionPtr.instanceData"/>), константы — отдельными аллокациями
+		/// (с бейком), затем для каждого In записывает указатель его источника (<see cref="Blueprint.inputToOutput"/>).
 		/// </summary>
 		private static void SetupMap(ref CompiledBlueprintHeader compiled, ref BumpHeader allocator, Blueprint blueprint)
 		{
 			var bpNodes = blueprint.nodes;
 			// Managed-структуры допустимы: путь компиляции — editor/server-side, не Burst и не per-frame.
-			// Цель Out: для Static — адрес в блобе; для Cache/InstancePersistence — (регион, офсет в блоке).
+			// Цель Out: Static — адрес в блобе; Cache — (ячейка в _cells, значение в _values); InstancePersistence — офсет слайса.
 			var outTarget = new Dictionary<NodeOutput, OutTarget>();
+
+			// Шаблон Cache-ячеек (по ordinal) — источник valueOffset для InstanceCache (в карте его нет). Считаем число ячеек
+			// тем же критерием, что в CalculateLayoutSizeToReserve (lockstep). Пусто → не аллоцируем. Ячейки обнулены (арена
+			// создаётся с ClearMemory) ⇒ state = Uninitialized; ниже бейкаем только valueOffset.
+			var cacheCellTotal = CountCacheCells(blueprint);
+			if (cacheCellTotal > 0)
+				compiled.cacheCellsTemplate.Alloc(ref allocator, cacheCellTotal);
 
 			// Pass 1: Out'ы каждой ноды.
 			Span<int> localRover = stackalloc int[DataSizes.Count];
-			// Cache-офсет слайса ноды (на заголовке не хранится — Cache уходит в DataCache): сумма выровненных
-			// Cache-слайсов предыдущих нод. Двигаем для КАЖДОЙ ноды (в т.ч. без портов), порядок == SetupLayout.
-			var cacheNodeOffset = 0;
-			// Раскладка Cache инстанса (InstanceCache: метаданные + значения раздельно): число ячеек + размер value-блока.
+			// Плоская ordinal-раскладка Cache инстанса: cacheCells — ordinal/число ячеек (карта несёт ordinal в cacheData),
+			// cacheValuesBytes — офсет/размер value-блока (бейкается в cacheCellsTemplate[ordinal].valueOffset). Считаются глобально по
+			// всем Cache-Out'ам в порядке нод (slack DataSizes.Cache на адрес НЕ влияет).
 			var cacheCells = 0;
 			var cacheValuesBytes = 0;
 			for (var n = 0; n < bpNodes.Length; n++)
 			{
 				var outputs = bpNodes[n].GetOutputs();
-				if (outputs != null && outputs.Length > 0)
+				if (outputs == null || outputs.Length == 0)
+					continue;
+
+				localRover.Clear();
+				var declaredSizes = bpNodes[n].DataSizes;
+				ref var header = ref compiled.nodes.Get(n);
+				foreach (var output in outputs)
 				{
-					localRover.Clear();
-					var declaredSizes = bpNodes[n].DataSizes;
-					ref var header = ref compiled.nodes.Get(n);
-					foreach (var output in outputs)
+					// null-Out легален (как в BuildAdjacency/pass-2): пропускаем — иначе NRE в GetOutputRegion/SetValue.
+					if (output == null)
+						continue;
+
+					var region = GetOutputRegion(output);
+					var regionIndex = region.ToInt();
+					// Cache-Out занимает ячейку CacheLink (тег+payload, форк 1); Static/InstancePersistence — сырой размер.
+					var slotSize = region == MemoryRegion.Cache ? output.CacheCellSize : output.DataSize;
+
+					// Budget-проверка (advisory): Out'ы ноды (ячейки для Cache) влезают в её declared слайс региона.
+					E.ASSERT(localRover[regionIndex] + slotSize <= declaredSizes[region],
+						"[BlueprintCompiler] Out'ы ноды не помещаются в её слайс региона (DataSizes меньше суммы Out'ов/ячеек).");
+					E.ASSERT(!outTarget.ContainsKey(output), "[BlueprintCompiler] Один Out принадлежит двум нодам.");
+
+					var intra = localRover[regionIndex];
+					localRover[regionIndex] += slotSize.AlignUp(DataSizes.Alignment);
+
+					switch (region)
 					{
-						var region = GetOutputRegion(output);
-						var regionIndex = region.ToInt();
-						// Cache-Out занимает ячейку DataCache (тег+payload, форк 1); Static/InstancePersistence — сырой размер.
-						var slotSize = region == MemoryRegion.Cache ? output.CacheCellSize : output.DataSize;
-
-						// InstanceCache: каждый Cache-Out → одна ячейка метаданных + слот значения (TSize<T>, выровнен).
-						if (region == MemoryRegion.Cache)
-						{
-							cacheCells++;
-							cacheValuesBytes += output.DataSize.AlignUp(DataSizes.Alignment);
-						}
-
-						E.ASSERT(localRover[regionIndex] + slotSize <= declaredSizes[region],
-							"[BlueprintCompiler] Out'ы ноды не помещаются в её слайс региона (DataSizes меньше суммы Out'ов/ячеек).");
-						E.ASSERT(!outTarget.ContainsKey(output), "[BlueprintCompiler] Один Out принадлежит двум нодам.");
-
-						var intra = localRover[regionIndex];
-						localRover[regionIndex] += slotSize.AlignUp(DataSizes.Alignment);
-
-						if (region == MemoryRegion.Static)
+						case MemoryRegion.Static:
 						{
 							// Адрес ячейки Out внутри static-слайса ноды; бейкаем дефолт прямо в блоб.
 							var target = (SafePtr)header.staticData.GetPtr() + intra;
 							output.SetValue(target);
 							outTarget[output] = OutTarget.Static(target);
+							break;
 						}
-						else
+						case MemoryRegion.Cache:
 						{
-							// Cache/InstancePersistence: офсет слайса ноды в блоке региона + позиция Out внутри слайса.
-							var nodeRegionOffset = region == MemoryRegion.Cache ? cacheNodeOffset : header.persistence.byteOffset;
-							outTarget[output] = OutTarget.Runtime(region, nodeRegionOffset + intra);
+							// Карта несёт ordinal ячейки (cacheData); valueOffset бейкается в шаблон ячейки cacheCellsTemplate[ordinal].
+							compiled.cacheCellsTemplate.Get(cacheCells).valueOffset = new PtrOffset(cacheValuesBytes);
+							outTarget[output] = OutTarget.Cache(cacheCells);
+
+							cacheCells++;
+							cacheValuesBytes += output.DataSize.AlignUp(DataSizes.Alignment);
+							break;
+						}
+						default:
+						{
+							// InstancePersistence: офсет слайса ноды в блоке региона + позиция Out внутри слайса.
+							outTarget[output] = OutTarget.Persistence(header.persistence.byteOffset + intra);
+							break;
 						}
 					}
 				}
-
-				cacheNodeOffset += bpNodes[n].DataSizes.GetAligned(MemoryRegion.Cache);
 			}
 
 			// Раскладка Cache для InstanceCache (число ячеек + размер value-блока) — на блоб.
@@ -371,14 +391,23 @@ namespace Sapientia.LogicGraph
 			return result;
 		}
 
-		/// <summary>Пишет указатель Map в слот: Static — self-relative (SetPtr на месте), иначе — офсет в блоке.</summary>
+		/// <summary>Пишет указатель Map в слот (union по региону): Static → <see cref="RegionPtr.staticData"/> (self-relative);
+		/// Cache → <see cref="RegionPtr.cacheData"/> (ordinal ячейки); Persistence → <see cref="RegionPtr.instanceData"/> (офсет слайса).</summary>
 		private static void WriteSlot(ref RegionPtr slot, OutTarget target)
 		{
 			slot.region = target.region;
-			if (target.region == MemoryRegion.Static)
-				slot.data.SetPtr(target.staticPtr.Cast<byte>()); // self-relative от адреса слота
-			else
-				slot.data = new RelativePtr<byte>(target.runtimeOffset); // .byteOffset = офсет в блоке региона
+			switch (target.region)
+			{
+				case MemoryRegion.Static:
+					slot.staticData.SetPtr(target.staticPtr.Cast<byte>()); // self-relative от адреса слота
+					break;
+				case MemoryRegion.Cache:
+					slot.cacheData = (Id<CacheLink>)target.cacheOrdinal; // ordinal ячейки в InstanceCache
+					break;
+				default:
+					slot.instanceData = new PtrOffset(target.runtimeOffset); // InstancePersistence: офсет слайса в блоке
+					break;
+			}
 		}
 
 		/// <summary>Регион, куда пишет Out: константа → Static (RO), persistent-стейт → InstancePersistence, иначе Cache.</summary>
@@ -430,6 +459,26 @@ namespace Sapientia.LogicGraph
 				var inputs = node.GetInputs();
 				var outputs = node.GetOutputs();
 				count += (inputs?.Length ?? 0) + (outputs?.Length ?? 0);
+			}
+			return count;
+		}
+
+		/// <summary>Число Cache-ячеек = число Out'ов в Cache-регионе (тот же критерий, что <see cref="GetOutputRegion"/>;
+		/// == <see cref="CompiledBlueprintHeader.cacheCellCount"/>). Единый источник для sizing (шаг 8 — таблица
+		/// <c>cacheCellsTemplate</c>) и заполнения (<see cref="SetupMap"/>) — lockstep.</summary>
+		private static int CountCacheCells(Blueprint blueprint)
+		{
+			var count = 0;
+			foreach (var node in blueprint.nodes)
+			{
+				var outputs = node.GetOutputs();
+				if (outputs == null)
+					continue;
+				foreach (var output in outputs)
+				{
+					if (output != null && GetOutputRegion(output) == MemoryRegion.Cache)
+						count++;
+				}
 			}
 			return count;
 		}
@@ -530,21 +579,28 @@ namespace Sapientia.LogicGraph
 			}
 		}
 
-		/// <summary>Цель Out на этапе компиляции: Static-адрес в блобе либо (регион, офсет) Runtime-памяти.</summary>
+		/// <summary>Цель Out на этапе компиляции (union по региону): Static — адрес в блобе; Cache — ordinal ячейки;
+		/// Persistence — офсет слайса в блоке.</summary>
 		private struct OutTarget
 		{
 			public MemoryRegion region;
-			public SafePtr staticPtr;     // для Static
-			public int runtimeOffset;     // для Cache/InstancePersistence
+			public SafePtr staticPtr;     // Static: адрес в блобе
+			public int cacheOrdinal;      // Cache: ordinal ячейки
+			public int runtimeOffset;     // Persistence: офсет слайса в блоке
 
 			public static OutTarget Static(SafePtr ptr)
 			{
 				return new OutTarget { region = MemoryRegion.Static, staticPtr = ptr };
 			}
 
-			public static OutTarget Runtime(MemoryRegion region, int offset)
+			public static OutTarget Cache(int ordinal)
 			{
-				return new OutTarget { region = region, runtimeOffset = offset };
+				return new OutTarget { region = MemoryRegion.Cache, cacheOrdinal = ordinal };
+			}
+
+			public static OutTarget Persistence(int offset)
+			{
+				return new OutTarget { region = MemoryRegion.Persistence, runtimeOffset = offset };
 			}
 		}
 	}

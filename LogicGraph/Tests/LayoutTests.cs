@@ -8,7 +8,7 @@ namespace Sapientia.LogicGraph.Tests
 	/// <summary>
 	/// Раскладка регионов в Static-заголовке (sizing-only, stub-ноды). Проверяют суммарные размеры блоков,
 	/// выравнивание/non-overlap per-node офсетов <b>InstancePersistence</b> (Static-слайсы — отдельные аллокации,
-	/// адресуются напрямую; Cache per-node офсет на заголовке не хранится — ушёл в DataCache, проверяется только
+	/// адресуются напрямую; Cache per-node офсет на заголовке не хранится — ушёл в CacheLink, проверяется только
 	/// суммарный размер блока), lockstep (резерв == bump), чистоту zero-size.
 	/// </summary>
 	public class LayoutTests
@@ -51,7 +51,7 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				// Per-node офсеты хранятся только для InstancePersistence (Cache — per-instance через DataCache).
+				// Per-node офсеты хранятся только для InstancePersistence (Cache — per-instance через CacheLink).
 				const MemoryRegion region = MemoryRegion.Persistence;
 				var prevEnd = 0;
 				for (var n = 0; n < bp.nodes.Length; n++)

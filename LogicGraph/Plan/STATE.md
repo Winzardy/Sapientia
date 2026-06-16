@@ -67,15 +67,16 @@
 | [LogicGraph.cs](../Logic/LogicGraph.cs) | `{CompiledBlueprintStorage storage; Id<Blueprint> entryBlueprintId}` | 🟡 поля |
 | [CompiledGraph.cs](../Logic/StaticData/CompiledGraph.cs) | Поля-заглушка | 🟡 stub |
 
-### Cache — per-instance кеш In/Out (✅ 4C поведение; 🔧 4F-1 раскладка переделана: метаданные + значения раздельно)
+### Cache — per-instance кеш In/Out (✅ 4C поведение; ✅ 4F-3: union-`RegionPtr` + шаблон ячеек, Reset = copy)
 
 | Файл | Что | Статус |
 |---|---|---|
-| [DataCache.cs](../Logic/CacheData/DataCache.cs) | **Метаданные** ячейки (без `T`, без значения): `[Explicit]` union `{state: CacheState @0; valueOffset: PtrOffset / link: PtrOffset<DataCache> @8}` (взаимоисключающи по `state`). 16 байт | ✅ **(4F-1)** |
-| [InstanceCache.cs](../Logic/CacheData/InstanceCache.cs) | Per-instance Cache = **два раздельных off-allocator-блока**: `_cells: UnsafeArray<DataCache>` (метаданные) + `_values: UnsafeArray<byte>` (значения). `Create(memoryId, cellCount, valuesSize)`/`Read`/`Write`/`IsCalculated`/`ResolveLink`/`WriteLink`/`Reset`(=`_cells.Clear`)/`Dispose`. `Write` пишет значение в `_values` и запоминает `cell.valueOffset`. Позиционно-независим (бывш. `CacheHeader`) | ✅ **(4F-1)** |
-| [CacheHandler.cs](../Logic/CacheData/CacheHandler.cs) | `{PtrOffset<DataCache> cell; PtrOffset value}` — офсет ячейки метаданных + офсет значения | ✅ **(4F-1)** |
+| [CacheLink.cs](../Logic/CacheData/CacheLink.cs) | Ячейка кеша (бывш. `DataCache`): `[Explicit]` 16 байт, union `{state @0; valueOffset / link @8}` (взаимоисключающи по `state`) | ✅ **(4F-3 rename)** |
+| [InstanceCache.cs](../Logic/CacheData/InstanceCache.cs) | Per-instance Cache = `_cells` (рабочие) + `_values` (значения) + **`_template`** (своя копия `cacheCellsTemplate` из блоба, забейканные `valueOffset`). `Create(memoryId, cellCount, valuesSize, SafePtr<CacheLink> template)` (копирует шаблон); **`Reset` = `_cells.CopyFrom(_template)`**; `Write` пишет по `cell.valueOffset` (из шаблона). Позиционно-независим | ✅ **(4F-3)** |
+| [CacheHandler.cs](../Logic/CacheData/CacheHandler.cs) | `{PtrOffset<CacheLink> cell}` — **один** офсет ячейки (value-офсет забейкан в самой ячейке) | ✅ **(4F-3)** |
+| [RegionPtr.cs](../Blueprint/RegionPtr.cs) | `[Explicit]` **16 байт, union @8**: `staticData` (Static self-rel) / `cacheData: Id<CacheLink>` (Cache — **ordinal ячейки**) / `instanceData: PtrOffset` (Persistence — офсет слайса). Порт одного региона ⇒ один слот | ✅ **(4F-3)** |
 | [NodeIn.cs](../Logic/CacheData/NodeIn.cs) / [NodeOut.cs](../Logic/CacheData/NodeOut.cs) | `Read`/`Write`/`IsCalculated(ref InstanceCache)` через `InstanceCache` | ✅ |
-| Cache-layout (`BlueprintCompiler`) | На компиляции считаются `CompiledBlueprintHeader.cacheCellCount`/`cacheValuesSize` (по Cache-Out: +1 ячейка, += `DataSize`); `ExecutionScope` ими создаёт `InstanceCache`. ⚠️ Старая per-node раскладка (`DataSizes.Cache`/`CacheCellSize`/Cache-`RegionPtr` офсеты) ещё сосуществует — **сверить/вычистить** | 🔧 **(4F-1, есть долг)** |
+| Cache-layout (`BlueprintCompiler`) | На компиляции: `cacheCellCount`/`cacheValuesSize` + **`cacheCellsTemplate: BumpArray<CacheLink>`** (по ordinal, забейкан `valueOffset`=префикс-сумма; slack `DataSizes.Cache` не влияет). Карта несёт `cacheData`=ordinal. `ExecutionScope` создаёт `InstanceCache` копией шаблона. Старый per-node `cacheNodeOffset` снесён | ✅ **(4F-3)** |
 
 ### Execution — оркестратор (✅ 4B: батч-DAG + детерминированный обход; параллелизм/диспатч — M6/M7)
 
@@ -106,14 +107,14 @@
   флаги `HasCache`/`Multiple` в `SetupNodeFlags`), **4E** (ContextType: ноды → `TypeId<INodeContext>[]`, дедуп-union
   бейкается в `CompiledBlueprintHeader.contextTypes`), **4F-1** (`ExecutionScope` — владелец per-instance памяти:
   `InstanceCache`/`InstancePersistence` поверх `UnsafeArray`; `CreateInstance`/`Dispose`/`Reset`/`Get*`; кеш-раскладка
-  переделана — `DataCache` метаданные + значения раздельно), **4F-2** (`ContextRegistry<TContext>` — ambient-context-реестр
-  на scope: владеет памятью контекстов, generic-only `SetContext<T>`/`GetContext<T>`→`readonly ref T`/`HasContext<T>`).
-  **Осталось: 4F-3** (долг 4F-1 — кеш-раскладка). Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheTests`
+  переделана), **4F-2** (`ContextRegistry<TContext>` — ambient-context-реестр
+  на scope: владеет памятью контекстов, generic-only `SetContext<T>`/`GetContext<T>`→`readonly ref T`/`HasContext<T>`),
+  **4F-3** (кеш-раскладка сведена). Покрыто `NodeMapTests`/`ExecutionGraphTests`/`CacheTests`
   (+обновлённые `MapTests`/`LayoutTests`); context — `ContextRegistryTests`/`ExecutionScopeTests` (round-trip под
-  `Assert.Ignore`: `IndexedTypes` не init в EditMode). **Долг 4F-1 → 4F-3:** дуальная кеш-раскладка в компиляторе
-  (старые `DataSizes.Cache`/`CacheCellSize`/Cache-`RegionPtr` ↔ новые `cacheCellCount`/`cacheValuesSize`) — свести
-  (развилка: как Cache-порт получает cell+value офсеты); `LayoutTests`/`MapTests` ожидания по Cache сверить; чистка
-  dead-code `BumpHeader.Reset/Size`/`RawBumpAllocator.Size`.
+  `Assert.Ignore`: `IndexedTypes` не init в EditMode). **4F-3 (свод кеша):** `RegionPtr` — **union 16 байт**
+  (`staticData`/`cacheData: Id<CacheLink>` ordinal/`instanceData`); value-офсет забейкан в **`cacheCellsTemplate`**
+  (`BumpArray<CacheLink>` по ordinal). `InstanceCache` владеет копией шаблона, `Reset` = `_cells.CopyFrom(_template)`.
+  `DataCache`→`CacheLink`; `cacheNodeOffset` снесён; `link` не бейкаем. `BumpHeader.Reset/Size`/`RawBumpAllocator.Size` — оставлены.
 
 ---
 
@@ -164,14 +165,16 @@
    (`BumpArray`, span-аксессор; lockstep шаг 7). На ноде не хранится; runtime-реестр-владелец — 4F.
 6. ✅ **(4F-1)** `ExecutionScope` — владелец per-instance памяти + трекер инстансов: `CreateInstance(ref storage, bp)`
    заводит `InstanceCache` + `InstancePersistence` (оба поверх `UnsafeArray<byte>`/`UnsafeArray<DataCache>`, off-allocator),
-   трекает в `BlueprintInstanceStorage`; `Get*`/`Reset*`/`DisposeInstance`/`Dispose`. Кеш переделан: `DataCache` —
-   только метаданные (state + valueOffset + link, union), значения — отдельный `UnsafeArray<byte>`.
+   трекает в `BlueprintInstanceStorage`; `Get*`/`Reset*`/`DisposeInstance`/`Dispose`. Кеш — split: `DataCache`
+   метаданные (state + valueOffset + link, union) + значения отдельным `UnsafeArray<byte>` (сохранён в 4F-3).
 7. ✅ **(4F-2)** Context-реестр на `ExecutionScope`: `ContextRegistry<TContext>` (generic по категории; scope:
    `INodeContext`) — `UnsafeArray<SafePtr>` размера `TypeId<TContext>.Count`, **владеет** памятью контекстов (lazy
    `MemAlloc(TSize<T>)` при set). Generic-only API: `SetContext<T>(in T)`/`GetContext<T>()`→`readonly ref T`/`HasContext<T>()`.
    Без id-based/count (решение пользователя). Round-trip тесты под `Assert.Ignore` (`IndexedTypes` не init в EditMode).
-8. 🔄 **(4F-3 — следующий)** Долг 4F-1: свести дуальную кеш-раскладку в компиляторе (развилка — как Cache-порт получает
-   два офсета cell+value); сверить `LayoutTests`/`MapTests`; вычистить dead-code `BumpHeader.Reset/Size`/`RawBumpAllocator.Size`.
+8. ✅ **(4F-3)** Свод кеш-раскладки: `RegionPtr` — **union 16 байт** (`staticData`/`cacheData: Id<CacheLink>` ordinal/
+   `instanceData`); value-офсет в карте не лежит — забейкан в **`cacheCellsTemplate: BumpArray<CacheLink>`** (по ordinal).
+   `InstanceCache` владеет копией шаблона, `Reset` = `_cells.CopyFrom(_template)`. `DataCache`→`CacheLink` (rename); старый
+   `cacheNodeOffset` снесён; `link` не бейкаем (runtime `WriteLink`). `BumpHeader.Reset/Size`/`RawBumpAllocator.Size` оставлены.
 9. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
 
 ---

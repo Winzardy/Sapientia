@@ -16,7 +16,7 @@ namespace Sapientia.LogicGraph
 	/// при <see cref="CacheState.Value"/>) / <see cref="link"/> (passthrough-ссылка на другую ячейку — дельта
 	/// офсетов в массиве ячеек, при <see cref="CacheState.Link"/>). <see cref="valueOffset"/> и <see cref="link"/>
 	/// взаимоисключающи (гейтятся <see cref="state"/>), поэтому лежат в union. Сами значения хранятся отдельно
-	/// (<c>InstanceCache</c> держит массив ячеек <see cref="DataCache"/> и байтовый массив значений раздельно).
+	/// (<c>InstanceCache</c> держит массив ячеек <see cref="CacheLink"/> и байтовый массив значений раздельно).
 	/// </summary>
 	/// <remarks>
 	/// Выравнивание: тег = 1 байт на офсете 0, payload (union) на офсете 8 (7 байт паддинга — цена за корректное
@@ -24,7 +24,7 @@ namespace Sapientia.LogicGraph
 	/// payload на нечётном офсете.
 	/// </remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public struct DataCache
+	public struct CacheLink
 	{
 		[FieldOffset(0)]
 		public CacheState state;
@@ -32,6 +32,6 @@ namespace Sapientia.LogicGraph
 		[FieldOffset(8)]
 		public PtrOffset valueOffset;
 		[FieldOffset(8)]
-		public PtrOffset<DataCache> link;
+		public PtrOffset<CacheLink> link;
 	}
 }

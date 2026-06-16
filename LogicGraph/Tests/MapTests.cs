@@ -46,20 +46,21 @@ namespace Sapientia.LogicGraph.Tests
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
 
-				// Обычный Out → Cache; нода 0 — голова Cache-блока (офсет 0).
+				// Обычный Out → Cache; нода 0 — первая Cache-ячейка (ordinal 0).
 				ref var cacheOut = ref Port(compiled.GetNodeInOut(0), 0);
 				Assert.AreEqual(MemoryRegion.Cache, cacheOut.region);
-				Assert.AreEqual(0, cacheOut.data.byteOffset);
+				int cacheOrdinal = cacheOut.cacheData;
+				Assert.AreEqual(0, cacheOrdinal);
 
 				// NodeStateOutput → InstancePersistence.
 				ref var persistentOut = ref Port(compiled.GetNodeInOut(1), 0);
 				Assert.AreEqual(MemoryRegion.Persistence, persistentOut.region);
-				Assert.AreEqual(compiled.GetNodePersistenceOffset(1).byteOffset, persistentOut.data.byteOffset);
+				Assert.AreEqual(compiled.GetNodePersistenceOffset(1).byteOffset, persistentOut.instanceData.byteOffset);
 
 				// Precalculated-Out → Static; дефолт забейкан, резолв на месте.
 				ref var staticOut = ref Port(compiled.GetNodeInOut(2), 0);
 				Assert.AreEqual(MemoryRegion.Static, staticOut.region);
-				Assert.AreEqual(7, ((SafePtr)staticOut.data.GetPtr()).Value<long>(), "Дефолт Static-Out не забейкался.");
+				Assert.AreEqual(7, ((SafePtr)staticOut.staticData.GetPtr()).Value<long>(), "Дефолт Static-Out не забейкался.");
 			}
 			finally
 			{
@@ -70,7 +71,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Map_MultipleOutsStackAlignedWithinSlice()
 		{
-			// Два Cache-out'а одной ноды: офсеты от головы слайса, шаг = ячейка DataCache (тег+payload = 16).
+			// Два Cache-out'а одной ноды: последовательные ordinal'ы ячеек (0, 1).
 			var bp = StubBlueprint.Of(
 				new StubNode(cacheSize: 32, outputs: new NodeOutput[] { new NodeOutput<long>(), new NodeOutput<int>() }));
 			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
@@ -78,13 +79,110 @@ namespace Sapientia.LogicGraph.Tests
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
 				var block = compiled.GetNodeInOut(0);
-				var sliceStart = 0; // нода 0 — голова Cache-блока
 
 				ref var o0 = ref Port(block, 0);
 				ref var o1 = ref Port(block, 1);
-				Assert.AreEqual(sliceStart, o0.data.byteOffset);
-				Assert.AreEqual(sliceStart + 16, o1.data.byteOffset, "Второй Out должен лечь за ячейкой первого (16 байт).");
+				int ord0 = o0.cacheData;
+				int ord1 = o1.cacheData;
+				Assert.AreEqual(0, ord0);
+				Assert.AreEqual(1, ord1, "Второй Cache-Out → следующий ordinal ячейки.");
 				Assert.AreEqual(MemoryRegion.Cache, o1.region);
+			}
+			finally
+			{
+				arena.Dispose();
+			}
+		}
+
+		[Test]
+		public void Map_CacheCellsFlatOrdinalAcrossNodes()
+		{
+			// Средняя нода declares slack (cacheSize 32 > 1 ячейки). Ordinal'ы ячеек (cacheData) — плоские 0,1,2
+			// (slack DataSizes.Cache на них не влияет). Value-офсеты (cacheCellsTemplate[ordinal].valueOffset) — префикс-сумма 0,8,16.
+			var bp = StubBlueprint.Of(
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { new NodeOutput<long>() }),
+				new StubNode(cacheSize: 32, outputs: new NodeOutput[] { new NodeOutput<long>() }),
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { new NodeOutput<long>() }));
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
+			try
+			{
+				ref var compiled = ref arena.Value.GetValue(offset);
+
+				ref var o0 = ref Port(compiled.GetNodeInOut(0), 0);
+				ref var o1 = ref Port(compiled.GetNodeInOut(1), 0);
+				ref var o2 = ref Port(compiled.GetNodeInOut(2), 0);
+
+				Assert.AreEqual(MemoryRegion.Cache, o0.region);
+				int ord0 = o0.cacheData;
+				int ord1 = o1.cacheData;
+				int ord2 = o2.cacheData;
+				Assert.AreEqual(0, ord0, "ordinal 0.");
+				Assert.AreEqual(1, ord1, "ordinal 1 (плоский, не зависит от slack).");
+				Assert.AreEqual(2, ord2, "ordinal 2 (плоский, не зависит от slack).");
+
+				Assert.AreEqual(0, compiled.cacheCellsTemplate.Get(0).valueOffset.byteOffset);
+				Assert.AreEqual(8, compiled.cacheCellsTemplate.Get(1).valueOffset.byteOffset);
+				Assert.AreEqual(16, compiled.cacheCellsTemplate.Get(2).valueOffset.byteOffset);
+
+				Assert.AreEqual(3, compiled.cacheCellCount, "Три Cache-Out'а → три ячейки.");
+				Assert.AreEqual(24, compiled.cacheValuesSize, "3 × long(8) = 24 байта значений.");
+			}
+			finally
+			{
+				arena.Dispose();
+			}
+		}
+
+		[Test]
+		public void Map_CacheValueOffsetsBakedByOrdinal()
+		{
+			// Cache-Out'ы разного размера (long=8, int=4→выровнен до 8): ordinal'ы 0,1; value-офсеты в таблице 0,8.
+			var bp = StubBlueprint.Of(
+				new StubNode(cacheSize: 32, outputs: new NodeOutput[] { new NodeOutput<long>(), new NodeOutput<int>() }));
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
+			try
+			{
+				ref var compiled = ref arena.Value.GetValue(offset);
+				var block = compiled.GetNodeInOut(0);
+
+				ref var o0 = ref Port(block, 0);
+				ref var o1 = ref Port(block, 1);
+				int ord0 = o0.cacheData;
+				int ord1 = o1.cacheData;
+				Assert.AreEqual(0, ord0);
+				Assert.AreEqual(1, ord1);
+				Assert.AreEqual(0, compiled.cacheCellsTemplate.Get(0).valueOffset.byteOffset);
+				Assert.AreEqual(8, compiled.cacheCellsTemplate.Get(1).valueOffset.byteOffset, "int выровнен до 8 ⇒ второе значение на офсете 8.");
+				Assert.AreEqual(16, compiled.cacheValuesSize, "8 (long) + 8 (int выровнен).");
+			}
+			finally
+			{
+				arena.Dispose();
+			}
+		}
+
+		[Test]
+		public void Map_InCopiesSourceCacheOrdinal()
+		{
+			// In Cache-источника копирует ordinal ячейки источника (значение — через тот же ordinal в таблице).
+			var aOut = new NodeOutput<long>();
+			var bIn = new NodeInput<long>();
+			var bp = StubBlueprint.Of(
+				new StubNode(cacheSize: 16, outputs: new NodeOutput[] { aOut }),
+				new StubNode(inputs: new NodeInput[] { bIn }));
+			bp.inputToOutput[bIn] = aOut;
+
+			var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
+			try
+			{
+				ref var compiled = ref arena.Value.GetValue(offset);
+				ref var source = ref Port(compiled.GetNodeInOut(0), 0);
+				ref var input = ref Port(compiled.GetNodeInOut(1), 0);
+
+				Assert.AreEqual(MemoryRegion.Cache, input.region);
+				int srcOrd = source.cacheData;
+				int inOrd = input.cacheData;
+				Assert.AreEqual(srcOrd, inOrd, "In — тот же ordinal ячейки, что у источника.");
 			}
 			finally
 			{
@@ -111,7 +209,9 @@ namespace Sapientia.LogicGraph.Tests
 				ref var input = ref Port(compiled.GetNodeInOut(1), 0);  // In ноды 1
 
 				Assert.AreEqual(source.region, input.region, "In должен читать из региона источника.");
-				Assert.AreEqual(source.data.byteOffset, input.data.byteOffset, "In должен указывать на данные источника.");
+				int srcOrd = source.cacheData;
+				int inOrd = input.cacheData;
+				Assert.AreEqual(srcOrd, inOrd, "In должен указывать на ту же ячейку-источник.");
 			}
 			finally
 			{
@@ -139,7 +239,7 @@ namespace Sapientia.LogicGraph.Tests
 
 				ref var input = ref Port(compiled.GetNodeInOut(0), 0);
 				Assert.AreEqual(MemoryRegion.Static, input.region, "Константа должна жить в Static.");
-				Assert.AreEqual(42, ((SafePtr)input.data.GetPtr()).Value<long>(), "Дефолт константы не забейкался / In не указывает на неё.");
+				Assert.AreEqual(42, ((SafePtr)input.staticData.GetPtr()).Value<long>(), "Дефолт константы не забейкался / In не указывает на неё.");
 			}
 			finally
 			{
@@ -186,7 +286,7 @@ namespace Sapientia.LogicGraph.Tests
 				Assert.AreEqual(8, compiled.GetBlockSize(MemoryRegion.Static), "Node-owned константа не должна дублироваться.");
 				ref var output = ref Port(compiled.GetNodeInOut(0), 0);
 				Assert.AreEqual(MemoryRegion.Static, output.region);
-				Assert.AreEqual(5, ((SafePtr)output.data.GetPtr()).Value<long>());
+				Assert.AreEqual(5, ((SafePtr)output.staticData.GetPtr()).Value<long>());
 			}
 			finally
 			{

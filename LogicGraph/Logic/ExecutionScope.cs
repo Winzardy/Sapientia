@@ -11,7 +11,7 @@ namespace Sapientia.LogicGraph
 	/// Память инстанса — <b>два независимых блока</b> (по природе данных), каждый — самостоятельная обёртка над
 	/// фиксированной off-allocator-ареной:
 	/// <list type="bullet">
-	/// <item><b><see cref="InstanceCache"/></b> (<see cref="_cache"/>) — ячейки <see cref="DataCache{T}"/>; <b>транзиентный,
+	/// <item><b><see cref="InstanceCache"/></b> (<see cref="_cache"/>) — ячейки <see cref="CacheLink{T}"/>; <b>транзиентный,
 	/// сброс каждый run, НЕ часть стейта</b> (в снапшот/слой State не идёт) ⇒ лежит <b>отдельно</b> от стейта.</item>
 	/// <item><b><see cref="InstancePersistence"/></b> (<see cref="_memory"/>) — постоянный per-instance стейт (часть состояния
 	/// домена). Динамику нода берёт через контекст (напр. <c>WorldState</c> + <c>MemArray</c> — 4F-2).</item>
@@ -58,7 +58,7 @@ namespace Sapientia.LogicGraph
 			E.ASSERT(storage.Has(bp), "[ExecutionScope] CreateInstance на отсутствующем в storage блюпринте.");
 			ref var compiled = ref storage.Get(bp);
 
-			var cache = InstanceCache.Create(_memoryId, compiled.cacheCellCount, compiled.cacheValuesSize);
+			var cache = InstanceCache.Create(_memoryId, compiled.cacheCellCount, compiled.cacheValuesSize, compiled.GetCacheCellsTemplate());
 			var persistence = InstancePersistence.Create(_memoryId, compiled.GetBlockSize(MemoryRegion.Persistence));
 
 			// BlueprintInstanceHeader — identity-сущность; память владеет scope (Cache/InstancePersistence), офсеты не нужны.
