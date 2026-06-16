@@ -7,12 +7,15 @@ namespace Sapientia.LogicGraph
 {
 	public interface INode<out TLogicNode> : INode where TLogicNode : unmanaged, ILogicNode
 	{
-		TypeId<INode> INode.NodeTypeId => TypeIdOf<INode, TLogicNode>.typeId;
+		TypeId<ILogicNode> INode.NodeTypeId => TypeIdOf<ILogicNode, TLogicNode>.typeId;
 	}
 
 	public interface INode
 	{
-		public TypeId<INode> NodeTypeId { get; }
+		/// <summary>Индекс метода обработки ноды — плотный ordinal logic-тела в контексте <see cref="ILogicNode"/>
+		/// (<c>TypeIdOf&lt;ILogicNode, TLogicNode&gt;</c>). Адресует function-table диспатча (M6-C); бейкается в
+		/// <see cref="NodeHeader.typeId"/>.</summary>
+		public TypeId<ILogicNode> NodeTypeId { get; }
 
 		/// <summary>
 		/// Размеры трёх регионов данных ноды (Static/Cache/InstancePersistence, sizing-only). По умолчанию все нули —

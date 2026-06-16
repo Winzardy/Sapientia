@@ -640,7 +640,7 @@ Use this as the canonical end-to-end target when wiring the runtime.
 | Compile to unmanaged `static` blob (#2, scope `static`) | `CompiledBlueprint` (`CompiledBlueprint.cs:14`) | ✅ compiles (blocked by `INode` stubs) |
 | Binary save / serialize | — (was `BlueprintCompiler.Serialize`) | ✗ **`BlueprintCompiler` removed in Phase 3**; per-arena serialize will return in Phase 5/M11 on `CompiledBlueprintStorage` |
 | Server→client transfer + **version gate** (#3.1) | `version` fields | ✗ check absent |
-| Burst functions compiled at startup, **by index** (#3.2) | `NodeInvoker.CompileDoNode` + `NodeTypeId` | ◐ no registry; `NodeTypeId` stubbed |
+| Burst functions compiled at startup, **by index** (#3.2) | dispatch-id `NodeHeader.typeId` = `TypeId<ILogicNode>` ordinal (M6-A) | ◐ **M6-A**: индекс закрыт (плотный ordinal по `ILogicNode`); function-table registry — M6-C |
 | Dual backend: Burst **and** plain .NET, deterministic (#3.3) | `NodeInvoker` (Burst only) | ✗ no managed path |
 | Bake from config (#1) | `CompiledBlueprint.CompileLayout` → `CompiledBlueprintStorage.Add` | ◐ compile-then-store path exists; no config source wired |
 | Node = data + I/O function (#4) | `INode` / `ILogicNode` | ◐ port methods throw |

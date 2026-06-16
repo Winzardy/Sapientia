@@ -175,7 +175,11 @@
    `instanceData`); value-офсет в карте не лежит — забейкан в **`cacheCellsTemplate: BumpArray<CacheLink>`** (по ordinal).
    `InstanceCache` владеет копией шаблона, `Reset` = `_cells.CopyFrom(_template)`. `DataCache`→`CacheLink` (rename); старый
    `cacheNodeOffset` снесён; `link` не бейкаем (runtime `WriteLink`). `BumpHeader.Reset/Size`/`RawBumpAllocator.Size` оставлены.
-9. M6 (диспатч нод по Map: Burst fn-pointer registry by index + managed-путь + version gate).
+9. 🔄 **M6 (диспатч нод + dual backend)** — разбита на под-фазы M6-A…F ([phase-M6/README.md](phase-M6/README.md);
+   решения пользователя: index space = `TypeId<ILogicNode>`, `NodeContext` = In/Out+persistence, version gate =
+   авто-хеш сигнатур кода). ✅ **M6-A**: dispatch-id ноды переведён `TypeId<INode>` → `TypeId<ILogicNode>`
+   (плотный ordinal logic-тела; заглушка `NodeTypeId` закрыта). Layout `NodeHeader` не изменился (оба `TypeId`
+   = 4 байта). Function-table registry/исполнение — M6-B…F.
 
 ---
 

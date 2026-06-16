@@ -40,7 +40,7 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 > Фаза 3 = Compiled-blueprint DB/manager (эволюция `BlueprintCompiler`), Фаза 4 = `ExecutionScope` (бывшая
 > Фаза 3, переделывается поверх БД: массив ленивых per-blueprint менеджеров, индексируемый по
 > `Id<CompiledBlueprint>`). Ambient context на scope не хранится — передаётся в методы исполнения (M7).
-| M6 | Node dispatch + dual backend | Burst fn-pointer registry by index + managed path + version gate; диспатч на Static.Map (`runtimeType`/`NodeState` wiring) | 5 | ◐ каркас (`ExecutionGraph` runtimes) |
+| M6 | Node dispatch + dual backend | Burst fn-pointer registry by index + managed path + version gate; диспатч на Static.Map (`runtimeType`/`NodeState` wiring) | 5 | 🔄 разбивка на под-фазы M6-A…F ([Plan/phase-M6/README.md](Plan/phase-M6/README.md)) — на гейте |
 | M7 | Orchestrator | dependency scheduling + Burst/non-Burst passes + parallelism | M6 | ◐ каркас (`ExecutionGraph`/`NodeMapHeader`/`ExecutionBatch` — поведение не реализовано, см. STATE.md §4) |
 | M8 | Memoized evaluation | pull-based `Is Calculated` gating | M7 | ☐ milestone |
 | M9 | Typed + composable blueprints | `Graph<TIn,TOut>`, blueprint-as-node, capability interfaces | M7 | ☐ milestone |

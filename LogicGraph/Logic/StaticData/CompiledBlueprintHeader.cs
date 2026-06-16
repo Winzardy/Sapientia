@@ -70,8 +70,9 @@ namespace Sapientia.LogicGraph
 			return blockSizes[region];
 		}
 
-		/// <summary>Индекс метода обработки ноды (Static.Data).</summary>
-		public TypeId<INode> GetNodeTypeId(Id<NodeHeader> nodeId)
+		/// <summary>Индекс метода обработки ноды (Static.Data) — ordinal logic-тела в контексте
+		/// <see cref="ILogicNode"/>; адресует function-table диспатча (M6-C).</summary>
+		public TypeId<ILogicNode> GetNodeTypeId(Id<NodeHeader> nodeId)
 		{
 			return nodes.Get(nodeId).typeId;
 		}

@@ -16,17 +16,19 @@ namespace Sapientia.LogicGraph.Tests
 		private readonly NodeOutput[] _outputs;
 		private readonly RuntimeType _runtimeType;
 		private readonly TypeId<INodeContext>[] _contextTypes;
+		private readonly TypeId<ILogicNode> _typeId;
 
-		public StubNode(int staticSize = 0, int cacheSize = 0, int persistanceSize = 0, NodeInput[] inputs = null, NodeOutput[] outputs = null, RuntimeType runtimeType = RuntimeType.Unmanaged, TypeId<INodeContext>[] contextTypes = null)
+		public StubNode(int staticSize = 0, int cacheSize = 0, int persistanceSize = 0, NodeInput[] inputs = null, NodeOutput[] outputs = null, RuntimeType runtimeType = RuntimeType.Unmanaged, TypeId<INodeContext>[] contextTypes = null, TypeId<ILogicNode> typeId = default)
 		{
 			_sizes = new DataSizes(staticSize, cacheSize, persistanceSize);
 			_inputs = inputs ?? Array.Empty<NodeInput>();
 			_outputs = outputs ?? Array.Empty<NodeOutput>();
 			_runtimeType = runtimeType;
 			_contextTypes = contextTypes ?? Array.Empty<TypeId<INodeContext>>();
+			_typeId = typeId;
 		}
 
-		public TypeId<INode> NodeTypeId => default;
+		public TypeId<ILogicNode> NodeTypeId => _typeId;
 		public DataSizes DataSizes => _sizes;
 		public RuntimeType RuntimeType => _runtimeType;
 

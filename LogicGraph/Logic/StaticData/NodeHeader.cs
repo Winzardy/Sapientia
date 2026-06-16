@@ -21,8 +21,10 @@ namespace Sapientia.LogicGraph
 	/// </summary>
 	public struct NodeHeader
 	{
-		/// <summary>Индекс метода обработки ноды (Static.Data; seed диспатча M6).</summary>
-		public TypeId<INode> typeId;
+		/// <summary>Индекс метода обработки ноды (Static.Data) — плотный ordinal logic-тела в контексте
+		/// <see cref="ILogicNode"/> (<c>TypeIdOf&lt;ILogicNode, TLogicNode&gt;</c>). Адресует function-table
+		/// диспатча по индексу (M6-C); валиден в пределах «версии кода» (version gate, M6-E).</summary>
+		public TypeId<ILogicNode> typeId;
 		/// <summary>Бэкенд исполнения (форк 8): пишется из <c>INode.RuntimeType</c>; бакетинг батчей по нему — M7.</summary>
 		public RuntimeType runtimeType;
 		/// <summary>Флаги ноды (форк 7) битовой маской: <see cref="NodeState.HasCache"/>/<see cref="NodeState.Multiple"/>;
