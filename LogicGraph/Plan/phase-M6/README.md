@@ -41,11 +41,11 @@
 | # | Развилка | Предлагаемое решение | Где лендится |
 |---|---|---|---|
 | 1 | **Index space диспатча** | Перевести dispatch-id на **`TypeId<ILogicNode>`** (плотный ordinal: `ILogicNode` — уже индексируемый контекст, дети = unmanaged logic-типы). Миграция `NodeHeader.typeId`/`CompiledBlueprintHeader.GetNodeTypeId`/`INode.NodeTypeId`: `TypeId<INode>` → `TypeId<ILogicNode>`; `INode<TLogicNode>` бейкает `TypeIdOf<ILogicNode, TLogicNode>.typeId`. **`INode` индексируемым НЕ делаем** (он managed-authoring). Это и есть закрытие заглушки `NodeTypeId`. **Локальный ordinal бейкается прямо в блоб** — его валидность гарантирует version gate (развилка 7): при совпадении «версии кода» набор/порядок `IndexedTypes` идентичны на сервере и клиенте, значит ordinal стабилен (в отличие от id блюпринтов, которые рантайм и требуют guid-резолва). | **M6-A** |
-| 2 | **Контракт исполнения ноды** | На `ILogicNode` — `void Execute(ref NodeContext ctx)`. `NodeContext` — Burst-совместимый seam (без managed-ссылок): static-слайс + блок In/Out (через `InstanceCache`+Map) + persistence-слайс + accessor ambient-контекста. `delegate void NodeFn(ref NodeContext)` — тип диспатча (аналог снесённого `DoNode`). | M6-B |
-| 3 | **Кто строит function-table** | Mirror `IndexedTypes`: отдельный `Initialize`, заполняемый **reflection-сканом** `ILogicNode`-типов на startup (кодогена нод нет до M10). Компиляция `FunctionPointer<NodeFn>` — **один раз** на тип, кешируется. Согласовать с будущим M10-кодогеном (тогда initializer станет генерируемым, как у TypeIndexer). | M6-C |
+| 2 | **Контракт исполнения ноды** | Узловой (не node-agnostic). Тело ноды — данные в static-слайсе (`NodeContext.Body<T>()`) + логика `ILogicNode.Execute(ref NodeContext)`. `NodeContext` — Burst-совместимый seam (без managed-ссылок): static-слайс/Body + Cache + persistence + блок In/Out (через Map). Дисптач — `FunctionPointer<ExecuteFn>` + generic-адаптер `NodeInvoker.Execute<T>`/`Compile<T>` (как исторический `CompileDoNode/DoBurst`). **Без виртуальных методов в рантайме:** диспатч по fn-pointer-индексу (без vtable), `body.Execute` в монолитной `Execute<T>` девиртуализуется Burst'ом. Ambient-context — M7. | M6-B |
+| 3 | **Кто строит function-table** | Mirror `IndexedTypes`: отдельный `Initialize`, заполняемый **reflection-сканом** `ILogicNode`-типов на startup (кодогена нод нет до M10). **Managed-таблица (`NodeFn`-делегаты) строится всегда** (универсальный путь, единственный в .NET); **Burst-таблица (`FunctionPointer`) — только под Unity** (`#if UNITY_5_3_OR_NEWER`) и **только для `Unmanaged`-нод**, компиляция один раз/кеш. Согласовать с M10-кодогеном (initializer станет генерируемым, как у TypeIndexer). | M6-C |
 | 4 | **Хранилище реестра** | Плоский статический `FunctionPointer<NodeFn>[]` (Burst) + `NodeFn[]` (managed), индекс = `TypeId<ILogicNode>` ordinal, размер = `TypeId<ILogicNode>.Count`. Статический (process-wide), не per-world — как `IndexedTypes`. | M6-C/D |
-| 5 | **Выбор бэкенда** | Per-node по `NodeHeader.runtimeType` (`Unmanaged`→Burst fn-ptr, `Managed`→managed delegate). Глобальный флаг «Burst недоступен» (сервер/EditMode-тесты) форсит managed-таблицу для всех. M6 строит **обе** таблицы; чередование Burst↔Managed pass (wave-модель) — M7. | M6-D |
-| 6 | **Сигнатура Execute** | Статический Burst-вход — generic wrapper `Execute<T>(ref NodeContext)` (как старый `DoBurst<T>`): резолвит тело и зовёт `ILogicNode.Execute`. `CompileFunctionPointer<NodeFn>(Execute<T>)`. | M6-B/C |
+| 5 | **Выбор бэкенда** | Per-node по `NodeHeader.runtimeType`: **`Managed` = строго NoBurst** (тело может лезть в managed-код) ⇒ реестр **не** компилит для неё Burst (упал бы), держит только managed-делегат; **`Unmanaged`** → Burst fn-ptr (под Unity) **+** managed-делегат (fallback/.NET). В чистом .NET Burst недоступен ⇒ исполнение всегда по managed-таблице. Чередование Burst↔Managed pass (wave-модель) — M7. | M6-D |
+| 6 | **Сигнатура Execute** | `ILogicNode.Execute(ref NodeContext)` (тело резолвится адаптером `NodeInvoker.Execute<T>` через `Body<T>()`). Адаптация типа в указатель — `Compile<T>()` → `CompileFunctionPointer<ExecuteFn>(Execute<T>)` (как исторический `CompileDoNode<T>/DoBurst<T>`). Реестр по индексу `TypeId<ILogicNode>` (managed `ExecuteFn` всегда / Burst `FunctionPointer` под Unity) — M6-C. | M6-B/C |
 | 7 | **Version gate: что и где** | Гейт сверяет **только «версию кода»** — детерминированный **авто-хеш сигнатур/контракта нод-функций** (`NodeFn`-ABI + раскладка `NodeContext` + сигнатуры используемых `ILogicNode`), **инвариантный к набору/количеству/порядку** блюпринтов и нод. Набор/порядок в контракт НЕ входят: id блюпринтов рантайм-генерятся, адресуются по **guid** (рантайм-id — кеш, как в Content-системе), а блоб самодостаточен по static-данным. Гейт при `CreateInstance`/загрузке блоба: хеш в блобе == локальный → исполнять, иначе → reject. Точную форму хеша (что входит, per-node по стабильному id vs глобально, где сверяется) — финализировать на гейте M6-E. | M6-E |
 
 ## Разбивка на под-фазы
@@ -53,7 +53,7 @@
 | Под-фаза | Концепт | Развилки | Статус |
 |---|---|---|---|
 | **M6-A — Dispatch index** | Закрыть заглушку `NodeTypeId`: dispatch-id → `TypeId<ILogicNode>` (плотный ordinal). Миграция `NodeHeader.typeId`/`GetNodeTypeId`/`INode.NodeTypeId`/`INode<T>`. Исполнения нет. | 1 | ✅ одобрено (не закоммичено) |
-| **M6-B — Node execution contract** | `ILogicNode.Execute(ref NodeContext)` + `NodeContext` (seam резолва памяти) + `delegate NodeFn` + generic-вход `Execute<T>`. Минимальная stub-logic-нода проверяет форму. | 2, 6 | ☐ todo |
+| **M6-B — Node execution contract** | `NodeContext` (seam резолва памяти) + `ILogicNode.Execute(ref NodeContext)` + `delegate ExecuteFn` + адаптер `NodeInvoker.Execute<T>`/`Compile<T>` (FunctionPointer, как исторический `CompileDoNode/DoBurst`). Диспатч по fn-pointer-индексу, без vtable. | 2, 6 | ✅ done (закоммичено) |
 | **M6-C — Burst registry (by index) + cache** | `NodeFunctionRegistry.Initialize`: startup-компиляция `FunctionPointer<NodeFn>` по `TypeId<ILogicNode>` ordinal (mirror `IndexedTypes.Initialize`), компиляция один раз/кеш. Закрыть «кеш `NodeInvoker`». | 3, 4 | ☐ todo |
 | **M6-D — Managed (.NET) backend + selection** | Параллельная managed-таблица `NodeFn[]`; выбор бэкенда по `NodeHeader.runtimeType`; глобальный managed-форс. **Детерминизм Burst↔.NET.** Реальные .NET-тесты исполнения (managed-путь идёт без Burst). | 4, 5 | ☐ todo |
 | **M6-E — Version gate** | Версия function-table + отклонение несовместимого блоба при `CreateInstance`/dispatch. | 7 | ☐ todo |
@@ -75,6 +75,20 @@
    Burst-резолв — на M7.
 3. **Version gate (развилка 7).** ✅ **Авто-хеш сигнатур/контракта нод-функций** («версия кода»),
    инвариантный к набору/порядку. Не хеш набора имён, не явный ручной int. Точная форма — на гейте M6-E.
+
+5. **Специализация под ноды + FunctionPointer (уточнения 2026-06-16).** ✅ Дисптач **не** абстрагируем от нод
+   (`IExecutable`/`Executor` откатаны). Восстановлен исходный механизм: `FunctionPointer<ExecuteFn>` + адаптер
+   `NodeInvoker.Execute<T>`/`Compile<T>` (как `CompileDoNode<T>/DoBurst<T>`). «Без виртуальных» = диспатч по
+   fn-pointer-индексу, без vtable (вызов тела в монолитной `Execute<T>` девиртуализуется). `ILogicNode` несёт
+   `Execute(ref NodeContext)`. Static-abstract interface members в Unity 6 (runtime/Burst) недоступны.
+
+4. **Кросс-среда + Burst/NoBurst гранулярность (уточнение 2026-06-16).** ✅ Весь код M6 (контракт, реестр,
+   диспетчер) **компилируется и в Unity (Burst), и в чистом .NET-приложении** (сервер без Unity/Burst).
+   Unity.Burst-зависимости (`[BurstCompile]`, `BurstCompiler.CompileFunctionPointer`) — **строго под**
+   `#if UNITY_5_3_OR_NEWER` (прецедент: `SafePtr`/`MemoryExt`/`IndexedTypes`). Seam (`NodeContext`/`NodeFn`/
+   `Execute<T>`/`ILogicNode.Execute`) использует только кросс-средовые core-типы Sapientia ⇒ guards не нужны.
+   **Гранулярность Burst-vs-NoBurst — по ноде** (`RuntimeType`): `Managed`-нода = строго NoBurst (Burst для
+   неё не компилится), `Unmanaged` — Burst+managed. Лендится в M6-C (раздельная сборка таблиц) / M6-D (выбор).
 
 ### Смежное (не входит в M6-dispatch, но всплыло на гейте)
 

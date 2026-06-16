@@ -14,9 +14,9 @@ namespace Sapientia.LogicGraph.Tests
 	/// </summary>
 	public class DispatchIndexTests
 	{
-		/// <summary>Минимальное logic-тело для round-trip плотных id (поведения нет; маркер <see cref="ILogicNode"/>).</summary>
-		private struct StubLogicA : ILogicNode { }
-		private struct StubLogicB : ILogicNode { }
+		/// <summary>Минимальное logic-тело для round-trip плотных id (поведения нет; <c>Execute</c> пустой).</summary>
+		private struct StubLogicA : ILogicNode { public void Execute(ref NodeContext ctx) { } }
+		private struct StubLogicB : ILogicNode { public void Execute(ref NodeContext ctx) { } }
 
 		[Test]
 		public void Dispatch_CompilerWritesNodeTypeId()

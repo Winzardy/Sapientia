@@ -177,9 +177,13 @@
    `cacheNodeOffset` снесён; `link` не бейкаем (runtime `WriteLink`). `BumpHeader.Reset/Size`/`RawBumpAllocator.Size` оставлены.
 9. 🔄 **M6 (диспатч нод + dual backend)** — разбита на под-фазы M6-A…F ([phase-M6/README.md](phase-M6/README.md);
    решения пользователя: index space = `TypeId<ILogicNode>`, `NodeContext` = In/Out+persistence, version gate =
-   авто-хеш сигнатур кода). ✅ **M6-A**: dispatch-id ноды переведён `TypeId<INode>` → `TypeId<ILogicNode>`
-   (плотный ordinal logic-тела; заглушка `NodeTypeId` закрыта). Layout `NodeHeader` не изменился (оба `TypeId`
-   = 4 байта). Function-table registry/исполнение — M6-B…F.
+   авто-хеш сигнатур кода, диспатч = FunctionPointer + `NodeInvoker` (без vtable), кросс-среда Unity/.NET).
+   ✅ **M6-A**: dispatch-id ноды `TypeId<INode>` → `TypeId<ILogicNode>` (плотный ordinal; заглушка `NodeTypeId`
+   закрыта; layout `NodeHeader` не изменился). ✅ **M6-B**: контракт исполнения — `NodeContext` (seam резолва
+   static-слайс/Cache/Persistence/Map) + `ILogicNode.Execute(ref NodeContext)` + адаптер `NodeInvoker.Execute<T>`/
+   `Compile<T>` (`FunctionPointer<ExecuteFn>` под `#if UNITY`, managed `GetManaged<T>` в .NET). Диспатч по
+   fn-pointer-индексу, без vtable; `body.Execute` девиртуализуется (constrained, `unmanaged T`). Реестр по индексу
+   / Burst-таблица / version gate — M6-C…F.
 
 ---
 
