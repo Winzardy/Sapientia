@@ -25,17 +25,18 @@ namespace Sapientia.LogicGraph.Tests
 			return new VersionedId<Blueprint>(id, version);
 		}
 
-		// Компилируем снаружи и отдаём в сторедж (владение ареной переходит стореджу).
+		// Компилируем снаружи и отдаём в сторедж (владение ареной переходит стореджу). Группа несёт своё окружение
+		// (та же версия кода, что у стореджа) — version gate пропускает.
 		private static void Add(ref CompiledBlueprintStorage storage, int id, int version)
 		{
 			var arena = BlueprintCompiler.CompileLayout(Bp(id, version), out var offset);
-			storage.Add(arena, offset);
+			storage.Add(arena, offset, CompiledEnvironment.Compile());
 		}
 
 		[Test]
 		public void Storage_AddCountAndGet()
 		{
-			var storage = CompiledBlueprintStorage.Create();
+			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			try
 			{
 				Add(ref storage, 1, 1);
@@ -60,7 +61,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Storage_Dedup_SameIdVersion()
 		{
-			var storage = CompiledBlueprintStorage.Create();
+			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			try
 			{
 				Add(ref storage, 1, 1);
@@ -78,7 +79,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Storage_RuntimeAdd_NewIdGrowsIndex()
 		{
-			var storage = CompiledBlueprintStorage.Create(blueprintCapacity: 1);
+			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile(), blueprintCapacity: 1);
 			try
 			{
 				Add(ref storage, 5, 1); // новый id за пределами начальной ёмкости
@@ -94,7 +95,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Storage_VersionsCoexist()
 		{
-			var storage = CompiledBlueprintStorage.Create();
+			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			try
 			{
 				Add(ref storage, 1, 1);
@@ -117,7 +118,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Storage_DisposeFreesAll()
 		{
-			var storage = CompiledBlueprintStorage.Create();
+			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			Add(ref storage, 1, 1);
 			Add(ref storage, 1, 2); // старая версия остаётся жить
 			Add(ref storage, 2, 1);

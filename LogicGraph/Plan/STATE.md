@@ -197,7 +197,17 @@
    параметр `Build`/`Create`). «Managed-ность» поднята на logic-тип — `ILogicNode.RuntimeType` (DIM, дефолт `Unmanaged`),
    `INode<TLogicNode>.RuntimeType` выводит из logic-типа ⇒ `NodeHeader.runtimeType` согласован с Burst-skip реестра.
    Managed-исполнение/selection/детерминизм — **реальные** тесты (`BackendSelectionTests`, без Burst); Build-skip — под
-   `Assert.Ignore`. Прогон `Drain` через scope — **M6-F**; version gate — **M6-E**.
+   `Assert.Ignore`. Прогон `Drain` через scope — **M6-F**.
+   ✅ **M6-E** (version gate): «версия кода» — верхнеуровневая сущность группы блюпринтов в `CompiledEnvironment`
+   (`NodeContractHash`: FNV-1a по `FormatVersion` + на каждый дочерний `ILogicNode` три слоя — имя `FullName`, IL тела
+   `Execute`, раскладка данных поля+`Marshal.SizeOf`; недоступность IL/размера → маркер, не падаем). **Блоб о хеше не
+   знает** (`CompiledBlueprintHeader`/`BlueprintCompiler` не тронуты). `CompiledBlueprintStorage` рождается с окружением
+   (`Create(CompiledEnvironment,…)`); гейт в `Add(arena,offsets,environment)` — `environment.IsCompatibleWith(_environment)`,
+   несовместимая группа → `arena.Dispose()`+`throw` (реальный, не `E.ASSERT` — load-bearing) до любой мутации. `ExecutionScope`
+   не тронут. 13 тестов (`VersionGateTests` + апдейт `CompiledBlueprintStorageTests`), реально/чисто, без `Assert.Ignore`;
+   FNV/IL/layout прогнаны изолированным `dotnet`-репро. **Ограничения IL/layout** (токены, Debug/Release, Burst-native≠IL,
+   IL2CPP-стрип, нет транзитивности) приняты осознанно; робастная замена — content-digest M10-кодогена; transfer-time приём +
+   сериализация конфига окружения — **M11**. Прогон `Drain` через scope — **M6-F**.
 
 ---
 
@@ -219,3 +229,10 @@
   (каждый вызов пиннит `GCHandle`, не освобождается до domain reload) — реестр это и обеспечивает (`Build` раз → таблица).
 - **M6-C: Burst-таблица сейчас компилит ВСЕ logic-типы** (в C нет managed-тел). Пропуск Burst-компиляции для
   `RuntimeType.Managed`-нод + выбор бэкенда — **M6-D** (иначе `CompileFunctionPointer` на managed-теле упадёт).
+- **M6-E `NodeContractHash` — интерим по содержимому.** Слои IL (`Execute`) и layout (`Marshal.SizeOf`+поля) считаются
+  reflection'ом на build-стороне ⇒ детерминированы **в пределах сборки**, но не портируемы между сборками (метадата-токены,
+  Debug/Release, Burst-native≠IL, нет транзитивности вложенных структур/хелперов; IL2CPP: `GetILAsByteArray()`==null ⇒ маркер).
+  Для реального server→client transfer нужен **content-digest из M10-кодогена** (стабильный/портируемый) + приём конфига
+  окружения на transfer-time — **M11**. Также `FormatVersion` — ручной бамп для ABI-изменений, не отражённых в IL тел.
+- **M6-E follow-up:** сериализация/загрузка `CompiledEnvironment` из конфига (сейчас носитель в памяти, `Compile()` build-time);
+  гейт на приёме блоба в transfer-слое (помимо `Add`) — **M11**.

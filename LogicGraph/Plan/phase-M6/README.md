@@ -56,7 +56,7 @@
 | **M6-B — Node execution contract** | `NodeContext` (seam резолва памяти) + `ILogicNode.Execute(ref NodeContext)` + `delegate ExecuteFn` + адаптер `NodeInvoker.Execute<T>`/`Compile<T>` (FunctionPointer, как исторический `CompileDoNode/DoBurst`). Диспатч по fn-pointer-индексу, без vtable. | 2, 6 | ✅ done (закоммичено) |
 | **M6-C — Burst registry (by index) + cache** | `NodeFunctionRegistry` (инстанс, не статика): `Build()` компилит `FunctionPointer<ExecuteFn>` по `TypeId<ILogicNode>` ordinal раз/тип; Burst-таблица = off-allocator `UnsafeArray`, managed = `ExecuteFn[]`. Закрыт «кеш `NodeInvoker`». | 3, 4 | ✅ done (закоммичено) ([C-burst-registry/plan.md](C-burst-registry/plan.md)) |
 | **M6-D — Managed (.NET) backend + selection** | Параллельная managed-таблица `NodeFn[]`; выбор бэкенда по `NodeHeader.runtimeType`; глобальный managed-форс. **Детерминизм Burst↔.NET.** Реальные .NET-тесты исполнения (managed-путь идёт без Burst). | 4, 5 | ✅ done (закоммичено) ([D-managed-selection/plan.md](D-managed-selection/plan.md)) |
-| **M6-E — Version gate** | Версия function-table + отклонение несовместимого блоба при `CreateInstance`/dispatch. | 7 | ☐ todo |
+| **M6-E — Version gate** | «Версия кода» (имя+IL `Execute`+раскладка данных) в `CompiledEnvironment`; сторедж рождается с окружением, гейт в `Add` (окружение группы vs своё). | 7 | ✅ done ([E-version-gate/plan.md](E-version-gate/plan.md)) |
 | **M6-F — Dispatcher integration + reconcile** | `NodeInvoker.Invoke(ref scope, ref compiled, NodeInstanceId)` — резолв памяти + dispatch через реестр; прогон `ExecutionGraph.Drain`-порядка через него (single-thread). Свод + апдейт STATE.md/CLAUDE.md status-map. | — | ☐ todo |
 
 ## Не входит (M7/M8/M9/M10)

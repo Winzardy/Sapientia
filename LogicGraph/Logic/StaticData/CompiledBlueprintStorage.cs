@@ -22,6 +22,12 @@ namespace Sapientia.LogicGraph
 	/// старых (<see cref="RootSlot.next"/>). Арены лежат отдельным списком <see cref="_arenas"/> (по батчам);
 	/// слот ссылается по индексу (<see cref="Slot.arenaId"/>), а не держит арену. Off-allocator, в снапшот
 	/// мира не идёт. <b>Add передаёт владение ареной стореджу</b> (освобождается на <see cref="Dispose"/>).
+	///
+	/// <b>Сторедж рождается с окружением</b> (<see cref="CompiledEnvironment"/>, version gate M6-E): при <c>Add</c>
+	/// добавляемой группе передаётся <b>её</b> окружение, и сторедж сверяет его со своим («версия кода» —
+	/// верхнеуровневая сущность группы, <see cref="CompiledEnvironment.IsCompatibleWith"/>); несовместимая группа
+	/// <b>отклоняется</b> (арена освобождается, throw) — её позиционные ordinal'ы нод указывали бы на чужие функции.
+	/// Окружение компилируется заранее и грузится (не вычисляется рефлексией в рантайме); сами блобы о хеше не знают.
 	/// </summary>
 	public struct CompiledBlueprintStorage : IDisposable
 	{
@@ -60,27 +66,38 @@ namespace Sapientia.LogicGraph
 		private UnsafeList<RawBumpAllocator> _arenas;
 		// Индексируется прямо по (int)Id<Blueprint>; растёт при новом id.
 		private UnsafeList<RootSlot> _blueprints;
+		// Окружение, с которым рождён сторедж (version gate M6-E): «версия кода» для сверки добавляемых блобов.
+		private CompiledEnvironment _environment;
 
 		public bool IsCreated => _arenas.IsCreated;
 		// Число арен (по одной на каждый Add/батч). При одном compiled на арену = числу compiled.
 		public int Count => _arenas.count;
 
-		public static CompiledBlueprintStorage Create(int blueprintCapacity = 8)
+		/// <summary>Окружение стореджа (version gate): «версия кода», с которой он рождён.</summary>
+		public CompiledEnvironment Environment => _environment;
+
+		/// <summary>
+		/// Создаёт сторедж <b>с окружением</b> (<paramref name="environment"/>, version gate M6-E): его «версия кода»
+		/// сверяется с каждым добавляемым блобом. Окружение приходит из загруженного конфига (компилируется заранее
+		/// вместе с блюпринтами), а не вычисляется в рантайме.
+		/// </summary>
+		public static CompiledBlueprintStorage Create(CompiledEnvironment environment, int blueprintCapacity = 8)
 		{
 			return new CompiledBlueprintStorage
 			{
 				_arenas = new UnsafeList<RawBumpAllocator>(blueprintCapacity > 0 ? blueprintCapacity : 1),
 				_blueprints = new UnsafeList<RootSlot>(blueprintCapacity > 0 ? blueprintCapacity : 1),
+				_environment = environment,
 			};
 		}
 
 		/// <summary>
 		/// Удобная перегрузка для одной скомпилированной ноды-блюпринта: оборачивает <paramref name="offset"/>
-		/// в span из одного элемента и зовёт батчевый <see cref="Add(RawBumpAllocator, Span{PtrOffset{CompiledBlueprintHeader}})"/>.
+		/// в span из одного элемента и зовёт батчевый <see cref="Add(RawBumpAllocator, Span{PtrOffset{CompiledBlueprintHeader}}, CompiledEnvironment)"/>.
 		/// </summary>
-		public void Add(RawBumpAllocator arena, PtrOffset<CompiledBlueprintHeader> offset)
+		public void Add(RawBumpAllocator arena, PtrOffset<CompiledBlueprintHeader> offset, CompiledEnvironment environment)
 		{
-			Add(arena, offset.AsSpan());
+			Add(arena, offset.AsSpan(), environment);
 		}
 
 		/// <summary>
@@ -91,8 +108,19 @@ namespace Sapientia.LogicGraph
 		/// список старых (продолжает жить). Арена кладётся в <see cref="_arenas"/>, если добавлен хотя бы
 		/// один блюпринт; иначе (всё дубли/невалидно) — освобождается. <b>Владение ареной переходит стореджу.</b>
 		/// </summary>
-		public void Add(RawBumpAllocator arena, Span<PtrOffset<CompiledBlueprintHeader>> offsets)
+		public void Add(RawBumpAllocator arena, Span<PtrOffset<CompiledBlueprintHeader>> offsets, CompiledEnvironment environment)
 		{
+			// 0. Version gate (M6-E): окружение добавляемой группы совместимо с окружением стореджа («версия кода» —
+			// верхнеуровневая сущность группы, не per-blob). Проверяем ДО любой мутации состояния — рассинхрон ⇒
+			// освобождаем арену (Add владеет ею) и throw. Реальный throw, НЕ E.ASSERT — гейт load-bearing (вырезанный
+			// в release ассерт пропустил бы misdispatch позиционных ordinal'ов нод на чужие функции).
+			if (!environment.IsCompatibleWith(_environment))
+			{
+				arena.Dispose();
+				throw new InvalidOperationException(
+					$"[CompiledBlueprintStorage] Несовместимая версия кода группы (version gate): группа={environment.contractHash}, окружение стореджа={_environment.contractHash}. Группа собрана под другой набор/порядок нод-функций — добавлять нельзя.");
+			}
+
 			var maxBlueprintId = default(Id<Blueprint>);
 			foreach (var offset in offsets)
 			{
