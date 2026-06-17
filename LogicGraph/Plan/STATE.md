@@ -38,7 +38,7 @@
 
 | Файл | Что | Статус |
 |---|---|---|
-| [CompiledBlueprintHeader.cs](../Logic/StaticData/CompiledBlueprintHeader.cs) | Static-блоб — **чистая рантайм-структура** (о authoring-`Blueprint` не знает): `nodes: BumpArray<NodeHeader>`, `blockSizes: DataSizes`, `blueprintKey: VersionedId<Blueprint>` (тег идентичности), `nodesMap`, `contextTypes: BumpArray<TypeId<INodeContext>>` (4E); аксессоры `GetStaticNodeSlice`/`GetNodeInOut`/`GetNodePersistenceOffset`/`GetBlockSize`/`GetNodeRelatives`/`GetNodeInDegree`/`StartNode*`/`GetContextTypes` (span) | ✅ |
+| [CompiledBlueprintHeader.cs](../Logic/StaticData/CompiledBlueprintHeader.cs) | Static-блоб — **чистая рантайм-структура** (о authoring-`Blueprint` не знает): `nodes: BumpArray<NodeHeader>`, `blockSizes: DataSizes`, `blueprintKey: VersionedId<Blueprint>` (тег идентичности), `nodesMap`, `contextTypes: BumpArray<TypeId<INodeContext>>` (4E); аксессоры `GetNode` (один `ref readonly NodeHeader` — `typeId`/`runtimeType`, M6)/`GetStaticNodeSlice`/`GetNodeInOut`/`GetNodePersistenceOffset`/`GetCacheCellsTemplate`/`GetBlockSize`/`GetNodeRelatives`/`GetNodeInDegree`/`StartNode*`/`GetContextTypes` (span) | ✅ |
 | [INodeContext.cs](../Blueprint/INodeContext.cs) | Маркер категории ambient-контекста: `interface INodeContext : IIndexedType`. Нода объявляет нужные контексты как `TypeId<INodeContext>[]` (`INode.GetContextTypes`); компилятор бейкает дедуп-union в блоб | ✅ **(4E)** |
 | [BlueprintCompiler.cs](../Logic/StaticData/BlueprintCompiler.cs) | **Вся компиляция** `Blueprint → CompiledBlueprintHeader` (единственное место, знающее об authoring): `CalculateLayoutSizeToReserve`⟷`SetupLayout`/`SetupMap`/`BuildNodeMap` (lockstep), `BuildAdjacency`. Выделен из заголовка (ревью 4A) | ✅ |
 | [NodeHeader.cs](../Logic/StaticData/NodeHeader.cs) | На ноду: `typeId`, `runtimeType` (форк 8: из `INode.RuntimeType`), `state: ByteEnumMask<NodeState>` (форк 7), `staticData: RelativePtr`, `persistence: PtrOffset`, `inOut: PtrOffset`; `enum NodeState : byte {HasCache=0, Multiple=1}` (члены — индексы бит, не `[Flags]`) | ✅ **(4D)** |
@@ -61,7 +61,7 @@
 | [BlueprintInstanceStorage.cs](../Logic/BlueprintInstanceStorage.cs) | Хранилище живых инстансов: `UnsafeIndexAllocSparseSet` + per-slot **generation** (staleness); `Add/Has/TryGet/Remove/Values/Dispose` | ✅ |
 | [BlueprintInstanceId.cs](../Logic/BlueprintInstanceId.cs) | Хендл `{Id id; int generation; long _raw}` (explicit layout, `IEquatable`); `generation==0` — невалид | ✅ |
 | [NodeInstanceId.cs](../Logic/NodeInstanceId.cs) | `{BlueprintInstanceId blueprintId; Id<NodeHeader> nodeId}` — адрес ноды конкретного инстанса | ✅ |
-| [ExecutionScope.cs](../Logic/ExecutionScope.cs) | **Коннектор/владелец per-instance памяти** (4F-1): `_instances: BlueprintInstanceStorage` + `_cache: UnsafeList<InstanceCache>` + `_memory: UnsafeList<InstancePersistence>` (по id) + `_contexts: ContextRegistry<INodeContext>` (4F-2). `Create`/`CreateInstance(ref storage, bp)`/`Has`/`GetInstanceCache(ref)`/`GetInstancePersistent(ref)`/`ResetInstanceCache`/`ResetAllCache`/`DisposeInstance`/`Dispose` + generic `SetContext<T>`/`GetContext<T>`/`HasContext<T>`. Читает блоб из `CompiledBlueprintStorage` (передаётся, не хранит) | ✅ **(4F-1, 4F-2)** |
+| [ExecutionScope.cs](../Logic/ExecutionScope.cs) | **Коннектор/владелец per-instance памяти** (4F-1): `_instances: BlueprintInstanceStorage` + `_cache: UnsafeList<InstanceCache>` + `_memory: UnsafeList<InstancePersistence>` (по id) + `_contexts: ContextRegistry<INodeContext>` (4F-2) + `_registry: NodeFunctionRegistry` (shared, не диспозит — M6-F). `Create(…, registry)`/`CreateInstance(ref storage, bp)`/`Has`/`GetInstanceCache(ref)`/`GetInstancePersistent(ref)`/`GetInstanceCachePtr`/`GetInstancePersistencePtr`/`Registry` (M6-F)/`ResetInstanceCache(id, template)`/`ResetAllCache(template)`/`DisposeInstance`/`Dispose` + generic `SetContext<T>`/`GetContext<T>`/`HasContext<T>`. Читает блоб из `CompiledBlueprintStorage` (передаётся, не хранит) | ✅ **(4F-1, 4F-2, M6-F)** |
 | [InstancePersistence.cs](../Logic/RuntimeData/InstancePersistence.cs) | Per-instance Persistence (стейт) поверх `UnsafeArray<byte>`: `Create(memoryId, size)`/`GetPtr`/`Dispose`/`IsValid`/`Size`. Фикс-размер, не растёт (динамика — через контекст) | ✅ **(4F-1)** |
 | [ContextRegistry.cs](../Logic/RuntimeData/ContextRegistry.cs) | **Ambient-context-реестр scope'а** (4F-2), generic по категории: `ContextRegistry<TContext> where TContext : IIndexedType` (scope: `INodeContext`). `UnsafeArray<SafePtr>` размера `TypeId<TContext>.Count`, **владеет** памятью контекстов (lazy `MemAlloc(TSize<T>)` при `SetContext<T>`). API generic-only: `SetContext<T>(in T)`/`GetContext<T>()→readonly ref T`/`HasContext<T>()`/`Dispose`. Без id-based/count. Резолв нодой в run'е — M7 | ✅ **(4F-2)** |
 | [LogicGraph.cs](../Logic/LogicGraph.cs) | `{CompiledBlueprintStorage storage; Id<Blueprint> entryBlueprintId}` | 🟡 поля |
@@ -72,17 +72,18 @@
 | Файл | Что | Статус |
 |---|---|---|
 | [CacheLink.cs](../Logic/CacheData/CacheLink.cs) | Ячейка кеша (бывш. `DataCache`): `[Explicit]` 16 байт, union `{state @0; valueOffset / link @8}` (взаимоисключающи по `state`) | ✅ **(4F-3 rename)** |
-| [InstanceCache.cs](../Logic/CacheData/InstanceCache.cs) | Per-instance Cache = `_cells` (рабочие) + `_values` (значения) + **`_template`** (своя копия `cacheCellsTemplate` из блоба, забейканные `valueOffset`). `Create(memoryId, cellCount, valuesSize, SafePtr<CacheLink> template)` (копирует шаблон); **`Reset` = `_cells.CopyFrom(_template)`**; `Write` пишет по `cell.valueOffset` (из шаблона). Позиционно-независим | ✅ **(4F-3)** |
+| [InstanceCache.cs](../Logic/CacheData/InstanceCache.cs) | Per-instance Cache = `_cells` (рабочие) + `_values` (значения). **Шаблон в инстансе НЕ хранится** (M6): `Create(memoryId, cellCount, valuesSize, SafePtr<CacheLink> template)` копирует шаблон прямо в `_cells`; **`Reset(SafePtr<CacheLink> template)`** копирует переданный шаблон (берётся из статики — `CompiledBlueprintHeader.GetCacheCellsTemplate()`) в `_cells`; `Write` пишет по `cell.valueOffset` (из шаблона). Позиционно-независим | ✅ **(4F-3, M6)** |
 | [CacheHandler.cs](../Logic/CacheData/CacheHandler.cs) | `{PtrOffset<CacheLink> cell}` — **один** офсет ячейки (value-офсет забейкан в самой ячейке) | ✅ **(4F-3)** |
 | [RegionPtr.cs](../Blueprint/RegionPtr.cs) | `[Explicit]` **16 байт, union @8**: `staticData` (Static self-rel) / `cacheData: Id<CacheLink>` (Cache — **ordinal ячейки**) / `instanceData: PtrOffset` (Persistence — офсет слайса). Порт одного региона ⇒ один слот | ✅ **(4F-3)** |
 | [NodeIn.cs](../Logic/CacheData/NodeIn.cs) / [NodeOut.cs](../Logic/CacheData/NodeOut.cs) | `Read`/`Write`/`IsCalculated(ref InstanceCache)` через `InstanceCache` | ✅ |
 | Cache-layout (`BlueprintCompiler`) | На компиляции: `cacheCellCount`/`cacheValuesSize` + **`cacheCellsTemplate: BumpArray<CacheLink>`** (по ordinal, забейкан `valueOffset`=префикс-сумма; slack `DataSizes.Cache` не влияет). Карта несёт `cacheData`=ordinal. `ExecutionScope` создаёт `InstanceCache` копией шаблона. Старый per-node `cacheNodeOffset` снесён | ✅ **(4F-3)** |
 
-### Execution — оркестратор (✅ 4B: батч-DAG + детерминированный обход; параллелизм/диспатч — M6/M7)
+### Execution — оркестратор (✅ 4B: батч-DAG + детерминированный обход; ✅ M6-F: диспатч/прогон single-thread; параллелизм — M7)
 
 | Файл | Что | Статус |
 |---|---|---|
-| [ExecutionGraph.cs](../Logic/RuntimeData/Execution/ExecutionGraph.cs) | Батч-DAG: `Inject(ref compiled, BlueprintInstanceId)` — chain-декомпозиция Static-топологии (батч = линейная цепочка); `Drain(Span<NodeInstanceId>)` — детерминированный обход (ready-queue, single-thread); `ResetDeps`/`Dispose`. `ExecutionBatch{ inDegree, remainingDeps (синхронный int), nextBatches, nodesOrder }`. `enum RuntimeType{Unmanaged,Managed}` (для 4D/M7). Снесён мёртвый каркас (`IterationTo`/курсор/`AsyncValue`/`iterationsToSchedule`) | ✅ **(4B)** (тела нод не исполняются — M6) |
+| [ExecutionGraph.cs](../Logic/RuntimeData/Execution/ExecutionGraph.cs) | Батч-DAG: `Inject(ref compiled, BlueprintInstanceId)` — chain-декомпозиция Static-топологии (батч = линейная цепочка); `Drain(Span<NodeInstanceId>)` — детерминированный обход (ready-queue, single-thread); `ResetDeps`/`Dispose`. `ExecutionBatch{ inDegree, remainingDeps (синхронный int), nextBatches, nodesOrder }`. `enum RuntimeType{Unmanaged,Managed}`. Снесён мёртвый каркас (`IterationTo`/курсор/`AsyncValue`/`iterationsToSchedule`) | ✅ **(4B)** |
+| [NodeInvoker.cs](../Logic/RuntimeData/Execution/NodeInvoker.cs) | Диспатч-seam (M6-F): `Invoke(ref scope, ref compiled, NodeInstanceId)` — сборка `NodeContext` из памяти инстанса (scope) + выбор бэкенда раз/ноду + вызов `InvokeBurst`(blittable function-table, `[BurstCompile]`)/`InvokeManaged`; `Run(ref scope, ref compiled, ref graph, Span<NodeInstanceId>)` — run-prologue (`ResetAllCache` + `ResetDeps`) → `Drain` → per-node `Invoke`. **Тела нод исполняются.** Managed-glue (scope несёт managed-поле); `Run` — временный seam (переедет в M7) | ✅ **(M6-F)** (single-thread; параллелизм/wave — M7) |
 
 ### Снесено (по ходу рефактора)
 
@@ -113,7 +114,7 @@
   (+обновлённые `MapTests`/`LayoutTests`); context — `ContextRegistryTests`/`ExecutionScopeTests` (round-trip под
   `Assert.Ignore`: `IndexedTypes` не init в EditMode). **4F-3 (свод кеша):** `RegionPtr` — **union 16 байт**
   (`staticData`/`cacheData: Id<CacheLink>` ordinal/`instanceData`); value-офсет забейкан в **`cacheCellsTemplate`**
-  (`BumpArray<CacheLink>` по ordinal). `InstanceCache` владеет копией шаблона, `Reset` = `_cells.CopyFrom(_template)`.
+  (`BumpArray<CacheLink>` по ordinal). `InstanceCache` шаблон **не хранит** — `Reset(template)` копирует переданный из статики шаблон в `_cells` (M6).
   `DataCache`→`CacheLink`; `cacheNodeOffset` снесён; `link` не бейкаем. `BumpHeader.Reset/Size`/`RawBumpAllocator.Size` — оставлены.
 
 ---
@@ -173,9 +174,9 @@
    Без id-based/count (решение пользователя). Round-trip тесты под `Assert.Ignore` (`IndexedTypes` не init в EditMode).
 8. ✅ **(4F-3)** Свод кеш-раскладки: `RegionPtr` — **union 16 байт** (`staticData`/`cacheData: Id<CacheLink>` ordinal/
    `instanceData`); value-офсет в карте не лежит — забейкан в **`cacheCellsTemplate: BumpArray<CacheLink>`** (по ordinal).
-   `InstanceCache` владеет копией шаблона, `Reset` = `_cells.CopyFrom(_template)`. `DataCache`→`CacheLink` (rename); старый
+   `InstanceCache` шаблон **не хранит** — `Reset(template)` копирует переданный из статики шаблон в `_cells` (M6). `DataCache`→`CacheLink` (rename); старый
    `cacheNodeOffset` снесён; `link` не бейкаем (runtime `WriteLink`). `BumpHeader.Reset/Size`/`RawBumpAllocator.Size` оставлены.
-9. 🔄 **M6 (диспатч нод + dual backend)** — разбита на под-фазы M6-A…F ([phase-M6/README.md](phase-M6/README.md);
+9. ✅ **M6 (диспатч нод + dual backend) — закрыта** (под-фазы M6-A…F все done, закоммичены) ([phase-M6/README.md](phase-M6/README.md);
    решения пользователя: index space = `TypeId<ILogicNode>`, `NodeContext` = In/Out+persistence, version gate =
    авто-хеш сигнатур кода, диспатч = FunctionPointer + `NodeInvoker` (без vtable), кросс-среда Unity/.NET).
    ✅ **M6-A**: dispatch-id ноды `TypeId<INode>` → `TypeId<ILogicNode>` (плотный ordinal; заглушка `NodeTypeId`
@@ -191,7 +192,7 @@
    `BurstTable`), managed-таблица = `ExecuteFn[]` (.NET-путь). `Dispose` освобождает off-allocator буфер (сам код FP
    — domain-lifetime Burst, освобождать нечем/незачем). Покрыто `NodeFunctionRegistryTests` (managed round-trip
    реально; Build/Burst — под `Assert.Ignore`, IndexedTypes не init в EditMode).
-   ✅ **M6-D**: выбор бэкенда — `NodeFunctionRegistry.UseManaged(runtimeType)`/`Invoke(ordinal, runtimeType, ref ctx)`
+   ✅ **M6-D**: выбор бэкенда — `NodeFunctionRegistry.UseManaged(runtimeType)`
    (под Unity `_forceManaged‖Managed`→managed, иначе Burst; в .NET всегда managed). `Build` **пропускает** Burst-компиляцию
    для `RuntimeType.Managed`-нод (managed-делегат для них — безусловно); глобальный managed-форс (`_forceManaged` в инстансе,
    параметр `Build`/`Create`). «Managed-ность» поднята на logic-тип — `ILogicNode.RuntimeType` (DIM, дефолт `Unmanaged`),
@@ -207,7 +208,17 @@
    не тронут. 13 тестов (`VersionGateTests` + апдейт `CompiledBlueprintStorageTests`), реально/чисто, без `Assert.Ignore`;
    FNV/IL/layout прогнаны изолированным `dotnet`-репро. **Ограничения IL/layout** (токены, Debug/Release, Burst-native≠IL,
    IL2CPP-стрип, нет транзитивности) приняты осознанно; робастная замена — content-digest M10-кодогена; transfer-time приём +
-   сериализация конфига окружения — **M11**. Прогон `Drain` через scope — **M6-F**.
+   сериализация конфига окружения — **M11**.
+   ✅ **M6-F** (dispatcher integration — **веха M6 закрыта**): seam `NodeInvoker.Invoke(ref scope, ref compiled, NodeInstanceId)`
+   (сборка `NodeContext` из памяти инстанса scope + выбор бэкенда раз/ноду + вызов нужной таблицы-точки) + `Run(ref scope, ref
+   compiled, ref graph, Span<NodeInstanceId>)` (run-prologue `ResetAllCache`+`ResetDeps` → `Drain` → per-node `Invoke`). Реестр
+   прокинут в `ExecutionScope` (`_registry`, shared, scope **не** диспозит). **Тела нод исполняются** end-to-end (single-thread).
+   **Пост-рефактор-свод (тем же сидением):** диспатч-вызов вынесен из реестра в `NodeInvoker.InvokeBurst` (blittable
+   function-table `BurstTable` в Burst, `[BurstCompile]`) / `InvokeManaged` (`ManagedTable`), `NodeFunctionRegistry.Invoke`
+   удалён; ordinal — `Id<ExecuteFn>`; `CompiledBlueprintHeader.GetNode` (один `ref readonly NodeHeader`) вместо
+   `GetNodeTypeId`/`GetNodeRuntimeType`; `InstanceCache` шаблон не хранит (`Reset(template)` из статики). Тесты —
+   `NodeDispatchTests` (real/managed, `forceManaged`; chain/diamond/мульти-инстанс/persistence/reset-детерминизм). **Не входит
+   (M7):** параллелизм + Burst↔Managed wave-passes, мульти-блюпринтовый `Run`, scope-в-Burst-job — `Run` сейчас временный seam.
 
 ---
 

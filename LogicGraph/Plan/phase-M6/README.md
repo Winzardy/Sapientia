@@ -1,9 +1,9 @@
 # M6 — Node dispatch + dual backend (разбивка вехи на под-фазы)
 
-> **Статус: 🔄 разбивка на гейте (план, код не писан).** Это milestone-expansion (как
+> **Статус: ✅ M6 закрыт (2026-06-17).** Все под-фазы A–F done и закоммичены. Это milestone-expansion (как
 > [phase-4/runtime/README.md](../phase-4/runtime/README.md) для Фазы 4): сначала разбить M6 на под-фазы
 > и согласовать решения, затем исполнять по одной (каждая = своё ревью-сидение, свой план-гейт,
-> компилируется, без полу-состояний).
+> компилируется, без полу-состояний). Параллелизм/wave-модель и мульти-блюпринтовый прогон — **M7**.
 >
 > Источник правды — код, затем [STATE.md](../STATE.md). Цель вехи (PLAN.md):
 > startup-реестр Burst-функций нод через `BurstCompiler.CompileFunctionPointer`, адресация **по индексу**
@@ -52,12 +52,12 @@
 
 | Под-фаза | Концепт | Развилки | Статус |
 |---|---|---|---|
-| **M6-A — Dispatch index** | Закрыть заглушку `NodeTypeId`: dispatch-id → `TypeId<ILogicNode>` (плотный ordinal). Миграция `NodeHeader.typeId`/`GetNodeTypeId`/`INode.NodeTypeId`/`INode<T>`. Исполнения нет. | 1 | ✅ одобрено (не закоммичено) |
+| **M6-A — Dispatch index** | Закрыть заглушку `NodeTypeId`: dispatch-id → `TypeId<ILogicNode>` (плотный ordinal). Миграция `NodeHeader.typeId`/`INode.NodeTypeId`/`INode<T>` (аксессор позже сведён в `GetNode`, M6-F). Исполнения нет. | 1 | ✅ done (закоммичено) |
 | **M6-B — Node execution contract** | `NodeContext` (seam резолва памяти) + `ILogicNode.Execute(ref NodeContext)` + `delegate ExecuteFn` + адаптер `NodeInvoker.Execute<T>`/`Compile<T>` (FunctionPointer, как исторический `CompileDoNode/DoBurst`). Диспатч по fn-pointer-индексу, без vtable. | 2, 6 | ✅ done (закоммичено) |
 | **M6-C — Burst registry (by index) + cache** | `NodeFunctionRegistry` (инстанс, не статика): `Build()` компилит `FunctionPointer<ExecuteFn>` по `TypeId<ILogicNode>` ordinal раз/тип; Burst-таблица = off-allocator `UnsafeArray`, managed = `ExecuteFn[]`. Закрыт «кеш `NodeInvoker`». | 3, 4 | ✅ done (закоммичено) ([C-burst-registry/plan.md](C-burst-registry/plan.md)) |
 | **M6-D — Managed (.NET) backend + selection** | Параллельная managed-таблица `NodeFn[]`; выбор бэкенда по `NodeHeader.runtimeType`; глобальный managed-форс. **Детерминизм Burst↔.NET.** Реальные .NET-тесты исполнения (managed-путь идёт без Burst). | 4, 5 | ✅ done (закоммичено) ([D-managed-selection/plan.md](D-managed-selection/plan.md)) |
 | **M6-E — Version gate** | «Версия кода» (имя+IL `Execute`+раскладка данных) в `CompiledEnvironment`; сторедж рождается с окружением, гейт в `Add` (окружение группы vs своё). | 7 | ✅ done ([E-version-gate/plan.md](E-version-gate/plan.md)) |
-| **M6-F — Dispatcher integration + reconcile** | `NodeInvoker.Invoke(ref scope, ref compiled, NodeInstanceId)` — резолв памяти + dispatch через реестр; прогон `ExecutionGraph.Drain`-порядка через него (single-thread). Свод + апдейт STATE.md/CLAUDE.md status-map. | — | ☐ todo |
+| **M6-F — Dispatcher integration + reconcile** | `NodeInvoker.Invoke(ref scope, ref compiled, NodeInstanceId)` — резолв памяти + dispatch; прогон `ExecutionGraph.Drain`-порядка через него (single-thread). Свод + апдейт STATE.md/CLAUDE.md status-map. | — | ✅ done (закоммичено) ([F-dispatcher-integration/plan.md](F-dispatcher-integration/plan.md)). **Пост-рефактор:** диспатч — `NodeInvoker.InvokeBurst`/`InvokeManaged` (blittable function-table в Burst; выбор бэкенда — раз/ноду в managed-glue), а не `NodeFunctionRegistry.Invoke`; заголовок ноды — `CompiledBlueprintHeader.GetNode` (один ref); `InstanceCache` шаблон не хранит (берётся из статики при `Reset`). |
 
 ## Не входит (M7/M8/M9/M10)
 
