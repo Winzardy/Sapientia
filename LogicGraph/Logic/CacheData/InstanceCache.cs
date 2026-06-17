@@ -7,27 +7,28 @@ namespace Sapientia.LogicGraph
 {
 	/// <summary>
 	/// Per-instance <b>Cache</b>: рабочий массив ячеек (<see cref="UnsafeArray{T}"/> из <see cref="CacheLink"/>) + байтовый
-	/// массив значений (<see cref="UnsafeArray{T}"/> из <c>byte</c>) + <b>шаблон ячеек</b> (<see cref="_template"/>, копия
-	/// <c>CompiledBlueprintHeader.cacheCellsTemplate</c> с забейканными <c>valueOffset</c>). Ячейка хранит тег + офсет
-	/// значения / link; значение — в Value-массиве по <see cref="CacheLink.valueOffset"/> (забейкан из шаблона). Адресует
-	/// ячейку <see cref="CacheHandler{T}"/> (ordinal/офсет из Static.Map). Транзиентный: сброс — <see cref="Reset"/> каждый
-	/// run = <b>копия шаблона</b> в рабочий массив (восстанавливает <c>state=Uninitialized</c> + забейканные офсеты).
-	/// <b>Позиционно-независим</b> (массивы хранят сырые указатели на неподвижные блоки), в снапшот мира не идёт.
+	/// массив значений (<see cref="UnsafeArray{T}"/> из <c>byte</c>). Ячейка хранит тег + офсет значения / link; значение —
+	/// в Value-массиве по <see cref="CacheLink.valueOffset"/> (забейкан из шаблона). Адресует ячейку <see cref="CacheHandler{T}"/>
+	/// (ordinal/офсет из Static.Map). Транзиентный: сброс — <see cref="Reset"/> каждый run = <b>копия шаблона</b> в рабочий
+	/// массив (восстанавливает <c>state=Uninitialized</c> + забейканные офсеты). <b>Шаблон в инстансе не хранится</b> — он
+	/// общий для всех инстансов блюпринта и берётся из статики (<c>CompiledBlueprintHeader.GetCacheCellsTemplate()</c>)
+	/// в момент <see cref="Create"/>/<see cref="Reset"/>. <b>Позиционно-независим</b> (массивы хранят сырые указатели на
+	/// неподвижные блоки), в снапшот мира не идёт.
 	/// </summary>
 	public struct InstanceCache
 	{
 		private UnsafeArray<CacheLink> _cells;     // рабочие ячейки (state + valueOffset / link)
 		private UnsafeArray<byte> _values;         // значения ячеек (raw bytes)
-		private UnsafeArray<CacheLink> _template;  // шаблон (копия из блоба): источник Reset, забейканные valueOffset
 
 		public readonly bool IsValid => _cells.IsCreated;
 		public readonly int CellCount => _cells.Length;
 		public readonly int ValuesSize => _values.Length;
 
 		/// <summary>
-		/// Создаёт Cache: рабочий массив + шаблон (копия <paramref name="template"/> из блоба) + байтовый блок значений
-		/// размера <paramref name="valuesSize"/>. Рабочий массив инициализируется копией шаблона. Пустой
-		/// (<paramref name="cellCount"/> &lt;= 0) → <c>default</c> (нода/инстанс без Cache-портов).
+		/// Создаёт Cache: рабочий массив (инициализируется копией <paramref name="template"/> из блоба) + байтовый блок
+		/// значений размера <paramref name="valuesSize"/>. Шаблон не копируется в инстанс — он остаётся в статике (для
+		/// <see cref="Reset"/> передаётся снова). Пустой (<paramref name="cellCount"/> &lt;= 0) → <c>default</c>
+		/// (нода/инстанс без Cache-портов).
 		/// </summary>
 		public static InstanceCache Create(Id<MemoryManager> memoryId, int cellCount, int valuesSize, SafePtr<CacheLink> template)
 		{
@@ -38,10 +39,8 @@ namespace Sapientia.LogicGraph
 			{
 				_cells = new UnsafeArray<CacheLink>(memoryId, cellCount),
 				_values = valuesSize > 0 ? new UnsafeArray<byte>(memoryId, valuesSize) : default,
-				_template = new UnsafeArray<CacheLink>(memoryId, cellCount),
 			};
-			MemoryExt.MemCopy(template, cache._template.ptr, cellCount); // блоб-шаблон → собственная копия
-			cache._cells.CopyFrom(cache._template);                     // шаблон → рабочий массив (стартовое состояние)
+			MemoryExt.MemCopy(template, cache._cells.ptr, cellCount); // блоб-шаблон → стартовое состояние рабочего массива
 			return cache;
 		}
 
@@ -57,12 +56,13 @@ namespace Sapientia.LogicGraph
 			return ref ((SafePtr)_values.ptr + valueOffset.byteOffset).Cast<T>().Value();
 		}
 
-		/// <summary>Сброс кеша перед run'ом: <b>копия шаблона</b> в рабочий массив (state → Uninitialized, valueOffset
+		/// <summary>Сброс кеша перед run'ом: <b>копия шаблона</b> (<paramref name="template"/> из статики,
+		/// <c>CompiledBlueprintHeader.GetCacheCellsTemplate()</c>) в рабочий массив (state → Uninitialized, valueOffset
 		/// восстановлены из шаблона). No-op для пустого Cache.</summary>
-		public void Reset()
+		public void Reset(SafePtr<CacheLink> template)
 		{
 			if (_cells.IsCreated)
-				_cells.CopyFrom(_template);
+				MemoryExt.MemCopy(template, _cells.ptr, _cells.Length);
 		}
 
 		/// <summary>
@@ -136,7 +136,6 @@ namespace Sapientia.LogicGraph
 		{
 			_cells.Dispose();
 			_values.Dispose();
-			_template.Dispose();
 		}
 	}
 }

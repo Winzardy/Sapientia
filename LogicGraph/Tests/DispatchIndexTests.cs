@@ -31,8 +31,8 @@ namespace Sapientia.LogicGraph.Tests
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
 
-				int idNode0 = compiled.GetNodeTypeId(0);
-				int idNode1 = compiled.GetNodeTypeId(1);
+				int idNode0 = compiled.GetNode(0).typeId;
+				int idNode1 = compiled.GetNode(1).typeId;
 				Assert.AreEqual(7, idNode0, "Компилятор должен пробросить NodeTypeId ноды 0 в NodeHeader.typeId.");
 				Assert.AreEqual(3, idNode1, "Компилятор должен пробросить NodeTypeId ноды 1 в NodeHeader.typeId.");
 			}
@@ -53,7 +53,7 @@ namespace Sapientia.LogicGraph.Tests
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
 
-				int id = compiled.GetNodeTypeId(0);
+				int id = compiled.GetNode(0).typeId;
 				Assert.AreEqual(0, id, "Не заданный NodeTypeId — ordinal 0.");
 			}
 			finally

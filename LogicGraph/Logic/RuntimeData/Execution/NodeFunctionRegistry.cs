@@ -157,6 +157,10 @@ namespace Sapientia.LogicGraph
 			return _managed[ordinal];
 		}
 
+		/// <summary>Managed-таблица делегатов целиком — передаётся в managed-диспетчер (<see cref="NodeInvoker.InvokeManaged"/>)
+		/// как аргумент, симметрично <see cref="BurstTable"/>.</summary>
+		public readonly ExecuteFn[] ManagedTable => _managed;
+
 #if UNITY_5_3_OR_NEWER
 		/// <summary>Адаптер ноды Burst-путём (нативный fn-pointer) по ordinal'у <c>TypeId&lt;ILogicNode&gt;</c>.</summary>
 		public readonly FunctionPointer<ExecuteFn> GetBurst(int ordinal)
@@ -172,7 +176,10 @@ namespace Sapientia.LogicGraph
 		/// <b>Выбор бэкенда</b> (M6-D, развилка 5) для ноды с per-node <paramref name="runtimeType"/> (из
 		/// <see cref="NodeHeader.runtimeType"/>). Под Unity: managed, если <see cref="ForceManaged"/> или
 		/// нода <see cref="RuntimeType.Managed"/>; иначе Burst. В чистом .NET — <b>всегда</b> managed
-		/// (Burst-таблица вырезана <c>#if</c>). Чередование Burst↔Managed pass (wave) — M7.
+		/// (Burst-таблица вырезана <c>#if</c>). Решение принимает managed-glue (<see cref="NodeInvoker.Invoke"/>)
+		/// один раз на ноду и зовёт нужную таблицу-специфичную точку (<see cref="NodeInvoker.InvokeBurst"/>/
+		/// <see cref="NodeInvoker.InvokeManaged"/>) — внутри самих точек развилки уже нет. Чередование Burst↔Managed
+		/// pass (wave) — M7.
 		/// </summary>
 		public readonly bool UseManaged(RuntimeType runtimeType)
 		{
@@ -181,27 +188,6 @@ namespace Sapientia.LogicGraph
 #else
 			return true;
 #endif
-		}
-
-		/// <summary>
-		/// Исполняет <b>одну</b> ноду <paramref name="ordinal"/> по выбранной (<see cref="UseManaged"/>) таблице над
-		/// <paramref name="ctx"/>: managed-делегатом (реально, кросс-среда) либо Burst-fn-pointer'ом (под Unity).
-		/// Прогон порядка <c>ExecutionGraph.Drain</c> через scope — M6-F.
-		/// </summary>
-		public readonly void Invoke(int ordinal, RuntimeType runtimeType, ref NodeContext ctx)
-		{
-#if UNITY_5_3_OR_NEWER
-			if (!UseManaged(runtimeType))
-			{
-				// Guard (DEBUG): Burst-fn обязан быть скомпилирован. Default ⇒ рассинхрон runtimeType блоба и реестра (Managed-нода без Burst).
-				E.ASSERT(_burst[ordinal].IsCreated, "[NodeFunctionRegistry] Burst-fn не скомпилирован — рассинхрон NodeHeader.runtimeType и реестра.");
-				_burst[ordinal].Invoke(ref ctx);
-				return;
-			}
-#endif
-			// Guard (DEBUG): managed-делегат обязан быть населён на managed-пути (форс/Managed-нода/.NET).
-			E.ASSERT(_managed[ordinal] != null, "[NodeFunctionRegistry] managed-делегат отсутствует на managed-пути (buildManaged:false без форса?).");
-			_managed[ordinal].Invoke(ref ctx);
 		}
 
 		/// <summary>Освобождает off-allocator Burst-таблицу. Вызывает владелец. Идемпотентно.</summary>

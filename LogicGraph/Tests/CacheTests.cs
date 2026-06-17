@@ -24,15 +24,22 @@ namespace Sapientia.LogicGraph.Tests
 			};
 		}
 
-		private static InstanceCache Create(int cellCount)
+		/// <summary>Создаёт кеш и отдаёт <paramref name="template"/> наружу — вызывающий владеет им (нужен для <see cref="InstanceCache.Reset"/>,
+		/// т.к. инстанс шаблон не хранит) и сам диспозит.</summary>
+		private static InstanceCache Create(int cellCount, out UnsafeArray<CacheLink> template)
 		{
 			// Шаблон ячеек: valueOffset[i] = i*sizeof(long) (как разложил бы компилятор), state = Uninitialized.
-			var template = new UnsafeArray<CacheLink>(default, cellCount);
+			template = new UnsafeArray<CacheLink>(default, cellCount);
 			for (var i = 0; i < cellCount; i++)
 				template[i].valueOffset = new PtrOffset(i * sizeof(long));
 
-			var cache = InstanceCache.Create(default, cellCount, cellCount * sizeof(long), template.ptr);
-			template.Dispose(); // InstanceCache держит собственную копию шаблона
+			return InstanceCache.Create(default, cellCount, cellCount * sizeof(long), template.ptr);
+		}
+
+		private static InstanceCache Create(int cellCount)
+		{
+			var cache = Create(cellCount, out var template);
+			template.Dispose(); // шаблон нужен только при Create (копируется в рабочий массив) и Reset; этот путь без Reset
 			return cache;
 		}
 
@@ -74,19 +81,20 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Cache_ResetClears()
 		{
-			var cache = Create(1);
+			var cache = Create(1, out var template);
 			try
 			{
 				var h = H(0);
 				cache.Write(h, 7L);
 				Assert.IsTrue(cache.Read(h, out _));
 
-				cache.Reset();
+				cache.Reset(template.ptr);
 				Assert.IsFalse(cache.Read(h, out _), "После Reset ячейка снова Uninitialized.");
 			}
 			finally
 			{
 				cache.Dispose();
+				template.Dispose();
 			}
 		}
 
@@ -112,14 +120,14 @@ namespace Sapientia.LogicGraph.Tests
 			// cellCount <= 0 ⇒ пустой Cache (нода без Cache-портов): невалиден, Reset — no-op (без краша).
 			var cache = InstanceCache.Create(default, 0, 0, default);
 			Assert.IsFalse(cache.IsValid, "Пустой Cache невалиден.");
-			cache.Reset();   // не должно бросать
+			cache.Reset(default);   // не должно бросать
 			cache.Dispose(); // идемпотентно
 		}
 
 		[Test]
 		public void Cache_NeighborIsolationAndResetAll()
 		{
-			var cache = Create(2);
+			var cache = Create(2, out var template);
 			try
 			{
 				cache.Write(H(0), 1L);
@@ -129,13 +137,14 @@ namespace Sapientia.LogicGraph.Tests
 				Assert.AreEqual(1L, a, "Соседняя ячейка не должна повлиять.");
 				Assert.AreEqual(2L, b);
 
-				cache.Reset();
+				cache.Reset(template.ptr);
 				Assert.IsFalse(cache.Read(H(0), out _), "Reset чистит все ячейки.");
 				Assert.IsFalse(cache.Read(H(1), out _));
 			}
 			finally
 			{
 				cache.Dispose();
+				template.Dispose();
 			}
 		}
 

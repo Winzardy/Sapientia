@@ -70,11 +70,17 @@ namespace Sapientia.LogicGraph
 			return blockSizes[region];
 		}
 
-		/// <summary>Индекс метода обработки ноды (Static.Data) — ordinal logic-тела в контексте
-		/// <see cref="ILogicNode"/>; адресует function-table диспатча (M6-C).</summary>
-		public TypeId<ILogicNode> GetNodeTypeId(Id<NodeHeader> nodeId)
+		/// <summary>Заголовок ноды (<see cref="NodeHeader"/>) по id — единая точка доступа: читай нужные поля
+		/// (<see cref="NodeHeader.typeId"/> — ordinal диспатча M6-C, <see cref="NodeHeader.runtimeType"/> — бэкенд M6-D)
+		/// через него, а не дёргай массив на каждое поле. <c>readonly ref</c> — без копии и без мутации.</summary>
+		/// <remarks>Поля-значения (typeId/runtimeType/persistence/state) читать прямо. Self-relative
+		/// <see cref="NodeHeader.staticData"/>/<see cref="NodeHeader.inOut"/> резолвить через
+		/// <see cref="GetStaticNodeSlice"/>/<see cref="GetNodeInOut"/> (на копии readonly-ref-поля адрес сломается).
+		/// Метод <b>не</b> <c>readonly</c>: внутри self-relative <see cref="nodes"/> (<see cref="BumpArray{T}"/>) — на
+		/// defensive-копии заголовка адрес бы сломался (как у прочих аксессоров блоба).</remarks>
+		public ref readonly NodeHeader GetNode(Id<NodeHeader> nodeId)
 		{
-			return nodes.Get(nodeId).typeId;
+			return ref nodes.Get(nodeId);
 		}
 
 		/// <summary>Офсет слайса ноды в блоке InstancePersistence (Static — <see cref="GetStaticNodeSlice"/>;

@@ -1,6 +1,7 @@
 using System;
 using Sapientia.Collections;
 using Sapientia.Data;
+using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
 using Submodules.Sapientia.Memory;
 
@@ -31,11 +32,21 @@ namespace Sapientia.LogicGraph
 		private UnsafeList<InstanceCache> _cache;              // транзиентный кеш по id (ОТДЕЛЬНО от стейта)
 		private UnsafeList<InstancePersistence> _memory;       // стейт (InstancePersistence) по id
 		private ContextRegistry<INodeContext> _contexts;       // ambient-context на scope (тип контекста → указатель)
+		// Function-table нод для диспатча (M6-F): SHARED-копия, scope НЕ владеет и НЕ диспозит её (владелец — тот,
+		// кто строил Build/Create; копия по значению разделяет нижележащие таблицы по указателю). default ⇒ диспатч
+		// недоступен (scope без исполнения — как в фазах до M6-F).
+		private NodeFunctionRegistry _registry;
 
 		public readonly bool IsCreated => _instances.IsCreated;
 		public readonly int InstanceCount => _instances.Count;
 
-		public static ExecutionScope Create(Id<MemoryManager> memoryId = default, int instanceCapacity = 8)
+		/// <summary>Function-table нод для диспатча (M6-F). SHARED-копия: scope её <b>не диспозит</b> (владелец строил и
+		/// диспозит сам). <c>default</c> (не передан в <see cref="Create"/>) ⇒ диспатч недоступен.</summary>
+		public readonly NodeFunctionRegistry Registry => _registry;
+
+		/// <param name="registry">Function-table нод (M6-F) — <b>shared-копия</b>, scope её не диспозит. Опц.
+		/// (последним, чтобы не ломать call-site'ы без диспатча); <c>default</c> ⇒ scope без исполнения.</param>
+		public static ExecutionScope Create(Id<MemoryManager> memoryId = default, int instanceCapacity = 8, NodeFunctionRegistry registry = default)
 		{
 			var cap = instanceCapacity > 0 ? instanceCapacity : 1;
 			return new ExecutionScope
@@ -45,6 +56,7 @@ namespace Sapientia.LogicGraph
 				_cache = new UnsafeList<InstanceCache>(memoryId, cap),
 				_memory = new UnsafeList<InstancePersistence>(memoryId, cap),
 				_contexts = ContextRegistry<INodeContext>.Create(memoryId),
+				_registry = registry,
 			};
 		}
 
@@ -93,17 +105,38 @@ namespace Sapientia.LogicGraph
 			return ref _memory[id.id];
 		}
 
-		/// <summary>Сброс кеша инстанса перед run'ом (все ячейки → <see cref="CacheState.Uninitialized"/>).</summary>
-		public void ResetInstanceCache(BlueprintInstanceId id)
+		/// <summary>Указатель на <see cref="InstanceCache"/> инстанса для сборки <see cref="NodeContext"/> (диспатч, M6-F).
+		/// Адрес элемента off-allocator store'а — валиден, пока store не ресайзится (во время прогона инстансы не
+		/// добавляются); собирать <c>NodeContext</c> внутри прогона, не кешировать между run'ами.</summary>
+		public SafePtr<InstanceCache> GetInstanceCachePtr(BlueprintInstanceId id)
 		{
-			GetInstanceCache(id).Reset();
+			E.ASSERT(_instances.Has(id), "[ExecutionScope] GetInstanceCachePtr на мёртвом/stale хендле.");
+			return _cache[id.id].AsSafePtr();
 		}
 
-		/// <summary>Сброс кеша у всех живых инстансов домена (старт run'а). Пустые/невалидные слоты — no-op.</summary>
-		public void ResetAllCache()
+		/// <summary>Указатель на <see cref="InstancePersistence"/> инстанса для сборки <see cref="NodeContext"/> (диспатч, M6-F).
+		/// См. оговорку о стабильности у <see cref="GetInstanceCachePtr"/>.</summary>
+		public SafePtr<InstancePersistence> GetInstancePersistencePtr(BlueprintInstanceId id)
+		{
+			E.ASSERT(_instances.Has(id), "[ExecutionScope] GetInstancePersistencePtr на мёртвом/stale хендле.");
+			return _memory[id.id].AsSafePtr();
+		}
+
+		/// <summary>Сброс кеша инстанса перед run'ом (все ячейки → <see cref="CacheState.Uninitialized"/>). Шаблон ячеек
+		/// (<paramref name="template"/>) берётся вызывающим из статики — <c>CompiledBlueprintHeader.GetCacheCellsTemplate()</c>
+		/// (в кеше инстанса не хранится).</summary>
+		public void ResetInstanceCache(BlueprintInstanceId id, SafePtr<CacheLink> template)
+		{
+			GetInstanceCache(id).Reset(template);
+		}
+
+		/// <summary>Сброс кеша у всех живых инстансов домена (старт run'а). Пустые/невалидные слоты — no-op. Один
+		/// <paramref name="template"/> на всех корректен для scope одного блюпринта (см. <see cref="NodeInvoker.Run"/>):
+		/// все инстансы делят общий <c>CompiledBlueprintHeader</c>, значит и шаблон.</summary>
+		public void ResetAllCache(SafePtr<CacheLink> template)
 		{
 			for (var i = 0; i < _cache.count; i++)
-				_cache[i].Reset();
+				_cache[i].Reset(template);
 		}
 
 		// ─────────────────────────── Ambient context (на scope) ───────────────────────────
@@ -157,6 +190,7 @@ namespace Sapientia.LogicGraph
 			_memory.Dispose();
 			_instances.Dispose();
 			_contexts.Dispose();
+			// _registry НЕ диспозим — shared-копия (владелец диспозит сам). this = default лишь обнуляет поле.
 			this = default;
 		}
 	}

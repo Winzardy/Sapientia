@@ -10,7 +10,7 @@ namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
 	/// M6-D: <b>выбор бэкенда</b> (<see cref="NodeFunctionRegistry.UseManaged"/> по <c>NodeHeader.runtimeType</c> +
-	/// глобальный managed-форс) и <b>реальное исполнение managed-путём</b> (<see cref="NodeFunctionRegistry.Invoke"/>,
+	/// глобальный managed-форс) и <b>реальное исполнение managed-путём</b> (<see cref="NodeInvoker.InvokeManaged"/>,
 	/// без Burst/IndexedTypes). Managed-путь исполняется по-настоящему даже в EditMode (plain managed-семантика) ⇒
 	/// selection/исполнение/детерминизм покрыты реально; фактический Burst-прогон и reflection-<c>Build</c> требуют
 	/// инициализированного <see cref="IndexedTypes"/> ⇒ под <see cref="Assert.Ignore(string)"/>. «Детерминизм
@@ -38,6 +38,21 @@ namespace Sapientia.LogicGraph.Tests
 			var cache = InstanceCache.Create(default, cellCount, cellCount * sizeof(long), template.ptr);
 			template.Dispose();
 			return cache;
+		}
+
+		/// <summary>Диспатч одной ноды как в <see cref="NodeInvoker.Invoke"/> (выбор таблицы по
+		/// <see cref="NodeFunctionRegistry.UseManaged"/>), но над вручную собранным <paramref name="ctx"/> (без
+		/// <see cref="ExecutionScope"/>) — изолированно проверяет selection + исполнение нужной таблицей.</summary>
+		private static void Dispatch(NodeFunctionRegistry registry, int ordinal, RuntimeType runtimeType, ref NodeContext ctx)
+		{
+#if UNITY_5_3_OR_NEWER
+			if (!registry.UseManaged(runtimeType))
+			{
+				NodeInvoker.InvokeBurst(registry.BurstTable, ordinal, ref ctx);
+				return;
+			}
+#endif
+			NodeInvoker.InvokeManaged(registry.ManagedTable, ordinal, ref ctx);
 		}
 
 		/// <summary>Unmanaged-тело (дефолт <see cref="RuntimeType.Unmanaged"/>): In + addend → Out.</summary>
@@ -168,8 +183,8 @@ namespace Sapientia.LogicGraph.Tests
 				cacheArr[0].Write(H(0), 5L);
 
 				var ctx = new NodeContext { compiled = compiledPtr, cache = cacheArr.ptr, nodeId = 0 };
-				// Managed runtimeType ⇒ Invoke выбирает managed-таблицу и реально исполняет тело.
-				registry.Invoke(0, RuntimeType.Managed, ref ctx);
+				// Managed runtimeType ⇒ выбор падает на managed-таблицу и реально исполняет тело.
+				Dispatch(registry, 0, RuntimeType.Managed, ref ctx);
 
 				Assert.IsTrue(cacheArr[0].Read(H(1), out var result), "Out посчитан managed-путём.");
 				Assert.AreEqual(105L, result, "5 + 100 через выбранную managed-таблицу.");
@@ -205,7 +220,7 @@ namespace Sapientia.LogicGraph.Tests
 				cacheArr[0].Write(H(0), 5L);
 
 				var ctx = new NodeContext { compiled = compiledPtr, cache = cacheArr.ptr, nodeId = 0 };
-				registry.Invoke(0, RuntimeType.Unmanaged, ref ctx);
+				Dispatch(registry, 0, RuntimeType.Unmanaged, ref ctx);
 
 				Assert.IsTrue(cacheArr[0].Read(H(1), out var result), "Форс направил Unmanaged-ноду в managed.");
 				Assert.AreEqual(105L, result);
@@ -241,10 +256,10 @@ namespace Sapientia.LogicGraph.Tests
 				cacheA[0].Write(H(0), 42L);
 				var ctxA = new NodeContext { compiled = compiledPtr, cache = cacheA.ptr, nodeId = 0 };
 
-				registry.Invoke(0, RuntimeType.Unmanaged, ref ctxA);
+				Dispatch(registry, 0, RuntimeType.Unmanaged, ref ctxA);
 				cacheA[0].Read(H(1), out var first);
 				// Повторный прогон того же инстанса (ячейка перезаписывается) → тот же результат.
-				registry.Invoke(0, RuntimeType.Unmanaged, ref ctxA);
+				Dispatch(registry, 0, RuntimeType.Unmanaged, ref ctxA);
 				cacheA[0].Read(H(1), out var second);
 				Assert.AreEqual(first, second, "Повтор Invoke детерминирован (побитово).");
 
@@ -252,7 +267,7 @@ namespace Sapientia.LogicGraph.Tests
 				cacheB[0] = CreateCache(2);
 				cacheB[0].Write(H(0), 42L);
 				var ctxB = new NodeContext { compiled = compiledPtr, cache = cacheB.ptr, nodeId = 0 };
-				registry.Invoke(0, RuntimeType.Unmanaged, ref ctxB);
+				Dispatch(registry, 0, RuntimeType.Unmanaged, ref ctxB);
 				cacheB[0].Read(H(1), out var other);
 				Assert.AreEqual(first, other, "Два инстанса с равным входом дают равный результат.");
 			}
