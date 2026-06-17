@@ -1,4 +1,4 @@
-#if DebugLog
+#if DEV
 #define ENABLE_IAP_EMPTY_CHECK
 #endif
 

@@ -110,7 +110,7 @@ namespace Sapientia.Pooling
 		{
 			var index = _indexMap[obj];
 
-#if DebugLog
+#if DEV
 			if (IsFree(index))
 				throw new InvalidOperationException($"Object is not in use: {obj}");
 #endif

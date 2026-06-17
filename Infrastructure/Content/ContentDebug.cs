@@ -67,7 +67,7 @@ namespace Content
 #endif
 
 				public static bool resolve =
-#if DebugLog
+#if DEV
 					true;
 #else
 					false;

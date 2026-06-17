@@ -1,4 +1,4 @@
-#if DebugLog
+#if DEV
 #define ENABLE_AD_EMPTY_CHECK
 #endif
 using System;

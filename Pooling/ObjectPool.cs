@@ -83,7 +83,7 @@ namespace Sapientia.Pooling
 
 		public void Release(T obj)
 		{
-#if DebugLog
+#if DEV
 			if (ReferenceEquals(_single, obj) || _queue.ReferenceContains(obj))
 				throw new ArgumentException("Already in pool", nameof(obj));
 #endif

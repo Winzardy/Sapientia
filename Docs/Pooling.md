@@ -111,9 +111,9 @@ Or the manual `Release` when `using` is not applicable.
 
 The type doc comment is explicit: "Non thread-safe version" (`OrderedPool.cs:12`). The usage pattern for `OrderedPool<T>` is single-threaded (e.g., per-scene or per-system pools where access is from one thread at a time).
 
-### `DebugLog` guard for double-return detection
+### `DEV` guard for double-return detection
 
-Both `ObjectPool<T>.Release` and `OrderedPool<T>.Release` have `#if DebugLog` guards (`ObjectPool.cs:81`, `OrderedPool.cs:113`) that throw exceptions on double-return. These guards are **not** `#if DEBUG` — they use a custom `DebugLog` symbol. Unless that symbol is defined in the build configuration, **double-return is silently ignored in all builds** (including development builds). Verify whether `DebugLog` is ever enabled in CI or editor configurations.
+Both `ObjectPool<T>.Release` and `OrderedPool<T>.Release` have `#if DEV` guards (`ObjectPool.cs:81`, `OrderedPool.cs:113`) that throw exceptions on double-return. These guards are **not** `#if DEBUG` — they use a custom `DEV` symbol. Unless that symbol is defined in the build configuration, **double-return is silently ignored in all builds** (including development builds). Verify whether `DEV` is ever enabled in CI or editor configurations.
 
 ### Capacity is fixed at construction for `ObjectPool<T>`
 
@@ -135,8 +135,8 @@ Both `ObjectPool<T>.Release` and `OrderedPool<T>.Release` have `#if DebugLog` gu
 
 - `Pooling/ObjectPool.cs:10-11` — **TODO** (Russian): "Dynamic capacity — for example: a scene requires many sounds, the next one does not; it would be worth thinking about changing the pool capacity by context." Capacity is currently fixed at construction; no mechanism exists to shrink or grow the pool post-construction.
 - `Pooling/Static/Pool.cs:5` — **TODO** (Russian): "Tried to rename to `OnRelease`, didn't work out, need to retry later..." — refers to the `IPoolable.Release()` method name. The method is named `Release` where the policy's callback is named `OnRelease`; the asymmetry is an acknowledged inconsistency, not yet resolved.
-- **`DebugLog` symbol is undefined** in the repository as verified (no `csc.rsp` entry, no project-level `#define DebugLog`) — the double-return checks in `ObjectPool` and `OrderedPool` are effectively dead code in all current build configurations. This is a risk: double-returns silently succeed and corrupt pool state.
+- **`DEV` symbol is undefined** in the repository as verified (no `csc.rsp` entry, no project-level `#define DEV`) — the double-return checks in `ObjectPool` and `OrderedPool` are effectively dead code in all current build configurations. This is a risk: double-returns silently succeed and corrupt pool state.
 - **`OrderedPool<T>` `_usageMask` → `_usageArray` migration** (`OrderedPool.cs:80-87`): when `_count >= 64`, the pool creates a new `bool[]` and copies the bitmask — but the bitmask is then abandoned (not zeroed; it is simply ignored afterwards). Any future code that reads `_usageMask` after the array migration would get stale data. Currently only `IsFree` branches on `_usageArray != null` first, so this is safe today but fragile.
 - **`ArrayPool<T>` calls `Initialize(minimumLength)` on every `Get`**, not just on fresh creates (`ArrayPool.cs:11`). If `Initialize` is expensive or has side-effects beyond size-setting, this is a hidden per-call cost. The implementation of `Array<T>.Initialize` is not read here — `unknown` cost.
 - **`ConcurrentDictionaryPool<K,V>` is in namespace `Sapientia.Pooling.Concurrent`** (`ConcurrentDictionaryPool.cs:4`) while all other pools are in `Sapientia.Pooling`. This namespace difference is a minor discoverability gotcha.
-- **No pooled-object ownership protocol.** There is no `DisposeSentinel`-style guard to detect use-after-return. Once `Release` is called, the caller's reference is still valid C# — any subsequent read or write on the returned object corrupts the next borrower's state silently. The `#if DebugLog` double-return check is the only mitigation, and it is inactive (see above).
+- **No pooled-object ownership protocol.** There is no `DisposeSentinel`-style guard to detect use-after-return. Once `Release` is called, the caller's reference is still valid C# — any subsequent read or write on the returned object corrupts the next borrower's state silently. The `#if DEV` double-return check is the only mitigation, and it is inactive (see above).

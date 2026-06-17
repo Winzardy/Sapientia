@@ -1,4 +1,4 @@
-﻿#if DebugLog
+﻿#if DEV
 #define ENABLE_CONTENT_CONTAINS_CHECK
 #endif
 
