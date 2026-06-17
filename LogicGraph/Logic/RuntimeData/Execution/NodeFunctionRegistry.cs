@@ -23,8 +23,9 @@ namespace Sapientia.LogicGraph
 	/// (managed-массив Burst читать не может; <see cref="FunctionPointer{T}"/> — <c>readonly struct</c> над <c>IntPtr</c>,
 	/// unmanaged). Managed-таблица — <see cref="_managed"/> (<see cref="ExecuteFn"/>-делегаты, managed-массив): путь
 	/// .NET/fallback, <b>Burst её не трогает</b>. Население managed-таблицы — опционально (<see cref="Build"/>
-	/// <c>buildManaged</c>): под Unity её можно пропустить, не дублируя unmanaged-ноды, уже покрытые Burst. <b>Выбор</b>
-	/// таблицы по <c>NodeHeader.runtimeType</c> и прогон через диспетчер — M6-D/M6-F.</para>
+	/// <c>buildManaged</c>): под Unity её можно пропустить для <b>Unmanaged</b>-нод (их покрывает Burst); для
+	/// <b>Managed</b>-нод managed-делегат строится всегда (Burst-skip — единственный путь). <b>Выбор</b> таблицы по
+	/// <c>NodeHeader.runtimeType</c> — <see cref="UseManaged"/>/<see cref="Invoke"/> (M6-D); прогон <c>Drain</c> — M6-F.</para>
 	/// <para><b>Индекс — плотный ordinal</b> <c>TypeId&lt;ILogicNode&gt;</c> (== <c>NodeHeader.typeId</c>, бейканный в блоб
 	/// на компиляции). Источник типов — уже построенные генератором <c>TypeIndexer</c> <b>дети контекста</b> <c>ILogicNode</c>
 	/// (<see cref="IndexedTypes.GetContextChildren"/>, упорядочены по этому ordinal'у) ⇒ совпадение индекса с блобом
@@ -39,33 +40,49 @@ namespace Sapientia.LogicGraph
 	/// </remarks>
 	public struct NodeFunctionRegistry : IDisposable
 	{
-		// Managed-таблица (universal-путь / .NET): индекс = TypeId<ILogicNode> ordinal. Может быть пустой под Unity (buildManaged:false).
+		// Managed-таблица (universal-путь / .NET): индекс = TypeId<ILogicNode> ordinal. Под Unity при buildManaged:false
+		// заполнены только Managed-ноды (у Unmanaged Burst покрывает путь), слоты прочих — null.
 		private ExecuteFn[] _managed;
 #if UNITY_5_3_OR_NEWER
 		// Burst-таблица (нативные fn-pointer'ы): off-allocator UnsafeArray ⇒ передаётся/читается из Burst. Индекс = ordinal.
 		private UnsafeArray<FunctionPointer<ExecuteFn>> _burst;
 #endif
+		// Глобальный managed-форс (M6-D): true ⇒ Invoke всегда идёт managed-путём независимо от per-node runtimeType
+		// (требует населённой managed-таблицы). Свойство инстанса — шарится копией вместе с таблицами.
+		private bool _forceManaged;
 		private bool _isCreated;
 
 		public readonly bool IsCreated => _isCreated;
+
+		/// <summary>Глобальный managed-форс: при <c>true</c> <see cref="Invoke"/>/<see cref="UseManaged"/> всегда выбирают
+		/// managed-путь (для .NET/сервера и A/B-проверки детерминизма). Ставится в <see cref="Build"/>/<see cref="Create"/>.</summary>
+		public readonly bool ForceManaged => _forceManaged;
 
 		/// <summary>
 		/// Строит таблицу по плотным детям <see cref="ILogicNode"/> из <see cref="IndexedTypes"/> (интерим до кодогена
 		/// M10). Вызывается <b>один раз</b> владельцем; результат шарится копией. Если <see cref="IndexedTypes"/> не
 		/// инициализирован (нет детей — напр. EditMode) → пустая (но созданная) таблица.
 		/// </summary>
-		/// <param name="buildManaged">Заполнять ли managed-таблицу. Под Unity <c>false</c> пропускает её
-		/// (Burst покрывает все unmanaged-ноды). В чистом .NET managed — единственный путь, флаг соблюдается честно
-		/// (<c>false</c> ⇒ реестр пуст).</param>
-		public static NodeFunctionRegistry Build(bool buildManaged = true)
+		/// <param name="buildManaged">Заполнять ли managed-делегат для <b>Unmanaged</b>-нод. Под Unity <c>false</c>
+		/// пропускает их (Burst покрывает unmanaged-ноды). Для <b>Managed</b>-нод managed-делегат строится
+		/// <b>всегда</b> (единственный путь). В чистом .NET managed — единственный путь у всех; флаг соблюдается честно
+		/// (<c>false</c> ⇒ заполнены только Managed-ноды).</param>
+		/// <param name="forceManaged">Глобальный managed-форс (см. <see cref="ForceManaged"/>). При <c>true</c>
+		/// managed-делегаты нужны для всех нод ⇒ <c>buildManaged</c> де-факто принудительно <c>true</c>.</param>
+		public static NodeFunctionRegistry Build(bool buildManaged = true, bool forceManaged = false)
 		{
+			// При форсе managed-таблица нужна целиком (Invoke всегда идёт managed) ⇒ заполняем managed для всех.
+			buildManaged |= forceManaged;
+
 			// Дети контекста ILogicNode — TypeId[], упорядоченные по плотному ordinal'у TypeId<ILogicNode>.
 			var children = IndexedTypes.GetContextChildren(typeof(ILogicNode));
 			var count = children.Length;
 
 			var registry = new NodeFunctionRegistry
 			{
-				_managed = (buildManaged && count > 0) ? new ExecuteFn[count] : Array.Empty<ExecuteFn>(),
+				// Аллоцируем при count>0 ВСЕГДА: у Managed-нод должен быть managed-слот даже при buildManaged:false.
+				_managed = (count > 0) ? new ExecuteFn[count] : Array.Empty<ExecuteFn>(),
+				_forceManaged = forceManaged,
 				_isCreated = true,
 			};
 #if UNITY_5_3_OR_NEWER
@@ -90,11 +107,16 @@ namespace Sapientia.LogicGraph
 			for (var ordinal = 0; ordinal < count; ordinal++)
 			{
 				var type = IndexedTypes.GetType(children[ordinal]);
+				// Capability logic-тела (M6-D): managed-тело нельзя Burst-компилировать ⇒ Burst-skip. Boxing default-инстанса
+				// — на сборке (раз/тип, managed-путь), не на горячем пути. Дефолт DIM = Unmanaged.
+				var isManaged = ((ILogicNode)Activator.CreateInstance(type)).RuntimeType == RuntimeType.Managed;
 #if UNITY_5_3_OR_NEWER
-				// Burst компилим для всех (в C все типы unmanaged; skip для RuntimeType.Managed — M6-D).
-				registry._burst[ordinal] = (FunctionPointer<ExecuteFn>)compileMethod.MakeGenericMethod(type).Invoke(null, null);
+				// Burst компилим только для Unmanaged: CompileFunctionPointer на managed-теле упал бы. Managed → _burst[ordinal]=default.
+				if (!isManaged)
+					registry._burst[ordinal] = (FunctionPointer<ExecuteFn>)compileMethod.MakeGenericMethod(type).Invoke(null, null);
 #endif
-				if (buildManaged)
+				// Managed-делегат: для Managed-нод — всегда (единственный путь), для Unmanaged — по флагу buildManaged.
+				if (buildManaged || isManaged)
 					registry._managed[ordinal] = (ExecuteFn)getManagedMethod.MakeGenericMethod(type).Invoke(null, null);
 			}
 
@@ -109,11 +131,13 @@ namespace Sapientia.LogicGraph
 #if UNITY_5_3_OR_NEWER
 			, FunctionPointer<ExecuteFn>[] burst = null
 #endif
+			, bool forceManaged = false
 		)
 		{
 			var registry = new NodeFunctionRegistry
 			{
 				_managed = managed ?? Array.Empty<ExecuteFn>(),
+				_forceManaged = forceManaged,
 				_isCreated = true,
 			};
 #if UNITY_5_3_OR_NEWER
@@ -143,6 +167,42 @@ namespace Sapientia.LogicGraph
 		/// <summary>Off-allocator Burst-таблица целиком — передаётся в Burst-диспетчер (M6-F) как аргумент/в контекст.</summary>
 		public readonly UnsafeArray<FunctionPointer<ExecuteFn>> BurstTable => _burst;
 #endif
+
+		/// <summary>
+		/// <b>Выбор бэкенда</b> (M6-D, развилка 5) для ноды с per-node <paramref name="runtimeType"/> (из
+		/// <see cref="NodeHeader.runtimeType"/>). Под Unity: managed, если <see cref="ForceManaged"/> или
+		/// нода <see cref="RuntimeType.Managed"/>; иначе Burst. В чистом .NET — <b>всегда</b> managed
+		/// (Burst-таблица вырезана <c>#if</c>). Чередование Burst↔Managed pass (wave) — M7.
+		/// </summary>
+		public readonly bool UseManaged(RuntimeType runtimeType)
+		{
+#if UNITY_5_3_OR_NEWER
+			return _forceManaged || runtimeType == RuntimeType.Managed;
+#else
+			return true;
+#endif
+		}
+
+		/// <summary>
+		/// Исполняет <b>одну</b> ноду <paramref name="ordinal"/> по выбранной (<see cref="UseManaged"/>) таблице над
+		/// <paramref name="ctx"/>: managed-делегатом (реально, кросс-среда) либо Burst-fn-pointer'ом (под Unity).
+		/// Прогон порядка <c>ExecutionGraph.Drain</c> через scope — M6-F.
+		/// </summary>
+		public readonly void Invoke(int ordinal, RuntimeType runtimeType, ref NodeContext ctx)
+		{
+#if UNITY_5_3_OR_NEWER
+			if (!UseManaged(runtimeType))
+			{
+				// Guard (DEBUG): Burst-fn обязан быть скомпилирован. Default ⇒ рассинхрон runtimeType блоба и реестра (Managed-нода без Burst).
+				E.ASSERT(_burst[ordinal].IsCreated, "[NodeFunctionRegistry] Burst-fn не скомпилирован — рассинхрон NodeHeader.runtimeType и реестра.");
+				_burst[ordinal].Invoke(ref ctx);
+				return;
+			}
+#endif
+			// Guard (DEBUG): managed-делегат обязан быть населён на managed-пути (форс/Managed-нода/.NET).
+			E.ASSERT(_managed[ordinal] != null, "[NodeFunctionRegistry] managed-делегат отсутствует на managed-пути (buildManaged:false без форса?).");
+			_managed[ordinal].Invoke(ref ctx);
+		}
 
 		/// <summary>Освобождает off-allocator Burst-таблицу. Вызывает владелец. Идемпотентно.</summary>
 		public void Dispose()

@@ -190,8 +190,14 @@
    off-allocator `UnsafeArray<FunctionPointer<ExecuteFn>>` (под `#if UNITY`, читается из Burst; передаётся как
    `BurstTable`), managed-таблица = `ExecuteFn[]` (.NET-путь). `Dispose` освобождает off-allocator буфер (сам код FP
    — domain-lifetime Burst, освобождать нечем/незачем). Покрыто `NodeFunctionRegistryTests` (managed round-trip
-   реально; Build/Burst — под `Assert.Ignore`, IndexedTypes не init в EditMode). Интеграция в `ExecutionScope` +
-   прогон `Drain` через диспетчер — **M6-F**; выбор бэкенда по `runtimeType` + детерминизм — **M6-D**; version gate — **M6-E**.
+   реально; Build/Burst — под `Assert.Ignore`, IndexedTypes не init в EditMode).
+   ✅ **M6-D**: выбор бэкенда — `NodeFunctionRegistry.UseManaged(runtimeType)`/`Invoke(ordinal, runtimeType, ref ctx)`
+   (под Unity `_forceManaged‖Managed`→managed, иначе Burst; в .NET всегда managed). `Build` **пропускает** Burst-компиляцию
+   для `RuntimeType.Managed`-нод (managed-делегат для них — безусловно); глобальный managed-форс (`_forceManaged` в инстансе,
+   параметр `Build`/`Create`). «Managed-ность» поднята на logic-тип — `ILogicNode.RuntimeType` (DIM, дефолт `Unmanaged`),
+   `INode<TLogicNode>.RuntimeType` выводит из logic-типа ⇒ `NodeHeader.runtimeType` согласован с Burst-skip реестра.
+   Managed-исполнение/selection/детерминизм — **реальные** тесты (`BackendSelectionTests`, без Burst); Build-skip — под
+   `Assert.Ignore`. Прогон `Drain` через scope — **M6-F**; version gate — **M6-E**.
 
 ---
 

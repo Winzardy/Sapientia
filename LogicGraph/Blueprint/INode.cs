@@ -8,6 +8,11 @@ namespace Sapientia.LogicGraph
 	public interface INode<out TLogicNode> : INode where TLogicNode : unmanaged, ILogicNode
 	{
 		TypeId<ILogicNode> INode.NodeTypeId => TypeIdOf<ILogicNode, TLogicNode>.typeId;
+
+		/// <summary>Бэкенд ноды выводится из <b>capability logic-тела</b> (<see cref="ILogicNode.RuntimeType"/>), а не
+		/// объявляется отдельно: забейканный <see cref="NodeHeader.runtimeType"/> ⇒ совпадает с тем, по чему реестр
+		/// решал Burst-skip (M6-D). Boxing default-инстанса — только на компиляции (раз/нода), не на горячем пути.</summary>
+		RuntimeType INode.RuntimeType => ((ILogicNode)default(TLogicNode)).RuntimeType;
 	}
 
 	public interface INode
