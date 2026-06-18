@@ -41,7 +41,7 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 > Фаза 3, переделывается поверх БД: массив ленивых per-blueprint менеджеров, индексируемый по
 > `Id<CompiledBlueprint>`). Ambient context на scope не хранится — передаётся в методы исполнения (M7).
 | M6 | Node dispatch + dual backend | Burst fn-pointer registry by index + managed path + version gate; диспатч на Static.Map (`runtimeType`/`NodeState` wiring) | 5 | ✅ done (A–F закоммичены, [Plan/phase-M6/README.md](Plan/phase-M6/README.md)); single-thread прогон — параллелизм/wave → M7 |
-| M7 | Orchestrator | dependency scheduling + Burst/non-Burst passes + parallelism | M6 | ◐ каркас (`ExecutionGraph`/`NodeMapHeader`/`ExecutionBatch` — поведение не реализовано, см. STATE.md §4) |
+| M7 | Orchestrator | dependency scheduling + Burst/non-Burst passes + parallelism + мульти-блюпринт; `Run` переезжает из `NodeInvoker` | M6 | ◐ **разбивка согласована** (A–D, [Plan/phase-M7/README.md](Plan/phase-M7/README.md)); substrate-каркас (`ExecutionGraph`/`NodeInvoker.Run` single-thread) есть, под-фазы не начаты |
 | M8 | Memoized evaluation | pull-based `Is Calculated` gating | M7 | ☐ milestone |
 | M9 | Typed + composable blueprints | `Graph<TIn,TOut>`, blueprint-as-node, capability interfaces | M7 | ☐ milestone |
 | M10 | Codegen | node ⇒ managed/logic partials + dispatch switch | M6,M9 | ☐ milestone |
