@@ -88,6 +88,15 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
+		/// Переводит старую сущность в новую по таблице копирования. Если сущности нет в таблице (ссылка
+		/// на чужую сущность, которую не копировали) - возвращает <see cref="Entity.EMPTY"/>.
+		/// </summary>
+		public static Entity Remap(this in UnsafeDictionary<Entity, Entity> map, Entity entity)
+		{
+			return map.TryGetValue(entity, out var mapped) ? mapped : Entity.EMPTY;
+		}
+
+		/// <summary>
 		/// Читает компонент <typeparamref name="T"/> из старого мира, делает копию значения и
 		/// перенастраивает ссылки через <see cref="ICopiable{T}.InnerCopy"/>. Возвращает копию для записи
 		/// в новый мир.
