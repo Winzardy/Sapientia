@@ -1,0 +1,114 @@
+using System.Collections.Generic;
+using Sapientia.Collections;
+using Sapientia.TypeIndexer;
+
+namespace Sapientia.MemoryAllocator.State
+{
+	/// <summary>
+	/// Копирует сущность вместе с её дочерним поддеревом в другой мир (один раз, при переходе между
+	/// этапами). Три прохода: собрать поддерево; создать все копии и запомнить пары старая-новая;
+	/// скопировать значения и перенастроить ссылки. Три, а не два, потому что для перенастройки ссылки
+	/// новая сущность уже должна существовать, поэтому создание идёт до копирования.
+	/// </summary>
+	public static class WorldStateCopyExtensions
+	{
+		/// <summary>
+		/// Копирует <paramref name="root"/> с дочерним поддеревом из srcWorld в dstWorld, возвращает новый
+		/// корень. Условие: dstWorld уже построен (наборы компонентов зарегистрированы), а
+		/// <paramref name="root"/> не помечен <see cref="IgnoreEntityCopy"/>.
+		/// </summary>
+		public static Entity CopyEntityTree(this WorldState srcWorld, Entity root, WorldState dstWorld)
+		{
+			var toCopy = new UnsafeList<Entity>(default, 16);
+			var visited = new UnsafeHashSet<Entity>(default, 16);
+			var frontier = new UnsafeList<Entity>(default, 16);
+			var typeIds = new List<TypeId>();
+
+			// Набор для метки может быть не зарегистрирован; тогда метки нет ни на одной сущности.
+			var hasIgnoreSet = srcWorld.HasComponentSet<IgnoreEntityCopy>();
+
+			frontier.Add(root);
+
+			// Проход A: собрать поддерево (обход, без повторов через visited).
+			while (frontier.count > 0)
+			{
+				var entity = frontier.RemoveLast();
+				if (!visited.Add(entity))
+				{
+					continue;
+				}
+				if (hasIgnoreSet && entity.Has<IgnoreEntityCopy>(srcWorld))
+				{
+					continue;
+				}
+
+				toCopy.Add(entity);
+
+				srcWorld.CollectComponentTypeIds(entity, typeIds);
+				foreach (var typeId in typeIds)
+				{
+					if (GeneratedCopier.IsCopiable(typeId))
+					{
+						GeneratedCopier.AppendEntities(typeId, srcWorld, entity, ref frontier);
+					}
+				}
+			}
+
+			// Проход B: создать все копии, чтобы на проходе C ссылки уже было куда перенастраивать.
+			var map = new UnsafeDictionary<Entity, Entity>(default, toCopy.count);
+			foreach (var oldEntity in toCopy)
+			{
+				var newEntity = CreateEntityCopy(srcWorld, dstWorld, oldEntity);
+				map.Add(oldEntity, newEntity);
+			}
+
+			// Проход C: скопировать значения и перенастроить ссылки по таблице.
+			foreach (var oldEntity in toCopy)
+			{
+				var newEntity = map[oldEntity];
+
+				srcWorld.CollectComponentTypeIds(oldEntity, typeIds);
+				foreach (var typeId in typeIds)
+				{
+					if (GeneratedCopier.IsCopiable(typeId))
+					{
+						GeneratedCopier.CopyComponent(typeId, srcWorld, dstWorld, oldEntity, newEntity, in map);
+					}
+				}
+			}
+
+			var result = map[root];
+
+			map.Dispose();
+			toCopy.Dispose();
+			visited.Dispose();
+			frontier.Dispose();
+
+			return result;
+		}
+
+		/// <summary>
+		/// Читает компонент <typeparamref name="T"/> из старого мира, делает копию значения и
+		/// перенастраивает ссылки через <see cref="ICopiable{T}.InnerCopy"/>. Возвращает копию для записи
+		/// в новый мир.
+		/// </summary>
+		public static T Copy<T>(this WorldState oldWS, Entity entity, WorldState newWS, in UnsafeDictionary<Entity, Entity> map)
+			where T : unmanaged, IComponent, ICopiable<T>
+		{
+			var oldComponent = new ComponentSetContext<T>(oldWS).ReadElement(entity);
+			var newComponent = oldComponent;
+			oldComponent.InnerCopy(oldWS, newWS, ref newComponent, in map);
+			return newComponent;
+		}
+
+		private static Entity CreateEntityCopy(WorldState srcWorld, WorldState dstWorld, Entity oldEntity)
+		{
+#if ENABLE_ENTITY_NAMES
+			var name = srcWorld.GetService<EntityStatePart>().GetEntityName(srcWorld, oldEntity);
+			return dstWorld.GetService<EntityStatePart>().CreateEntity(dstWorld, name);
+#else
+			return dstWorld.GetService<EntityStatePart>().CreateEntity(dstWorld);
+#endif
+		}
+	}
+}
