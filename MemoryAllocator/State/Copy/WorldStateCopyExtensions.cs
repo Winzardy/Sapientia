@@ -33,6 +33,12 @@ namespace Sapientia.MemoryAllocator.State
 			while (frontier.count > 0)
 			{
 				var entity = frontier.RemoveLast();
+				// Пустая ссылка (необязательная дочерняя сущность не задана) не копируется: иначе для неё
+				// создалась бы лишняя сущность-копия, и перенастройка ссылок вернула бы её вместо Entity.EMPTY.
+				if (entity.IsEmpty())
+				{
+					continue;
+				}
 				if (!visited.Add(entity))
 				{
 					continue;
