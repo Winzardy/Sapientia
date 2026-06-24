@@ -9,7 +9,16 @@ namespace Sapientia.MemoryAllocator.State
 	public struct IgnoreEntityCopy : IComponent {}
 
 	/// <summary>
-	/// Компонент пишет реализацию <see cref="ICopiable{T}"/> вручную. Генератор его пропускает.
+	/// Генератор пишет partial <see cref="ICopiable{T}"/> для этого ссылочного компонента. Ставится
+	/// вместе с partial, когда компонент вводят в копирование. Плоским компонентам не нужен — они
+	/// копируются значением без интерфейса. Без метки ссылочный компонент идёт в лог-отчёт (worklist).
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Struct)]
+	public sealed class GenerateCopyAttribute : Attribute {}
+
+	/// <summary>
+	/// Компонент реализует <see cref="ICopiable{T}"/> вручную (держатели union-структур). Генератор
+	/// partial не пишет, но компонент попадает в диспатч.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Struct)]
 	public sealed class ManualCopyAttribute : Attribute {}
@@ -19,6 +28,20 @@ namespace Sapientia.MemoryAllocator.State
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Struct)]
 	public sealed class SkipCopyAttribute : Attribute {}
+
+	/// <summary>
+	/// Поле-сущность принадлежит компоненту (дочерняя). Кладётся в обход и копируется. Без метки поле
+	/// <see cref="Entity"/> считается ссылкой на чужую сущность — только перенастройка, в обход не идёт.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Field)]
+	public sealed class OwnedAttribute : Attribute {}
+
+	/// <summary>
+	/// Коллекция сущностей — это ссылки на чужие сущности, не владение. В обход не кладётся, только
+	/// поэлементная перенастройка. Без метки коллекция <see cref="Entity"/> считается владением.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Field)]
+	public sealed class LinkAttribute : Attribute {}
 
 	/// <summary>
 	/// Поле при копировании обнуляется и не попадает в AppendEntities.

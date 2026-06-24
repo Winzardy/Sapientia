@@ -17,6 +17,7 @@ namespace Sapientia.TypeIndexer
 			var assemblyNameToPath = ReflectionExt.GetAssemblyNameToPath();
 
 			InterfaceProxyGenerator.GenerateProxies(baseGenerationFolder, assemblyNameToPath);
+			ComponentCopyGenerator.GenerateCopiers(baseGenerationFolder, assemblyNameToPath);
 			AssetDatabase.Refresh();
 		}
 	}
