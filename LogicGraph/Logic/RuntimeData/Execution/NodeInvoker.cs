@@ -1,4 +1,3 @@
-using System;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
 #if UNITY_5_3_OR_NEWER
@@ -52,15 +51,20 @@ namespace Sapientia.LogicGraph
 			return Execute<T>;
 		}
 
-		// ─────────────────────────── Интеграция диспетчера (M6-F) ───────────────────────────
+		// ─────────────────────────── Per-node диспатч (M6-F) ───────────────────────────
+		// Прогон (run-prologue → Drain → per-node Invoke) переехал в Orchestrator (M7-A); здесь — чистый
+		// диспатч одной ноды: managed-glue Invoke + Burst/Managed таблицы-точки.
 
 #if UNITY_5_3_OR_NEWER
 		/// <summary><b>Burst-путь</b> исполнения ноды <paramref name="ordinal"/> над <paramref name="ctx"/>. Принимает
 		/// <b>только blittable</b>: off-allocator <paramref name="table"/> (<see cref="NodeFunctionRegistry.BurstTable"/>) +
 		/// <see cref="NodeContext"/> — managed-реестр <b>не трогает</b>, поэтому компилируется Burst'ом. Развилки рантайма
 		/// внутри нет: бэкенд выбран заранее (граф собран до прогона), здесь только вызов fn-pointer'а.</summary>
+		/// <remarks><paramref name="ordinal"/> — по <c>in</c> (readonly-ref): <c>[BurstCompile]</c> entry-point
+		/// запрещает структуры <b>по значению</b> в параметрах (BC1064), а <c>in</c> — это указатель (как и
+		/// <paramref name="table"/>/<paramref name="ctx"/>), что ABI-легально.</remarks>
 		[BurstCompile]
-		public static void InvokeBurst(in UnsafeArray<FunctionPointer<ExecuteFn>> table, Id<ExecuteFn> ordinal, ref NodeContext ctx)
+		public static void InvokeBurst(in UnsafeArray<FunctionPointer<ExecuteFn>> table, in Id<ExecuteFn> ordinal, ref NodeContext ctx)
 		{
 			// Guard (DEBUG): Burst-fn обязан быть скомпилирован, иначе рассинхрон NodeHeader.runtimeType и реестра.
 			E.ASSERT(table[ordinal].IsCreated, "[NodeInvoker] Burst-fn не скомпилирован — рассинхрон NodeHeader.runtimeType и реестра.");
@@ -70,7 +74,7 @@ namespace Sapientia.LogicGraph
 
 		/// <summary><b>Managed-путь</b> исполнения ноды <paramref name="ordinal"/> над <paramref name="ctx"/> (.NET /
 		/// fallback / forceManaged). <paramref name="table"/> — <see cref="NodeFunctionRegistry.ManagedTable"/>.</summary>
-		public static void InvokeManaged(ExecuteFn[] table, Id<ExecuteFn> ordinal, ref NodeContext ctx)
+		public static void InvokeManaged(ExecuteFn[] table, in Id<ExecuteFn> ordinal, ref NodeContext ctx)
 		{
 			// Guard (DEBUG): делегат обязан быть населён на managed-пути (форс/Managed-нода/.NET).
 			E.ASSERT(table[ordinal] != null, "[NodeInvoker] managed-делегат отсутствует на managed-пути (buildManaged:false без форса?).");
@@ -101,8 +105,10 @@ namespace Sapientia.LogicGraph
 
 			ref readonly var header = ref compiled.GetNode(node.nodeId);
 			var registry = scope.Registry;
-			// typeId (ordinal TypeId<ILogicNode>) == индекс ноды в function-table (Id<ExecuteFn>); хоп через int (оба — implicit).
-			int ordinal = header.typeId;
+			// typeId (TypeId<ILogicNode>) численно == слот функции в реестре; мост между id-семействами через int
+			// (две user-конверсии не цепляются), дальше — типизированный Id<ExecuteFn> (в Invoke* по in, BC1064).
+			int typeIndex = header.typeId;
+			Id<ExecuteFn> ordinal = typeIndex;
 #if UNITY_5_3_OR_NEWER
 			if (!registry.UseManaged(header.runtimeType))
 			{
@@ -111,27 +117,6 @@ namespace Sapientia.LogicGraph
 			}
 #endif
 			InvokeManaged(registry.ManagedTable, ordinal, ref ctx);
-		}
-
-		/// <summary>
-		/// <b>Прогон блюпринта</b> (Drain-driver, M6-F, single-thread): run-prologue (<see cref="ExecutionScope.ResetAllCache"/>
-		/// + <see cref="ExecutionGraph.ResetDeps"/>) → детерминированный обход (<see cref="ExecutionGraph.Drain"/>) →
-		/// <see cref="Invoke"/> каждой ноды по порядку. Возвращает число исполненных нод (== записанных в
-		/// <paramref name="orderBuffer"/>; буфер должен вмещать все ноды графа).
-		/// </summary>
-		/// <remarks><b>Один compiled-блоб за прогон</b> (мульти-инстанс <b>одного</b> блюпринта — ОК: общий
-		/// <paramref name="compiled"/>, память различается по <see cref="NodeInstanceId.blueprintId"/>). Группа
-		/// <b>разных</b> блюпринтов за один прогон + джоб-параллелизм/wave (бакетинг по <c>runtimeType</c>) — M7.</remarks>
-		public static int Run(ref ExecutionScope scope, ref CompiledBlueprintHeader compiled, ref ExecutionGraph graph, Span<NodeInstanceId> orderBuffer)
-		{
-			scope.ResetAllCache(compiled.GetCacheCellsTemplate());
-			graph.ResetDeps();
-
-			var count = graph.Drain(orderBuffer);
-			for (var i = 0; i < count; i++)
-				Invoke(ref scope, ref compiled, orderBuffer[i]);
-
-			return count;
 		}
 	}
 }

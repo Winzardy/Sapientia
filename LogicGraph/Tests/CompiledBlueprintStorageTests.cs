@@ -49,8 +49,8 @@ namespace Sapientia.LogicGraph.Tests
 				Assert.IsFalse(storage.Has(Key(3, 1)), "Несуществующий id → false.");
 
 				ref var compiled = ref storage.Get(Key(1, 1));
-				Assert.AreEqual((Id<Blueprint>)1, compiled.blueprintKey.id, "Неверный id у compiled.");
-				Assert.AreEqual(1, (int)compiled.blueprintKey.version, "Неверная version у compiled.");
+				Assert.AreEqual((Id<Blueprint>)1, compiled.blueprintKey.Id, "Неверный id у compiled.");
+				Assert.AreEqual(1, (int)compiled.blueprintKey.Version, "Неверная version у compiled.");
 			}
 			finally
 			{
@@ -105,9 +105,9 @@ namespace Sapientia.LogicGraph.Tests
 				// Ничего не удаляется — все версии живут и резолвятся (jump-by-id + walk по старым).
 				Assert.IsTrue(storage.Has(Key(1, 1)) && storage.Has(Key(1, 2)) && storage.Has(Key(1, 3)), "Все версии живы.");
 				Assert.AreEqual(3, storage.Count);
-				Assert.AreEqual(1, (int)storage.Get(Key(1, 1)).blueprintKey.version, "v1 (старая) резолвится.");
-				Assert.AreEqual(2, (int)storage.Get(Key(1, 2)).blueprintKey.version, "v2 (старая) резолвится.");
-				Assert.AreEqual(3, (int)storage.Get(Key(1, 3)).blueprintKey.version, "v3 (текущая) резолвится.");
+				Assert.AreEqual(1, (int)storage.Get(Key(1, 1)).blueprintKey.Version, "v1 (старая) резолвится.");
+				Assert.AreEqual(2, (int)storage.Get(Key(1, 2)).blueprintKey.Version, "v2 (старая) резолвится.");
+				Assert.AreEqual(3, (int)storage.Get(Key(1, 3)).blueprintKey.Version, "v3 (текущая) резолвится.");
 			}
 			finally
 			{

@@ -22,8 +22,8 @@ namespace Sapientia.LogicGraph.Tests
 				ref var compiled = ref arena.Value.GetValue(offset);
 				var instance = BlueprintInstanceHeader.Create(compiled, new PtrOffset(32), default);
 
-				Assert.AreEqual((Id<Blueprint>)7, instance.blueprintId.id, "blueprintId не из compiled.");
-				Assert.AreEqual(3, (int)instance.blueprintId.version, "version не из compiled.");
+				Assert.AreEqual((Id<Blueprint>)7, instance.blueprintId.Id, "blueprintId не из compiled.");
+				Assert.AreEqual(3, (int)instance.blueprintId.Version, "version не из compiled.");
 				Assert.IsTrue(instance.instanceCache.isValid, "Валидный cache-офсет должен сохраниться.");
 				Assert.AreEqual(32, instance.instanceCache.byteOffset, "Неверный cache-офсет.");
 				Assert.IsFalse(instance.instancePersistent.isValid, "default персистент-офсет — невалиден (zero-size).");

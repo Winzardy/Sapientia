@@ -130,9 +130,10 @@ namespace Sapientia.LogicGraph
 			GetInstanceCache(id).Reset(template);
 		}
 
-		/// <summary>Сброс кеша у всех живых инстансов домена (старт run'а). Пустые/невалидные слоты — no-op. Один
-		/// <paramref name="template"/> на всех корректен для scope одного блюпринта (см. <see cref="NodeInvoker.Run"/>):
-		/// все инстансы делят общий <c>CompiledBlueprintHeader</c>, значит и шаблон.</summary>
+		/// <summary>Сброс кеша у всех живых инстансов домена. Зовётся <b>вызывающим раз за итерацию апдейта нод</b>
+		/// (перед Update-/LateUpdate-пачкой), <b>не</b> из <see cref="Orchestrator.Run"/> и не на каждый wave. Пустые/
+		/// невалидные слоты — no-op. Один <paramref name="template"/> на всех корректен для scope одного блюпринта
+		/// (все инстансы делят общий <c>CompiledBlueprintHeader</c>, значит и шаблон).</summary>
 		public void ResetAllCache(SafePtr<CacheLink> template)
 		{
 			for (var i = 0; i < _cache.count; i++)

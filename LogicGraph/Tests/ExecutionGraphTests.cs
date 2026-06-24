@@ -18,6 +18,12 @@ namespace Sapientia.LogicGraph.Tests
 			return new BlueprintInstanceId { id = id, generation = 1 };
 		}
 
+		/// <summary>Входная нода прогона: <see cref="NodeInstanceId"/> = (инстанс, <paramref name="nodeId"/>). Inject строит подграф от неё.</summary>
+		private static NodeInstanceId Entry(int instance, Id<NodeHeader> nodeId)
+		{
+			return new NodeInstanceId { blueprintId = Instance(instance), nodeId = nodeId };
+		}
+
 		/// <summary>Индекс первой ноды <paramref name="nodeId"/> в порядке обхода (или −1).</summary>
 		private static int IndexOf(ReadOnlySpan<NodeInstanceId> order, int count, int nodeId)
 		{
@@ -106,7 +112,7 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				graph.Inject(ref compiled, Instance(1));
+				graph.Inject(ref compiled, Entry(1, 0));
 
 				Assert.AreEqual(1, graph.BatchCount, "Линейная цепочка должна схлопнуться в один батч.");
 
@@ -133,7 +139,7 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				graph.Inject(ref compiled, Instance(1));
+				graph.Inject(ref compiled, Entry(1, 0));
 
 				Assert.AreEqual(4, graph.BatchCount, "Ветвление/join не сливаются: 4 батча.");
 
@@ -166,7 +172,10 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				graph.Inject(ref compiled, Instance(1));
+				// Три несвязанные ноды — три независимых входа (каждый подграф = одна нода).
+				graph.Inject(ref compiled, Entry(1, 0));
+				graph.Inject(ref compiled, Entry(1, 1));
+				graph.Inject(ref compiled, Entry(1, 2));
 
 				Assert.AreEqual(3, graph.BatchCount, "Три несвязанные ноды — три батча.");
 
@@ -188,8 +197,8 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				graph.Inject(ref compiled, Instance(1));
-				graph.Inject(ref compiled, Instance(2));
+				graph.Inject(ref compiled, Entry(1, 0));
+				graph.Inject(ref compiled, Entry(2, 0));
 
 				Assert.AreEqual(2, graph.BatchCount, "Два инстанса по одному батчу (цепочка из 2 нод).");
 
@@ -219,7 +228,7 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				graph.Inject(ref compiled, Instance(1));
+				graph.Inject(ref compiled, Entry(1, 0));
 
 				Span<NodeInstanceId> first = stackalloc NodeInstanceId[4];
 				var n1 = graph.Drain(first);
@@ -248,7 +257,7 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				graph.Inject(ref compiled, Instance(1));
+				graph.Inject(ref compiled, Entry(1, 0));
 
 				Assert.AreEqual(3, graph.BatchCount, "[A,B] схлопнуты; C и D — отдельные батчи.");
 
@@ -279,7 +288,7 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				graph.Inject(ref compiled, Instance(1));
+				graph.Inject(ref compiled, Entry(1, 0));
 
 				Span<NodeInstanceId> first = stackalloc NodeInstanceId[4];
 				Assert.AreEqual(4, graph.Drain(first), "Первый прогон — все ноды.");
@@ -305,7 +314,9 @@ namespace Sapientia.LogicGraph.Tests
 			try
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				graph.Inject(ref compiled, Instance(1));
+				// Две несвязанные ноды — два входа (вложенные списки батчей должны освободиться в Dispose).
+				graph.Inject(ref compiled, Entry(1, 0));
+				graph.Inject(ref compiled, Entry(1, 1));
 				Assert.IsTrue(graph.IsCreated);
 			}
 			finally

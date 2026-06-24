@@ -41,8 +41,8 @@ dispatch, codegen, and authoring come later (M6+), once the memory substrate is 
 > Фаза 3, переделывается поверх БД: массив ленивых per-blueprint менеджеров, индексируемый по
 > `Id<CompiledBlueprint>`). Ambient context на scope не хранится — передаётся в методы исполнения (M7).
 | M6 | Node dispatch + dual backend | Burst fn-pointer registry by index + managed path + version gate; диспатч на Static.Map (`runtimeType`/`NodeState` wiring) | 5 | ✅ done (A–F закоммичены, [Plan/phase-M6/README.md](Plan/phase-M6/README.md)); single-thread прогон — параллелизм/wave → M7 |
-| M7 | Orchestrator | dependency scheduling + Burst/non-Burst passes + parallelism + мульти-блюпринт; `Run` переезжает из `NodeInvoker` | M6 | ◐ **разбивка согласована** (A–D, [Plan/phase-M7/README.md](Plan/phase-M7/README.md)); substrate-каркас (`ExecutionGraph`/`NodeInvoker.Run` single-thread) есть, под-фазы не начаты |
-| M8 | Memoized evaluation | pull-based `Is Calculated` gating | M7 | ☐ milestone |
+| M7 | Orchestrator (демандный) | **Демандный work-list** (не батч-DAG): `Inject(span)` → eager-резолв инпутов + **per-port мемоизация** + push аутпутов; runtime-wave (Burst↔managed); lazy-ноды (re-execution); мульти-блюпринт + command-buffer. **Параллелизм вынесен за M7.** | M6 | 🔄 модель пересмотрена 2026-06-18 ([Plan/phase-M7/README.md](Plan/phase-M7/README.md)); A — relocation сделана, разбивка A′/B/C/D/E ждёт гейта |
+| M8 | ~~Memoized evaluation~~ → **поглощено M7-B** | pull-based `Is Calculated` — теперь **ядро демандной модели** (M7-B), не отдельная веха | — | ✅ перенесено в M7-B |
 | M9 | Typed + composable blueprints | `Graph<TIn,TOut>`, blueprint-as-node, capability interfaces | M7 | ☐ milestone |
 | M10 | Codegen | node ⇒ managed/logic partials + dispatch switch | M6,M9 | ☐ milestone |
 | M11 | Authoring + transfer | config baking, binary server→client, end-to-end versioning | M10 | ☐ milestone |

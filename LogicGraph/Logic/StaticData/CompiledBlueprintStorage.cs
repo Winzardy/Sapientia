@@ -125,8 +125,8 @@ namespace Sapientia.LogicGraph
 			foreach (var offset in offsets)
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				if (maxBlueprintId < compiled.blueprintKey.id)
-					maxBlueprintId = compiled.blueprintKey.id;
+				if (maxBlueprintId < compiled.blueprintKey.Id)
+					maxBlueprintId = compiled.blueprintKey.Id;
 			}
 
 			// +1: индекс = (int)blueprintId доходит до maxBlueprintId, значит нужен count = max + 1.
@@ -137,8 +137,8 @@ namespace Sapientia.LogicGraph
 			foreach (var offset in offsets)
 			{
 				ref var compiled = ref arena.Value.GetValue(offset);
-				var blueprintId = compiled.blueprintKey.id;
-				var version = compiled.blueprintKey.version;
+				var blueprintId = compiled.blueprintKey.Id;
+				var version = compiled.blueprintKey.Version;
 
 				if (!version.IsValid)
 					continue;
@@ -176,21 +176,21 @@ namespace Sapientia.LogicGraph
 		/// <summary>Есть ли в хранилище версия <paramref name="blueprintId"/> (текущая или старая).</summary>
 		public bool Has(VersionedId<Blueprint> blueprintId)
 		{
-			if (!blueprintId.id.IsValid || blueprintId.id >= _blueprints.count)
+			if (!blueprintId.Id.IsValid || blueprintId.Id >= _blueprints.count)
 				return false;
 
-			ref var root = ref _blueprints[blueprintId.id];
-			return root.HasVersion(blueprintId.version);
+			ref var root = ref _blueprints[blueprintId.Id];
+			return root.HasVersion(blueprintId.Version);
 		}
 
 		/// <summary>Доступ к static-данным версии (jump-by-id + walk по старым). Вызывать на существующей
 		/// <paramref name="blueprintId"/> (см. <see cref="Has"/>); DEBUG-assert ловит обращение к несуществующей.</summary>
 		public ref CompiledBlueprintHeader Get(VersionedId<Blueprint> blueprintId)
 		{
-			ref var root = ref _blueprints[blueprintId.id];
+			ref var root = ref _blueprints[blueprintId.Id];
 
 			// Быстрый путь — текущая версия (1 jump).
-			if (root.HasSlot && root.slot.version == blueprintId.version)
+			if (root.HasSlot && root.slot.version == blueprintId.Version)
 				return ref ResolveSlot(root.slot);
 
 			// Иначе — среди старых.
@@ -199,7 +199,7 @@ namespace Sapientia.LogicGraph
 				var span = root.next.GetSpan();
 				for (var i = 0; i < span.Length; i++)
 				{
-					if (span[i].version == blueprintId.version)
+					if (span[i].version == blueprintId.Version)
 						return ref ResolveSlot(span[i]);
 				}
 			}

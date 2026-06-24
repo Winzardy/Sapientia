@@ -1,5 +1,4 @@
 #if UNITY_5_4_OR_NEWER
-using System;
 using NUnit.Framework;
 using Sapientia.Data;
 using Sapientia.Extensions;
@@ -8,8 +7,8 @@ using Submodules.Sapientia.Data;
 namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
-	/// M6-F: <b>интеграция диспетчера</b> — прогон <see cref="ExecutionGraph.Drain"/>-порядка через
-	/// <see cref="NodeInvoker.Run"/>/<see cref="NodeInvoker.Invoke"/>: резолв памяти инстанса из
+	/// M6-F/M7-A: <b>прогон через оркестратор</b> — <see cref="Orchestrator.Run"/> гоняет
+	/// <see cref="ExecutionGraph.Drain"/>-порядок через <see cref="NodeInvoker.Invoke"/>: резолв памяти инстанса из
 	/// <see cref="ExecutionScope"/> (Cache + Persistence) + dispatch через <see cref="ExecutionScope.Registry"/>.
 	/// Тела нод <b>реально исполняются</b> managed-путём (реестр строим через
 	/// <see cref="NodeFunctionRegistry.Create(ExecuteFn[], bool)"/> с <c>forceManaged: true</c> ⇒ Burst/<c>IndexedTypes</c>
@@ -103,6 +102,12 @@ namespace Sapientia.LogicGraph.Tests
 			};
 		}
 
+		/// <summary>Входная нода прогона: <see cref="NodeInstanceId"/> = (инстанс, <paramref name="nodeId"/>). Inject строит подграф от неё.</summary>
+		private static NodeInstanceId Entry(BlueprintInstanceId id, Id<NodeHeader> nodeId)
+		{
+			return new NodeInstanceId { blueprintId = id, nodeId = nodeId };
+		}
+
 		/// <summary>Пишет <paramref name="value"/> в Persistence-слайс ноды <paramref name="nodeId"/> инстанса (до прогона).</summary>
 		private static void SeedPersistence(ref ExecutionScope scope, ref CompiledBlueprintHeader compiled, BlueprintInstanceId id, int nodeId, long value)
 		{
@@ -120,7 +125,7 @@ namespace Sapientia.LogicGraph.Tests
 			var registry = NodeFunctionRegistry.Create(new[] { NodeInvoker.GetManaged<StubSeedFromPersistence>() }, forceManaged: true);
 			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			var scope = ExecutionScope.Create(registry: registry);
-			var graph = ExecutionGraph.Create();
+			var orch = Orchestrator.Create();
 			try
 			{
 				var bp = StubBlueprint.Of(new StubNode(staticSize: 64, cacheSize: 16, persistanceSize: 8,
@@ -143,7 +148,7 @@ namespace Sapientia.LogicGraph.Tests
 			}
 			finally
 			{
-				graph.Dispose();
+				orch.Dispose();
 				scope.Dispose();
 				storage.Dispose();
 				registry.Dispose();
@@ -162,7 +167,7 @@ namespace Sapientia.LogicGraph.Tests
 			}, forceManaged: true);
 			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			var scope = ExecutionScope.Create(registry: registry);
-			var graph = ExecutionGraph.Create();
+			var orch = Orchestrator.Create();
 			try
 			{
 				var aOut = new NodeOutput<long>();
@@ -187,10 +192,9 @@ namespace Sapientia.LogicGraph.Tests
 				compiled.GetStaticNodeSlice(1).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 1, 0), output = PortHandle(ref compiled, 1, 1), addend = 5L };
 				compiled.GetStaticNodeSlice(2).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 2, 0), output = PortHandle(ref compiled, 2, 1), addend = 5L };
 
-				graph.Inject(ref compiled, id);
+				orch.Inject(ref compiled, Entry(id, 0));
 
-				Span<NodeInstanceId> order = stackalloc NodeInstanceId[compiled.NodesCount];
-				var n = NodeInvoker.Run(ref scope, ref compiled, ref graph, order);
+				var n = orch.Run(ref scope, ref compiled);
 				Assert.AreEqual(3, n, "Все три ноды исполнены.");
 
 				var cOut = PortHandle(ref compiled, 2, 1);
@@ -199,7 +203,7 @@ namespace Sapientia.LogicGraph.Tests
 			}
 			finally
 			{
-				graph.Dispose();
+				orch.Dispose();
 				scope.Dispose();
 				storage.Dispose();
 				registry.Dispose();
@@ -219,7 +223,7 @@ namespace Sapientia.LogicGraph.Tests
 			}, forceManaged: true);
 			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			var scope = ExecutionScope.Create(registry: registry);
-			var graph = ExecutionGraph.Create();
+			var orch = Orchestrator.Create();
 			try
 			{
 				var aOut = new NodeOutput<long>();
@@ -251,10 +255,9 @@ namespace Sapientia.LogicGraph.Tests
 				compiled.GetStaticNodeSlice(2).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 2, 0), output = PortHandle(ref compiled, 2, 1), addend = 2L };
 				compiled.GetStaticNodeSlice(3).Cast<StubSum2>().Value() = new StubSum2 { inputA = PortHandle(ref compiled, 3, 0), inputB = PortHandle(ref compiled, 3, 1), output = PortHandle(ref compiled, 3, 2) };
 
-				graph.Inject(ref compiled, id);
+				orch.Inject(ref compiled, Entry(id, 0));
 
-				Span<NodeInstanceId> order = stackalloc NodeInstanceId[compiled.NodesCount];
-				Assert.AreEqual(4, NodeInvoker.Run(ref scope, ref compiled, ref graph, order), "Все четыре ноды исполнены.");
+				Assert.AreEqual(4, orch.Run(ref scope, ref compiled), "Все четыре ноды исполнены.");
 
 				var dOut = PortHandle(ref compiled, 3, 2);
 				Assert.IsTrue(scope.GetInstanceCache(id).Read(dOut, out var result), "D-Out посчитан (join увидел обе ветви).");
@@ -262,7 +265,7 @@ namespace Sapientia.LogicGraph.Tests
 			}
 			finally
 			{
-				graph.Dispose();
+				orch.Dispose();
 				scope.Dispose();
 				storage.Dispose();
 				registry.Dispose();
@@ -277,7 +280,7 @@ namespace Sapientia.LogicGraph.Tests
 			var registry = NodeFunctionRegistry.Create(new[] { NodeInvoker.GetManaged<StubSeedFromPersistence>() }, forceManaged: true);
 			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			var scope = ExecutionScope.Create(registry: registry);
-			var graph = ExecutionGraph.Create();
+			var orch = Orchestrator.Create();
 			try
 			{
 				var bp = StubBlueprint.Of(new StubNode(staticSize: 64, cacheSize: 16, persistanceSize: 8,
@@ -296,11 +299,10 @@ namespace Sapientia.LogicGraph.Tests
 				SeedPersistence(ref scope, ref compiled, id1, 0, 10L);
 				SeedPersistence(ref scope, ref compiled, id2, 0, 20L);
 
-				graph.Inject(ref compiled, id1);
-				graph.Inject(ref compiled, id2);
+				orch.Inject(ref compiled, Entry(id1, 0));
+				orch.Inject(ref compiled, Entry(id2, 0));
 
-				Span<NodeInstanceId> order = stackalloc NodeInstanceId[2];
-				Assert.AreEqual(2, NodeInvoker.Run(ref scope, ref compiled, ref graph, order), "Обе ноды (по одной на инстанс) исполнены.");
+				Assert.AreEqual(2, orch.Run(ref scope, ref compiled), "Обе ноды (по одной на инстанс) исполнены.");
 
 				Assert.IsTrue(scope.GetInstanceCache(id1).Read(outHandle, out var r1));
 				Assert.IsTrue(scope.GetInstanceCache(id2).Read(outHandle, out var r2));
@@ -309,7 +311,7 @@ namespace Sapientia.LogicGraph.Tests
 			}
 			finally
 			{
-				graph.Dispose();
+				orch.Dispose();
 				scope.Dispose();
 				storage.Dispose();
 				registry.Dispose();
@@ -320,11 +322,11 @@ namespace Sapientia.LogicGraph.Tests
 		public void Run_PersistenceNode_PersistsAcrossRuns()
 		{
 			// Нода инкрементит Persistence-счётчик. Два Run'а ⇒ counter == 2: Persistence проброшен через scope и
-			// переживает reset кеша (ResetAllCache не трогает Persistence).
+			// живёт между прогонами (он — постоянный per-instance стейт, сброс кеша его в принципе не трогает).
 			var registry = NodeFunctionRegistry.Create(new[] { NodeInvoker.GetManaged<StubPersistInc>() }, forceManaged: true);
 			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			var scope = ExecutionScope.Create(registry: registry);
-			var graph = ExecutionGraph.Create();
+			var orch = Orchestrator.Create();
 			try
 			{
 				var bp = StubBlueprint.Of(new StubNode(staticSize: 8, persistanceSize: 8, typeId: 0));
@@ -334,18 +336,17 @@ namespace Sapientia.LogicGraph.Tests
 
 				var id = scope.CreateInstance(ref storage, key);
 				ref var compiled = ref storage.Get(key);
-				graph.Inject(ref compiled, id);
+				orch.Inject(ref compiled, Entry(id, 0));
 
-				Span<NodeInstanceId> order = stackalloc NodeInstanceId[compiled.NodesCount];
-				NodeInvoker.Run(ref scope, ref compiled, ref graph, order);
-				NodeInvoker.Run(ref scope, ref compiled, ref graph, order);
+				orch.Run(ref scope, ref compiled);
+				orch.Run(ref scope, ref compiled);
 
 				var counter = (scope.GetInstancePersistent(id).GetPtr() + compiled.GetNodePersistenceOffset(0).byteOffset).Cast<long>().Value();
 				Assert.AreEqual(2L, counter, "Persistence пережил два прогона (++ дважды), reset кеша его не сбросил.");
 			}
 			finally
 			{
-				graph.Dispose();
+				orch.Dispose();
 				scope.Dispose();
 				storage.Dispose();
 				registry.Dispose();
@@ -353,9 +354,10 @@ namespace Sapientia.LogicGraph.Tests
 		}
 
 		[Test]
-		public void Run_ResetsCacheEachRun_Deterministic()
+		public void Run_CallerResetsCachePerIteration_Deterministic()
 		{
-			// Два Run'а одного графа (cache-only) дают побитово равный результат: ResetAllCache на старте + детерминизм.
+			// Сброс кеша — на стороне ВЫЗЫВАЮЩЕГО раз за итерацию (не в Run). Две итерации (reset → Run) одного
+			// графа (cache-only) дают побитово равный результат: детерминизм при caller-driven сбросе.
 			var registry = NodeFunctionRegistry.Create(new[]
 			{
 				NodeInvoker.GetManaged<StubSeed>(),
@@ -363,7 +365,7 @@ namespace Sapientia.LogicGraph.Tests
 			}, forceManaged: true);
 			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			var scope = ExecutionScope.Create(registry: registry);
-			var graph = ExecutionGraph.Create();
+			var orch = Orchestrator.Create();
 			try
 			{
 				var aOut = new NodeOutput<long>();
@@ -381,23 +383,55 @@ namespace Sapientia.LogicGraph.Tests
 				ref var compiled = ref storage.Get(key);
 				compiled.GetStaticNodeSlice(0).Cast<StubSeed>().Value() = new StubSeed { output = PortHandle(ref compiled, 0, 0), seed = 7L };
 				compiled.GetStaticNodeSlice(1).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 1, 0), output = PortHandle(ref compiled, 1, 1), addend = 3L };
-				graph.Inject(ref compiled, id);
+				orch.Inject(ref compiled, Entry(id, 0));
 
 				var bOutHandle = PortHandle(ref compiled, 1, 1);
-				Span<NodeInstanceId> order = stackalloc NodeInstanceId[compiled.NodesCount];
+				var template = compiled.GetCacheCellsTemplate();
 
-				NodeInvoker.Run(ref scope, ref compiled, ref graph, order);
+				// Итерация 1: вызывающий сбрасывает кеш инстанса, затем Run.
+				scope.ResetInstanceCache(id, template);
+				orch.Run(ref scope, ref compiled);
 				scope.GetInstanceCache(id).Read(bOutHandle, out var first);
 
-				NodeInvoker.Run(ref scope, ref compiled, ref graph, order);
+				// Итерация 2: снова caller-сброс → Run.
+				scope.ResetInstanceCache(id, template);
+				orch.Run(ref scope, ref compiled);
 				scope.GetInstanceCache(id).Read(bOutHandle, out var second);
 
 				Assert.AreEqual(10L, first, "7 + 3.");
-				Assert.AreEqual(first, second, "Повторный Run после reset кеша детерминирован (побитово равен).");
+				Assert.AreEqual(first, second, "Детерминизм при сбросе кеша вызывающим раз за итерацию (побитово равен).");
 			}
 			finally
 			{
-				graph.Dispose();
+				orch.Dispose();
+				scope.Dispose();
+				storage.Dispose();
+				registry.Dispose();
+			}
+		}
+
+		[Test]
+		public void Run_NoInject_ReturnsZero()
+		{
+			// Run без Inject (граф пуст, NodeCount == 0): 0 исполненных нод, буфер порядка не аллоцируется
+			// (регрессия M7-A: старый stackalloc[0] ноль нод терпел, MakeArray(0) — DEBUG-assert).
+			var registry = NodeFunctionRegistry.Create(new[] { NodeInvoker.GetManaged<StubSeed>() }, forceManaged: true);
+			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
+			var scope = ExecutionScope.Create(registry: registry);
+			var orch = Orchestrator.Create();
+			try
+			{
+				var bp = StubBlueprint.Of(new StubNode(staticSize: 8, typeId: 0));
+				var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
+				var key = arena.Value.GetValue(offset).blueprintKey;
+				storage.Add(arena, offset, CompiledEnvironment.Compile());
+				ref var compiled = ref storage.Get(key);
+
+				Assert.AreEqual(0, orch.Run(ref scope, ref compiled), "Без Inject граф пуст — 0 нод, без аллокации.");
+			}
+			finally
+			{
+				orch.Dispose();
 				scope.Dispose();
 				storage.Dispose();
 				registry.Dispose();
