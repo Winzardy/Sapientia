@@ -1,93 +1,173 @@
 using System;
 using Sapientia.Collections;
+using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
 using Submodules.Sapientia.Memory;
 
 namespace Sapientia.LogicGraph
 {
 	/// <summary>
-	/// <b>Оркестратор прогона</b> (M7-A): владеет <see cref="ExecutionGraph"/> (батч-DAG) и off-allocator
-	/// буфером порядка обхода (<see cref="_order"/>), переиспользуемым между прогонами. <see cref="Run"/> —
-	/// <see cref="ExecutionGraph.ResetDeps"/> → детерминированный обход (<see cref="ExecutionGraph.Drain"/>) →
-	/// per-node <see cref="NodeInvoker.Invoke"/>. <b>Кеш не сбрасывает</b> — это делает вызывающий раз за
-	/// итерацию апдейта (см. тело <see cref="Run"/>).
-	/// Переезд временного seam'а <c>NodeInvoker.Run</c> сюда — без изменения поведения (память
-	/// <c>logicgraph-run-temporary</c>); <see cref="NodeInvoker"/> остаётся чистым диспатчем.
+	/// <b>Оркестратор прогона</b> (M7-B): демандный <b>work-list</b> вместо статического батч-DAG. Сидится
+	/// несколькими входными нодами (<see cref="Inject"/>), затем <see cref="Run"/> исполняет их и достижимый
+	/// граф в порядке зависимостей: нода исполняется, когда все её <b>ноды-предшественники</b> посчитаны
+	/// (ready-check по узловой топологии <see cref="CompiledBlueprintHeader.GetNodeRelatives"/>), результат
+	/// <b>мемоизируется</b> (общий предок — один раз), а консьюмеры ставятся в очередь (push).
 	/// </summary>
-	/// <remarks><b>Single-thread, один compiled-блоб за прогон</b> (мульти-инстанс <b>одного</b> блюпринта —
-	/// ОК: общий <c>compiled</c>, память различается по <see cref="NodeInstanceId.blueprintId"/>). Бакетинг по
-	/// <c>runtimeType</c> + Burst/Managed wave-passes — M7-B; группа <b>разных</b> блюпринтов (per-node резолв
-	/// <c>compiled</c> через storage) — M7-C; джоб-параллелизм внутри wave + next-wave-буфер — M7-D.</remarks>
+	/// <remarks>
+	/// <b>Eager, single-thread, один рантайм</b> (forceManaged): тела нод атомарны, инпуты готовы до запуска
+	/// (нода читает их из кеша). <b>Lazy</b> (`Get`-yield) — M7-D; <b>runtime-wave</b> (Burst↔managed) — M7-C;
+	/// мульти-блюпринт + command-buffer — M7-E; параллелизм — вне M7. Per-node-планирование (биты <c>queued</c>/
+	/// <c>computed</c>) — в per-instance байт-массиве (<see cref="_schedule"/>, слот = инстанс, размер
+	/// <c>NodesCount</c>), сбрасывается в начале <see cref="Run"/>.
+	/// <para><b>Инвариант:</b> pull предшественников / push консьюмеров остаются <b>в том же инстансе</b>
+	/// (<see cref="NodeInstanceId.blueprintId"/> не меняется) ⇒ во время цикла новые инстансы не появляются;
+	/// <see cref="_schedule"/> пре-аллоцируется под инстансы входов до цикла и <b>не ресайзится</b> внутри.</para>
+	/// </remarks>
 	public struct Orchestrator : IDisposable
 	{
-		private Id<MemoryManager> _memoryId;
-		private ExecutionGraph _graph;
-		// Буфер порядка обхода (Drain пишет сюда): ленивый, переиспользуется, растёт под _nodeCount.
-		private UnsafeArray<NodeInstanceId> _order;
-		// Суммарное число нод по всем Inject'ам (== числу записей Drain) — владелец буфера сам считает размер.
-		private int _nodeCount;
+		private const byte FLAG_QUEUED = 1;
+		private const byte FLAG_COMPUTED = 2;
 
-		public readonly bool IsCreated => _graph.IsCreated;
+		private Id<MemoryManager> _memoryId;
+		// Work-list (FIFO по cursor'у): растёт по ходу (pull предшественников + push консьюмеров).
+		private UnsafeList<NodeInstanceId> _queue;
+		// Планирование per-(инстанс, нода): байт-флаги. Индекс слота = blueprintId.id (как _cache в ExecutionScope).
+		private UnsafeList<UnsafeArray<byte>> _schedule;
+
+		public readonly bool IsCreated => _queue.IsCreated;
 
 		public static Orchestrator Create(Id<MemoryManager> memoryId = default)
 		{
 			return new Orchestrator
 			{
 				_memoryId = memoryId,
-				_graph = ExecutionGraph.Create(memoryId),
-				// _order — ленивый: создаётся/растёт в Run под накопленный _nodeCount.
+				_queue = new UnsafeList<NodeInstanceId>(memoryId, 16),
+				_schedule = new UnsafeList<UnsafeArray<byte>>(memoryId, 4),
 			};
 		}
 
-		/// <summary>
-		/// Инстанцирует подграф, достижимый от входной ноды <paramref name="entry"/> (форвард в
-		/// <see cref="ExecutionGraph.Inject"/>; батчи накапливаются — несколько входов/инстансов). Возвращает
-		/// число инжектнутых нод; оркестратор суммирует его в размер буфера порядка.
-		/// </summary>
-		public int Inject(ref CompiledBlueprintHeader compiled, NodeInstanceId entry)
+		/// <summary>Сидит work-list входными нодами (несколько входов/инстансов). Дедуп/планирование — в <see cref="Run"/>.</summary>
+		public void Inject(ReadOnlySpan<NodeInstanceId> entries)
 		{
-			// Размер буфера = сумма инжектнутых нод по всем входам (== числу записей Drain).
-			var injected = _graph.Inject(ref compiled, entry);
-			_nodeCount += injected;
-			return injected;
+			for (var i = 0; i < entries.Length; i++)
+				_queue.Add(entries[i]);
 		}
 
 		/// <summary>
-		/// <b>Прогон блюпринта</b> (single-thread): гарантирует буфер порядка ≥ суммарного числа нод (накоплено в
-		/// <see cref="Inject"/>), сбрасывает счётчики зависимостей (<c>ResetDeps</c>) → <see cref="ExecutionGraph.Drain"/>
-		/// → <see cref="NodeInvoker.Invoke"/> каждой ноды по порядку. Возвращает число исполненных нод.
-		/// <b>Кеш не трогает</b> — его сброс делает вызывающий раз за итерацию апдейта (см. тело).
+		/// <b>Прогон</b>: сброс планирования → обработка work-list'а до опустошения. Для ноды: посчитана →
+		/// пропустить; не готова → pull предшественников (саму ноду ре-активирует push последнего предка); готова →
+		/// <see cref="NodeInvoker.Invoke"/> + пометить computed + push консьюмеров. Возвращает число <b>исполненных</b>
+		/// нод (мемоизированные пропуски не считаются). Кеш не трогает (сброс — у вызывающего раз за итерацию).
 		/// </summary>
 		public int Run(ref ExecutionScope scope, ref CompiledBlueprintHeader compiled)
 		{
-			EnsureOrder(_nodeCount);
+			var nodeCount = compiled.NodesCount;
+			ResetSchedules();
 
-			// Кеш здесь НЕ сбрасываем: сброс — забота вызывающего, один раз перед итерацией апдейта нод (напр.
-			// перед Update-пачкой / перед LateUpdate-пачкой по тем же блюпринтам), а не на каждый Run/wave. Внутри
-			// итерации нода с валидным кешем повторно не исполняется (pull-based мемоизация — M8).
-			_graph.ResetDeps();
+			// Пре-аллокация планирования под инстансы входов (pull/push не создают новых) ⇒ _schedule не растёт в цикле.
+			for (var i = 0; i < _queue.count; i++)
+				EnsureSchedule(_queue[i].blueprintId, nodeCount);
+			// Начальные входы — queued (дедуп при последующих push/pull).
+			for (var i = 0; i < _queue.count; i++)
+				SetFlag(_queue[i].blueprintId, _queue[i].nodeId, FLAG_QUEUED);
 
-			// Пустой граф (Run без Inject) — буфер не создаём, Drain получает пустой span и пишет 0 (как было
-			// со stackalloc[0]); иначе MakeArray(0) роняет DEBUG-assert.
-			var order = _order.IsCreated ? _order.GetSpan() : Span<NodeInstanceId>.Empty;
-			var count = _graph.Drain(order);
-			for (var i = 0; i < count; i++)
-				NodeInvoker.Invoke(ref scope, ref compiled, order[i]);
+			var executed = 0;
+			var cursor = 0;
+			while (cursor < _queue.count)
+			{
+				var node = _queue[cursor++];
+				ClearFlag(node.blueprintId, node.nodeId, FLAG_QUEUED); // вышла из очереди
 
-			return count;
+				if (HasFlag(node.blueprintId, node.nodeId, FLAG_COMPUTED))
+					continue; // уже посчитана (мемоизация — общий предок один раз)
+
+				// ready-check: все ноды-предшественники посчитаны? Непосчитанных — pull (поставить в очередь).
+				ref var rel = ref compiled.GetNodeRelatives(node.nodeId);
+				var ready = true;
+				for (var i = 0; i < rel.inputs.Length; i++)
+				{
+					var pred = rel.inputs.Get(i);
+					if (HasFlag(node.blueprintId, pred, FLAG_COMPUTED))
+						continue;
+					ready = false;
+					Enqueue(node.blueprintId, pred);
+				}
+
+				// Не готова: предшественники запулены выше; ноду НЕ ре-энкьюим — её ре-активирует push последнего
+				// досчитавшегося предшественника (топология симметрична: pred∈inputs(N) ⟺ N∈outputs(pred)). Это даёт
+				// терминирование даже на циклах (нода в цикле так и не станет ready ⇒ частичный обход, как старый Drain),
+				// и не плодит спин-дубли в очереди.
+				if (!ready)
+					continue;
+
+				NodeInvoker.Invoke(ref scope, ref compiled, node);
+				SetFlag(node.blueprintId, node.nodeId, FLAG_COMPUTED);
+				executed++;
+
+				// push: консьюмеры могли стать готовы (рефетч relatives — Invoke трогал scope/cache, не блоб).
+				ref var relOut = ref compiled.GetNodeRelatives(node.nodeId);
+				for (var i = 0; i < relOut.outputs.Length; i++)
+					Enqueue(node.blueprintId, relOut.outputs.Get(i));
+			}
+
+			_queue.Clear();
+			return executed;
 		}
 
-		/// <summary>Лениво создаёт/наращивает owned-буфер порядка под <paramref name="need"/> нод (без per-run alloc,
-		/// пока топология не выросла). Re-alloc только при росте — старый блок освобождается.</summary>
-		private void EnsureOrder(int need)
+		/// <summary>Ставит ноду в очередь, если она ещё не там и не посчитана (дедуп).</summary>
+		private void Enqueue(BlueprintInstanceId instance, Id<NodeHeader> node)
 		{
-			// need == 0 (пустой граф) — не аллоцируем (MakeArray(0) — DEBUG-assert); Run подаёт пустой span.
-			if (need == 0 || (_order.IsCreated && _order.Length >= need))
+			ref var flags = ref ScheduleByte(instance, node);
+			if ((flags & (FLAG_QUEUED | FLAG_COMPUTED)) != 0)
 				return;
+			flags |= FLAG_QUEUED;
+			_queue.Add(new NodeInstanceId { blueprintId = instance, nodeId = node });
+		}
 
-			if (_order.IsCreated)
-				_order.Dispose();
-			_order = new UnsafeArray<NodeInstanceId>(_memoryId, need);
+		private bool HasFlag(BlueprintInstanceId instance, Id<NodeHeader> node, byte flag)
+		{
+			return (ScheduleByte(instance, node) & flag) != 0;
+		}
+
+		private void SetFlag(BlueprintInstanceId instance, Id<NodeHeader> node, byte flag)
+		{
+			ScheduleByte(instance, node) |= flag;
+		}
+
+		private void ClearFlag(BlueprintInstanceId instance, Id<NodeHeader> node, byte flag)
+		{
+			ref var b = ref ScheduleByte(instance, node);
+			b = (byte)(b & ~flag);
+		}
+
+		/// <summary><c>ref</c> на байт флагов ноды в per-instance массиве. Берётся в <b>уже пре-аллоцированный</b>
+		/// слот (см. инвариант) — без <c>EnsureCount</c>, поэтому <see cref="_schedule"/> не ресайзится, а
+		/// возвращаемый <c>ref</c> указывает в стабильный байт-буфер.</summary>
+		private ref byte ScheduleByte(BlueprintInstanceId instance, Id<NodeHeader> node)
+		{
+			return ref _schedule[instance.id].ptr[node];
+		}
+
+		/// <summary>Гарантирует per-instance массив планирования (слот = <c>blueprintId.id</c>, размер <paramref name="nodeCount"/>).</summary>
+		private void EnsureSchedule(BlueprintInstanceId instance, int nodeCount)
+		{
+			_schedule.EnsureCount(instance.id + 1, default);
+			ref var arr = ref _schedule[instance.id];
+			if (!arr.IsCreated)
+				arr = new UnsafeArray<byte>(_memoryId, nodeCount);
+			// Слот инстанса связан с одним блюпринтом ⇒ размер не меняется. Reuse под больший граф — рассинхрон.
+			E.ASSERT(arr.Length >= nodeCount, "[Orchestrator] schedule-слот меньше NodesCount (слот переиспользован под больший блюпринт?).");
+		}
+
+		/// <summary>Сброс планирования перед прогоном: чистит все существующие per-instance массивы (queued/computed → 0).</summary>
+		private void ResetSchedules()
+		{
+			for (var i = 0; i < _schedule.count; i++)
+			{
+				ref var arr = ref _schedule[i];
+				if (arr.IsCreated)
+					arr.Clear();
+			}
 		}
 
 		public void Dispose()
@@ -95,9 +175,10 @@ namespace Sapientia.LogicGraph
 			if (!IsCreated)
 				return;
 
-			if (_order.IsCreated)
-				_order.Dispose();
-			_graph.Dispose();
+			for (var i = 0; i < _schedule.count; i++)
+				_schedule[i].Dispose();
+			_schedule.Dispose();
+			_queue.Dispose();
 			this = default;
 		}
 	}

@@ -1,6 +1,6 @@
 # M7-B — Work-list core (eager, single-thread, один рантайм)
 
-> **Статус: 🔄 план-гейт.** Источник модели — [phase-M7/README.md «Целевая модель исполнения»](../README.md).
+> **Статус: 🔄 реализовано, self-review пройден, ожидает ревью.** Источник модели — [phase-M7/README.md «Целевая модель исполнения»](../README.md).
 > Эта под-фаза — **ядро**: заменяет статический `ExecutionGraph`/`Drain`/батч-DAG на **демандный work-list**
 > оркестратора. Single-thread, **один рантайм** (forceManaged), **без lazy/wave/параллели** (это M7-C/D/E).
 
@@ -29,10 +29,16 @@
          затем **push**: поставить консьюмеров (`GetNodeRelatives(N).outputs`) в work-list.
    - Терминирование: нода исполняется ≤1 раза (после — мемоизирована); pull/push добавляют конечное число;
      «в очереди»-флаг гасит дубли. Гарантия прогресса — DAG (циклы = ошибка графа, как в Drain).
-4. **Ready-check по кешу (тип-агностично).** Оркестратор не знает `T` порта ⇒ нужен **не-generic**
-   `InstanceCache.IsCalculated(Id<CacheLink> cell)` (по ordinal ячейки, читает `state`). In/Out-ордоналы
-   ноды берём из Map (`GetNodeInOut(N)` → `RegionPtr.cacheData`). Добавить не-generic перегрузку (сейчас есть
-   только `IsCalculated<T>(CacheHandler<T>)`).
+4. **Ready-check по УЗЛОВОЙ топологии** (РЕШЕНО (B), 2026-06-18 — меняет гейт #3). Перечислить In-**порты**
+   ноды оркестратор не может (число портов в компиляте не лежит — «знает сама нода»). Поэтому ready-check —
+   по **нодам-предшественникам** (`GetNodeRelatives(N).inputs`, `InDegree`) + per-node бит `_computed`:
+   `Ready(N) ⟺ все предшественники computed`. Константные входы не в `inputs` → не блокируют. Для eager
+   (нода производит **все** выходы за раз) per-node ≡ per-port. Не-generic `IsCalculated(cell)` **выпадает из
+   M7-B** (вернётся в M7-D/M9 для lazy/частичного/инкрементального skip).
+   **Хранилище бит'ов:** два бита на ноду (`queued`/`computed`) — в **per-instance transient-массиве**
+   (`UnsafeArray<byte>` размера `NodesCount`), живёт рядом с `InstanceCache` в `ExecutionScope`, сбрасывается
+   оркестратором в начале `Run` (решение гейта #1 — «место в кеш-пространстве»). Мульти-инстанс — естественно
+   (у каждого инстанса свой массив).
 5. **Eager — границы.** В M7-B тело **не тянет** входы (`Get`/`TryGet`/yield — M7-D). Контракт тела:
    `Read` готовых In + `Write` Out (как сейчас в стаб-нодах). `NodeContext` без `Get`/yield.
 6. **Один рантайм.** Cross-runtime (Burst↔managed граница, wave) — **M7-C**. В M7-B всё forceManaged ⇒
@@ -69,10 +75,14 @@ struct Orchestrator : IDisposable
 
 | Задача | Концепт | Статус |
 |---|---|---|
-| **T01** — `InstanceCache.IsCalculated(cell)` не-generic + ready-helper по ноде | ☐ |
-| **T02** — `Orchestrator` work-list: `Inject(span)` + ready-driven `Run` (pull/push/memoize) | ☐ |
-| **T03** — снос `ExecutionGraph`/`ExecutionBatch`/`Drain` (+ перенос `RuntimeType`); удалить `ExecutionGraphTests` | ☐ |
-| **T04** — переписать `NodeDispatchTests` под work-list; + тест мемоизации (нода ≤1 раза) | ☐ |
+| **T01** — ready-check по узловой топологии (`relatives`) + per-node bitset'ы (вместо `IsCalculated(cell)` — реш. (B)) | ✅ (свёрнут в T02) |
+| **T02** — `Orchestrator` work-list: `Inject(span)` + ready-driven `Run`; per-instance `_schedule` (queued/computed); pull + push-реактивация + memoize | ✅ |
+| **T03** — снос `ExecutionGraph`/`ExecutionBatch`/`Drain` + `ExecutionGraphTests`; `RuntimeType` → отдельный файл | ✅ |
+| **T04** — `NodeDispatchTests` под `Inject(span)`; + `Run_SharedAncestor_RunsOnce` (мемоизация) | ✅ |
+
+> **Self-review (adversarial):** Blocker/Major нет. Исправлены 2 Minor — (1) убран self-re-enqueue → push-
+> реактивация (терминирует на циклах, как старый Drain); (2) DEBUG-assert на reuse schedule-слота. Nit (stale
+> `Drain` doc-комментарии) — поправлены. **Компиляция/тесты под Unity здесь не прогонялись** (нет Unity).
 
 ## Тесты (доказательная база)
 

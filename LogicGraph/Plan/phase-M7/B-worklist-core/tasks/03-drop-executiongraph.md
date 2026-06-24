@@ -1,6 +1,6 @@
 # T03 — Снос ExecutionGraph / батч-DAG
 
-**Статус:** ☐ todo
+**Статус:** ✅ done
 
 ## Шаги
 1. Удалить `ExecutionGraph.cs` (+ `.meta`), `ExecutionBatch`. `RuntimeType` — перенести (нужен в M7-C) в

@@ -7,9 +7,10 @@ using Submodules.Sapientia.Data;
 namespace Sapientia.LogicGraph.Tests
 {
 	/// <summary>
-	/// M6-F/M7-A: <b>прогон через оркестратор</b> — <see cref="Orchestrator.Run"/> гоняет
-	/// <see cref="ExecutionGraph.Drain"/>-порядок через <see cref="NodeInvoker.Invoke"/>: резолв памяти инстанса из
-	/// <see cref="ExecutionScope"/> (Cache + Persistence) + dispatch через <see cref="ExecutionScope.Registry"/>.
+	/// M7-B: <b>прогон через демандный оркестратор</b> — <see cref="Orchestrator.Inject"/> сидит входы,
+	/// <see cref="Orchestrator.Run"/> исполняет граф в порядке зависимостей (ready-по-предшественникам + push +
+	/// мемоизация) через <see cref="NodeInvoker.Invoke"/>: резолв памяти инстанса из <see cref="ExecutionScope"/>
+	/// (Cache + Persistence) + dispatch через <see cref="ExecutionScope.Registry"/>.
 	/// Тела нод <b>реально исполняются</b> managed-путём (реестр строим через
 	/// <see cref="NodeFunctionRegistry.Create(ExecuteFn[], bool)"/> с <c>forceManaged: true</c> ⇒ Burst/<c>IndexedTypes</c>
 	/// не нужны — plain managed-семантика). Прогон — через Unity Test Runner (весь файл под <c>#if UNITY_5_4_OR_NEWER</c>,
@@ -85,6 +86,21 @@ namespace Sapientia.LogicGraph.Tests
 			{
 				var v = ctx.PersistenceSlice().Cast<long>().Value();
 				ctx.Cache().Write(output, v);
+			}
+		}
+
+		/// <summary>Источник: пишет <see cref="seed"/> в Cache-Out И инкрементит Persistence-счётчик исполнений
+		/// (детектор повторного запуска — для проверки мемоизации общего предка).</summary>
+		private struct StubSeedCounting : ILogicNode
+		{
+			public CacheHandler<long> output;
+			public long seed;
+
+			public void Execute(ref NodeContext ctx)
+			{
+				ref var counter = ref ctx.PersistenceSlice().Cast<long>().Value();
+				counter = counter + 1;
+				ctx.Cache().Write(output, seed);
 			}
 		}
 
@@ -192,7 +208,7 @@ namespace Sapientia.LogicGraph.Tests
 				compiled.GetStaticNodeSlice(1).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 1, 0), output = PortHandle(ref compiled, 1, 1), addend = 5L };
 				compiled.GetStaticNodeSlice(2).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 2, 0), output = PortHandle(ref compiled, 2, 1), addend = 5L };
 
-				orch.Inject(ref compiled, Entry(id, 0));
+				orch.Inject(new[] { Entry(id, 0) });
 
 				var n = orch.Run(ref scope, ref compiled);
 				Assert.AreEqual(3, n, "Все три ноды исполнены.");
@@ -255,7 +271,7 @@ namespace Sapientia.LogicGraph.Tests
 				compiled.GetStaticNodeSlice(2).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 2, 0), output = PortHandle(ref compiled, 2, 1), addend = 2L };
 				compiled.GetStaticNodeSlice(3).Cast<StubSum2>().Value() = new StubSum2 { inputA = PortHandle(ref compiled, 3, 0), inputB = PortHandle(ref compiled, 3, 1), output = PortHandle(ref compiled, 3, 2) };
 
-				orch.Inject(ref compiled, Entry(id, 0));
+				orch.Inject(new[] { Entry(id, 0) });
 
 				Assert.AreEqual(4, orch.Run(ref scope, ref compiled), "Все четыре ноды исполнены.");
 
@@ -299,8 +315,7 @@ namespace Sapientia.LogicGraph.Tests
 				SeedPersistence(ref scope, ref compiled, id1, 0, 10L);
 				SeedPersistence(ref scope, ref compiled, id2, 0, 20L);
 
-				orch.Inject(ref compiled, Entry(id1, 0));
-				orch.Inject(ref compiled, Entry(id2, 0));
+				orch.Inject(new[] { Entry(id1, 0), Entry(id2, 0) });
 
 				Assert.AreEqual(2, orch.Run(ref scope, ref compiled), "Обе ноды (по одной на инстанс) исполнены.");
 
@@ -336,9 +351,10 @@ namespace Sapientia.LogicGraph.Tests
 
 				var id = scope.CreateInstance(ref storage, key);
 				ref var compiled = ref storage.Get(key);
-				orch.Inject(ref compiled, Entry(id, 0));
-
+				// Два прогона: Inject перед каждым (Run опустошает очередь).
+				orch.Inject(new[] { Entry(id, 0) });
 				orch.Run(ref scope, ref compiled);
+				orch.Inject(new[] { Entry(id, 0) });
 				orch.Run(ref scope, ref compiled);
 
 				var counter = (scope.GetInstancePersistent(id).GetPtr() + compiled.GetNodePersistenceOffset(0).byteOffset).Cast<long>().Value();
@@ -383,18 +399,18 @@ namespace Sapientia.LogicGraph.Tests
 				ref var compiled = ref storage.Get(key);
 				compiled.GetStaticNodeSlice(0).Cast<StubSeed>().Value() = new StubSeed { output = PortHandle(ref compiled, 0, 0), seed = 7L };
 				compiled.GetStaticNodeSlice(1).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 1, 0), output = PortHandle(ref compiled, 1, 1), addend = 3L };
-				orch.Inject(ref compiled, Entry(id, 0));
-
 				var bOutHandle = PortHandle(ref compiled, 1, 1);
 				var template = compiled.GetCacheCellsTemplate();
 
-				// Итерация 1: вызывающий сбрасывает кеш инстанса, затем Run.
+				// Итерация 1: вызывающий сбрасывает кеш, сидит вход, Run.
 				scope.ResetInstanceCache(id, template);
+				orch.Inject(new[] { Entry(id, 0) });
 				orch.Run(ref scope, ref compiled);
 				scope.GetInstanceCache(id).Read(bOutHandle, out var first);
 
-				// Итерация 2: снова caller-сброс → Run.
+				// Итерация 2: снова reset → Inject → Run.
 				scope.ResetInstanceCache(id, template);
+				orch.Inject(new[] { Entry(id, 0) });
 				orch.Run(ref scope, ref compiled);
 				scope.GetInstanceCache(id).Read(bOutHandle, out var second);
 
@@ -413,8 +429,7 @@ namespace Sapientia.LogicGraph.Tests
 		[Test]
 		public void Run_NoInject_ReturnsZero()
 		{
-			// Run без Inject (граф пуст, NodeCount == 0): 0 исполненных нод, буфер порядка не аллоцируется
-			// (регрессия M7-A: старый stackalloc[0] ноль нод терпел, MakeArray(0) — DEBUG-assert).
+			// Run без Inject: work-list пуст → цикл не исполняется → 0 нод (без падений на пустом графе).
 			var registry = NodeFunctionRegistry.Create(new[] { NodeInvoker.GetManaged<StubSeed>() }, forceManaged: true);
 			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
 			var scope = ExecutionScope.Create(registry: registry);
@@ -427,7 +442,63 @@ namespace Sapientia.LogicGraph.Tests
 				storage.Add(arena, offset, CompiledEnvironment.Compile());
 				ref var compiled = ref storage.Get(key);
 
-				Assert.AreEqual(0, orch.Run(ref scope, ref compiled), "Без Inject граф пуст — 0 нод, без аллокации.");
+				Assert.AreEqual(0, orch.Run(ref scope, ref compiled), "Без Inject work-list пуст — 0 нод.");
+			}
+			finally
+			{
+				orch.Dispose();
+				scope.Dispose();
+				storage.Dispose();
+				registry.Dispose();
+			}
+		}
+
+		[Test]
+		public void Run_SharedAncestor_RunsOnce()
+		{
+			// A (источник, инкрементит Persistence-счётчик) → B, C. Входы = [B, C]; оба ТЯНУТ A,
+			// но A исполняется РОВНО ОДИН раз (мемоизация по computed-биту). Доказывает pull + дедуп + memoize.
+			var registry = NodeFunctionRegistry.Create(new[]
+			{
+				NodeInvoker.GetManaged<StubSeedCounting>(),
+				NodeInvoker.GetManaged<StubAdd>(),
+				NodeInvoker.GetManaged<StubAdd>(),
+			}, forceManaged: true);
+			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
+			var scope = ExecutionScope.Create(registry: registry);
+			var orch = Orchestrator.Create();
+			try
+			{
+				var aOut = new NodeOutput<long>();
+				var bIn = new NodeInput<long>();
+				var cIn = new NodeInput<long>();
+				var bp = StubBlueprint.Of(
+					new StubNode(staticSize: 64, cacheSize: 16, persistanceSize: 8, outputs: new NodeOutput[] { aOut }, typeId: 0),
+					new StubNode(staticSize: 64, cacheSize: 16, inputs: new NodeInput[] { bIn }, outputs: new NodeOutput[] { new NodeOutput<long>() }, typeId: 1),
+					new StubNode(staticSize: 64, cacheSize: 16, inputs: new NodeInput[] { cIn }, outputs: new NodeOutput[] { new NodeOutput<long>() }, typeId: 2));
+				bp.inputToOutput[bIn] = aOut;
+				bp.inputToOutput[cIn] = aOut;
+
+				var arena = BlueprintCompiler.CompileLayout(bp, out var offset);
+				var key = arena.Value.GetValue(offset).blueprintKey;
+				storage.Add(arena, offset, CompiledEnvironment.Compile());
+
+				var id = scope.CreateInstance(ref storage, key);
+				ref var compiled = ref storage.Get(key);
+				compiled.GetStaticNodeSlice(0).Cast<StubSeedCounting>().Value() = new StubSeedCounting { output = PortHandle(ref compiled, 0, 0), seed = 5L };
+				compiled.GetStaticNodeSlice(1).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 1, 0), output = PortHandle(ref compiled, 1, 1), addend = 1L };
+				compiled.GetStaticNodeSlice(2).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 2, 0), output = PortHandle(ref compiled, 2, 1), addend = 2L };
+
+				orch.Inject(new[] { Entry(id, 1), Entry(id, 2) }); // входы = B и C, тянут общего предка A
+				var n = orch.Run(ref scope, ref compiled);
+
+				var counter = (scope.GetInstancePersistent(id).GetPtr() + compiled.GetNodePersistenceOffset(0).byteOffset).Cast<long>().Value();
+				Assert.AreEqual(1L, counter, "Общий предок A исполнен ровно один раз (мемоизация), хотя его тянут и B, и C.");
+				Assert.AreEqual(3, n, "Исполнены A, B, C по разу.");
+				Assert.IsTrue(scope.GetInstanceCache(id).Read(PortHandle(ref compiled, 1, 1), out var bOut));
+				Assert.AreEqual(6L, bOut, "B = A(5) + 1.");
+				Assert.IsTrue(scope.GetInstanceCache(id).Read(PortHandle(ref compiled, 2, 1), out var cOut));
+				Assert.AreEqual(7L, cOut, "C = A(5) + 2.");
 			}
 			finally
 			{

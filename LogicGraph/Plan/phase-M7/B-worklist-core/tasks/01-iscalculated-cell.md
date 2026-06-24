@@ -1,6 +1,6 @@
 # T01 — InstanceCache.IsCalculated(cell) + ready-helper
 
-**Статус:** ☐ todo
+**Статус:** ✅ done
 
 ## Цель
 Тип-агностичная проверка готовности входов ноды для оркестратора.

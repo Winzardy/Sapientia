@@ -25,7 +25,7 @@ namespace Sapientia.LogicGraph
 	/// .NET/fallback, <b>Burst её не трогает</b>. Население managed-таблицы — опционально (<see cref="Build"/>
 	/// <c>buildManaged</c>): под Unity её можно пропустить для <b>Unmanaged</b>-нод (их покрывает Burst); для
 	/// <b>Managed</b>-нод managed-делегат строится всегда (Burst-skip — единственный путь). <b>Выбор</b> таблицы по
-	/// <c>NodeHeader.runtimeType</c> — <see cref="UseManaged"/>/<see cref="Invoke"/> (M6-D); прогон <c>Drain</c> — M6-F.</para>
+	/// <c>NodeHeader.runtimeType</c> — <see cref="UseManaged"/>/<see cref="Invoke"/> (M6-D); прогон — демандный work-list <c>Orchestrator</c> (M7-B).</para>
 	/// <para><b>Индекс — плотный ordinal</b> <c>TypeId&lt;ILogicNode&gt;</c> (== <c>NodeHeader.typeId</c>, бейканный в блоб
 	/// на компиляции). Источник типов — уже построенные генератором <c>TypeIndexer</c> <b>дети контекста</b> <c>ILogicNode</c>
 	/// (<see cref="IndexedTypes.GetContextChildren"/>, упорядочены по этому ordinal'у) ⇒ совпадение индекса с блобом

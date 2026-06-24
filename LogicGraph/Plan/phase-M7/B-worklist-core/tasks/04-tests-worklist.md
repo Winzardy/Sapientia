@@ -1,6 +1,6 @@
 # T04 — NodeDispatchTests под work-list + мемоизация
 
-**Статус:** ☐ todo
+**Статус:** ✅ done
 
 ## Шаги
 1. Переписать `Run_*` под `Inject(span)` (вместо entry-node/Drain).

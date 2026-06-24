@@ -1,6 +1,6 @@
 # T02 — Orchestrator work-list
 
-**Статус:** ☐ todo
+**Статус:** ✅ done
 
 ## Цель
 Демандный ready-driven прогон вместо батч-DAG.

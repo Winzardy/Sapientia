@@ -52,8 +52,8 @@ namespace Sapientia.LogicGraph
 		}
 
 		// ─────────────────────────── Per-node диспатч (M6-F) ───────────────────────────
-		// Прогон (run-prologue → Drain → per-node Invoke) переехал в Orchestrator (M7-A); здесь — чистый
-		// диспатч одной ноды: managed-glue Invoke + Burst/Managed таблицы-точки.
+		// Прогон (демандный work-list) — в Orchestrator (M7-B); здесь — чистый диспатч одной ноды:
+		// managed-glue Invoke + Burst/Managed таблицы-точки.
 
 #if UNITY_5_3_OR_NEWER
 		/// <summary><b>Burst-путь</b> исполнения ноды <paramref name="ordinal"/> над <paramref name="ctx"/>. Принимает
