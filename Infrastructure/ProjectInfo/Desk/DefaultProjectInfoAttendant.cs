@@ -1,4 +1,5 @@
 using System;
+using Content;
 
 namespace ProjectInformation
 {
@@ -10,21 +11,27 @@ namespace ProjectInformation
 
 		private readonly PlatformEntry _platform;
 		private readonly BuildInfo _buildInfo;
+		private readonly ContentBuildInfo _contentBuildInfo;
 		private readonly DistributionEntry _store;
 
 		public string UserId { get => _userId; }
 		public string Identifier { get => _info.identifier; }
 		public event Action UserIdChanged;
 
-		public DefaultProjectInfoAttendant(in ProjectInfoConfig info, in PlatformEntry platform, BuildInfo buildInfo)
+		public DefaultProjectInfoAttendant(
+			in ProjectInfoConfig info,
+			in PlatformEntry platform,
+			BuildInfo buildInfo,
+			ContentBuildInfo contentBuildInfo)
 		{
 			_info = info;
 			if (!info.platformToDistribution.TryGetValue(platform, out var store))
 				store = DistributionType.UNDEFINED;
 
-			_platform  = platform;
-			_buildInfo = buildInfo;
-			_store     = store;
+			_platform         = platform;
+			_buildInfo        = buildInfo;
+			_contentBuildInfo = contentBuildInfo;
+			_store            = store;
 
 			ProjectDebug.Log($"OS: {_platform}");
 			ProjectDebug.Log($"Distribution: {_store}");
@@ -37,6 +44,7 @@ namespace ProjectInformation
 			_info.buildNumber != 0 ? $"{_info.version} ({_info.buildNumber})" : _info.version;
 
 		public virtual BuildInfo GetBuildInfo() => _buildInfo;
+		public virtual ContentBuildInfo GetContentBuildInfo() => _contentBuildInfo;
 		public ref readonly PlatformEntry GetPlatform() => ref _platform;
 		public ref readonly DistributionEntry GetDistribution() => ref _store;
 
