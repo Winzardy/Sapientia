@@ -29,6 +29,15 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
+		/// Помечен ли <paramref name="typeId"/> как намеренно не копируемый. Если диспатч не зарегистрирован -
+		/// считаем пропущенным (копировать всё равно нечем, ложную диагностику не поднимаем).
+		/// </summary>
+		public static bool IsSkipped(TypeId typeId)
+		{
+			return _copier == null || _copier.IsSkipped(typeId);
+		}
+
+		/// <summary>
 		/// Складывает дочерние сущности компонента <paramref name="typeId"/> с <paramref name="entity"/>
 		/// в <paramref name="frontier"/>. Вызывается только когда <see cref="IsCopiable"/> вернул true.
 		/// </summary>
@@ -44,6 +53,15 @@ namespace Sapientia.MemoryAllocator.State
 		public static void CopyComponent(TypeId typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)
 		{
 			_copier!.CopyComponent(typeId, oldWS, newWS, oldEntity, newEntity, in map);
+		}
+
+		/// <summary>
+		/// Сообщает о необработанном ссылочном компоненте через диспатч в код игры. Если диспатч не
+		/// зарегистрирован - сообщать нечем и незачем (копировать всё равно нечем).
+		/// </summary>
+		public static void ReportUnhandled(TypeId typeId)
+		{
+			_copier?.ReportUnhandled(typeId);
 		}
 	}
 }

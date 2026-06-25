@@ -15,6 +15,12 @@ namespace Sapientia.MemoryAllocator.State
 		bool IsCopiable(TypeId typeId);
 
 		/// <summary>
+		/// Помечен ли <paramref name="typeId"/> как намеренно не копируемый (<see cref="SkipCopyAttribute"/>).
+		/// Нужно, чтобы отличить ожидаемый пропуск от необработанного ссылочного компонента (молчаливая потеря).
+		/// </summary>
+		bool IsSkipped(TypeId typeId);
+
+		/// <summary>
 		/// Складывает дочерние сущности компонента <paramref name="typeId"/> с <paramref name="entity"/>
 		/// в очередь обхода.
 		/// </summary>
@@ -25,5 +31,11 @@ namespace Sapientia.MemoryAllocator.State
 		/// ссылки по <paramref name="map"/>.
 		/// </summary>
 		void CopyComponent(TypeId typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map);
+
+		/// <summary>
+		/// Сообщает о необработанном ссылочном компоненте (без маркера копирования). Реализация в коде игры
+		/// пишет ошибку в лог (видно в релизе) и роняет в DEBUG, чтобы потеря при копии не прошла молча.
+		/// </summary>
+		void ReportUnhandled(TypeId typeId);
 	}
 }

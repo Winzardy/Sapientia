@@ -35,6 +35,8 @@ namespace Sapientia.TypeIndexer
 			EntityOwned,
 			SetOwned,
 			SetLink,
+			ListOwned,
+			ListLink,
 			IgnoreField,
 		}
 
@@ -68,6 +70,7 @@ namespace Sapientia.TypeIndexer
 
 			var flatComponents = new List<Type>();
 			var refComponents = new List<Type>();
+			var skippedComponents = new List<Type>();
 
 			foreach (var type in GetComponentTypes())
 			{
@@ -76,6 +79,9 @@ namespace Sapientia.TypeIndexer
 
 				switch (verdict)
 				{
+					case Verdict.Skip:
+						skippedComponents.Add(type);
+						break;
 					case Verdict.FlatCopy:
 						flatComponents.Add(type);
 						break;
@@ -116,7 +122,7 @@ namespace Sapientia.TypeIndexer
 				Directory.Delete(baseDirectory, true);
 			Directory.CreateDirectory(baseDirectory);
 
-			File.WriteAllText(Path.Combine(baseDirectory, "GeneratedComponentCopier.generated.cs"), EmitDispatcher(flatComponents, refComponents));
+			File.WriteAllText(Path.Combine(baseDirectory, "GeneratedComponentCopier.generated.cs"), EmitDispatcher(flatComponents, refComponents, skippedComponents));
 			File.WriteAllText(Path.Combine(baseDirectory, "_worklist.txt"), report.ToString());
 		}
 
@@ -219,6 +225,22 @@ namespace Sapientia.TypeIndexer
 				plan = new FieldPlan(field.Name, link ? FieldKind.SetLink : FieldKind.SetOwned);
 				return true;
 			}
+			if (IsMemListOfEntity(fieldType))
+			{
+				var link = field.GetCustomAttribute<LinkAttribute>() != null;
+				plan = new FieldPlan(field.Name, link ? FieldKind.ListLink : FieldKind.ListOwned);
+				return true;
+			}
+			if (IsMemArrayOfEntity(fieldType))
+			{
+				var droppedMarker = field.GetCustomAttribute<OwnedAttribute>() != null ? "[Owned]"
+					: field.GetCustomAttribute<LinkAttribute>() != null ? "[Link]"
+					: null;
+				unhandleableReason = droppedMarker != null
+					? $"{field.Name}: {droppedMarker} на MemArray<Entity> ПРОИГНОРИРОВАН - MemArray<Entity> генератором не поддержана (фиксированная длина). Замени на MemList<Entity>/MemHashSet<Entity> либо напиши [ManualCopy]."
+					: $"{field.Name}: MemArray<Entity> генератором не поддержана (фиксированная длина). Замени на MemList<Entity>/MemHashSet<Entity> либо напиши [ManualCopy].";
+				return false;
+			}
 			if (IsFlat(fieldType))
 			{
 				plan = new FieldPlan(field.Name, FieldKind.Flat);
@@ -233,6 +255,20 @@ namespace Sapientia.TypeIndexer
 		{
 			return type.IsGenericType
 				&& type.GetGenericTypeDefinition() == typeof(MemHashSet<>)
+				&& type.GetGenericArguments()[0] == typeof(Entity);
+		}
+
+		private static bool IsMemListOfEntity(Type type)
+		{
+			return type.IsGenericType
+				&& type.GetGenericTypeDefinition() == typeof(MemList<>)
+				&& type.GetGenericArguments()[0] == typeof(Entity);
+		}
+
+		private static bool IsMemArrayOfEntity(Type type)
+		{
+			return type.IsGenericType
+				&& type.GetGenericTypeDefinition() == typeof(MemArray<>)
 				&& type.GetGenericArguments()[0] == typeof(Entity);
 		}
 
@@ -333,6 +369,7 @@ namespace Sapientia.TypeIndexer
 						builder.AppendLine($"\t\t\tentities.Add({plan.name});");
 						break;
 					case FieldKind.SetOwned:
+					case FieldKind.ListOwned:
 						builder.AppendLine($"\t\t\tforeach (var __entity in {plan.name}.GetEnumerable(world))");
 						builder.AppendLine("\t\t\t{");
 						builder.AppendLine("\t\t\t\tentities.Add(__entity);");
@@ -370,6 +407,20 @@ namespace Sapientia.TypeIndexer
 						builder.AppendLine("\t\t\t\t}");
 						builder.AppendLine("\t\t\t}");
 						break;
+					case FieldKind.ListOwned:
+					case FieldKind.ListLink:
+						builder.AppendLine($"\t\t\tif ({plan.name}.IsCreated)");
+						builder.AppendLine("\t\t\t{");
+						builder.AppendLine($"\t\t\t\tcomponent.{plan.name} = new MemList<Entity>(newWS, {plan.name}.Count);");
+						builder.AppendLine($"\t\t\t\tforeach (var __entity in {plan.name}.GetEnumerable(oldWS))");
+						builder.AppendLine("\t\t\t\t{");
+						builder.AppendLine("\t\t\t\t\tif (map.TryGetValue(__entity, out var __mapped))");
+						builder.AppendLine("\t\t\t\t\t{");
+						builder.AppendLine($"\t\t\t\t\t\tcomponent.{plan.name}.Add(newWS, __mapped);");
+						builder.AppendLine("\t\t\t\t\t}");
+						builder.AppendLine("\t\t\t\t}");
+						builder.AppendLine("\t\t\t}");
+						break;
 				}
 			}
 			builder.AppendLine("\t\t}");
@@ -379,19 +430,22 @@ namespace Sapientia.TypeIndexer
 			return builder.ToString();
 		}
 
-		private static string EmitDispatcher(List<Type> flatComponents, List<Type> refComponents)
+		private static string EmitDispatcher(List<Type> flatComponents, List<Type> refComponents, List<Type> skippedComponents)
 		{
 			var builder = new StringBuilder();
 			builder.AppendLine("using Sapientia.Collections;");
 			builder.AppendLine("using Sapientia.MemoryAllocator;");
 			builder.AppendLine("using Sapientia.MemoryAllocator.State;");
 			builder.AppendLine("using Sapientia.TypeIndexer;");
+			builder.AppendLine("using Sapientia;");
+			builder.AppendLine("using WLog;");
 			builder.AppendLine();
 			builder.AppendLine("namespace Sapientia.TypeIndexer.Generated");
 			builder.AppendLine("{");
 			builder.AppendLine("\tpublic sealed class GeneratedComponentCopier : IComponentCopier");
 			builder.AppendLine("\t{");
 			builder.AppendLine("\t\tprivate static System.Collections.Generic.HashSet<int> _copiable;");
+			builder.AppendLine("\t\tprivate static System.Collections.Generic.HashSet<int> _skipped;");
 			builder.AppendLine();
 			builder.AppendLine("\t\t[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSceneLoad)]");
 			builder.AppendLine("\t\tprivate static void Register()");
@@ -410,6 +464,19 @@ namespace Sapientia.TypeIndexer
 			}
 			builder.AppendLine("\t\t\t};");
 			builder.AppendLine("\t\t\treturn _copiable.Contains((int)typeId);");
+			builder.AppendLine("\t\t}");
+			builder.AppendLine();
+
+			builder.AppendLine("\t\tpublic bool IsSkipped(TypeId typeId)");
+			builder.AppendLine("\t\t{");
+			builder.AppendLine("\t\t\t_skipped ??= new System.Collections.Generic.HashSet<int>");
+			builder.AppendLine("\t\t\t{");
+			foreach (var type in skippedComponents)
+			{
+				builder.AppendLine($"\t\t\t\t(int)TypeIdOf<{type.GetFullName()}>.typeId,");
+			}
+			builder.AppendLine("\t\t\t};");
+			builder.AppendLine("\t\t\treturn _skipped.Contains((int)typeId);");
 			builder.AppendLine("\t\t}");
 			builder.AppendLine();
 
@@ -452,6 +519,14 @@ namespace Sapientia.TypeIndexer
 				builder.AppendLine("\t\t\t\treturn;");
 				builder.AppendLine("\t\t\t}");
 			}
+			builder.AppendLine("\t\t}");
+			builder.AppendLine();
+			builder.AppendLine("\t\tpublic void ReportUnhandled(TypeId typeId)");
+			builder.AppendLine("\t\t{");
+			builder.AppendLine("\t\t\tvar __type = IndexedTypes.GetType(typeId);");
+			builder.AppendLine("\t\t\tvar __name = __type != null ? __type.FullName : ((int)typeId).ToString();");
+			builder.AppendLine("\t\t\tthis.LogError($\"CopyEntityTree: необработанный ссылочный компонент {__name} потеряется при копии. Добавь [GenerateCopy]/[ManualCopy] либо [SkipCopy].\");");
+			builder.AppendLine("\t\t\tE.ASSERT(false, \"CopyEntityTree: необработанный ссылочный компонент \" + __name + \".\");");
 			builder.AppendLine("\t\t}");
 			builder.AppendLine("\t}");
 			builder.AppendLine("}");
