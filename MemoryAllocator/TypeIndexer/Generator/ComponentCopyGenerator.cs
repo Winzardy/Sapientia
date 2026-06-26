@@ -122,7 +122,7 @@ namespace Sapientia.TypeIndexer
 				Directory.Delete(baseDirectory, true);
 			Directory.CreateDirectory(baseDirectory);
 
-			File.WriteAllText(Path.Combine(baseDirectory, "GeneratedComponentCopier.generated.cs"), EmitDispatcher(flatComponents, refComponents, skippedComponents));
+			File.WriteAllText(Path.Combine(baseDirectory, "GeneratedComponentCopier.generated.cs"), EmitRegistration(flatComponents, refComponents, skippedComponents));
 			File.WriteAllText(Path.Combine(baseDirectory, "_worklist.txt"), report.ToString());
 		}
 
@@ -430,7 +430,12 @@ namespace Sapientia.TypeIndexer
 			return builder.ToString();
 		}
 
-		private static string EmitDispatcher(List<Type> flatComponents, List<Type> refComponents, List<Type> skippedComponents)
+		/// <summary>
+		/// Эмитит ТОЛЬКО данные регистрации (без класса-диспатчера): per-type thunk-и Append/Copy и метод
+		/// <c>Register</c>, который запекает их в <see cref="ComponentCopier"/> по локальному индексу.
+		/// Тело диспатча живёт руками в Sapientia (ComponentCopier), здесь только game-side обвязка.
+		/// </summary>
+		private static string EmitRegistration(List<Type> flatComponents, List<Type> refComponents, List<Type> skippedComponents)
 		{
 			var builder = new StringBuilder();
 			builder.AppendLine("using Sapientia.Collections;");
@@ -442,90 +447,74 @@ namespace Sapientia.TypeIndexer
 			builder.AppendLine();
 			builder.AppendLine("namespace Sapientia.TypeIndexer.Generated");
 			builder.AppendLine("{");
-			builder.AppendLine("\tpublic sealed class GeneratedComponentCopier : IComponentCopier");
+			builder.AppendLine("\tpublic static class GeneratedComponentCopier");
 			builder.AppendLine("\t{");
-			builder.AppendLine("\t\tprivate static System.Collections.Generic.HashSet<int> _copiable;");
-			builder.AppendLine("\t\tprivate static System.Collections.Generic.HashSet<int> _skipped;");
+			builder.AppendLine("\t\tprivate static readonly WLogContext W_CONTEXT = WLogContext.Create(\"ComponentCopier\");");
 			builder.AppendLine();
 			builder.AppendLine("\t\t[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSceneLoad)]");
 			builder.AppendLine("\t\tprivate static void Register()");
 			builder.AppendLine("\t\t{");
-			builder.AppendLine("\t\t\tGeneratedCopier.SetCopier(new GeneratedComponentCopier());");
-			builder.AppendLine("\t\t}");
+			builder.AppendLine("\t\t\tvar copier = new ComponentCopier();");
 			builder.AppendLine();
-
-			builder.AppendLine("\t\tpublic bool IsCopiable(TypeId typeId)");
-			builder.AppendLine("\t\t{");
-			builder.AppendLine("\t\t\t_copiable ??= new System.Collections.Generic.HashSet<int>");
-			builder.AppendLine("\t\t\t{");
-			foreach (var type in flatComponents.Concat(refComponents))
-			{
-				builder.AppendLine($"\t\t\t\t(int)TypeIdOf<{type.GetFullName()}>.typeId,");
-			}
-			builder.AppendLine("\t\t\t};");
-			builder.AppendLine("\t\t\treturn _copiable.Contains((int)typeId);");
-			builder.AppendLine("\t\t}");
-			builder.AppendLine();
-
-			builder.AppendLine("\t\tpublic bool IsSkipped(TypeId typeId)");
-			builder.AppendLine("\t\t{");
-			builder.AppendLine("\t\t\t_skipped ??= new System.Collections.Generic.HashSet<int>");
-			builder.AppendLine("\t\t\t{");
-			foreach (var type in skippedComponents)
-			{
-				builder.AppendLine($"\t\t\t\t(int)TypeIdOf<{type.GetFullName()}>.typeId,");
-			}
-			builder.AppendLine("\t\t\t};");
-			builder.AppendLine("\t\t\treturn _skipped.Contains((int)typeId);");
-			builder.AppendLine("\t\t}");
-			builder.AppendLine();
-
-			builder.AppendLine("\t\tpublic void AppendEntities(TypeId typeId, WorldState world, Entity entity, ref UnsafeList<Entity> frontier)");
-			builder.AppendLine("\t\t{");
-			builder.AppendLine("\t\t\tvar __id = (int)typeId;");
-			foreach (var type in refComponents)
-			{
-				var fullName = type.GetFullName();
-				builder.AppendLine($"\t\t\tif (__id == (int)TypeIdOf<{fullName}>.typeId)");
-				builder.AppendLine("\t\t\t{");
-				builder.AppendLine($"\t\t\t\tvar __component = new ComponentSetContext<{fullName}>(world).ReadElement(entity);");
-				builder.AppendLine("\t\t\t\t__component.AppendEntities(world, ref frontier);");
-				builder.AppendLine("\t\t\t\treturn;");
-				builder.AppendLine("\t\t\t}");
-			}
-			builder.AppendLine("\t\t}");
-			builder.AppendLine();
-
-			builder.AppendLine("\t\tpublic void CopyComponent(TypeId typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)");
-			builder.AppendLine("\t\t{");
-			builder.AppendLine("\t\t\tvar __id = (int)typeId;");
 			foreach (var type in flatComponents)
 			{
 				var fullName = type.GetFullName();
-				builder.AppendLine($"\t\t\tif (__id == (int)TypeIdOf<{fullName}>.typeId)");
-				builder.AppendLine("\t\t\t{");
-				builder.AppendLine($"\t\t\t\tref var __dst = ref new ComponentSetContext<{fullName}>(newWS).GetElement(newEntity);");
-				builder.AppendLine($"\t\t\t\t__dst = new ComponentSetContext<{fullName}>(oldWS).ReadElement(oldEntity);");
-				builder.AppendLine("\t\t\t\treturn;");
-				builder.AppendLine("\t\t\t}");
+				builder.AppendLine($"\t\t\tcopier.Register(TypeIdOf<IComponent, {fullName}>.typeId, null, Copy_{type.Name});");
 			}
+			builder.AppendLine();
 			foreach (var type in refComponents)
 			{
 				var fullName = type.GetFullName();
-				builder.AppendLine($"\t\t\tif (__id == (int)TypeIdOf<{fullName}>.typeId)");
-				builder.AppendLine("\t\t\t{");
-				builder.AppendLine($"\t\t\t\tref var __dst = ref new ComponentSetContext<{fullName}>(newWS).GetElement(newEntity);");
-				builder.AppendLine($"\t\t\t\t__dst = oldWS.Copy<{fullName}>(oldEntity, newWS, in map);");
-				builder.AppendLine("\t\t\t\treturn;");
-				builder.AppendLine("\t\t\t}");
+				builder.AppendLine($"\t\t\tcopier.Register(TypeIdOf<IComponent, {fullName}>.typeId, Append_{type.Name}, Copy_{type.Name});");
 			}
+			builder.AppendLine();
+			foreach (var type in skippedComponents)
+			{
+				var fullName = type.GetFullName();
+				builder.AppendLine($"\t\t\tcopier.MarkSkipped(TypeIdOf<IComponent, {fullName}>.typeId);");
+			}
+			builder.AppendLine();
+			builder.AppendLine("\t\t\tcopier.SetUnhandledReporter(ReportUnhandled);");
+			builder.AppendLine("\t\t\tGeneratedCopier.SetCopier(copier);");
 			builder.AppendLine("\t\t}");
 			builder.AppendLine();
-			builder.AppendLine("\t\tpublic void ReportUnhandled(TypeId typeId)");
+
+			foreach (var type in flatComponents)
+			{
+				var fullName = type.GetFullName();
+				builder.AppendLine($"\t\tprivate static void Copy_{type.Name}(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)");
+				builder.AppendLine("\t\t{");
+				builder.AppendLine($"\t\t\tref var __dst = ref new ComponentSetContext<{fullName}>(newWS).GetElement(newEntity);");
+				builder.AppendLine($"\t\t\t__dst = new ComponentSetContext<{fullName}>(oldWS).ReadElement(oldEntity);");
+				builder.AppendLine("\t\t}");
+				builder.AppendLine();
+			}
+
+			foreach (var type in refComponents)
+			{
+				var fullName = type.GetFullName();
+				builder.AppendLine($"\t\tprivate static void Append_{type.Name}(WorldState world, Entity entity, ref UnsafeList<Entity> frontier)");
+				builder.AppendLine("\t\t{");
+				builder.AppendLine($"\t\t\tvar __component = new ComponentSetContext<{fullName}>(world).ReadElement(entity);");
+				builder.AppendLine("\t\t\t__component.AppendEntities(world, ref frontier);");
+				builder.AppendLine("\t\t}");
+				builder.AppendLine();
+				builder.AppendLine($"\t\tprivate static void Copy_{type.Name}(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)");
+				builder.AppendLine("\t\t{");
+				builder.AppendLine($"\t\t\tref var __dst = ref new ComponentSetContext<{fullName}>(newWS).GetElement(newEntity);");
+				builder.AppendLine($"\t\t\t__dst = oldWS.Copy<{fullName}>(oldEntity, newWS, in map);");
+				builder.AppendLine("\t\t}");
+				builder.AppendLine();
+			}
+
+			// Имя типа берём через локальный индекс -> children -> глобальный TypeId. Прямой (TypeId)localId
+			// дал бы сырой копир id без валидации = чужой тип, диагностика соврала бы.
+			builder.AppendLine("\t\tprivate static void ReportUnhandled(TypeId<IComponent> localId)");
 			builder.AppendLine("\t\t{");
-			builder.AppendLine("\t\t\tvar __type = IndexedTypes.GetType(typeId);");
-			builder.AppendLine("\t\t\tvar __name = __type != null ? __type.FullName : ((int)typeId).ToString();");
-			builder.AppendLine("\t\t\tthis.LogError($\"CopyEntityTree: необработанный ссылочный компонент {__name} потеряется при копии. Добавь [GenerateCopy]/[ManualCopy] либо [SkipCopy].\");");
+			builder.AppendLine("\t\t\tvar __globalTypeId = IndexedTypes.GetContextChildren(typeof(IComponent))[(int)localId];");
+			builder.AppendLine("\t\t\tvar __type = __globalTypeId.Type;");
+			builder.AppendLine("\t\t\tvar __name = __type != null ? __type.FullName : ((int)localId).ToString();");
+			builder.AppendLine("\t\t\tW_CONTEXT.LogError($\"CopyEntityTree: необработанный ссылочный компонент {__name} потеряется при копии. Добавь [GenerateCopy]/[ManualCopy] либо [SkipCopy].\");");
 			builder.AppendLine("\t\t\tE.ASSERT(false, \"CopyEntityTree: необработанный ссылочный компонент \" + __name + \".\");");
 			builder.AppendLine("\t\t}");
 			builder.AppendLine("\t}");
