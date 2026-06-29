@@ -12,6 +12,8 @@ namespace Sapientia.MemoryAllocator.State
 		public void OnEntityDisabled(WorldState worldState, Entity callbackReceiver);
 	}
 
+	// [SkipCopy]: колбэки активности (Callback-прокси) в другой мир не переносятся.
+	[SkipCopy]
 	public struct ActivityCallbackComponent : IComponent
 	{
 		/// <summary>
