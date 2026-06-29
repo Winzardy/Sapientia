@@ -31,7 +31,7 @@ namespace Sapientia.MemoryAllocator.State
 			// visited - бит-сет по entity.id (ushort): id всех живых сущностей исходного мира < EntitiesCapacity.
 			var entitiesCapacity = srcWorld.GetService<EntityStatePart>().EntitiesCapacity;
 			_toCopy = new UnsafeList<Entity>(16);
-			_visited = new UnsafeBitArray(default, entitiesCapacity);
+			_visited = new UnsafeBitArray(entitiesCapacity);
 			_frontier = new UnsafeList<Entity>(16);
 			_map = default;
 		}
@@ -101,7 +101,7 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		public void CreateCopies()
 		{
-			_map = new UnsafeDictionary<Entity, Entity>(default, _toCopy.count);
+			_map = default;
 			foreach (var oldEntity in _toCopy)
 			{
 				var newEntity = CreateEntityCopy(oldEntity);

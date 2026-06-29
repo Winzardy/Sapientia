@@ -388,7 +388,7 @@ namespace Sapientia.TypeIndexer
 				{
 					case FieldKind.EntityLink:
 					case FieldKind.EntityOwned:
-						builder.AppendLine($"\t\t\tcomponent.{plan.name} = map.Remap({plan.name});");
+						builder.AppendLine($"\t\t\tcomponent.{plan.name} = map.GetOrDefault({plan.name});");
 						break;
 					case FieldKind.IgnoreField:
 						builder.AppendLine($"\t\t\tcomponent.{plan.name} = default;");

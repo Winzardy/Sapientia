@@ -61,24 +61,24 @@ namespace Sapientia.MemoryAllocator.State
 
 		public bool IsCopiable(TypeId<IComponent> typeId)
 		{
-			return _copiable[(int)typeId];
+			return _copiable[typeId];
 		}
 
 		public bool IsSkipped(TypeId<IComponent> typeId)
 		{
-			return _skipped[(int)typeId];
+			return _skipped[typeId];
 		}
 
 		public void AppendEntities(TypeId<IComponent> typeId, WorldState world, Entity entity, ref UnsafeList<Entity> frontier)
 		{
 			// У плоского компонента append = null: дочерних сущностей нет, складывать нечего.
-			_append[(int)typeId]?.Invoke(world, entity, ref frontier);
+			_append[typeId]?.Invoke(world, entity, ref frontier);
 		}
 
 		public void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)
 		{
 			// Зовётся только после IsCopiable == true, поэтому copy-делегат заведомо не null.
-			_copy[(int)typeId]!.Invoke(oldWS, newWS, oldEntity, newEntity, in map);
+			_copy[typeId]!.Invoke(oldWS, newWS, oldEntity, newEntity, in map);
 		}
 
 		public void ReportUnhandled(TypeId<IComponent> typeId)

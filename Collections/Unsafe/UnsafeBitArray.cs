@@ -33,6 +33,10 @@ namespace Sapientia.Collections
 
 		public readonly Id<MemoryManager> memoryId;
 
+		public UnsafeBitArray(int numBits) : this(default, numBits)
+		{
+		}
+
 		/// <summary>
 		/// Initializes and returns an instance of UnsafeBitArray.
 		/// </summary>

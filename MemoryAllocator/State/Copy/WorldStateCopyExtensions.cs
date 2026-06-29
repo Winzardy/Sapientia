@@ -15,19 +15,12 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		public static Entity CopyEntityTree(this WorldState srcWorld, Entity root, WorldState dstWorld)
 		{
-			var copier = new EntityTreeCopier(srcWorld, dstWorld);
-			try
-			{
-				copier.AddRoot(root);
-				copier.CollectAll();
-				copier.CreateCopies();
-				copier.CopyValues();
-				return copier.GetCopy(root);
-			}
-			finally
-			{
-				copier.Dispose();
-			}
+			using var copier = new EntityTreeCopier(srcWorld, dstWorld);
+			copier.AddRoot(root);
+			copier.CollectAll();
+			copier.CreateCopies();
+			copier.CopyValues();
+			return copier.GetCopy(root);
 		}
 
 		/// <summary>
@@ -39,34 +32,18 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			E.ASSERT(newRoots.Length >= roots.Length, "CopyEntityTreeBatch: newRoots короче roots - некуда писать копии корней.");
 
-			var copier = new EntityTreeCopier(srcWorld, dstWorld);
-			try
+			using var copier = new EntityTreeCopier(srcWorld, dstWorld);
+			foreach (var root in roots)
 			{
-				foreach (var root in roots)
-				{
-					copier.AddRoot(root);
-				}
-				copier.CollectAll();
-				copier.CreateCopies();
-				copier.CopyValues();
-				for (var i = 0; i < roots.Length; i++)
-				{
-					newRoots[i] = copier.GetCopy(roots[i]);
-				}
+				copier.AddRoot(root);
 			}
-			finally
+			copier.CollectAll();
+			copier.CreateCopies();
+			copier.CopyValues();
+			for (var i = 0; i < roots.Length; i++)
 			{
-				copier.Dispose();
+				newRoots[i] = copier.GetCopy(roots[i]);
 			}
-		}
-
-		/// <summary>
-		/// Переводит старую сущность в новую по таблице копирования. Если сущности нет в таблице (ссылка
-		/// на чужую сущность, которую не копировали) - возвращает <see cref="Entity.EMPTY"/>.
-		/// </summary>
-		public static Entity Remap(this in UnsafeDictionary<Entity, Entity> map, Entity entity)
-		{
-			return map.TryGetValue(entity, out var mapped) ? mapped : Entity.EMPTY;
 		}
 
 		/// <summary>

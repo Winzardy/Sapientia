@@ -27,13 +27,13 @@ namespace Sapientia.Collections
 
 		public readonly Id<MemoryManager> memoryId;
 
-		public int Length
+		public readonly int Length
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _length;
 		}
 
-		public bool IsCreated => ptr != default;
+		public readonly bool IsCreated => ptr != default;
 
 		public UnsafeArray(int length = 8, ClearOptions clearMemory = ClearOptions.ClearMemory) : this(default, length, clearMemory)
 		{
@@ -58,7 +58,7 @@ namespace Sapientia.Collections
 			get => ptr.Slice(Length - 1, 1);
 		}
 
-		public ref T this[int index]
+		public readonly ref T this[int index]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => ref ptr[index];
