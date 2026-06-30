@@ -7,6 +7,9 @@ namespace Sapientia.MemoryAllocator.State
 		public void OnEntityKilled(WorldState worldState, Entity callbackReceiver);
 	}
 
+	// [SkipCopy]: children/parents - внешние связи смерти (на персонажа и источник), их заново ставит
+	// наложение эффекта; killCallbacks - прокси, в другой мир не переносятся.
+	[SkipCopy]
 	public struct KillCallbackComponent : IComponent
 	{
 		public MemList<Entity> children;

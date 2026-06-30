@@ -38,6 +38,16 @@ namespace Sapientia.MemoryAllocator.State
 				return "[Destroyed]";
 			return entityIdToName[worldState, entity.id].ToString();
 		}
+
+		/// <summary>
+		/// Имя сущности без конвертации в string (индексер MemArray даёт ref). Для копирования имени между
+		/// мирами без round-trip FixedString-string-FixedString. Сущность должна быть живой.
+		/// </summary>
+		public ref readonly FixedString64Bytes GetEntityNameRef(WorldState worldState, in Entity entity)
+		{
+			E.ASSERT(IsEntityExist(worldState, entity), "GetEntityNameRef: сущность уже уничтожена.");
+			return ref entityIdToName[worldState, entity.id];
+		}
 #endif
 
 		public EntityStatePart(int entitiesCapacity, int expandStep = 512)
