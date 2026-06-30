@@ -322,11 +322,13 @@ namespace Sapientia.MemoryAllocator
 			=> worldState.GetComponentsManager().Get<T>().IsValid();
 
 		/// <summary>
-		/// Собирает глобальные <see cref="TypeId"/> всех компонентов, присутствующих на <paramref name="entity"/>:
-		/// перебор всех зарегистрированных <see cref="ComponentSet"/>'ов с проверкой <see cref="ComponentSet.HasElement(WorldState, Entity)"/>.
+		/// Собирает локальные индексы (<see cref="TypeId{IComponent}"/>) всех компонентов, присутствующих на
+		/// <paramref name="entity"/>: перебор зарегистрированных <see cref="ComponentSet"/>'ов с проверкой
+		/// <see cref="ComponentSet.HasElement(WorldState, Entity)"/>. Индекс слота реестра и есть локальный
+		/// индекс компонента — индирекция через глобальный <see cref="TypeId"/> не нужна.
 		/// Для дебага/инспекции — линейный проход по всем типам, не для горячего пути.
 		/// </summary>
-		public static void CollectComponentTypeIds(this WorldState worldState, Entity entity, List<TypeId> result)
+		public static void CollectComponentTypeIds(this WorldState worldState, Entity entity, List<TypeId<IComponent>> result)
 		{
 			result.Clear();
 
@@ -334,7 +336,6 @@ namespace Sapientia.MemoryAllocator
 			if (!manager.IsCreated)
 				return;
 
-			var children = IndexedTypes.GetContextChildren(typeof(IComponent));
 			for (var i = 0; i < manager.Length; i++)
 			{
 				ref var slot = ref manager.GetByIndex(i);
@@ -343,8 +344,7 @@ namespace Sapientia.MemoryAllocator
 				if (!slot.GetPtr(worldState).Value().HasElement(worldState, entity))
 					continue;
 
-				E.ASSERT(i < children.Length);
-				result.Add(children[i]);
+				result.Add(i);
 			}
 		}
 	}
