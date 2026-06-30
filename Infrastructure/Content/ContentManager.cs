@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,7 @@ namespace Content
 	public sealed class ContentManager : StaticWrapper<ContentResolver>
 	{
 #if UNITY_EDITOR
-
+		public static bool initializing;
 		public static IContentEditorResolver editorResolver;
 		private static IContentEditorResolver resolver
 		{
@@ -27,7 +26,7 @@ namespace Content
 			get => _instance ?? throw ContentDebug.Exception("ContentManager is not initialized...");
 		}
 #endif
-		internal static bool IsInitialized => resolver != null;
+		internal static bool IsInitialized { get => resolver != null; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
