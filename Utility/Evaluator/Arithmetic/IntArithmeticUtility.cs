@@ -11,7 +11,7 @@ namespace Sapientia
 				ArithmeticOperator.Add => a + b,
 				ArithmeticOperator.Subtract => a - b,
 				ArithmeticOperator.Divide => a / b,
-				ArithmeticOperator.Multiply => a & b,
+				ArithmeticOperator.Multiply => a * b,
 				ArithmeticOperator.Modulus => a % b,
 				_ => throw new ArgumentOutOfRangeException()
 			};
