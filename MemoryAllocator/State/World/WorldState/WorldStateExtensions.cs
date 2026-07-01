@@ -4,7 +4,7 @@ using Sapientia.MemoryAllocator.State;
 
 namespace Sapientia.MemoryAllocator
 {
-	public static class WorldStateExt
+	public static class WorldStateExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Entity CreateEntity(this WorldState worldState, in FixedString64Bytes name = default)
