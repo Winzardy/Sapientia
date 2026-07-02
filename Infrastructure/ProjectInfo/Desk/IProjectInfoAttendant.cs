@@ -1,4 +1,5 @@
 using System;
+using Content;
 
 namespace ProjectInformation
 {
@@ -8,6 +9,7 @@ namespace ProjectInformation
 
 		string GetVersion();
 		BuildInfo GetBuildInfo();
+		ContentBuildInfo GetContentBuildInfo();
 		ref readonly PlatformEntry GetPlatform();
 		ref readonly DistributionEntry GetDistribution();
 		string GetStoreUrl(DistributionEntry distribution);

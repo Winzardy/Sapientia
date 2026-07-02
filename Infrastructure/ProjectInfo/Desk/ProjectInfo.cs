@@ -1,4 +1,5 @@
 using System;
+using Content;
 using Sapientia;
 
 namespace ProjectInformation
@@ -13,6 +14,7 @@ namespace ProjectInformation
 
 		public static string Version { get => attendant.GetVersion(); }
 		public static BuildInfo Build { get => attendant.GetBuildInfo(); }
+		public static ContentBuildInfo ContentInfo { get => attendant.GetContentBuildInfo(); }
 		public static string Identifier { get => attendant.Identifier; }
 
 		public static ref readonly PlatformEntry Platform { get => ref attendant.GetPlatform(); }
