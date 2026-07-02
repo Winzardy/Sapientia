@@ -204,31 +204,4 @@ namespace Sapientia.MemoryAllocator
 		public static ref T GetOrCreateService<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
 			=> ref world.worldState.GetOrCreateService<T>();
 	}
-
-	public static class WorldExtensions
-	{
-
-		[CanBeNull]
-		public static World ToWorld(this Entity entity)
-		{
-			if (!entity.IsValid())
-				return null;
-
-			return WorldManager.GetWorld(entity.worldId);
-		}
-
-		[CanBeNull]
-		public static World ToWorld(this WorldState worldState)
-		{
-			if (!worldState.IsValid)
-				return null;
-
-			return WorldManager.GetWorld(worldState.WorldId);
-		}
-
-		public static bool IsValid(this Entity entity)
-		{
-			return entity.worldId.IsValid() && entity.IsExist(entity.GetWorldState());
-		}
-	}
 }
