@@ -1,6 +1,8 @@
 namespace Sapientia.MemoryAllocator.State
 {
-	public struct DestroyComponent : IComponent
+	// Зеркало destroy-связей - владение уже задаёт KillCallbackComponent, только ремап, без AppendEntities.
+	[ManualCopy]
+	public partial struct DestroyComponent : IComponent
 	{
 		public MemList<Entity> children;
 		public MemList<Entity> parents;
