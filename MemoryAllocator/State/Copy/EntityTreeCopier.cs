@@ -49,6 +49,25 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
+		/// Вписывает готовую пару до обхода (например World-сущность - в новом мире у неё уже есть свой
+		/// экземпляр). Помечает oldEntity visited, чтобы CollectAll не создал ей лишнюю копию при встрече
+		/// по ссылке. Только до <see cref="CreateCopies"/>.
+		/// </summary>
+		public void SeedPair(Entity oldEntity, Entity newEntity)
+		{
+			E.ASSERT(!oldEntity.IsEmpty(), "EntityTreeCopier: SeedPair oldEntity пустой.");
+			E.ASSERT(!newEntity.IsEmpty(), "EntityTreeCopier: SeedPair newEntity пустой.");
+			_map.Add(oldEntity, newEntity);
+			_visited.Set(oldEntity.id, true);
+		}
+
+		/// <summary>
+		/// Все пары старая-новая после CopyValues (включая засеянные через SeedPair). Struct-хендл на те же
+		/// буферы - не диспозить, не хранить дольше copier'а.
+		/// </summary>
+		public readonly UnsafeDictionary<Entity, Entity> Pairs => _map;
+
+		/// <summary>
 		/// Проход A: обойти поддеревья всех засеянных корней (без повторов через visited), собрать в toCopy.
 		/// </summary>
 		public void CollectAll()
@@ -98,10 +117,10 @@ namespace Sapientia.MemoryAllocator.State
 
 		/// <summary>
 		/// Проход B: создать все копии, чтобы на проходе C ссылки уже было куда перенастраивать.
+		/// _map не зануляется - засеянные через SeedPair пары (например World) должны выжить.
 		/// </summary>
 		public void CreateCopies()
 		{
-			_map = default;
 			foreach (var oldEntity in _toCopy)
 			{
 				var newEntity = CreateEntityCopy(oldEntity);

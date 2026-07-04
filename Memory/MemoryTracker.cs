@@ -123,7 +123,18 @@ namespace Submodules.Sapientia.Memory
 			var isLowInBound = IsInBound(low, out var lowIndex);
 			var isHiInBound = IsInBound(hi, out var hiIndex);
 			E.ASSERT(isLowInBound && isHiInBound);
-			E.ASSERT((lowIndex + 1) == hiIndex); // Индексы должны идти друг за другом
+
+			if (low == hi)
+			{
+				// Блок в 1 байт: в списке две равные границы подряд. BinarySearch не гарантирует,
+				// какую из двух вернул - нормализуем к первой.
+				if (lowIndex > 0 && _memorySpaces[lowIndex - 1] == low.ToInt64())
+					lowIndex--;
+				hiIndex = lowIndex + 1;
+				E.ASSERT(_memorySpaces[hiIndex] == hi.ToInt64());
+			}
+			else
+				E.ASSERT((lowIndex + 1) == hiIndex); // Индексы должны идти друг за другом
 
 			_memorySpaces.RemoveAt(hiIndex);
 			_memorySpaces.RemoveAt(lowIndex);
