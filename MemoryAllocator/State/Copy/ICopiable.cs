@@ -20,6 +20,6 @@ namespace Sapientia.MemoryAllocator.State
 		/// Перенастроить поля-сущности по <paramref name="map"/>, коллекции пересоздать в новом мире по
 		/// одному элементу. Если сущности нет в <paramref name="map"/> - поставить <see cref="Entity.EMPTY"/>.
 		/// </summary>
-		void InnerCopy(WorldState oldWS, WorldState newWS, ref T component, in UnsafeDictionary<Entity, Entity> map);
+		void InnerCopy(WorldState oldWS, WorldState newWS, ref T component, in EntityCopyMap map);
 	}
 }

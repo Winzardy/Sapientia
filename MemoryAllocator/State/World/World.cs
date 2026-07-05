@@ -61,6 +61,18 @@ namespace Sapientia.MemoryAllocator
 			{
 				element.Initialize(worldState, worldState, element);
 			}
+		}
+
+		/// <summary>
+		/// Поздняя фаза инициализации: локальные стейт-парты + LateInitialize всех элементов.
+		/// Отделена от <see cref="Initialize"/>, чтобы билдер мог вклиниться между фазами
+		/// (например, зарезервировать id сущностей до того, как их начнут раздавать элементы).
+		/// </summary>
+		public void LateInitialize()
+		{
+			using var scope = worldState.GetWorldScope();
+
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
 			LocalStatePartService.Initialize(worldState);
 

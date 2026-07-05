@@ -14,7 +14,7 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public delegate void AppendDelegate(WorldState world, Entity entity, ref UnsafeList<Entity> frontier);
 
-		public delegate void CopyDelegate(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map);
+		public delegate void CopyDelegate(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map);
 
 		private readonly AppendDelegate?[] _append;
 		private readonly CopyDelegate?[] _copy;
@@ -75,7 +75,7 @@ namespace Sapientia.MemoryAllocator.State
 			_append[typeId]?.Invoke(world, entity, ref frontier);
 		}
 
-		public void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)
+		public void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map)
 		{
 			// Зовётся только после IsCopiable == true, поэтому copy-делегат заведомо не null.
 			_copy[typeId]!.Invoke(oldWS, newWS, oldEntity, newEntity, in map);

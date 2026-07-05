@@ -50,7 +50,7 @@ namespace Sapientia.MemoryAllocator.State
 		/// Копирует компонент <paramref name="typeId"/> со старой сущности на новую и перенастраивает
 		/// ссылки по <paramref name="map"/>. Вызывается только когда <see cref="IsCopiable"/> вернул true.
 		/// </summary>
-		public static void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)
+		public static void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map)
 		{
 			_copier!.CopyComponent(typeId, oldWS, newWS, oldEntity, newEntity, in map);
 		}

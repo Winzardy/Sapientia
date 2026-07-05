@@ -380,7 +380,7 @@ namespace Sapientia.TypeIndexer
 			builder.AppendLine("\t\t}");
 			builder.AppendLine();
 
-			builder.AppendLine($"\t\tpublic void InnerCopy(WorldState oldWS, WorldState newWS, ref {name} component, in UnsafeDictionary<Entity, Entity> map)");
+			builder.AppendLine($"\t\tpublic void InnerCopy(WorldState oldWS, WorldState newWS, ref {name} component, in EntityCopyMap map)");
 			builder.AppendLine("\t\t{");
 			foreach (var plan in plans)
 			{
@@ -482,7 +482,7 @@ namespace Sapientia.TypeIndexer
 			foreach (var type in flatComponents)
 			{
 				var fullName = type.GetFullName();
-				builder.AppendLine($"\t\tprivate static void Copy_{type.Name}(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)");
+				builder.AppendLine($"\t\tprivate static void Copy_{type.Name}(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map)");
 				builder.AppendLine("\t\t{");
 				builder.AppendLine($"\t\t\tref var __dst = ref new ComponentSetContext<{fullName}>(newWS).GetElement(newEntity);");
 				builder.AppendLine($"\t\t\t__dst = new ComponentSetContext<{fullName}>(oldWS).ReadElement(oldEntity);");
@@ -499,7 +499,7 @@ namespace Sapientia.TypeIndexer
 				builder.AppendLine("\t\t\t__component.AppendEntities(world, ref frontier);");
 				builder.AppendLine("\t\t}");
 				builder.AppendLine();
-				builder.AppendLine($"\t\tprivate static void Copy_{type.Name}(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)");
+				builder.AppendLine($"\t\tprivate static void Copy_{type.Name}(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map)");
 				builder.AppendLine("\t\t{");
 				builder.AppendLine($"\t\t\tref var __dst = ref new ComponentSetContext<{fullName}>(newWS).GetElement(newEntity);");
 				builder.AppendLine($"\t\t\t__dst = oldWS.Copy<{fullName}>(oldEntity, newWS, in map);");
@@ -514,8 +514,8 @@ namespace Sapientia.TypeIndexer
 			builder.AppendLine("\t\t\tvar __globalTypeId = IndexedTypes.GetContextChildren(typeof(IComponent))[(int)localId];");
 			builder.AppendLine("\t\t\tvar __type = __globalTypeId.Type;");
 			builder.AppendLine("\t\t\tvar __name = __type != null ? __type.FullName : ((int)localId).ToString();");
-			builder.AppendLine("\t\t\tW_CONTEXT.LogError($\"CopyEntityTree: необработанный ссылочный компонент {__name} потеряется при копии. Добавь [GenerateCopy]/[ManualCopy] либо [SkipCopy].\");");
-			builder.AppendLine("\t\t\tE.ASSERT(false, \"CopyEntityTree: необработанный ссылочный компонент \" + __name + \".\");");
+			builder.AppendLine("\t\t\tW_CONTEXT.LogError($\"EntityTreeCopier: необработанный ссылочный компонент {__name} потеряется при копии. Добавь [GenerateCopy]/[ManualCopy] либо [SkipCopy].\");");
+			builder.AppendLine("\t\t\tE.ASSERT(false, \"EntityTreeCopier: необработанный ссылочный компонент \" + __name + \".\");");
 			builder.AppendLine("\t\t}");
 			builder.AppendLine("\t}");
 			builder.AppendLine("}");

@@ -10,13 +10,13 @@ namespace Sapientia.MemoryAllocator.State
 			// Владение kill-деревом уже задаёт KillCallbackComponent - здесь только зеркало связей, без Append.
 		}
 
-		public void InnerCopy(WorldState oldWS, WorldState newWS, ref DestroyComponent component, in UnsafeDictionary<Entity, Entity> map)
+		public void InnerCopy(WorldState oldWS, WorldState newWS, ref DestroyComponent component, in EntityCopyMap map)
 		{
 			component.children = RemapAliveEntities(oldWS, newWS, children, map);
 			component.parents = RemapAliveEntities(oldWS, newWS, parents, map);
 		}
 
-		private static MemList<Entity> RemapAliveEntities(WorldState oldWS, WorldState newWS, MemList<Entity> source, in UnsafeDictionary<Entity, Entity> map)
+		private static MemList<Entity> RemapAliveEntities(WorldState oldWS, WorldState newWS, MemList<Entity> source, in EntityCopyMap map)
 		{
 			if (!source.IsCreated)
 			{

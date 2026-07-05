@@ -42,8 +42,8 @@ Sapientia is plumbing, not a Data/State/Logic/View gameplay feature. It provides
 
 The world is built and driven from `Game.Core` (`GameWorldBuilder`/`GameRuntime`), but the mechanism lives here:
 
-- **Build:** `WorldBuilder.Build(initialSize)` (`MemoryAllocator/State/World/WorldBuilder/WorldBuilder.cs:22`) → `WorldManager.CreateWorld` allocates a `WorldState` (arena) → `AddStateParts()`/`AddSystems()` queue elements → `World.Initialize(...)`.
-- **Initialize:** `World.Initialize` (`World.cs:42`) registers every StatePart then every System (registration order = execution order), then calls `Initialize` → `LocalStatePartService.Initialize` → `LateInitialize` on all elements.
+- **Build:** `WorldBuilder.Build(initialSize)` (`MemoryAllocator/State/World/WorldBuilder/WorldBuilder.cs:22`) → `WorldManager.CreateWorld` allocates a `WorldState` (arena) → `AddStateParts()`/`AddSystems()` queue elements → `InitializeWorld()` (default: both init phases back-to-back).
+- **Initialize (two phases):** `World.Initialize` (`World.cs:42`) registers every StatePart then every System (registration order = execution order) and calls `Initialize` on all elements; `World.LateInitialize` (`World.cs:66`) then runs `LocalStatePartService.Initialize` → `LateInitialize` on all elements. The split lets a builder interject between the phases (e.g. reserve entity ids before elements start handing them out — see `EntityStatePart.InsertEntity`/`ResetFreeIndexes` and `EntityTreeCopier`); after `Initialize` only the World entity exists, the first other entities appear in `LateInitialize`.
 - **Start:** `World.Start` (`World.cs:73`) calls `EarlyStart` then `Start`; sets `IsStarted`; sends started message.
 - **Tick:** `World.Update(deltaTime)` (`World.cs:98`) increments `worldState.Tick`/`Time`, then runs all systems in registration order across three phases: `BeforeUpdate` → `Update(deltaTime)` → `AfterUpdate`. `World.LateUpdate` (`World.cs:126`) runs `BeforeLateUpdate` → `LateUpdate` → `AfterLateUpdate` (used by View).
 - **Dispose:** `World.Dispose` (`World.cs:153`) runs `BeforeDispose`/`Dispose` on all elements, then `worldState.RemoveWorld()`.

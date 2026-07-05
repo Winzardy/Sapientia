@@ -26,6 +26,7 @@ namespace Sapientia.MemoryAllocator.State
 		private ProxyEvent<IEntityDestroySubscriberProxy> _entityDestroySubscribers;
 #if DEBUG
 		private MemSparseSet<Entity> _aliveEntities;
+		private bool _freeIndexesDirty;
 #endif
 
 #if ENABLE_ENTITY_NAMES
@@ -62,6 +63,7 @@ namespace Sapientia.MemoryAllocator.State
 			_entityDestroySubscribers = default;
 #if DEBUG
 			_aliveEntities = default;
+			_freeIndexesDirty = false;
 #endif
 #if ENABLE_ENTITY_NAMES
 			entityIdToName = default;
@@ -122,6 +124,9 @@ namespace Sapientia.MemoryAllocator.State
 		public Entity CreateEntity(WorldState worldState, string name = null)
 #endif
 		{
+#if DEBUG
+			E.ASSERT(!_freeIndexesDirty, "CreateEntity: free-list недостоверен после InsertEntity - сначала ResetFreeIndexes.");
+#endif
 			EnsureCapacity(worldState, EntitiesCount);
 
 			var id = _freeEntitiesIds[worldState, EntitiesCount++];
@@ -140,6 +145,76 @@ namespace Sapientia.MemoryAllocator.State
 			return entity;
 		}
 
+		/// <summary>
+		/// Занимает конкретный id с конкретным generation в обход free-list (перенос сущностей в новый мир
+		/// с сохранением id). Generation обязан быть нечётным - как у любой живой сущности. После серии
+		/// вставок и до любого CreateEntity/DestroyEntities обязателен <see cref="ResetFreeIndexes"/>.
+		/// </summary>
+#if ENABLE_ENTITY_NAMES
+		public Entity InsertEntity(WorldState worldState, ushort id, ushort generation, in FixedString64Bytes name = default)
+#else
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Entity InsertEntity(WorldState worldState, ushort id, ushort generation, in FixedString64Bytes name)
+		{
+			return InsertEntity(worldState, id, generation);
+		}
+
+		public Entity InsertEntity(WorldState worldState, ushort id, ushort generation, string name = null)
+#endif
+		{
+			E.ASSERT(_entityIdToGeneration.IsCreated, "InsertEntity: часть ещё не инициализирована.");
+			E.ASSERT(((int)generation).IsOdd(), "InsertEntity: generation чётный - таким может быть только мёртвая сущность.");
+
+			EnsureCapacity(worldState, id);
+			E.ASSERT(((int)_entityIdToGeneration[worldState, id]).IsEven(), "InsertEntity: id уже занят живой сущностью.");
+
+			_entityIdToGeneration[worldState, id] = generation;
+			EntitiesCount++;
+
+			var entity = new Entity(id, generation, worldState.WorldId);
+#if DEBUG
+			_freeIndexesDirty = true;
+			_aliveEntities.EnsureGet(worldState, entity.id) = entity;
+#endif
+
+#if ENABLE_ENTITY_NAMES
+			entityIdToName[worldState, id] = name;
+			if (MaxEntitiesCount < EntitiesCount)
+				MaxEntitiesCount = EntitiesCount;
+#endif
+			return entity;
+		}
+
+		/// <summary>
+		/// Пересобирает free-list и EntitiesCount сканом generation'ов после серии <see cref="InsertEntity"/>.
+		/// Живость по чётности: create и destroy инкрементят generation по одному разу, поэтому у живой
+		/// сущности generation всегда нечётный, у мёртвой/несозданной - чётный.
+		/// </summary>
+		public void ResetFreeIndexes(WorldState worldState)
+		{
+			var aliveCount = 0;
+			var freeIndex = EntitiesCapacity;
+			for (var id = EntitiesCapacity - 1; id >= 0; id--)
+			{
+				int generation = _entityIdToGeneration[worldState, id];
+				if (generation.IsOdd())
+				{
+					aliveCount++;
+				}
+				else
+				{
+					_freeEntitiesIds[worldState, --freeIndex] = (ushort)id;
+				}
+			}
+
+			E.ASSERT(aliveCount == EntitiesCount, "ResetFreeIndexes: число живых по generation-скану разошлось с EntitiesCount.");
+#if DEBUG
+			E.ASSERT(aliveCount == _aliveEntities.Count, "ResetFreeIndexes: generation-скан разошёлся с DEBUG-набором живых сущностей.");
+			_freeIndexesDirty = false;
+#endif
+			EntitiesCount = aliveCount;
+		}
+
 		public bool IsEntityExist(WorldState worldState, in Entity entity)
 		{
 			return entity.id < EntitiesCapacity && _entityIdToGeneration[worldState, entity.id] == entity.generation;
@@ -149,6 +224,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void DestroyEntities(WorldState worldState, Entity* entities, int count)
 		{
 #if DEBUG
+			E.ASSERT(!_freeIndexesDirty, "DestroyEntities: free-list недостоверен после InsertEntity - сначала ResetFreeIndexes.");
 			for (var i = 0; i < count; i++)
 			{
 				E.ASSERT(IsEntityExist(worldState, entities[i]), "Попытка уничтожить уже мёртвую entity!");

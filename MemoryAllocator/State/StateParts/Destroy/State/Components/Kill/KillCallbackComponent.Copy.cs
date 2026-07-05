@@ -7,11 +7,6 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public void AppendEntities(WorldState world, ref UnsafeList<Entity> entities)
 		{
-			if (!children.IsCreated)
-			{
-				return;
-			}
-
 			foreach (ref readonly var child in children.GetEnumerable(world))
 			{
 				// Протухшие ссылки бывают - уборка не чистит чужие списки при обычном киле.
@@ -22,7 +17,7 @@ namespace Sapientia.MemoryAllocator.State
 			}
 		}
 
-		public void InnerCopy(WorldState oldWS, WorldState newWS, ref KillCallbackComponent component, in UnsafeDictionary<Entity, Entity> map)
+		public void InnerCopy(WorldState oldWS, WorldState newWS, ref KillCallbackComponent component, in EntityCopyMap map)
 		{
 			component.children = RemapAliveChildren(oldWS, newWS, children, map);
 			component.parents = RemapAliveChildren(oldWS, newWS, parents, map);
@@ -32,7 +27,7 @@ namespace Sapientia.MemoryAllocator.State
 			component.killCallbacks = default;
 		}
 
-		private static MemList<Entity> RemapAliveChildren(WorldState oldWS, WorldState newWS, MemList<Entity> source, in UnsafeDictionary<Entity, Entity> map)
+		private static MemList<Entity> RemapAliveChildren(WorldState oldWS, WorldState newWS, MemList<Entity> source, in EntityCopyMap map)
 		{
 			if (!source.IsCreated)
 			{
