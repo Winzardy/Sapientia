@@ -47,7 +47,9 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToLabel(this float seconds, bool useSpace = true)
 		{
-			if (seconds < 1)
+			if (seconds <= 0)
+				seconds = 0;
+			else if (seconds < 1)
 				seconds = 1;
 
 			var timeSpan = new TimeSpan(0, 0, 0, (int) seconds);
@@ -60,7 +62,9 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToLabel(this int seconds, bool useSpace = true, bool useMs = false)
 		{
-			if (seconds < 1)
+			if (seconds <= 0)
+				seconds = 0;
+			else if (seconds <= 1)
 				seconds = 1;
 
 			return ToLabel(TimeSpan.FromSeconds(seconds), useSpace, useMs);
@@ -72,7 +76,9 @@ namespace Sapientia.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string ToLabel(this long seconds, bool useSpace = true, bool useMs = false)
 		{
-			if (seconds < 1)
+			if (seconds <= 0)
+				seconds = 0;
+			else if (seconds <= 1)
 				seconds = 1;
 
 			return ToLabel(TimeSpan.FromSeconds(seconds), useSpace, useMs);
@@ -90,7 +96,7 @@ namespace Sapientia.Extensions
 
 		public static string ToLabel(this TimeSpan ts, bool useSpace = true, bool useMs = true)
 		{
-			if (ts.TotalSeconds <= 0)
+			if (ts.TotalSeconds < 0)
 				return ALREADY_PASSED;
 
 			using (StringBuilderPool.Get(out var sb))

@@ -21,7 +21,7 @@ namespace Content
 		new IContentEntry<T> ContentEntry { get; }
 	}
 
-	public interface IContentEntrySource
+	public partial interface IContentEntrySource
 	{
 		/// <summary>
 		/// <see cref="ContentEntryScriptableObject{T}._entry"/>
