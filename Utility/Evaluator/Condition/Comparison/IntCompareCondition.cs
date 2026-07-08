@@ -14,8 +14,7 @@ namespace Sapientia.Conditions.Comparison
 	[Serializable]
 	public class IntCompareCondition<TContext> : Condition<TContext>
 	{
-#if CLIENT
-		public const string SELECTOR_NAME = "\u2009Int Comparison (Legacy)";
+#if CLIEN
 		public const string SELECTOR_CATEGORY = "Comparison";
 		public const SdfIconType SELECTOR_ICON = SdfIconType.ArrowLeftRight;
 
