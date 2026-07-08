@@ -4,12 +4,10 @@ using Sapientia.Collections;
 namespace Sapientia.MemoryAllocator.State
 {
 	/// <summary>
-	/// Обход и копирование поддеревьев сущностей в другой мир за один батч (один раз, при переходе между
-	/// этапами). Копия сохраняет id+generation оригинала: id вставляются в новый мир в обход free-list
-	/// (<see cref="EntityStatePart.InsertEntity"/>), поэтому вставка возможна только пока новый мир не начал
-	/// раздавать id сам. Три прохода: собрать все поддеревья (<see cref="CollectAll"/>); вставить все копии
-	/// и зафиксировать пары старая-новая (<see cref="InsertCopies"/>); скопировать значения и перенастроить
-	/// ссылки (<see cref="CopyValues"/>). Буферы off-arena, освобождаются в <see cref="Dispose"/>.
+	/// Копирует поддеревья сущностей в другой мир, сохраняя id+generation (вставка в обход free-list,
+	/// см. <see cref="EntityStatePart.InsertEntity"/>). Три прохода: <see cref="CollectDescendants"/>
+	/// (собрать поддеревья), <see cref="CreateCopies"/> (создать копии, зафиксировать пары),
+	/// <see cref="CopyValues"/> (скопировать значения, перенастроить ссылки).
 	/// </summary>
 	public struct EntityTreeCopier : IDisposable
 	{
@@ -27,10 +25,13 @@ namespace Sapientia.MemoryAllocator.State
 		public bool IsCreated => _toCopy.IsCreated;
 
 		/// <summary>
-		/// Все пары старая-новая после <see cref="InsertCopies"/> (включая засеянные через
+		/// Все пары старая-новая после <see cref="CreateCopies"/> (включая засеянные через
 		/// <see cref="SeedExisting"/>). Хендл на буфер копира - не хранить дольше него.
 		/// </summary>
-		public EntityCopyMap Map => new(_insertedGenerations, _pairsCount, _srcWorld.WorldId, _dstWorld.WorldId);
+		public EntityCopyMap GetMap()
+		{
+			return new(_insertedGenerations, _pairsCount, _srcWorld.WorldId, _dstWorld.WorldId);
+		}
 
 		public EntityTreeCopier(WorldState srcWorld, WorldState dstWorld)
 		{
@@ -49,7 +50,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
-		/// Сеет корень в обход. Предусловие (до <see cref="CollectAll"/>): корень должен копироваться, иначе он
+		/// Сеет корень в обход. Предусловие (до <see cref="CollectDescendants"/>): корень должен копироваться, иначе он
 		/// не попадёт в таблицу пар и ссылки на него в перенесённых компонентах умрут в EMPTY. Пустой или
 		/// помеченный IgnoreEntityCopy корень - нарушение, ловим явным E.ASSERT в DEBUG.
 		/// </summary>
@@ -63,8 +64,8 @@ namespace Sapientia.MemoryAllocator.State
 		/// <summary>
 		/// Вписывает в таблицу пар сущность, копия которой уже существует в новом мире под теми же
 		/// id+generation (например World - его создаёт инициализация нового мира, вставлять нельзя и не нужно).
-		/// Помечает oldEntity visited, чтобы CollectAll не собрал её при встрече по ссылке.
-		/// Только до <see cref="InsertCopies"/>.
+		/// Помечает oldEntity visited, чтобы CollectDescendants не собрал её при встрече по ссылке.
+		/// Только до <see cref="CreateCopies"/>.
 		/// </summary>
 		public void SeedExisting(Entity oldEntity)
 		{
@@ -80,7 +81,7 @@ namespace Sapientia.MemoryAllocator.State
 		/// <summary>
 		/// Проход A: обойти поддеревья всех засеянных корней (без повторов через visited), собрать в toCopy.
 		/// </summary>
-		public void CollectAll()
+		public void CollectDescendants()
 		{
 			// Реестр компонентов: индекс слота = локальный индекс компонента, по нему идёт диспатч копира.
 			ref var manager = ref _srcWorld.GetComponentsManager();
@@ -126,12 +127,69 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
-		/// Проход B: вставить все копии в новый мир под старыми id+generation, чтобы на проходе C ссылки
-		/// уже было куда перенастраивать. Завершается одним пересбором free-list нового мира
-		/// (<see cref="EntityStatePart.ResetFreeIndexes"/>) - до него создание сущностей в новом мире закрыто.
+		/// Метит <see cref="IgnoreEntityCopy"/> на всё поддерево root тем же обходом что
+		/// <see cref="CollectDescendants"/>, но без карты пар - только метка. Статический, не требует
+		/// построенного копира, свой visited/frontier. Вход в поддерево через любую другую ссылку тоже
+		/// умрёт в EMPTY - CollectDescendants проверяет метку у каждой сущности, а не только у корней.
 		/// </summary>
-		public void InsertCopies()
+		public static void MarkSubtreeIgnored(WorldState world, Entity root)
 		{
+			if (root.IsEmpty())
+			{
+				return;
+			}
+
+			ref var manager = ref world.GetComponentsManager();
+			var ignoreSet = new ComponentSetContext<IgnoreEntityCopy>(world);
+
+			using var visited = new UnsafeBitArray(world.GetService<EntityStatePart>().EntitiesCapacity);
+			var frontier = new UnsafeList<Entity>(16);
+			try
+			{
+				frontier.Add(root);
+
+				while (frontier.count > 0)
+				{
+					var entity = frontier.RemoveLast();
+					if (entity.IsEmpty() || visited.IsSet(entity.id))
+					{
+						continue;
+					}
+					visited.Set(entity.id, true);
+					ignoreSet.GetElement(entity);
+
+					for (var i = 0; i < manager.Length; i++)
+					{
+						ref var slot = ref manager.GetByIndex(i);
+						if (!slot.IsValid() || !slot.GetPtr(world).Value().HasElement(world, entity))
+						{
+							continue;
+						}
+						if (GeneratedCopier.IsCopiable(i))
+						{
+							GeneratedCopier.AppendEntities(i, world, entity, ref frontier);
+						}
+					}
+				}
+			}
+			finally
+			{
+				frontier.Dispose();
+			}
+		}
+
+		/// <summary>
+		/// Проход B: создаёт копии в новом мире под старыми id+generation, чтобы на проходе C было куда
+		/// перенастраивать ссылки. Завершается пересбором free-list (<see cref="EntityStatePart.ResetFreeIndexes"/>).
+		/// Пустой перенос (0 сущностей) не вызывает InsertEntity, поэтому пересбор не нужен и не вызывается.
+		/// </summary>
+		public void CreateCopies()
+		{
+			if (_toCopy.count == 0)
+			{
+				return;
+			}
+
 			ref var dstEntityStatePart = ref _dstWorld.GetService<EntityStatePart>();
 #if ENABLE_ENTITY_NAMES
 			ref var srcEntityStatePart = ref _srcWorld.GetService<EntityStatePart>();
@@ -158,7 +216,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void CopyValues()
 		{
 			ref var manager = ref _srcWorld.GetComponentsManager();
-			var map = Map;
+			var map = GetMap();
 
 			foreach (var oldEntity in _toCopy)
 			{

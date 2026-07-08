@@ -2,13 +2,14 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public interface IKillSubscriber : IInterfaceProxyType
+	public interface IKillSubscriber : ISubscriberCopyable
 	{
 		public void OnEntityKilled(WorldState worldState, Entity callbackReceiver);
 	}
 
-	// children - kill-дерево, копир тащит как own. parents - ремап с дропом. callbackTargets/killCallbacks -
-	// ProxyPtr-подписки, локальны для мира, не копируются.
+	// children - kill-дерево, копир тащит как own. parents - ремап с дропом. callbackTargets - обратный
+	// индекс, ремап как обычный список ссылок. killCallbacks - ProxyPtr-подписки, копируются через
+	// ISubscriberCopyable.Copy (payload в новую арену + ремап Entity-полей внутри).
 	[ManualCopy]
 	public partial struct KillCallbackComponent : IComponent
 	{

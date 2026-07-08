@@ -33,17 +33,15 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			newEntity = Entity.EMPTY;
 			// Гейт по generation: пустая ссылка с ненулевым id на невставленном слоте дала бы ложное 0 == 0.
-			if (oldEntity.generation == Entity.GENERATION_ZERO)
+			if (oldEntity.IsEmpty())
 			{
 				return false;
 			}
 			// Словарь ключевался полным Entity (worldId входит в ==) - ссылку не из старого мира ловим явно.
 			E.ASSERT(oldEntity.worldId == _oldWorldId, "EntityCopyMap: ссылка не из старого мира.");
-			// Не ассерт: протухшая ссылка с id за пределами таблицы легальна.
-			if (oldEntity.id >= _insertedGenerations.Length)
-			{
-				return false;
-			}
+			// После worldId-ассерта выше честная ссылка старого мира не выйдет за границы таблицы -
+			// её id всегда < EntitiesCapacity на момент захвата (см. EntityTreeCopier).
+			E.ASSERT(oldEntity.id < _insertedGenerations.Length, "EntityCopyMap: id ссылки за пределами таблицы пар.");
 			if (_insertedGenerations[oldEntity.id] != oldEntity.generation)
 			{
 				return false;

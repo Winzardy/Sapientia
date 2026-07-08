@@ -27,6 +27,7 @@ namespace Sapientia.MemoryAllocator.State
 #if DEBUG
 		private MemSparseSet<Entity> _aliveEntities;
 		private bool _freeIndexesDirty;
+		private bool _entityCreationLocked;
 #endif
 
 #if ENABLE_ENTITY_NAMES
@@ -64,6 +65,7 @@ namespace Sapientia.MemoryAllocator.State
 #if DEBUG
 			_aliveEntities = default;
 			_freeIndexesDirty = false;
+			_entityCreationLocked = false;
 #endif
 #if ENABLE_ENTITY_NAMES
 			entityIdToName = default;
@@ -100,6 +102,22 @@ namespace Sapientia.MemoryAllocator.State
 #else
 			worldEntity = CreateEntity(worldState);
 #endif
+#if DEBUG
+			// Замок снимается в LateInitialize - до этой границы entity создаёт только сам EntityStatePart.
+			_entityCreationLocked = true;
+#endif
+		}
+
+		/// <summary>
+		/// Снимает замок создания entity, поставленный в <see cref="Initialize"/>. К этой точке остальные
+		/// StatePart'ы уже прошли Initialize (граница циклов World.Initialize/World.LateInitialize) -
+		/// дальше entity легитимно создают и другие (Camera, Static-тело физики и т.д.).
+		/// </summary>
+		public void LateInitialize(WorldState worldState, IndexedPtr self)
+		{
+#if DEBUG
+			_entityCreationLocked = false;
+#endif
 		}
 
 		public void AddSubscriber(WorldState worldState, in ProxyPtr<IEntityDestroySubscriberProxy> subscriber)
@@ -126,6 +144,7 @@ namespace Sapientia.MemoryAllocator.State
 		{
 #if DEBUG
 			E.ASSERT(!_freeIndexesDirty, "CreateEntity: free-list недостоверен после InsertEntity - сначала ResetFreeIndexes.");
+			E.ASSERT(!_entityCreationLocked, "CreateEntity: запрещено создавать entity во время сборки мира.");
 #endif
 			EnsureCapacity(worldState, EntitiesCount);
 
@@ -149,6 +168,7 @@ namespace Sapientia.MemoryAllocator.State
 		/// Занимает конкретный id с конкретным generation в обход free-list (перенос сущностей в новый мир
 		/// с сохранением id). Generation обязан быть нечётным - как у любой живой сущности. После серии
 		/// вставок и до любого CreateEntity/DestroyEntities обязателен <see cref="ResetFreeIndexes"/>.
+		/// Легально только пока стоит замок создания entity (см. <see cref="Initialize"/>/<see cref="LateInitialize"/>).
 		/// </summary>
 #if ENABLE_ENTITY_NAMES
 		public Entity InsertEntity(WorldState worldState, ushort id, ushort generation, in FixedString64Bytes name = default)
@@ -163,10 +183,13 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 		{
 			E.ASSERT(_entityIdToGeneration.IsCreated, "InsertEntity: часть ещё не инициализирована.");
-			E.ASSERT(((int)generation).IsOdd(), "InsertEntity: generation чётный - таким может быть только мёртвая сущность.");
+#if DEBUG
+			E.ASSERT(_entityCreationLocked, "InsertEntity: разрешено только пока мир не раздал id (замок снят).");
+#endif
+			E.ASSERT(generation.IsOdd(), "InsertEntity: generation чётный - таким может быть только мёртвая сущность.");
 
 			EnsureCapacity(worldState, id);
-			E.ASSERT(((int)_entityIdToGeneration[worldState, id]).IsEven(), "InsertEntity: id уже занят живой сущностью.");
+			E.ASSERT(_entityIdToGeneration[worldState, id].IsEven(), "InsertEntity: id уже занят живой сущностью.");
 
 			_entityIdToGeneration[worldState, id] = generation;
 			EntitiesCount++;
@@ -192,6 +215,9 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		public void ResetFreeIndexes(WorldState worldState)
 		{
+#if DEBUG
+			E.ASSERT(_freeIndexesDirty, "ResetFreeIndexes: вызван без предшествующего InsertEntity - нечего пересобирать.");
+#endif
 			var aliveCount = 0;
 			var freeIndex = EntitiesCapacity;
 			for (var id = EntitiesCapacity - 1; id >= 0; id--)

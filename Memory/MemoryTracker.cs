@@ -2,6 +2,7 @@ using System;
 using Sapientia;
 using Sapientia.Collections;
 using Sapientia.Data;
+using Sapientia.Extensions;
 
 namespace Submodules.Sapientia.Memory
 {
@@ -126,15 +127,17 @@ namespace Submodules.Sapientia.Memory
 
 			if (low == hi)
 			{
-				// Блок в 1 байт: в списке две равные границы подряд. BinarySearch не гарантирует,
-				// какую из двух вернул - нормализуем к первой.
-				if (lowIndex > 0 && _memorySpaces[lowIndex - 1] == low.ToInt64())
-					lowIndex--;
-				hiIndex = lowIndex + 1;
+				// Блок в 1 байт: в списке две равные границы подряд, BinarySearch не гарантирует, какую из
+				// двух вернул. Список хранит пары (low, hi) подряд - чётный индекс всегда нижняя граница
+				// пары, нечётный - верхняя, поэтому нормализуем по чётности индекса, не по значению соседа.
+				if (lowIndex.IsEven())
+					hiIndex = lowIndex + 1;
+				else
+					(lowIndex, hiIndex) = (lowIndex - 1, lowIndex);
 				E.ASSERT(_memorySpaces[hiIndex] == hi.ToInt64());
 			}
-			else
-				E.ASSERT((lowIndex + 1) == hiIndex); // Индексы должны идти друг за другом
+
+			E.ASSERT((lowIndex + 1) == hiIndex); // Индексы должны идти друг за другом
 
 			_memorySpaces.RemoveAt(hiIndex);
 			_memorySpaces.RemoveAt(lowIndex);

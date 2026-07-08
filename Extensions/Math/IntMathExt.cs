@@ -71,6 +71,18 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsEven(this ushort value)
+		{
+			return (value & 1) == 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsOdd(this ushort value)
+		{
+			return (value & 1) == 1;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int Pow(this int value, int power)
 		{
 			return (int)Math.Pow(value, power);
