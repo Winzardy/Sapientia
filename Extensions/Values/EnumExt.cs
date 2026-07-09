@@ -17,6 +17,33 @@ namespace Sapientia.Extensions
 		public static readonly int ENUM_LENGHT = NAMES.Length;
 	}
 
+	public static class EnumNameToValue<T> where T : unmanaged, Enum
+	{
+		private static readonly Dictionary<string, T> NAME_TO_VALUE;
+
+		static EnumNameToValue()
+		{
+			var names = EnumNames<T>.NAMES;
+			var values = EnumValues<T>.VALUES;
+
+			NAME_TO_VALUE = new Dictionary<string, T>(names.Length);
+			for (var i = 0; i < names.Length; i++)
+			{
+				NAME_TO_VALUE[names[i]] = values[i];
+			}
+		}
+
+		public static bool TryGetValue(string name, out T value)
+		{
+			if (name == null)
+			{
+				value = default;
+				return false;
+			}
+			return NAME_TO_VALUE.TryGetValue(name, out value);
+		}
+	}
+
 	public static class EnumToIndex<T> where T : unmanaged, Enum
 	{
 		private static readonly Dictionary<T, int> VALUE_TO_INDEX;
