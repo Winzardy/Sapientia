@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator
 
 			foreach (var statePart in stateParts)
 			{
-				elementsService.AddWorldElement(worldState, statePart.proxy.ToProxy<IWorldElementProxy>(), statePart.typeId);
+				elementsService.AddWorldStatePart(worldState, statePart.proxy, statePart.typeId);
 			}
 
 			foreach (var system in systems)

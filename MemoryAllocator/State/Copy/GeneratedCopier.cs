@@ -56,6 +56,23 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
+		/// Есть ли у <paramref name="typeId"/> вторая фаза копирования. false, если диспатч не зарегистрирован.
+		/// </summary>
+		public static bool HasLateCopy(TypeId<IComponent> typeId)
+		{
+			return _copier != null && _copier.HasLateCopy(typeId);
+		}
+
+		/// <summary>
+		/// Вторая фаза копирования (<see cref="ILateCopiable{T}.LateInnerCopy"/>). Вызывается только когда
+		/// <see cref="HasLateCopy"/> вернул true.
+		/// </summary>
+		public static void LateCopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map)
+		{
+			_copier!.LateCopyComponent(typeId, oldWS, newWS, oldEntity, newEntity, in map);
+		}
+
+		/// <summary>
 		/// Сообщает о необработанном ссылочном компоненте через диспатч в код игры. Если диспатч не
 		/// зарегистрирован - сообщать нечем и незачем (копировать всё равно нечем).
 		/// </summary>

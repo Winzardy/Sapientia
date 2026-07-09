@@ -18,6 +18,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		private readonly AppendDelegate?[] _append;
 		private readonly CopyDelegate?[] _copy;
+		private readonly CopyDelegate?[] _lateCopy;
 		private readonly BitArray _copiable;
 		private readonly BitArray _skipped;
 		private Action<TypeId<IComponent>>? _reportUnhandled;
@@ -28,6 +29,7 @@ namespace Sapientia.MemoryAllocator.State
 			var count = TypeId<IComponent>.Count;
 			_append = new AppendDelegate?[count];
 			_copy = new CopyDelegate?[count];
+			_lateCopy = new CopyDelegate?[count];
 			_copiable = new BitArray(count);
 			_skipped = new BitArray(count);
 		}
@@ -41,6 +43,15 @@ namespace Sapientia.MemoryAllocator.State
 			_append[localId] = append;
 			_copy[localId] = copy;
 			_copiable[localId] = true;
+		}
+
+		/// <summary>
+		/// Регистрирует thunk второй фазы (<see cref="ILateCopiable{T}"/>) по локальному индексу. У компонента
+		/// без второй фазы delegate = null (диспатч его пропустит по <see cref="HasLateCopy"/>).
+		/// </summary>
+		public void RegisterLate(int localId, CopyDelegate lateCopy)
+		{
+			_lateCopy[localId] = lateCopy;
 		}
 
 		/// <summary>
@@ -79,6 +90,17 @@ namespace Sapientia.MemoryAllocator.State
 		{
 			// Зовётся только после IsCopiable == true, поэтому copy-делегат заведомо не null.
 			_copy[typeId]!.Invoke(oldWS, newWS, oldEntity, newEntity, in map);
+		}
+
+		public bool HasLateCopy(TypeId<IComponent> typeId)
+		{
+			return _lateCopy[typeId] != null;
+		}
+
+		public void LateCopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map)
+		{
+			// Зовётся только после HasLateCopy == true, поэтому late-делегат заведомо не null.
+			_lateCopy[typeId]!.Invoke(oldWS, newWS, oldEntity, newEntity, in map);
 		}
 
 		public void ReportUnhandled(TypeId<IComponent> typeId)

@@ -34,6 +34,17 @@ namespace Sapientia.MemoryAllocator.State
 		void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map);
 
 		/// <summary>
+		/// Есть ли у <paramref name="typeId"/> вторая фаза копирования (<see cref="ILateCopiable{T}"/>).
+		/// </summary>
+		bool HasLateCopy(TypeId<IComponent> typeId);
+
+		/// <summary>
+		/// Вторая фаза (<see cref="ILateCopiable{T}.LateInnerCopy"/>): кросс-сущностная дозапись после того
+		/// как все сущности прошли <see cref="CopyComponent"/>. Зовётся только когда <see cref="HasLateCopy"/> == true.
+		/// </summary>
+		void LateCopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map);
+
+		/// <summary>
 		/// Сообщает о необработанном ссылочном компоненте (без маркера копирования). Реализация в коде игры
 		/// пишет ошибку в лог (видно в релизе) и роняет в DEBUG, чтобы потеря при копии не прошла молча.
 		/// </summary>

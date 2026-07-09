@@ -8,15 +8,8 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		public void AppendEntities(WorldState world, ref UnsafeList<Entity> entities)
 		{
-			foreach (ref readonly var child in children.GetEnumerable(world))
-			{
-				// Протухшие ссылки бывают - уборка не чистит чужие списки при обычном киле.
-				if (child.IsExist(world))
-				{
-					entities.Add(child);
-				}
-			}
-
+			// Kill-связь "слабая": children/parents в обход не тянем, до копии сущности добираются
+			// явными owned-ссылками владельцев. InnerCopy оставит пары, где обе стороны перенеслись.
 			// Payload подписки может владеть Entity-полями - отдаём их в обход.
 			foreach (ref var callback in killCallbacks.GetEnumerable(world))
 			{

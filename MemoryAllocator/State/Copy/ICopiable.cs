@@ -22,4 +22,21 @@ namespace Sapientia.MemoryAllocator.State
 		/// </summary>
 		void InnerCopy(WorldState oldWS, WorldState newWS, ref T component, in EntityCopyMap map);
 	}
+
+	/// <summary>
+	/// Опциональная вторая фаза копирования (аналог LateInitialize). Зовётся строго ПОСЛЕ того как ВСЕ
+	/// сущности прошли <see cref="ICopiable{T}.InnerCopy"/> (проход D в <see cref="EntityTreeCopier"/>) -
+	/// сюда кросс-сущностная дозапись, которую нельзя делать в InnerCopy (чужой компонент мог не скопироваться).
+	/// Реализуют только стат/тег-компоненты. Отдельный интерфейс, а не 2-й метод на <see cref="ICopiable{T}"/>:
+	/// метод сломал бы все генерённые partial'ы до регена, а default-метод на struct = боксинг (unmanaged).
+	/// </summary>
+	public interface ILateCopiable<T> where T : unmanaged, IComponent, ICopiable<T>, ILateCopiable<T>
+	{
+		/// <summary>
+		/// this - старый компонент; <paramref name="component"/> - его копия в новом мире, уже прошедшая
+		/// фазу 1 (простые поля и ремап своих списков сделаны). Сюда - дозапись в чужие компоненты нового
+		/// мира через ComponentSetContext.
+		/// </summary>
+		void LateInnerCopy(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, ref T component, in EntityCopyMap map);
+	}
 }

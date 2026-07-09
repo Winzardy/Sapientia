@@ -5,7 +5,7 @@ namespace Sapientia.MemoryAllocator.State
 {
 	/// <summary>
 	/// Копирует поддеревья сущностей в другой мир, сохраняя id+generation (вставка в обход free-list,
-	/// см. <see cref="EntityStatePart.InsertEntity"/>). Три прохода: <see cref="CollectDescendants"/>
+	/// см. <see cref="EntityStatePart.InsertEntity"/>). Три прохода: <see cref="CollectChildren"/>
 	/// (собрать поддеревья), <see cref="CreateCopies"/> (создать копии, зафиксировать пары),
 	/// <see cref="CopyValues"/> (скопировать значения, перенастроить ссылки).
 	/// </summary>
@@ -50,7 +50,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
-		/// Сеет корень в обход. Предусловие (до <see cref="CollectDescendants"/>): корень должен копироваться, иначе он
+		/// Сеет корень в обход. Предусловие (до <see cref="CollectChildren"/>): корень должен копироваться, иначе он
 		/// не попадёт в таблицу пар и ссылки на него в перенесённых компонентах умрут в EMPTY. Пустой или
 		/// помеченный IgnoreEntityCopy корень - нарушение, ловим явным E.ASSERT в DEBUG.
 		/// </summary>
@@ -64,7 +64,7 @@ namespace Sapientia.MemoryAllocator.State
 		/// <summary>
 		/// Вписывает в таблицу пар сущность, копия которой уже существует в новом мире под теми же
 		/// id+generation (например World - его создаёт инициализация нового мира, вставлять нельзя и не нужно).
-		/// Помечает oldEntity visited, чтобы CollectDescendants не собрал её при встрече по ссылке.
+		/// Помечает oldEntity visited, чтобы CollectChildren не собрал её при встрече по ссылке.
 		/// Только до <see cref="CreateCopies"/>.
 		/// </summary>
 		public void SeedExisting(Entity oldEntity)
@@ -81,7 +81,7 @@ namespace Sapientia.MemoryAllocator.State
 		/// <summary>
 		/// Проход A: обойти поддеревья всех засеянных корней (без повторов через visited), собрать в toCopy.
 		/// </summary>
-		public void CollectDescendants()
+		public void CollectChildren()
 		{
 			// Реестр компонентов: индекс слота = локальный индекс компонента, по нему идёт диспатч копира.
 			ref var manager = ref _srcWorld.GetComponentsManager();
@@ -123,58 +123,6 @@ namespace Sapientia.MemoryAllocator.State
 						GeneratedCopier.AppendEntities(i, _srcWorld, entity, ref _frontier);
 					}
 				}
-			}
-		}
-
-		/// <summary>
-		/// Метит <see cref="IgnoreEntityCopy"/> на всё поддерево root тем же обходом что
-		/// <see cref="CollectDescendants"/>, но без карты пар - только метка. Статический, не требует
-		/// построенного копира, свой visited/frontier. Вход в поддерево через любую другую ссылку тоже
-		/// умрёт в EMPTY - CollectDescendants проверяет метку у каждой сущности, а не только у корней.
-		/// </summary>
-		public static void MarkSubtreeIgnored(WorldState world, Entity root)
-		{
-			if (root.IsEmpty())
-			{
-				return;
-			}
-
-			ref var manager = ref world.GetComponentsManager();
-			var ignoreSet = new ComponentSetContext<IgnoreEntityCopy>(world);
-
-			using var visited = new UnsafeBitArray(world.GetService<EntityStatePart>().EntitiesCapacity);
-			var frontier = new UnsafeList<Entity>(16);
-			try
-			{
-				frontier.Add(root);
-
-				while (frontier.count > 0)
-				{
-					var entity = frontier.RemoveLast();
-					if (entity.IsEmpty() || visited.IsSet(entity.id))
-					{
-						continue;
-					}
-					visited.Set(entity.id, true);
-					ignoreSet.GetElement(entity);
-
-					for (var i = 0; i < manager.Length; i++)
-					{
-						ref var slot = ref manager.GetByIndex(i);
-						if (!slot.IsValid() || !slot.GetPtr(world).Value().HasElement(world, entity))
-						{
-							continue;
-						}
-						if (GeneratedCopier.IsCopiable(i))
-						{
-							GeneratedCopier.AppendEntities(i, world, entity, ref frontier);
-						}
-					}
-				}
-			}
-			finally
-			{
-				frontier.Dispose();
 			}
 		}
 
@@ -243,6 +191,40 @@ namespace Sapientia.MemoryAllocator.State
 						// Сообщаем в код игры: в релизе лог виден, в DEBUG падаем. Список непокрытого - _worklist.txt.
 						GeneratedCopier.ReportUnhandled(i);
 					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Проход D: вторая фаза копирования (<see cref="ILateCopiable{T}.LateInnerCopy"/>). Строго после
+		/// <see cref="CopyValues"/> - все сущности прошли фазу 1, поэтому кросс-сущностная дозапись видит
+		/// финализированные компоненты. Типы без второй фазы пропускаются по одному биту (<see cref="GeneratedCopier.HasLateCopy"/>).
+		/// </summary>
+		public void LateCopyValues()
+		{
+			ref var manager = ref _srcWorld.GetComponentsManager();
+			var map = GetMap();
+
+			foreach (var oldEntity in _toCopy)
+			{
+				var newEntity = new Entity(oldEntity.id, oldEntity.generation, _dstWorld.WorldId);
+
+				for (var i = 0; i < manager.Length; i++)
+				{
+					if (!GeneratedCopier.HasLateCopy(i))
+					{
+						continue;
+					}
+					ref var slot = ref manager.GetByIndex(i);
+					if (!slot.IsValid())
+					{
+						continue;
+					}
+					if (!slot.GetPtr(_srcWorld).Value().HasElement(_srcWorld, oldEntity))
+					{
+						continue;
+					}
+					GeneratedCopier.LateCopyComponent(i, _srcWorld, _dstWorld, oldEntity, newEntity, in map);
 				}
 			}
 		}
