@@ -16,7 +16,6 @@ namespace Sapientia.Conditions.Comparison
 	public class Fix64CompareCondition<TContext> : Condition<TContext>
 	{
 #if CLIENT
-		public const string SELECTOR_NAME = "\u2009Float Comparison (Legacy)";
 		public const string SELECTOR_CATEGORY = "Comparison";
 		public const SdfIconType SELECTOR_ICON = SdfIconType.ArrowLeftRight;
 

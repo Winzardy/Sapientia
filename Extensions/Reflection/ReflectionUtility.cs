@@ -227,22 +227,30 @@ namespace Sapientia.Utility
 			bool includeSelf = false,
 			bool editor = false)
 		{
-			List<Type> list = new List<Type>();
-			foreach (Assembly assembly in GetAssemblies(assemblyTags, editor))
+			var list = new List<Type>();
+
+#if UNITY_EDITOR && LIGHT_EDITOR_MODE
+			var types = UnityEditor.TypeCache.GetTypesDerivedFrom(baseType);
+
+			foreach (var type in types)
+			{
+				if (!AllowedAssembly(type.Assembly, assemblyTags)) // По идее, можно вообще отказаться от проверки по assemblyTags при использовании UnityEditor.TypeCache. Но тогда поведение будет отличаться в билде
+					continue;
+
+				if (IsTypeSuitable(baseType, type, includeSelf))
+					list.Add(type);
+			}
+
+			return list;
+#endif
+			foreach (var assembly in GetAssemblies(assemblyTags, editor))
 			{
 				try
 				{
-					foreach (Type type in assembly.GetTypes())
+					foreach (var type in assembly.GetTypes())
 					{
-						if (type == baseType && !includeSelf)
-							continue;
-
-						if (baseType.IsAssignableFrom(type) &&
-							!type.IsInterface &&
-							!type.IsAbstract)
-						{
+						if (IsTypeSuitable(baseType, type, includeSelf))
 							list.Add(type);
-						}
 					}
 				}
 				catch (ReflectionTypeLoadException e)
@@ -259,6 +267,30 @@ namespace Sapientia.Utility
 			}
 
 			return list;
+		}
+
+		private static bool AllowedAssembly(Assembly assembly, string[] includeTags)
+		{
+			if (includeTags.IsNullOrEmpty())
+				return true;
+
+			var assemblyName = assembly.GetName().Name;
+
+			foreach (var tag in includeTags)
+			{
+				if (assemblyName.Contains(tag, StringComparison.Ordinal))
+					return true;
+			}
+
+			return false;
+		}
+
+		private static bool IsTypeSuitable(Type baseType, Type type, bool includeSelf)
+		{
+			if (type == baseType && !includeSelf)
+				return false;
+
+			return baseType.IsAssignableFrom(type) && type is { IsInterface: false, IsAbstract: false };
 		}
 
 		/// <summary>
