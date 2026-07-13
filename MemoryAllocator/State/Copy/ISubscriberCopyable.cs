@@ -10,7 +10,7 @@ namespace Sapientia.MemoryAllocator.State
 	public interface ISubscriberCopyable : IInterfaceProxyType
 	{
 		/// <summary>
-		/// Копирует себя из oldWS в newWS и ремапит свои Entity-поля через map. Возвращает IndexedPtr -
+		/// Копирует себя из oldWS в newWS и перенастраивает свои Entity-поля через map. Возвращает IndexedPtr -
 		/// вызывающий код оборачивает его в ProxyPtr (implicit).
 		/// </summary>
 		IndexedPtr Copy(WorldState oldWS, WorldState newWS, in EntityCopyMap map);

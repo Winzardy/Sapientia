@@ -34,7 +34,7 @@ namespace Sapientia.MemoryAllocator.State
 	{
 		/// <summary>
 		/// this - старый компонент; <paramref name="component"/> - его копия в новом мире, уже прошедшая
-		/// фазу 1 (простые поля и ремап своих списков сделаны). Сюда - дозапись в чужие компоненты нового
+		/// фазу 1 (простые поля и перенастройка своих списков сделаны). Сюда - дозапись в чужие компоненты нового
 		/// мира через ComponentSetContext.
 		/// </summary>
 		void LateInnerCopy(WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, ref T component, in EntityCopyMap map);

@@ -5,7 +5,7 @@ namespace Sapientia.MemoryAllocator.State
 	/// <summary>
 	/// Отображение сущностей старого мира в их копии в новом (копия = тот же id+generation, новый worldId).
 	/// Таблица generation'ов вставленных id (0 = не вставлен) вместо словаря пар: ссылка на
-	/// не-скопированное или протухшая даёт EMPTY. Хендл на буфер <see cref="EntityTreeCopier"/> - не хранить дольше него.
+	/// не-скопированное или протухшая даёт EMPTY. Указатель на буфер <see cref="EntityTreeCopier"/> - не хранить дольше него.
 	/// </summary>
 	public readonly struct EntityCopyMap
 	{
@@ -32,7 +32,7 @@ namespace Sapientia.MemoryAllocator.State
 		public bool TryGetValue(in Entity oldEntity, out Entity newEntity)
 		{
 			newEntity = Entity.EMPTY;
-			// Гейт по generation: пустая ссылка с ненулевым id на невставленном слоте дала бы ложное 0 == 0.
+			// Проверка по generation: пустая ссылка с ненулевым id на невставленном слоте дала бы ложное 0 == 0.
 			if (oldEntity.IsEmpty())
 			{
 				return false;

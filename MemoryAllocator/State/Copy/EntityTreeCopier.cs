@@ -4,7 +4,7 @@ using Sapientia.Collections;
 namespace Sapientia.MemoryAllocator.State
 {
 	/// <summary>
-	/// Копирует поддеревья сущностей в другой мир, сохраняя id+generation (вставка в обход free-list,
+	/// Копирует поддеревья сущностей в другой мир, сохраняя id+generation (вставка в обход списка свободных индексов,
 	/// см. <see cref="EntityStatePart.InsertEntity"/>). Три прохода: <see cref="CollectChildren"/>
 	/// (собрать поддеревья), <see cref="CreateCopies"/> (создать копии, зафиксировать пары),
 	/// <see cref="CopyValues"/> (скопировать значения, перенастроить ссылки).
@@ -26,7 +26,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		/// <summary>
 		/// Все пары старая-новая после <see cref="CreateCopies"/> (включая засеянные через
-		/// <see cref="SeedExisting"/>). Хендл на буфер копира - не хранить дольше него.
+		/// <see cref="SeedExisting"/>). Указатель на буфер копира - не хранить дольше него.
 		/// </summary>
 		public EntityCopyMap GetMap()
 		{
@@ -128,7 +128,7 @@ namespace Sapientia.MemoryAllocator.State
 
 		/// <summary>
 		/// Проход B: создаёт копии в новом мире под старыми id+generation, чтобы на проходе C было куда
-		/// перенастраивать ссылки. Завершается пересбором free-list (<see cref="EntityStatePart.ResetFreeIndexes"/>).
+		/// перенастраивать ссылки. Завершается пересборкой списка свободных индексов (<see cref="EntityStatePart.ResetFreeIndexes"/>).
 		/// Пустой перенос (0 сущностей) не вызывает InsertEntity, поэтому пересбор не нужен и не вызывается.
 		/// </summary>
 		public void CreateCopies()

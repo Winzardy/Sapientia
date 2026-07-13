@@ -19,10 +19,10 @@ namespace Sapientia.MemoryAllocator.State
 
 		public void InnerCopy(WorldState oldWS, WorldState newWS, ref KillCallbackComponent component, in EntityCopyMap map)
 		{
-			component.children = RemapAliveChildren(oldWS, newWS, children, map);
-			component.parents = RemapAliveChildren(oldWS, newWS, parents, map);
+			component.children = children.RemapAlive(oldWS, newWS, in map);
+			component.parents = parents.RemapAlive(oldWS, newWS, in map);
 
-			// callbackTargets - обратный индекс "на кого я подписан", ремап как обычный список ссылок.
+			// callbackTargets - обратный индекс "на кого я подписан", перенастраивается как обычный список ссылок.
 			if (callbackTargets.IsCreated)
 			{
 				component.callbackTargets = new MemList<Entity>(newWS, callbackTargets.Count);
@@ -36,7 +36,7 @@ namespace Sapientia.MemoryAllocator.State
 			}
 
 			// killCallbacks - ProxyPtr-подписки: payload копируется в новую арену через
-			// ISubscriberCopyable.Copy (ремапит свои Entity-поля сам), callbackReceiver - обычное
+			// ISubscriberCopyable.Copy (перенастраивает свои Entity-поля сам), callbackReceiver - обычное
 			// поле-ссылка (map-or-EMPTY -> дроп).
 			if (killCallbacks.IsCreated)
 			{
@@ -54,31 +54,6 @@ namespace Sapientia.MemoryAllocator.State
 					});
 				}
 			}
-		}
-
-		private static MemList<Entity> RemapAliveChildren(WorldState oldWS, WorldState newWS, MemList<Entity> source, in EntityCopyMap map)
-		{
-			if (!source.IsCreated)
-			{
-				return default;
-			}
-
-			var result = new MemList<Entity>(newWS, source.Count);
-			foreach (ref readonly var entity in source.GetEnumerable(oldWS))
-			{
-				if (!entity.IsExist(oldWS))
-				{
-					continue;
-				}
-
-				var newEntity = map.GetOrDefault(entity);
-				if (newEntity.IsEmpty())
-				{
-					continue;
-				}
-				result.Add(newWS, newEntity);
-			}
-			return result;
 		}
 	}
 }

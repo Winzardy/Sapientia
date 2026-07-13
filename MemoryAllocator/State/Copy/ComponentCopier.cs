@@ -46,8 +46,8 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
-		/// Регистрирует thunk второй фазы (<see cref="ILateCopiable{T}"/>) по локальному индексу. У компонента
-		/// без второй фазы delegate = null (диспатч его пропустит по <see cref="HasLateCopy"/>).
+		/// Регистрирует делегат второй фазы (<see cref="ILateCopiable{T}"/>) по локальному индексу. У компонента
+		/// без второй фазы делегат = null (диспатч его пропустит по <see cref="HasLateCopy"/>).
 		/// </summary>
 		public void RegisterLate(int localId, CopyDelegate lateCopy)
 		{

@@ -143,7 +143,7 @@ namespace Sapientia.MemoryAllocator.State
 #endif
 		{
 #if DEBUG
-			E.ASSERT(!_freeIndexesDirty, "CreateEntity: free-list недостоверен после InsertEntity - сначала ResetFreeIndexes.");
+			E.ASSERT(!_freeIndexesDirty, "CreateEntity: список свободных индексов недостоверен после InsertEntity - сначала ResetFreeIndexes.");
 			E.ASSERT(!_entityCreationLocked, "CreateEntity: запрещено создавать entity во время сборки мира.");
 #endif
 			EnsureCapacity(worldState, EntitiesCount);
@@ -165,7 +165,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
-		/// Занимает конкретный id с конкретным generation в обход free-list (перенос сущностей в новый мир
+		/// Занимает конкретный id с конкретным generation в обход списка свободных индексов (перенос сущностей в новый мир
 		/// с сохранением id). Generation обязан быть нечётным - как у любой живой сущности. После серии
 		/// вставок и до любого CreateEntity/DestroyEntities обязателен <see cref="ResetFreeIndexes"/>.
 		/// Легально только пока стоит замок создания entity (см. <see cref="Initialize"/>/<see cref="LateInitialize"/>).
@@ -209,7 +209,7 @@ namespace Sapientia.MemoryAllocator.State
 		}
 
 		/// <summary>
-		/// Пересобирает free-list и EntitiesCount сканом generation'ов после серии <see cref="InsertEntity"/>.
+		/// Пересобирает список свободных индексов и EntitiesCount сканом generation'ов после серии <see cref="InsertEntity"/>.
 		/// Живость по чётности: create и destroy инкрементят generation по одному разу, поэтому у живой
 		/// сущности generation всегда нечётный, у мёртвой/несозданной - чётный.
 		/// </summary>
@@ -250,7 +250,7 @@ namespace Sapientia.MemoryAllocator.State
 		public void DestroyEntities(WorldState worldState, Entity* entities, int count)
 		{
 #if DEBUG
-			E.ASSERT(!_freeIndexesDirty, "DestroyEntities: free-list недостоверен после InsertEntity - сначала ResetFreeIndexes.");
+			E.ASSERT(!_freeIndexesDirty, "DestroyEntities: список свободных индексов недостоверен после InsertEntity - сначала ResetFreeIndexes.");
 			for (var i = 0; i < count; i++)
 			{
 				E.ASSERT(IsEntityExist(worldState, entities[i]), "Попытка уничтожить уже мёртвую entity!");
