@@ -1,6 +1,6 @@
 namespace Sapientia.MemoryAllocator.State
 {
-	public static class MemListCopyExtensions
+	public static class MemCopyExtensions
 	{
 		/// <summary>
 		/// Пересоздаёт список ссылок в новом мире по карте пар: живая и переехавшая сущность -> её копия,
