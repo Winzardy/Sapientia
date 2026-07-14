@@ -31,7 +31,18 @@ namespace Sapientia.MemoryAllocator.State
 		/// Копирует компонент <paramref name="typeId"/> со старой сущности на новую и перенастраивает
 		/// ссылки по <paramref name="map"/>.
 		/// </summary>
-		void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map);
+		void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map);
+
+		/// <summary>
+		/// Есть ли у <paramref name="typeId"/> вторая фаза копирования (<see cref="ILateCopiable{T}"/>).
+		/// </summary>
+		bool HasLateCopy(TypeId<IComponent> typeId);
+
+		/// <summary>
+		/// Вторая фаза (<see cref="ILateCopiable{T}.LateInnerCopy"/>): кросс-сущностная дозапись после того
+		/// как все сущности прошли <see cref="CopyComponent"/>. Зовётся только когда <see cref="HasLateCopy"/> == true.
+		/// </summary>
+		void LateCopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map);
 
 		/// <summary>
 		/// Сообщает о необработанном ссылочном компоненте (без маркера копирования). Реализация в коде игры

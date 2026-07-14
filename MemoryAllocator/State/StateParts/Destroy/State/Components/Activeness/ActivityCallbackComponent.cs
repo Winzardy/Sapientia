@@ -2,19 +2,19 @@ using Sapientia.TypeIndexer;
 
 namespace Sapientia.MemoryAllocator.State
 {
-	public interface IEnabledSubscriber : IInterfaceProxyType
+	public interface IEnabledSubscriber : ISubscriberCopyable
 	{
 		public void OnEntityEnabled(WorldState worldState, Entity callbackReceiver);
 	}
 
-	public interface IDisabledSubscriber : IInterfaceProxyType
+	public interface IDisabledSubscriber : ISubscriberCopyable
 	{
 		public void OnEntityDisabled(WorldState worldState, Entity callbackReceiver);
 	}
 
-	// [SkipCopy]: колбэки активности (Callback-прокси) в другой мир не переносятся.
-	[SkipCopy]
-	public struct ActivityCallbackComponent : IComponent
+	// Колбэки активности (Callback-прокси) копируются через ISubscriberCopyable.Copy, см. .Copy.cs.
+	[ManualCopy]
+	public partial struct ActivityCallbackComponent : IComponent
 	{
 		/// <summary>
 		/// Список сущностей, на которые подписана эта сущность.

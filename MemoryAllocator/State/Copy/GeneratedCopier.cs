@@ -50,9 +50,26 @@ namespace Sapientia.MemoryAllocator.State
 		/// Копирует компонент <paramref name="typeId"/> со старой сущности на новую и перенастраивает
 		/// ссылки по <paramref name="map"/>. Вызывается только когда <see cref="IsCopiable"/> вернул true.
 		/// </summary>
-		public static void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in UnsafeDictionary<Entity, Entity> map)
+		public static void CopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map)
 		{
 			_copier!.CopyComponent(typeId, oldWS, newWS, oldEntity, newEntity, in map);
+		}
+
+		/// <summary>
+		/// Есть ли у <paramref name="typeId"/> вторая фаза копирования. false, если диспатч не зарегистрирован.
+		/// </summary>
+		public static bool HasLateCopy(TypeId<IComponent> typeId)
+		{
+			return _copier != null && _copier.HasLateCopy(typeId);
+		}
+
+		/// <summary>
+		/// Вторая фаза копирования (<see cref="ILateCopiable{T}.LateInnerCopy"/>). Вызывается только когда
+		/// <see cref="HasLateCopy"/> вернул true.
+		/// </summary>
+		public static void LateCopyComponent(TypeId<IComponent> typeId, WorldState oldWS, WorldState newWS, Entity oldEntity, Entity newEntity, in EntityCopyMap map)
+		{
+			_copier!.LateCopyComponent(typeId, oldWS, newWS, oldEntity, newEntity, in map);
 		}
 
 		/// <summary>

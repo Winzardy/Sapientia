@@ -86,6 +86,15 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddRange(Span<T> items)
+		{
+			EnsureCapacity(count + items.Length);
+
+			items.CopyTo(ptr.GetSpan(count, items.Length));
+			count += items.Length;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T RemoveAt(int index)
 		{
 			var result = ptr[index];

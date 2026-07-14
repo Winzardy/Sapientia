@@ -33,7 +33,18 @@ namespace Sapientia.MemoryAllocator
 
 		protected virtual void InitializeWorld()
 		{
+			InitializeWorldElements();
+			LateInitializeWorldElements();
+		}
+
+		protected void InitializeWorldElements()
+		{
 			_world.Initialize(_stateParts, _systems);
+		}
+
+		protected void LateInitializeWorldElements()
+		{
+			_world.LateInitialize();
 		}
 
 		protected virtual void AddStateParts()

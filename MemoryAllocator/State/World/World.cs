@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator
 
 			foreach (var statePart in stateParts)
 			{
-				elementsService.AddWorldElement(worldState, statePart.proxy.ToProxy<IWorldElementProxy>(), statePart.typeId);
+				elementsService.AddWorldStatePart(worldState, statePart.proxy, statePart.typeId);
 			}
 
 			foreach (var system in systems)
@@ -61,6 +61,18 @@ namespace Sapientia.MemoryAllocator
 			{
 				element.Initialize(worldState, worldState, element);
 			}
+		}
+
+		/// <summary>
+		/// Поздняя фаза инициализации: локальные стейт-парты + LateInitialize всех элементов.
+		/// Отделена от <see cref="Initialize"/>, чтобы билдер мог вклиниться между фазами
+		/// (например, зарезервировать id сущностей до того, как их начнут раздавать элементы).
+		/// </summary>
+		public void LateInitialize()
+		{
+			using var scope = worldState.GetWorldScope();
+
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
 			LocalStatePartService.Initialize(worldState);
 
