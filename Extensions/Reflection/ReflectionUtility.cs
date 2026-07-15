@@ -323,7 +323,7 @@ namespace Sapientia.Utility
 				{
 					foreach (Type type in assembly.GetTypes())
 					{
-						if (IsGenericTypeSuitable(type, baseType, out var argument))
+						if (IsGenericTypeSuitable(baseType, type, out var argument))
 							list.Add((type, argument!));
 					}
 				}
