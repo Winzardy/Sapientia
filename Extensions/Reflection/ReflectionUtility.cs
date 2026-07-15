@@ -298,7 +298,6 @@ namespace Sapientia.Utility
 		/// Only accepts generic type definitions.
 		/// Only checks nearest inheritance level, ignores the rest of the hierarchy.
 		/// </summary>
-		/// <returns></returns>
 		public static List<(Type originType, Type argumentType)> GetAllGenericArgumentTypes(this Type baseType, bool editor = false)
 		{
 			if (!baseType.IsGenericTypeDefinition)
@@ -306,24 +305,26 @@ namespace Sapientia.Utility
 
 			var list = new List<(Type originType, Type argumentType)>();
 
+#if UNITY_EDITOR && LIGHT_EDITOR_MODE
+			var types = UnityEditor.TypeCache.GetTypesDerivedFrom(baseType);
+
+			foreach (var type in types)
+			{
+				if (IsGenericTypeSuitable(baseType, type, out var argument))
+					list.Add((type, argument!));
+			}
+
+			return list;
+#endif
+
 			foreach (Assembly assembly in GetAssemblies(_allowedAssemblyTags, editor))
 			{
 				try
 				{
 					foreach (Type type in assembly.GetTypes())
 					{
-						if (type.IsInterface || type.IsAbstract)
-							continue;
-
-						var parent = type.BaseType;
-
-						if (parent != null &&
-							parent.IsGenericType &&
-							parent.GetGenericTypeDefinition() == baseType)
-						{
-							var argument = parent.GetGenericArguments()[0];
-							list.Add((type, argument));
-						}
+						if (IsGenericTypeSuitable(type, baseType, out var argument))
+							list.Add((type, argument!));
 					}
 				}
 				catch (ReflectionTypeLoadException e)
@@ -340,6 +341,26 @@ namespace Sapientia.Utility
 			}
 
 			return list;
+		}
+
+		private static bool IsGenericTypeSuitable(Type baseType, Type type, out Type? argumentType)
+		{
+			argumentType = default;
+
+			if (type.IsInterface || type.IsAbstract)
+				return false;
+
+			var parent = type.BaseType;
+
+			if (parent != null &&
+			    parent.IsGenericType &&
+			    parent.GetGenericTypeDefinition() == baseType)
+			{
+				argumentType = parent.GetGenericArguments()[0];
+				return true;
+			}
+
+			return false;
 		}
 
 		public static string GetTypeName(this object obj)
