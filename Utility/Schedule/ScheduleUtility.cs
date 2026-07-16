@@ -117,6 +117,10 @@ namespace Sapientia
 		public static bool IsPassed(long rawCode, DateTime utcAt, DateTime utcNow)
 		{
 			var dateTime = ToDateTime(rawCode, utcAt);
+
+			if (utcAt == utcNow)
+				return utcAt >= dateTime;
+
 			return utcNow > dateTime && utcAt < dateTime;
 		}
 
