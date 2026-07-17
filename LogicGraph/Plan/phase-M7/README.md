@@ -70,11 +70,12 @@
 |---|---|---|
 | **M7-A — Orchestrator relocation** | `Run` вынесен из `NodeInvoker` в `Orchestrator`; per-node диспатч чистый; сброс кеша убран из `Run`. | ◐ сделано (валидно, остаётся) |
 | **M7-B — Work-list core (eager, single-thread, один рантайм)** | **Заменяет `ExecutionGraph`/батч-DAG/`Drain` на месте** (и сносит тупиковую entry-node работу + её тесты). Демандный work-list в оркестраторе; `Inject(span NodeInstanceId)`; **eager-резолв инпутов** до запуска ноды; **per-port мемоизация** (посчитанное не пересчитываем); **push** изменённых аутпутов. Тела атомарны. Без lazy/wave/параллели. Тесты — forceManaged. | 🔄 реализовано, ревью ([plan](B-worklist-core/plan.md)) |
-| **M7-C — Runtime-wave (Burst↔managed)** | Граница рантайма: нода другого рантайма откладывается на следующий wave, чередование; нужно **даже single-thread**. Мемоизация через wave. | ☐ не начата |
+| ~~**M7-C — Runtime-wave**~~ | **СХЛОПНУТА (2026-06-18).** Для eager single-thread mixed-runtime «просто работает»: оркестратор зовёт `NodeInvoker.Invoke` → per-node выбор бэкенда (`runtimeType`, M6); данные через кеш. Wave нужен только для **параллелизма** (вне M7) и **lazy** (Burst тянет managed посреди тела → yield, **M7-D**). Барьер тестируем только под Burst/Unity. | ✅ не требуется (subsumed) |
 | **M7-D — Lazy-ноды (re-execution)** | Контракт `ctx.TryGet`-yield; оркестратор резолвит запрошенного продюсера + перезапускает тело (fast-forward по кешу); side-effect commit-on-completion. Рукописно (без кодогена). | ☐ не начата |
-| **M7-E — Мульти-блюпринт + command-buffer** | Прогон входов **нескольких** независимых блюпринтов в одном run; deferred command-buffer для managed side-effect'ов (аналитика и т.п.). | ☐ не начата |
+| **M7-E — Мульти-блюпринт** | Прогон входов **нескольких** независимых блюпринтов в одном run; per-instance резолв `compiled`. (command-buffer → M7-F) | ✅ реализовано ([plan](E-multi-blueprint/plan.md)) |
 
-Порядок **B→C→D→E** (B — ядро, заменяет батч-DAG; C и D независимы поверх B; E — поверх B).
+Порядок **B→E→D** (B — ядро; **C схлопнута**; E — мульти-блюпринт+command-buffer, тестируемо в .NET; D — lazy,
+Burst-yield тестируем только под Unity). Параллелизм/wave — отдельная поздняя веха.
 
 **Сдвиги дорожной карты:** мемоизация (`Is-Calculated`) была M8 — теперь **ядро M7-B** (демандная модель без
 неё не работает). Параллелизм (джоб-батчинг same-runtime wave) — **вынесен за M7** в отдельную позднюю веху, по

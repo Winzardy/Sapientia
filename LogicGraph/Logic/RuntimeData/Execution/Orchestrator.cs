@@ -1,5 +1,6 @@
 using System;
 using Sapientia.Collections;
+using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Data;
 using Submodules.Sapientia.Memory;
@@ -33,6 +34,9 @@ namespace Sapientia.LogicGraph
 		private UnsafeList<NodeInstanceId> _queue;
 		// Планирование per-(инстанс, нода): байт-флаги. Индекс слота = blueprintId.id (как _cache в ExecutionScope).
 		private UnsafeList<UnsafeArray<byte>> _schedule;
+		// Кеш compiled-блоба на инстанс (M7-E, мульти-блюпринт): резолв key→storage.Get раз/инстанс, не на ноду.
+		// SafePtr в off-allocator storage-блоб (стабилен, не владеем — не диспозим элементы).
+		private UnsafeList<SafePtr<CompiledBlueprintHeader>> _compiled;
 
 		public readonly bool IsCreated => _queue.IsCreated;
 
@@ -43,6 +47,7 @@ namespace Sapientia.LogicGraph
 				_memoryId = memoryId,
 				_queue = new UnsafeList<NodeInstanceId>(memoryId, 16),
 				_schedule = new UnsafeList<UnsafeArray<byte>>(memoryId, 4),
+				_compiled = new UnsafeList<SafePtr<CompiledBlueprintHeader>>(memoryId, 4),
 			};
 		}
 
@@ -59,14 +64,14 @@ namespace Sapientia.LogicGraph
 		/// <see cref="NodeInvoker.Invoke"/> + пометить computed + push консьюмеров. Возвращает число <b>исполненных</b>
 		/// нод (мемоизированные пропуски не считаются). Кеш не трогает (сброс — у вызывающего раз за итерацию).
 		/// </summary>
-		public int Run(ref ExecutionScope scope, ref CompiledBlueprintHeader compiled)
+		public int Run(ref ExecutionScope scope, ref CompiledBlueprintStorage storage)
 		{
-			var nodeCount = compiled.NodesCount;
 			ResetSchedules();
 
-			// Пре-аллокация планирования под инстансы входов (pull/push не создают новых) ⇒ _schedule не растёт в цикле.
+			// Пре-резолв инстансов входов (compiled-ptr + schedule под NodesCount); pull/push не создают новых
+			// инстансов ⇒ _schedule/_compiled не растут в цикле, рефы в их буферы стабильны.
 			for (var i = 0; i < _queue.count; i++)
-				EnsureSchedule(_queue[i].blueprintId, nodeCount);
+				EnsureInstance(ref scope, ref storage, _queue[i].blueprintId);
 			// Начальные входы — queued (дедуп при последующих push/pull).
 			for (var i = 0; i < _queue.count; i++)
 				SetFlag(_queue[i].blueprintId, _queue[i].nodeId, FLAG_QUEUED);
@@ -80,6 +85,8 @@ namespace Sapientia.LogicGraph
 
 				if (HasFlag(node.blueprintId, node.nodeId, FLAG_COMPUTED))
 					continue; // уже посчитана (мемоизация — общий предок один раз)
+
+				ref var compiled = ref CompiledOf(node.blueprintId); // блоб именно этого инстанса (мульти-блюпринт)
 
 				// ready-check: все ноды-предшественники посчитаны? Непосчитанных — pull (поставить в очередь).
 				ref var rel = ref compiled.GetNodeRelatives(node.nodeId);
@@ -105,7 +112,7 @@ namespace Sapientia.LogicGraph
 				executed++;
 
 				// push: консьюмеры могли стать готовы (рефетч relatives — Invoke трогал scope/cache, не блоб).
-				ref var relOut = ref compiled.GetNodeRelatives(node.nodeId);
+				ref var relOut = ref CompiledOf(node.blueprintId).GetNodeRelatives(node.nodeId);
 				for (var i = 0; i < relOut.outputs.Length; i++)
 					Enqueue(node.blueprintId, relOut.outputs.Get(i));
 			}
@@ -148,15 +155,28 @@ namespace Sapientia.LogicGraph
 			return ref _schedule[instance.id].ptr[node];
 		}
 
-		/// <summary>Гарантирует per-instance массив планирования (слот = <c>blueprintId.id</c>, размер <paramref name="nodeCount"/>).</summary>
-		private void EnsureSchedule(BlueprintInstanceId instance, int nodeCount)
+		/// <summary>Резолвит инстанс (слот = <c>blueprintId.id</c>): кеширует его compiled-ptr (key→storage.Get) и
+		/// заводит schedule-массив под <c>NodesCount</c>. Раз/инстанс (по первому касанию); compiled-ptr и
+		/// schedule переживают run'ы (storage-блоб стабилен, schedule лишь чистится).</summary>
+		private void EnsureInstance(ref ExecutionScope scope, ref CompiledBlueprintStorage storage, BlueprintInstanceId instance)
 		{
 			_schedule.EnsureCount(instance.id + 1, default);
+			_compiled.EnsureCount(instance.id + 1, default);
 			ref var arr = ref _schedule[instance.id];
-			if (!arr.IsCreated)
-				arr = new UnsafeArray<byte>(_memoryId, nodeCount);
-			// Слот инстанса связан с одним блюпринтом ⇒ размер не меняется. Reuse под больший граф — рассинхрон.
-			E.ASSERT(arr.Length >= nodeCount, "[Orchestrator] schedule-слот меньше NodesCount (слот переиспользован под больший блюпринт?).");
+			if (arr.IsCreated)
+				return; // уже резолвлен
+
+			var key = scope.GetBlueprintKey(instance);
+			ref var compiled = ref storage.Get(key);
+			_compiled[instance.id] = compiled.AsSafePtr();
+			arr = new UnsafeArray<byte>(_memoryId, compiled.NodesCount);
+		}
+
+		/// <summary><c>ref</c> на compiled-блоб инстанса из кеша (<see cref="EnsureInstance"/>). Адрес в стабильном
+		/// off-allocator storage-блобе.</summary>
+		private ref CompiledBlueprintHeader CompiledOf(BlueprintInstanceId instance)
+		{
+			return ref _compiled[instance.id].Value();
 		}
 
 		/// <summary>Сброс планирования перед прогоном: чистит все существующие per-instance массивы (queued/computed → 0).</summary>
@@ -178,6 +198,7 @@ namespace Sapientia.LogicGraph
 			for (var i = 0; i < _schedule.count; i++)
 				_schedule[i].Dispose();
 			_schedule.Dispose();
+			_compiled.Dispose(); // элементы — SafePtr в чужой storage, не диспозим
 			_queue.Dispose();
 			this = default;
 		}

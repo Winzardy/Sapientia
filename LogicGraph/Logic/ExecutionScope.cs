@@ -91,6 +91,15 @@ namespace Sapientia.LogicGraph
 			return _instances.Has(id);
 		}
 
+		/// <summary>Ключ блюпринта инстанса (<c>(id, version)</c>) — для резолва его <c>CompiledBlueprintHeader</c>
+		/// из <see cref="CompiledBlueprintStorage"/> (мульти-блюпринтовый прогон, M7-E). Вызывать на живом хендле.</summary>
+		public readonly VersionedId<Blueprint> GetBlueprintKey(BlueprintInstanceId id)
+		{
+			E.ASSERT(_instances.Has(id), "[ExecutionScope] GetBlueprintKey на мёртвом/stale хендле.");
+			_instances.TryGet(id, out var header);
+			return header.blueprintId;
+		}
+
 		/// <summary><see cref="InstanceCache"/> инстанса (Read/Write/Reset кеша портов). Вызывать на живом хендле.</summary>
 		public ref InstanceCache GetInstanceCache(BlueprintInstanceId id)
 		{
