@@ -43,7 +43,7 @@ namespace Content.Management
 				}
 			}
 
-			if (entry.Value is IExternallyIdentifiable identifiable)
+			if (entry.BaseValue is IExternallyIdentifiable identifiable)
 			{
 				if (entry.ValueType.IsValueType)
 				{
@@ -63,7 +63,7 @@ namespace Content.Management
 			if (!_clearSubscribe)
 			{
 				ContentEntryMap.Cleared += OnCleared;
-				_clearSubscribe         =  true;
+				_clearSubscribe = true;
 			}
 
 			if (_dictionary.IsBuilding)
@@ -98,10 +98,11 @@ namespace Content.Management
 
 		public static bool TryGetEntry(in SerializableGuid guid, out UniqueContentEntry<T> entry)
 		{
-			entry = null;
-
 			if (!_dictionary.Contains(in guid))
+			{
+				entry = null;
 				return false;
+			}
 
 			entry = _dictionary[in guid];
 			return true;
@@ -109,10 +110,11 @@ namespace Content.Management
 
 		public static bool TryGetEntry(string id, out UniqueContentEntry<T> entry)
 		{
-			entry = null;
-
 			if (!_dictionary.Contains(id))
+			{
+				entry = null;
 				return false;
+			}
 
 			entry = _dictionary[id];
 			return true;
@@ -120,10 +122,11 @@ namespace Content.Management
 
 		public static bool TryGetEntry(int index, out UniqueContentEntry<T> entry)
 		{
-			entry = null;
-
 			if (!_dictionary.Contains(index))
+			{
+				entry = null;
 				return false;
+			}
 
 			entry = _dictionary[index];
 			return true;

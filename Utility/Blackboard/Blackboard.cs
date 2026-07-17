@@ -59,8 +59,6 @@ namespace Sapientia
 				StaticObjectPoolUtility.ReleaseAndSetNullSafe(ref _tokens);
 			}
 
-			OnReleaseSimulationMode();
-
 			foreach (var storage in _typeToStorage.Values)
 				storage.ReleaseToPool();
 
@@ -70,6 +68,8 @@ namespace Sapientia
 			Released = null;
 
 			OnRelease();
+
+			OnReleaseSimulationMode();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -147,12 +147,7 @@ namespace Sapientia
 				return Register(in value, key);
 
 			if (EqualityComparer<T>.Default.Equals(registeredValue, value))
-			{
-				var keyLabel = key != null ? $" with key [ {key} ]" : string.Empty;
-				if (!_isSimulationMode)
-					throw new BlackboardException($"Attempt to register or overwrite the same value of type [ {typeof(T).Name} ]{keyLabel}");
 				return null;
-			}
 
 			Overwrite(in value, key);
 			return null;
@@ -245,7 +240,7 @@ namespace Sapientia
 
 		internal BlackboardToken(IBlackboardToken token, int generation)
 		{
-			_token      = token;
+			_token = token;
 			_generation = generation;
 		}
 

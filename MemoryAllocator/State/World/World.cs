@@ -49,7 +49,7 @@ namespace Sapientia.MemoryAllocator
 
 			foreach (var statePart in stateParts)
 			{
-				elementsService.AddWorldElement(worldState, statePart.proxy.ToProxy<IWorldElementProxy>(), statePart.typeId);
+				elementsService.AddWorldStatePart(worldState, statePart.proxy, statePart.typeId);
 			}
 
 			foreach (var system in systems)
@@ -61,6 +61,18 @@ namespace Sapientia.MemoryAllocator
 			{
 				element.Initialize(worldState, worldState, element);
 			}
+		}
+
+		/// <summary>
+		/// Поздняя фаза инициализации: локальные стейт-парты + LateInitialize всех элементов.
+		/// Отделена от <see cref="Initialize"/>, чтобы билдер мог вклиниться между фазами
+		/// (например, зарезервировать id сущностей до того, как их начнут раздавать элементы).
+		/// </summary>
+		public void LateInitialize()
+		{
+			using var scope = worldState.GetWorldScope();
+
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
 
 			LocalStatePartService.Initialize(worldState);
 
@@ -203,32 +215,5 @@ namespace Sapientia.MemoryAllocator
 
 		public static ref T GetOrCreateService<T>(this World world) where T : unmanaged, IWorldLocalUnmanagedService, IInitializableService
 			=> ref world.worldState.GetOrCreateService<T>();
-	}
-
-	public static class WorldExtensions
-	{
-
-		[CanBeNull]
-		public static World ToWorld(this Entity entity)
-		{
-			if (!entity.IsValid())
-				return null;
-
-			return WorldManager.GetWorld(entity.worldId);
-		}
-
-		[CanBeNull]
-		public static World ToWorld(this WorldState worldState)
-		{
-			if (!worldState.IsValid)
-				return null;
-
-			return WorldManager.GetWorld(worldState.WorldId);
-		}
-
-		public static bool IsValid(this Entity entity)
-		{
-			return entity.worldId.IsValid() && entity.IsExist(entity.GetWorldState());
-		}
 	}
 }

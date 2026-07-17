@@ -29,7 +29,7 @@ namespace SharedLogic
 		public SharedRoot(ISharedNodesRegistrar registrar, ISystemTimeProvider dateTimeProvider, ILogger logger = null)
 		{
 			_registrar = registrar;
-			_logger    = logger;
+			_logger = logger;
 
 			_registry = new SharedNodeRegistry();
 
@@ -144,6 +144,23 @@ namespace SharedLogic
 			streamer.Write(REVISION_KEY, _revision);
 
 			Saved?.Invoke();
+		}
+	}
+
+	public static class SharedRootUtility
+	{
+		public static void GetNode<T>(this ISharedRoot root, out T node)
+			where T : class, ISharedNode
+		{
+			node = root.GetNode<T>();
+		}
+
+		public static bool IsCommandExecuting(this ISharedRoot root)
+		{
+#if CLIENT
+			return root.GetNode<TimeSharedNode>().TimeProviderSuppress;
+#endif
+			return true;
 		}
 	}
 }

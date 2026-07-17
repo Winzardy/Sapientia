@@ -26,12 +26,5 @@ namespace SharedLogic
 			where T : struct, ICommand;
 	}
 
-	public static class SharedRootUtility
-	{
-		public static void GetNode<T>(this ISharedRoot root, out T node)
-			where T : class, ISharedNode
-		{
-			node = root.GetNode<T>();
-		}
-	}
+
 }

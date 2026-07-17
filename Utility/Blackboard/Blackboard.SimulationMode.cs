@@ -43,8 +43,12 @@ namespace Sapientia
 
 		private void OnReleaseSimulationMode()
 		{
-			_isSimulationMode       = false;
+			var prev = _isSimulationMode;
+			_isSimulationMode = false;
 			_simulationRequestCount = 0;
+
+			if (prev != _isSimulationMode)
+				SimulationModeChanged?.Invoke(false);
 
 			SimulationModeChanged = null;
 		}

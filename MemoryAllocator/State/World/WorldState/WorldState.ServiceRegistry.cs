@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.MemoryAllocator.State;
@@ -319,5 +320,32 @@ namespace Sapientia.MemoryAllocator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool HasComponentSet<T>(this WorldState worldState) where T : unmanaged, IComponent
 			=> worldState.GetComponentsManager().Get<T>().IsValid();
+
+		/// <summary>
+		/// Собирает локальные индексы (<see cref="TypeId{IComponent}"/>) всех компонентов, присутствующих на
+		/// <paramref name="entity"/>: перебор зарегистрированных <see cref="ComponentSet"/>'ов с проверкой
+		/// <see cref="ComponentSet.HasElement(WorldState, Entity)"/>. Индекс слота реестра и есть локальный
+		/// индекс компонента — индирекция через глобальный <see cref="TypeId"/> не нужна.
+		/// Для дебага/инспекции — линейный проход по всем типам, не для горячего пути.
+		/// </summary>
+		public static void CollectComponentTypeIds(this WorldState worldState, Entity entity, List<TypeId<IComponent>> result)
+		{
+			result.Clear();
+
+			ref var manager = ref worldState.GetComponentsManager();
+			if (!manager.IsCreated)
+				return;
+
+			for (var i = 0; i < manager.Length; i++)
+			{
+				ref var slot = ref manager.GetByIndex(i);
+				if (!slot.IsValid())
+					continue;
+				if (!slot.GetPtr(worldState).Value().HasElement(worldState, entity))
+					continue;
+
+				result.Add(i);
+			}
+		}
 	}
 }

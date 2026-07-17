@@ -162,7 +162,7 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TryGetValue(TKey key, out TValue value)
+		public readonly bool TryGetValue(TKey key, out TValue value)
 		{
 			var entry = FindEntry(key);
 			if (entry >= 0)
@@ -173,6 +173,12 @@ namespace Sapientia.Collections
 
 			value = UnsafeExt.DefaultRefReadonly<TValue>();
 			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly TValue GetOrDefault(TKey key, TValue defaultValue = default)
+		{
+			return TryGetValue(key, out var value) ? value : defaultValue;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -239,7 +245,7 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private int FindEntry(in TKey key)
+		private readonly int FindEntry(in TKey key)
 		{
 			if (_buckets.IsCreated)
 			{

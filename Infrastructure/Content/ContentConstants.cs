@@ -9,10 +9,13 @@ namespace Content
 		/// <see cref="ContentEntry{T}.guid"/>
 		/// </summary>
 		public const string GUID_FIELD_NAME = "guid";
-
 		/// <summary>
 		/// <see cref="BaseContentEntry{T}.value"/>
 		/// </summary>
 		public const string VALUE_FIELD_NAME = "value";
+		/// <summary>
+		/// <see cref="UniqueContentEntry{T}.Redirect"/>
+		/// </summary>
+		public const string REDIRECT_FIELD_NAME = "redirect";
 	}
 }

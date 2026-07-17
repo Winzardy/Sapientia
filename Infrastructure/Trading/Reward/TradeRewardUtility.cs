@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Content;
 using Sapientia;
@@ -46,31 +47,28 @@ namespace Trading
 			return board.RegisterRewardHandle<TReward, THandle>(source);
 		}
 
-		public static IEnumerable<ITradeRewardResult> ExpandAll(this ITradeRewardResult[] results, bool forceFullExpansion = false)
+		public static IReadOnlyList<ITradeRewardResult> ExpandAll(this ITradeRewardResult[] results, bool forceFullExpansion = false)
 		{
 			if (results.IsNullOrEmpty())
-				yield break;
+				return Array.Empty<ITradeRewardResult>();
 
 			using (Pool<Blackboard>.Get(out var blackboard))
+			using (ListPool<ITradeRewardResult>.Get(out var output))
 			{
 				blackboard.Register(forceFullExpansion, ITradeRewardResult.FORCE_FULL_EXPANSION_KEY);
+
 				foreach (var result in results)
 				{
+					// дочерние итераторы потребляем жадно прямо здесь, пока доска ещё арендована
 					if (result is IEnumerableWithBoard<ITradeRewardResult> enumerableWithBoard)
-					{
-						foreach (var child in ExpandAll(enumerableWithBoard, blackboard))
-							yield return child;
-					}
+						output.AddRange(ExpandAll(enumerableWithBoard, blackboard));
 					else if (result is IEnumerable<ITradeRewardResult> enumerable)
-					{
-						foreach (var child in ExpandAll(enumerable, blackboard))
-							yield return child;
-					}
+						output.AddRange(ExpandAll(enumerable, blackboard));
 					else
-					{
-						yield return result;
-					}
+						output.Add(result);
 				}
+
+				return output.ToArray();
 			}
 		}
 
@@ -142,38 +140,30 @@ namespace Trading
 			}
 		}
 
-		public static IEnumerable<ITradeRewardResult> MergeAll(this ITradeRewardResult[] results, bool forceFullExpansion = false)
+		public static IReadOnlyList<ITradeRewardResult> MergeAll(this ITradeRewardResult[] results, bool forceFullExpansion = false)
 		{
 			if (results.IsNullOrEmpty())
-				yield break;
+				return Array.Empty<ITradeRewardResult>();
 
 			using (ListPool<ITradeRewardResult>.Get(out var expanded))
 			{
 				foreach (var e in results.ExpandAll(forceFullExpansion))
 					expanded.Add(e);
 
-				if (expanded.Count == 0)
-					yield break;
-
 				for (int i = 0; i < expanded.Count; i++)
 				{
 					var target = expanded[i];
+					// схлопываем все совместимые с target вправо
 					for (int j = i + 1; j < expanded.Count;)
 					{
-						var candidate = expanded[j];
-						if (target.Merge(candidate))
-						{
+						if (target.Merge(expanded[j]))
 							expanded.RemoveAt(j);
-						}
 						else
-						{
 							j++;
-						}
 					}
 				}
 
-				for (int k = 0; k < expanded.Count; k++)
-					yield return expanded[k];
+				return expanded.ToArray();
 			}
 		}
 

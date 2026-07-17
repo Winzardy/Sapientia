@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Sapientia;
 
 namespace Content
 {
@@ -9,8 +10,13 @@ namespace Content
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	[Serializable]
-	public partial class SingleContentEntry<T> : BaseContentEntry<T>, ISingleContentEntry<T>
+	public partial class SingleContentEntry<T> : BaseContentEntry<T>, ISingleContentEntry<T>, IIdentifiable
 	{
+		private const string ID = "$single";
+
+		public string Id { get => ID; }
+		public SerializableGuid Guid { get => IContentReference.SINGLE_GUID; }
+
 		protected SingleContentEntry(in T value) : base(in value)
 		{
 		}
@@ -24,7 +30,7 @@ namespace Content
 		public static implicit operator T(SingleContentEntry<T> entry) => entry.Value;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ContentReference(SingleContentEntry<T> _) => new(in IContentReference.SINGLE_GUID);
+		public static implicit operator ContentReference(SingleContentEntry<T> entry) => new(entry.Guid);
 	}
 
 	public interface ISingleContentEntry<T> : IContentEntry<T>, ISingleContentEntry

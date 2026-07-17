@@ -13,7 +13,6 @@ namespace Sapientia.Conditions.Comparison
 	public class Fix64InRangeCondition<TContext> : Condition<TContext>
 	{
 #if CLIENT
-		public const string SELECTOR_NAME = "\u2009Float In Range (Legacy)";
 		public const string SELECTOR_CATEGORY = "Comparison";
 		public const SdfIconType SELECTOR_ICON = SdfIconType.ArrowsCollapse;
 		public const int SELECTOR_PRIORITY = -1;

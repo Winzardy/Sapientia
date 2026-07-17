@@ -41,7 +41,7 @@ namespace SharedLogic
 		public TimeSharedNode(ISystemTimeProvider timeProvider)
 		{
 			_timeProvider = timeProvider;
-			_dateTime     = _timeProvider.SystemTime;
+			_dateTime = _timeProvider.SystemTime;
 		}
 
 		/// <summary>
@@ -140,7 +140,7 @@ namespace SharedLogic
 		protected override void OnSave(out SaveData data)
 		{
 			data.timestampOffset = _dateTimeOffset.Ticks;
-			data.timestamp       = _dateTime.Ticks;
+			data.timestamp = _dateTime.Ticks;
 		}
 
 		public struct SaveData

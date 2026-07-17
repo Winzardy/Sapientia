@@ -209,6 +209,7 @@ namespace Sapientia.Collections
 			ref var valueA = ref (_values.ptr + denseId).Value();
 			ref var valueB = ref (_values.ptr + _count).Value();
 
+			removedValue = valueA;
 			valueA = valueB;
 			valueB = default;
 

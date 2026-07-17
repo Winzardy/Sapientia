@@ -18,6 +18,8 @@ namespace Sapientia.MemoryAllocator.State
 			ComponentSet.RegisterComponentSet<DisabledComponent>(worldState, 512);
 			ComponentSet.RegisterComponentSet<ActivityCallbackComponent>(worldState, 512)
 				.SetDestroyHandler<ActivityComponentDestroyHandler>(worldState);
+
+			ComponentSet.RegisterComponentSet<IgnoreEntityCopy>(worldState, 128);
 		}
 	}
 }
