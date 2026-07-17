@@ -28,6 +28,7 @@ namespace Content
 		/// </summary>
 		const string ENTRY_FIELD_NAME = "_entry";
 
+		bool enabled { get; }
 		IContentEntry ContentEntry { get; }
 		bool Validate();
 	}
@@ -38,6 +39,7 @@ namespace Content
 		//public Type ValueType { get; }
 		IContentEntrySource Source { get; }
 		IUniqueContentEntry UniqueContentEntry { get; }
+		bool IContentEntrySource.enabled => Source.enabled;
 		IContentEntry IContentEntrySource.ContentEntry => UniqueContentEntry;
 	}
 }
