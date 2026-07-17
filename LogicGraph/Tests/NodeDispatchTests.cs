@@ -210,7 +210,7 @@ namespace Sapientia.LogicGraph.Tests
 
 				orch.Inject(new[] { Entry(id, 0) });
 
-				var n = orch.Run(ref scope, ref compiled);
+				var n = orch.Run(ref scope, ref storage);
 				Assert.AreEqual(3, n, "Все три ноды исполнены.");
 
 				var cOut = PortHandle(ref compiled, 2, 1);
@@ -273,7 +273,7 @@ namespace Sapientia.LogicGraph.Tests
 
 				orch.Inject(new[] { Entry(id, 0) });
 
-				Assert.AreEqual(4, orch.Run(ref scope, ref compiled), "Все четыре ноды исполнены.");
+				Assert.AreEqual(4, orch.Run(ref scope, ref storage), "Все четыре ноды исполнены.");
 
 				var dOut = PortHandle(ref compiled, 3, 2);
 				Assert.IsTrue(scope.GetInstanceCache(id).Read(dOut, out var result), "D-Out посчитан (join увидел обе ветви).");
@@ -317,7 +317,7 @@ namespace Sapientia.LogicGraph.Tests
 
 				orch.Inject(new[] { Entry(id1, 0), Entry(id2, 0) });
 
-				Assert.AreEqual(2, orch.Run(ref scope, ref compiled), "Обе ноды (по одной на инстанс) исполнены.");
+				Assert.AreEqual(2, orch.Run(ref scope, ref storage), "Обе ноды (по одной на инстанс) исполнены.");
 
 				Assert.IsTrue(scope.GetInstanceCache(id1).Read(outHandle, out var r1));
 				Assert.IsTrue(scope.GetInstanceCache(id2).Read(outHandle, out var r2));
@@ -353,9 +353,9 @@ namespace Sapientia.LogicGraph.Tests
 				ref var compiled = ref storage.Get(key);
 				// Два прогона: Inject перед каждым (Run опустошает очередь).
 				orch.Inject(new[] { Entry(id, 0) });
-				orch.Run(ref scope, ref compiled);
+				orch.Run(ref scope, ref storage);
 				orch.Inject(new[] { Entry(id, 0) });
-				orch.Run(ref scope, ref compiled);
+				orch.Run(ref scope, ref storage);
 
 				var counter = (scope.GetInstancePersistent(id).GetPtr() + compiled.GetNodePersistenceOffset(0).byteOffset).Cast<long>().Value();
 				Assert.AreEqual(2L, counter, "Persistence пережил два прогона (++ дважды), reset кеша его не сбросил.");
@@ -405,13 +405,13 @@ namespace Sapientia.LogicGraph.Tests
 				// Итерация 1: вызывающий сбрасывает кеш, сидит вход, Run.
 				scope.ResetInstanceCache(id, template);
 				orch.Inject(new[] { Entry(id, 0) });
-				orch.Run(ref scope, ref compiled);
+				orch.Run(ref scope, ref storage);
 				scope.GetInstanceCache(id).Read(bOutHandle, out var first);
 
 				// Итерация 2: снова reset → Inject → Run.
 				scope.ResetInstanceCache(id, template);
 				orch.Inject(new[] { Entry(id, 0) });
-				orch.Run(ref scope, ref compiled);
+				orch.Run(ref scope, ref storage);
 				scope.GetInstanceCache(id).Read(bOutHandle, out var second);
 
 				Assert.AreEqual(10L, first, "7 + 3.");
@@ -442,7 +442,7 @@ namespace Sapientia.LogicGraph.Tests
 				storage.Add(arena, offset, CompiledEnvironment.Compile());
 				ref var compiled = ref storage.Get(key);
 
-				Assert.AreEqual(0, orch.Run(ref scope, ref compiled), "Без Inject work-list пуст — 0 нод.");
+				Assert.AreEqual(0, orch.Run(ref scope, ref storage), "Без Inject work-list пуст — 0 нод.");
 			}
 			finally
 			{
@@ -490,7 +490,7 @@ namespace Sapientia.LogicGraph.Tests
 				compiled.GetStaticNodeSlice(2).Cast<StubAdd>().Value() = new StubAdd { input = PortHandle(ref compiled, 2, 0), output = PortHandle(ref compiled, 2, 1), addend = 2L };
 
 				orch.Inject(new[] { Entry(id, 1), Entry(id, 2) }); // входы = B и C, тянут общего предка A
-				var n = orch.Run(ref scope, ref compiled);
+				var n = orch.Run(ref scope, ref storage);
 
 				var counter = (scope.GetInstancePersistent(id).GetPtr() + compiled.GetNodePersistenceOffset(0).byteOffset).Cast<long>().Value();
 				Assert.AreEqual(1L, counter, "Общий предок A исполнен ровно один раз (мемоизация), хотя его тянут и B, и C.");
@@ -499,6 +499,53 @@ namespace Sapientia.LogicGraph.Tests
 				Assert.AreEqual(6L, bOut, "B = A(5) + 1.");
 				Assert.IsTrue(scope.GetInstanceCache(id).Read(PortHandle(ref compiled, 2, 1), out var cOut));
 				Assert.AreEqual(7L, cOut, "C = A(5) + 2.");
+			}
+			finally
+			{
+				orch.Dispose();
+				scope.Dispose();
+				storage.Dispose();
+				registry.Dispose();
+			}
+		}
+
+		[Test]
+		public void Run_MultiBlueprint_IndependentResults()
+		{
+			// Два РАЗНЫХ блюпринта (ключи (1,1) и (2,1)) в одном Run: входы обоих в очереди, оркестратор резолвит
+			// compiled per-instance (M7-E). bp1 сидит 100, bp2 — 200; результаты независимы.
+			var registry = NodeFunctionRegistry.Create(new[] { NodeInvoker.GetManaged<StubSeed>() }, forceManaged: true);
+			var storage = CompiledBlueprintStorage.Create(CompiledEnvironment.Compile());
+			var scope = ExecutionScope.Create(registry: registry);
+			var orch = Orchestrator.Create();
+			try
+			{
+				var bp1 = StubBlueprint.Of(1, 1, new StubNode(staticSize: 64, cacheSize: 16, outputs: new NodeOutput[] { new NodeOutput<long>() }, typeId: 0));
+				var bp2 = StubBlueprint.Of(2, 1, new StubNode(staticSize: 64, cacheSize: 16, outputs: new NodeOutput[] { new NodeOutput<long>() }, typeId: 0));
+
+				var arena1 = BlueprintCompiler.CompileLayout(bp1, out var off1);
+				var key1 = arena1.Value.GetValue(off1).blueprintKey;
+				storage.Add(arena1, off1, CompiledEnvironment.Compile());
+				var arena2 = BlueprintCompiler.CompileLayout(bp2, out var off2);
+				var key2 = arena2.Value.GetValue(off2).blueprintKey;
+				storage.Add(arena2, off2, CompiledEnvironment.Compile());
+
+				var id1 = scope.CreateInstance(ref storage, key1);
+				var id2 = scope.CreateInstance(ref storage, key2);
+				ref var c1 = ref storage.Get(key1);
+				c1.GetStaticNodeSlice(0).Cast<StubSeed>().Value() = new StubSeed { output = PortHandle(ref c1, 0, 0), seed = 100L };
+				var out1 = PortHandle(ref c1, 0, 0);
+				ref var c2 = ref storage.Get(key2);
+				c2.GetStaticNodeSlice(0).Cast<StubSeed>().Value() = new StubSeed { output = PortHandle(ref c2, 0, 0), seed = 200L };
+				var out2 = PortHandle(ref c2, 0, 0);
+
+				orch.Inject(new[] { Entry(id1, 0), Entry(id2, 0) });
+				Assert.AreEqual(2, orch.Run(ref scope, ref storage), "Обе ноды (по одной на блюпринт) исполнены.");
+
+				Assert.IsTrue(scope.GetInstanceCache(id1).Read(out1, out var r1));
+				Assert.IsTrue(scope.GetInstanceCache(id2).Read(out2, out var r2));
+				Assert.AreEqual(100L, r1, "Инстанс bp1 → 100.");
+				Assert.AreEqual(200L, r2, "Инстанс bp2 → 200 (per-instance compiled, независимо).");
 			}
 			finally
 			{
