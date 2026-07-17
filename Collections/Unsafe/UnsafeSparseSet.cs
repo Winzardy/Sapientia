@@ -115,7 +115,7 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(int id)
+		public readonly bool Has(int id)
 		{
 			if (_sparse.Length <= id)
 				return false;

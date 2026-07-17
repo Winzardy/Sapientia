@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Sapientia.TypeIndexer;
-using Unity.Burst;
 
 namespace Sapientia.LogicGraph
 {

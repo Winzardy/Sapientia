@@ -74,7 +74,7 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Has(int id)
+		public readonly bool Has(int id)
 		{
 			return _sparseSet.Has(id);
 		}
