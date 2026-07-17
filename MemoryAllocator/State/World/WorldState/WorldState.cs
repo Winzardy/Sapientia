@@ -105,7 +105,7 @@ namespace Sapientia.MemoryAllocator
 			var worldState = new WorldState();
 
 			worldState._worldStateData = MemoryExt.MemAlloc<WorldStateData>();
-			worldState.WorldStateData = WorldStateData.Deserialize(ref stream);
+			worldState._worldStateData.Value() = WorldStateData.Deserialize(ref stream);
 			// Caller обязан вызвать SetupNewWorldId(worldId) после Deserialize — это назначение
 			// нового handle мира. Регистры уже восстановлены из стрима.
 

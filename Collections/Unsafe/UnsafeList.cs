@@ -70,9 +70,18 @@ namespace Sapientia.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetCount(int newCount)
+		public void EnsureCount(int newCount, T defaultValue = default)
+		{
+			if (count < newCount)
+				SetCount(newCount, defaultValue);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void SetCount(int newCount, T defaultValue = default)
 		{
 			EnsureCapacity(newCount);
+			if (count < newCount)
+				ptr.GetSpan(count, newCount - count).Fill(defaultValue);
 			count = newCount;
 		}
 

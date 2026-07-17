@@ -159,6 +159,12 @@ namespace Sapientia.Extensions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SafePtr AsSafePtr<T>(this ref T value, int bytesCount) where T : unmanaged
+		{
+			return new SafePtr(value.AsPointer(), bytesCount);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SafePtr<T> AsSafePtr<T>(this ref T value) where T : unmanaged
 		{
 			return new SafePtr<T>(value.AsPointer(), 1);

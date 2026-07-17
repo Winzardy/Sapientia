@@ -156,10 +156,23 @@ namespace Sapientia.MemoryAllocator
 			ServiceContext<WorldId>.SetContext(context);
 		}
 
-		public static WorldState DeserializeWorld(ref StreamBufferReader stream)
+		public static World DeserializeWorld(ref StreamBufferReader stream)
 		{
-			throw new NotImplementedException();
-			var world = WorldState.Deserialize(ref stream);
+			var worldState = WorldState.Deserialize(ref stream);
+			var world = CreateWorld(worldState);
+			return world;
+		}
+
+		private static World CreateWorld(WorldState worldState)
+		{
+			var worldId = worldState.WorldId;
+			ExpandWorldsArrays(worldId.id + 1);
+
+			_versions[worldId.id] = worldId.version;
+
+			ref var world = ref _worlds[worldId.id];
+
+			world = new World(worldState);
 			return world;
 		}
 
@@ -185,15 +198,22 @@ namespace Sapientia.MemoryAllocator
 			if (_freeIndexes.Count == 0)
 			{
 				_freeIndexes.Add(_versions.Length);
-
-				ArrayExt.Expand(ref _versions, _versions.Length + 1, FIRST_VERSION);
-				ArrayExt.Expand(ref _worldsStates, _worldsStates.Length + 1);
-				ArrayExt.Expand(ref _worlds, _worlds.Length + 1);
+				ExpandWorldsArrays(_versions.Length + 1);
 			}
 
 			var id = _freeIndexes.RemoveLast();
 			var version = _versions[id];
 			return new WorldId(id, version);
+		}
+
+		private static void ExpandWorldsArrays(int newSize)
+		{
+			if (_versions.Length < newSize)
+				ArrayExt.Expand(ref _versions, newSize, FIRST_VERSION);
+			if (_worldsStates.Length < newSize)
+				ArrayExt.Expand(ref _worldsStates, newSize);
+			if (_worlds.Length < newSize)
+				ArrayExt.Expand(ref _worlds, newSize);
 		}
 
 		public static void RemoveWorld(this WorldState world)
