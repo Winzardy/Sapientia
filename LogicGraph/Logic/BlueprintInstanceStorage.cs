@@ -47,7 +47,7 @@ namespace Sapientia.LogicGraph
 		}
 
 		/// <summary>Жив ли хендл: слот занят и generation совпадает (не stale).</summary>
-		public bool Has(BlueprintInstanceId id)
+		public readonly bool Has(BlueprintInstanceId id)
 		{
 			return id.IsValid && _instances.Has(id.id) && _generations[id.id] == id.generation;
 		}
