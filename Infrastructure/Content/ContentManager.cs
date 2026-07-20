@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Sapientia;
+using Sapientia.Utility;
 
 namespace Content
 {
@@ -31,8 +32,8 @@ namespace Content
 		internal static bool IsInitialized { get => resolver != null; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task PopulateAsync(IContentImporter importer, [CanBeNull] IProgress<float> progress = null, CancellationToken token = default)
-			=> resolver.PopulateAsync(importer, progress, token);
+		public static Task PopulateAsync(IContentImporter importer, IAsyncFlowController flowController = null, [CanBeNull] IProgress<float> progress = null, CancellationToken token = default)
+			=> resolver.PopulateAsync(importer, flowController, progress, token);
 
 		/// <inheritdoc cref="ContentResolver.Any{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
