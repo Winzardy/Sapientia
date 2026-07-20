@@ -132,6 +132,6 @@ namespace Content.Management
 		public static int ToIndex(string id) => _dictionary[id].Index;
 		public static int ToIndex(in SerializableGuid guid) => _dictionary[in guid].Index;
 
-		public static IEnumerable<IUniqueContentEntry<T>> GetAll() => _dictionary.Values;
+		public static IEnumerable<IUniqueContentEntry<T>> GetAll() => _dictionary.Entries;
 	}
 }

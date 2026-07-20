@@ -4,10 +4,10 @@ using Sapientia.Collections;
 
 namespace Content.Management
 {
-	public sealed class ContentDictionary<TValue>
-		where TValue : IUniqueContentEntry
+	public sealed class ContentDictionary<TEntry>
+		where TEntry : IUniqueContentEntry
 	{
-		private List<TValue> _temporary;
+		private List<TEntry> _temporary;
 
 		// Можно будет переделать на FrozenDictionary, когда его завезут в Unity
 		private Dictionary<SerializableGuid, int> _keyToIndex;
@@ -18,41 +18,41 @@ namespace Content.Management
 		// Постепенно прогревается при запросе Id для объекта!
 		private Dictionary<SerializableGuid, string> _keyToId;
 
-		private TValue[] _values;
+		private TEntry[] _entries;
 
-		public ref readonly TValue this[in SerializableGuid key]
+		public ref readonly TEntry this[in SerializableGuid key]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _values[_keyToIndex[key]];
+			get => ref _entries[_keyToIndex[key]];
 		}
 
-		public ref readonly TValue this[string id]
+		public ref readonly TEntry this[string id]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _values[_idToIndex[id]];
+			get => ref _entries[_idToIndex[id]];
 		}
 
-		public ref readonly TValue this[int index]
+		public ref readonly TEntry this[int index]
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => ref _values[index];
+			get => ref _entries[index];
 		}
 
-		public int Count => _values.Length;
-		public int Length => _values.Length;
+		public int Count => _entries.Length;
+		public int Length => _entries.Length;
 
-		public TValue[] Values => _values;
+		public TEntry[] Entries => _entries;
 
-		public bool IsEmpty => _values == null || _values.Length == 0;
+		public bool IsEmpty => _entries == null || _entries.Length == 0;
 
-		public bool IsFrozen => _values != null;
+		public bool IsFrozen => _entries != null;
 		public bool IsBuilding => _temporary != null;
 
 		public ContentDictionary()
 		{
 		}
 
-		public ContentDictionary(ICollection<TValue> source)
+		public ContentDictionary(ICollection<TEntry> source)
 		{
 			Fill(source);
 		}
@@ -80,62 +80,62 @@ namespace Content.Management
 			_idToIndex = null;
 			_keyToIndex.Clear();
 			_keyToIndex = null;
-			_values = null;
+			_entries = null;
 		}
 
-		private void Fill(ICollection<TValue> source)
+		private void Fill(ICollection<TEntry> source)
 		{
-			if (_values != null)
+			if (_entries != null)
 			{
-				var array = new TValue[_values.Length + source.Count];
-				foreach (var (value, i) in _values.WithIndex())
-					array[i] = value;
+				var array = new TEntry[_entries.Length + source.Count];
+				foreach (var (entry, i) in _entries.WithIndex())
+					array[i] = entry;
 
-				_values = array;
+				_entries = array;
 			}
 			else
 			{
-				_values = new TValue[source.Count];
+				_entries = new TEntry[source.Count];
 				_keyToIndex = new Dictionary<SerializableGuid, int>(source.Count);
 				_idToIndex = new Dictionary<string, int>(source.Count);
 				_keyToId = new Dictionary<SerializableGuid, string>();
 			}
 
 			int index = 0;
-			foreach (var value in source)
+			foreach (var entry in source)
 			{
-				_values[index] = value;
+				_entries[index] = entry;
 
-				_keyToIndex[value.Guid] = index;
+				_keyToIndex[entry.Guid] = index;
 
-				if (!value.Id.IsNullOrEmpty())
+				if (!entry.Id.IsNullOrEmpty())
 				{
-					_keyToId[value.Guid] = value.Id;
-					_idToIndex[value.Id] = index;
+					_keyToId[entry.Guid] = entry.Id;
+					_idToIndex[entry.Id] = index;
 				}
 
-				value.SetIndex(index);
+				entry.SetIndex(index);
 				index++;
 			}
 		}
 
 		public bool Contains(in SerializableGuid guid) => _keyToIndex.ContainsKey(guid);
 		public bool Contains(string id) => _idToIndex.ContainsKey(id);
-		public bool Contains(int index) => _values.ContainsIndexSafe(index);
+		public bool Contains(int index) => _entries.ContainsIndexSafe(index);
 
-		public void Stage(TValue value) => _temporary.Add(value);
-		public bool Unstage(TValue value) => _temporary.Remove(value);
+		public void Stage(TEntry entry) => _temporary.Add(entry);
+		public bool Unstage(TEntry entry) => _temporary.Remove(entry);
 
-		internal bool TryGet(in SerializableGuid guid, out TValue value)
+		internal bool TryGet(in SerializableGuid guid, out TEntry entry)
 		{
 			if (IsFrozen && _keyToIndex.TryGetValue(guid, out var index))
 			{
-				value = _values[index];
+				entry = _entries[index];
 				return true;
 			}
 
 			var yGuid = guid;
-			return _temporary.TryGetFirst(x => x.Guid == yGuid, out value);
+			return _temporary.TryGetFirst(x => x.Guid == yGuid, out entry);
 		}
 
 		internal string GetId(in SerializableGuid guid)
@@ -147,7 +147,7 @@ namespace Content.Management
 
 		internal string GetId(int index)
 		{
-			ref readonly var guid = ref _values[index].Guid;
+			ref readonly var guid = ref _entries[index].Guid;
 			if (!_keyToId.TryGetValue(guid, out var id))
 				_keyToId[guid] = id = guid.ToString();
 			return id;
