@@ -50,6 +50,12 @@ namespace Submodules.Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator UshortId<T>(int id)
+		{
+			return new UshortId<T> { id = (ushort)id, };
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator UshortId(UshortId<T> genericId)
 		{
 			return genericId.id;
