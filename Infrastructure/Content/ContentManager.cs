@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Sapientia;
 
 namespace Content
@@ -29,8 +31,8 @@ namespace Content
 		internal static bool IsInitialized { get => resolver != null; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
-			=> resolver.PopulateAsync(importer, token);
+		public static Task PopulateAsync(IContentImporter importer, [CanBeNull] IProgress<float> progress = null, CancellationToken token = default)
+			=> resolver.PopulateAsync(importer, progress, token);
 
 		/// <inheritdoc cref="ContentResolver.Any{T}"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

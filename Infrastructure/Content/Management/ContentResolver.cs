@@ -4,9 +4,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Reflection;
 #if ENABLE_CONTENT_CONTAINS_CHECK
@@ -32,20 +34,27 @@ namespace Content.Management
 			Clear();
 		}
 
-		internal async Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
+		internal async Task PopulateAsync(IContentImporter importer, [CanBeNull] IProgress<float> progress = null, CancellationToken token = default)
 		{
 #if CONTENT_ENTRY_BUFFER
 			ContentEntryBuffer.Clear();
 #endif
 			var entries = await importer.ImportAsync(token);
 
+			progress?.Report(0.1f);
+
 			if (token.IsCancellationRequested)
 				return;
 
 			_entries.AddRange(entries);
 
+			float i = 0;
 			foreach (var entry in entries)
+			{
 				entry.Register();
+				i += 1;
+				progress?.Report(0.1f + (i / entries.Count) * 0.8f);
+			}
 
 			ContentEntryMap.Populated?.Invoke(entries);
 
