@@ -7,7 +7,7 @@ namespace Content.Management
 	public sealed class ContentDictionary<TValue>
 		where TValue : IUniqueContentEntry
 	{
-		private Dictionary<SerializableGuid, TValue> _temporary;
+		private List<TValue> _temporary;
 
 		// Можно будет переделать на FrozenDictionary, когда его завезут в Unity
 		private Dictionary<SerializableGuid, int> _keyToIndex;
@@ -52,7 +52,7 @@ namespace Content.Management
 		{
 		}
 
-		public ContentDictionary(Dictionary<SerializableGuid, TValue> source)
+		public ContentDictionary(ICollection<TValue> source)
 		{
 			Fill(source);
 		}
@@ -62,7 +62,7 @@ namespace Content.Management
 			if (_temporary != null)
 				throw ContentDebug.Exception("Already building...");
 
-			_temporary = new Dictionary<SerializableGuid, TValue>();
+			_temporary = new();
 		}
 
 		internal void Freeze()
@@ -80,10 +80,10 @@ namespace Content.Management
 			_idToIndex = null;
 			_keyToIndex.Clear();
 			_keyToIndex = null;
-			_values     = null;
+			_values = null;
 		}
 
-		private void Fill(Dictionary<SerializableGuid, TValue> source)
+		private void Fill(ICollection<TValue> source)
 		{
 			if (_values != null)
 			{
@@ -95,22 +95,22 @@ namespace Content.Management
 			}
 			else
 			{
-				_values     = new TValue[source.Count];
+				_values = new TValue[source.Count];
 				_keyToIndex = new Dictionary<SerializableGuid, int>(source.Count);
-				_idToIndex  = new Dictionary<string, int>(source.Count);
-				_keyToId    = new Dictionary<SerializableGuid, string>();
+				_idToIndex = new Dictionary<string, int>(source.Count);
+				_keyToId = new Dictionary<SerializableGuid, string>();
 			}
 
 			int index = 0;
-			foreach (var (guid, value) in source)
+			foreach (var value in source)
 			{
 				_values[index] = value;
 
-				_keyToIndex[guid] = index;
+				_keyToIndex[value.Guid] = index;
 
 				if (!value.Id.IsNullOrEmpty())
 				{
-					_keyToId[guid]       = value.Id;
+					_keyToId[value.Guid] = value.Id;
 					_idToIndex[value.Id] = index;
 				}
 
@@ -123,8 +123,8 @@ namespace Content.Management
 		public bool Contains(string id) => _idToIndex.ContainsKey(id);
 		public bool Contains(int index) => _values.ContainsIndexSafe(index);
 
-		public bool TryAdd(in SerializableGuid guid, TValue entry) => _temporary.TryAdd(guid, entry);
-		public bool Remove(in SerializableGuid guid) => _temporary.Remove(guid);
+		public void Stage(TValue value) => _temporary.Add(value);
+		public bool Unstage(TValue value) => _temporary.Remove(value);
 
 		internal bool TryGet(in SerializableGuid guid, out TValue value)
 		{
@@ -134,7 +134,8 @@ namespace Content.Management
 				return true;
 			}
 
-			return _temporary.TryGetValue(guid, out value);
+			var yGuid = guid;
+			return _temporary.TryGetFirst(x => x.Guid == yGuid, out value);
 		}
 
 		internal string GetId(in SerializableGuid guid)
