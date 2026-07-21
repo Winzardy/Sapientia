@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
+#if UNITY_5_3_OR_NEWER
 using Unity.Mathematics;
+#endif
 
 namespace Sapientia.Deterministic
 {
@@ -31,6 +33,7 @@ namespace Sapientia.Deterministic
 			y = xy;
 		}
 
+#if UNITY_5_3_OR_NEWER
 		/// <summary>
 		/// Вход в детерминированный домен из float-мира (физика, Unity-трансформы) - покомпонентно
 		/// через <see cref="Fix64"/>, который сам implicit-конвертируется из float. Обратного
@@ -38,6 +41,7 @@ namespace Sapientia.Deterministic
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Fix64_2(float2 value) => new(value.x, value.y);
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Fix64_2 operator +(Fix64_2 a, Fix64_2 b) => new(a.x + b.x, a.y + b.y);
