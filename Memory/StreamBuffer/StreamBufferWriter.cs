@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
@@ -93,6 +94,14 @@ namespace Sapientia.Memory
 			var size = TSize<T>.size * length;
 			var ptr = GetPointerAndMove(size);
 			MemoryExt.MemCopy((SafePtr)arrBytes, ptr, size);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write<T>(Span<T> arrBytes) where T : unmanaged
+		{
+			var size = TSize<T>.size * arrBytes.Length;
+			var ptr = GetPointerAndMove(size);
+			MemoryExt.MemCopy(arrBytes, ptr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

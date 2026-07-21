@@ -41,6 +41,12 @@ namespace Sapientia.Memory
 			this.length = length;
 		}
 
+		public void Alloc(ref BumpHeader allocator, Span<T> values)
+		{
+			Alloc(ref allocator, values.Length);
+			values.CopyTo(GetSpan());
+		}
+
 		public SafePtr<T> GetPtr()
 		{
 			var fieldPtr = (SafePtr)offset.AsSafePtr();

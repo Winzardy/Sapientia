@@ -28,20 +28,7 @@ namespace Content.Management
 				_populateSubscribe = true;
 			}
 
-			if (!_dictionary.TryAdd(in entry.Guid, entry))
-			{
-				var msg = $"Already registered entry of type: [ {typeof(T).Name} ] with guid: [ {entry.Guid} ]";
-				if (_dictionary.TryGet(in entry.Guid, out var usedEntry) && usedEntry == entry)
-				{
-					ContentDebug.LogWarning(msg, entry.Context);
-				}
-				else
-				{
-					ContentDebug.LogError(msg + " (1)", usedEntry.Context);
-					ContentDebug.LogError(msg + " (2)", entry.Context);
-					throw ContentDebug.Exception(msg);
-				}
-			}
+			_dictionary.Stage(entry);
 
 			if (entry.BaseValue is IExternallyIdentifiable identifiable)
 			{
@@ -67,7 +54,7 @@ namespace Content.Management
 			}
 
 			if (_dictionary.IsBuilding)
-				_dictionary.Remove(in entry.Guid);
+				_dictionary.Unstage(entry);
 		}
 
 		private static void OnPopulated(IList<IContentEntry> _)
@@ -145,6 +132,6 @@ namespace Content.Management
 		public static int ToIndex(string id) => _dictionary[id].Index;
 		public static int ToIndex(in SerializableGuid guid) => _dictionary[in guid].Index;
 
-		public static IEnumerable<IUniqueContentEntry<T>> GetAll() => _dictionary.Values;
+		public static IEnumerable<IUniqueContentEntry<T>> GetAll() => _dictionary.Entries;
 	}
 }

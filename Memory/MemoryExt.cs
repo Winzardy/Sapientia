@@ -181,6 +181,18 @@ namespace Submodules.Sapientia.Memory
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void MemCopy<T>(Span<T> source, SafePtr destination) where T: unmanaged
+		{
+			source.CopyTo(destination.GetSpan<T>(source.Length));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void MemCopy(Span<byte> source, SafePtr destination)
+		{
+			source.CopyTo(destination.GetSpan(source.Length));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void MemSwap<T>(SafePtr<T> a, SafePtr<T> b) where T: unmanaged
 		{
 			MemSwap((SafePtr)a, (SafePtr)b, TSize<T>.size);

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using Unity.Mathematics;
 
 namespace Sapientia.Deterministic
 {
@@ -9,7 +10,7 @@ namespace Sapientia.Deterministic
 	/// сеточные координаты, game-logic позиции.
 	/// </summary>
 	[Serializable]
-	public struct Fix64_2 : IEquatable<Fix64_2>
+	public struct Fix64_2 : IEquatable<Fix64_2>, IComparable<Fix64_2>
 	{
 		public Fix64 x;
 		public Fix64 y;
@@ -29,6 +30,14 @@ namespace Sapientia.Deterministic
 			x = xy;
 			y = xy;
 		}
+
+		/// <summary>
+		/// Вход в детерминированный домен из float-мира (физика, Unity-трансформы) - покомпонентно
+		/// через <see cref="Fix64"/>, который сам implicit-конвертируется из float. Обратного
+		/// implicit-каста намеренно нет: выход из Fix64 в float должен быть виден в коде.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator Fix64_2(float2 value) => new(value.x, value.y);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Fix64_2 operator +(Fix64_2 a, Fix64_2 b) => new(a.x + b.x, a.y + b.y);
@@ -50,6 +59,12 @@ namespace Sapientia.Deterministic
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(Fix64_2 other) => x.Equals(other.x) && y.Equals(other.y);
+
+		public int CompareTo(Fix64_2 other)
+		{
+			var result = x.CompareTo(other.x);
+			return result != 0 ? result : y.CompareTo(other.y);
+		}
 
 		public override bool Equals(object obj) => obj is Fix64_2 other && Equals(other);
 
