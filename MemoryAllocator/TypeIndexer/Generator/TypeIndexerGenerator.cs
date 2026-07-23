@@ -59,8 +59,39 @@ namespace Sapientia.TypeIndexer
 				}
 			}
 
+#if UNITY_EDITOR
+			var visibleAssemblies = GetInitializerVisibleAssemblyNames();
+			types.RemoveWhere(type => !visibleAssemblies.Contains(type.Assembly.GetName().Name));
+#endif
+
 			return types.OrderBy(t => t.FullName).ToArray();
 		}
+
+#if UNITY_EDITOR
+		/// <summary>
+		/// Имена сборок, видимых сгенерированному инициализатору. Он лежит без asmdef и компилится в
+		/// Assembly-CSharp, поэтому индексируемый тип из сборки, которую та не референсит (тест-сборки,
+		/// editor-сборки), даёт CS0234. Player-набор компиляции — ровно этот предикат. Прекомпилированные
+		/// рантайм-плагины в сам набор не входят, но player-сборки на них ссылаются — берём из референсов.
+		/// </summary>
+		private static HashSet<string> GetInitializerVisibleAssemblyNames()
+		{
+			var names = new HashSet<string>();
+			var playerAssemblies = UnityEditor.Compilation.CompilationPipeline.GetAssemblies(
+				UnityEditor.Compilation.AssembliesType.Player);
+
+			foreach (var assembly in playerAssemblies)
+			{
+				names.Add(assembly.name);
+				foreach (var reference in assembly.compiledAssemblyReferences)
+				{
+					names.Add(Path.GetFileNameWithoutExtension(reference));
+				}
+			}
+
+			return names;
+		}
+#endif
 
 		private static string CreateTypeIndexProvider()
 		{
