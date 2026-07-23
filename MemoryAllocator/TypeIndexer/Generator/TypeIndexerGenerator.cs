@@ -59,39 +59,31 @@ namespace Sapientia.TypeIndexer
 				}
 			}
 
-#if UNITY_EDITOR
-			var visibleAssemblies = GetInitializerVisibleAssemblyNames();
-			types.RemoveWhere(type => !visibleAssemblies.Contains(type.Assembly.GetName().Name));
-#endif
+			types.RemoveWhere(type => IsTestAssembly(type.Assembly));
 
 			return types.OrderBy(t => t.FullName).ToArray();
 		}
 
-#if UNITY_EDITOR
 		/// <summary>
-		/// Имена сборок, видимых сгенерированному инициализатору. Он лежит без asmdef и компилится в
-		/// Assembly-CSharp, поэтому индексируемый тип из сборки, которую та не референсит (тест-сборки,
-		/// editor-сборки), даёт CS0234. Player-набор компиляции — ровно этот предикат. Прекомпилированные
-		/// рантайм-плагины в сам набор не входят, но player-сборки на них ссылаются — берём из референсов.
+		/// Тест-сборки грузятся в редакторе, но сгенерированный инициализатор лежит без asmdef, компилится
+		/// в Assembly-CSharp и их не референсит — их индексируемые типы дают CS0234. Признак тест-сборки —
+		/// precompiled-референс на nunit.framework.
+		///
+		/// Фильтр по player-набору (<c>CompilationPipeline.GetAssemblies(AssembliesType.Player)</c>) выглядит
+		/// более общим предикатом, но НЕ работает: тест-asmdef'ы всеплатформенные (<c>includePlatforms: []</c>)
+		/// и гейтятся только <c>defineConstraints: [UNITY_INCLUDE_TESTS]</c>, который в редакторе выполнен —
+		/// Unity кладёт их в player-набор. Проверено прогоном: CS0234 возвращаются.
 		/// </summary>
-		private static HashSet<string> GetInitializerVisibleAssemblyNames()
+		private static bool IsTestAssembly(Assembly assembly)
 		{
-			var names = new HashSet<string>();
-			var playerAssemblies = UnityEditor.Compilation.CompilationPipeline.GetAssemblies(
-				UnityEditor.Compilation.AssembliesType.Player);
-
-			foreach (var assembly in playerAssemblies)
+			foreach (var reference in assembly.GetReferencedAssemblies())
 			{
-				names.Add(assembly.name);
-				foreach (var reference in assembly.compiledAssemblyReferences)
-				{
-					names.Add(Path.GetFileNameWithoutExtension(reference));
-				}
+				if (reference.Name == "nunit.framework")
+					return true;
 			}
 
-			return names;
+			return false;
 		}
-#endif
 
 		private static string CreateTypeIndexProvider()
 		{
