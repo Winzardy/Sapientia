@@ -10,14 +10,14 @@ namespace Sapientia.Utility
 
 		public static void Release(ref CancellationTokenSource? cts, bool cancel = false)
 		{
-			if (cts == null)
+			var releasedCts = Interlocked.Exchange(ref cts, null);
+			if (releasedCts == null)
 				return;
 
-			if (cancel && !cts.IsCancellationRequested)
-				cts.Cancel();
+			if (cancel && !releasedCts.IsCancellationRequested)
+				releasedCts.Cancel();
 
-			cts.Dispose();
-			cts = null;
+			releasedCts.Dispose();
 		}
 
 		public static void Renew([NotNull] ref CancellationTokenSource? cts, bool cancel = false)
