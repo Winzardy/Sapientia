@@ -25,4 +25,30 @@ namespace Sapientia
 		T Evaluate(TContext context);
 		Type IEvaluator.ContextType { get => typeof(TContext); }
 	}
+
+	public static class EvaluatorExtensions
+	{
+		public static T FindFirst<T>(this IEvaluator evaluator) where T : class, IEvaluator
+		{
+			return FindFirst<T>(evaluator, new HashSet<IEvaluator>());
+		}
+
+		private static T FindFirst<T>(IEvaluator evaluator, HashSet<IEvaluator> visited) where T : class, IEvaluator
+		{
+			if (evaluator == null || !visited.Add(evaluator))
+				return null;
+
+			if (evaluator is T target)
+				return target;
+
+			foreach (var child in evaluator)
+			{
+				var result = FindFirst<T>(child, visited);
+				if (result != null)
+					return result;
+			}
+
+			return null;
+		}
+	}
 }

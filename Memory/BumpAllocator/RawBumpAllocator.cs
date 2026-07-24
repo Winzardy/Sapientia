@@ -17,7 +17,13 @@ namespace Sapientia.Memory
 		public readonly Id<MemoryManager> memoryId;
 
 		public bool IsValid => header.IsValid;
+		/// <summary>Размер данных (без inline-заголовка арены).</summary>
 		public int Size => header.Value().Size;
+		/// <summary>
+		/// Полный размер блока (данные + inline-заголовок) — ровно столько байт занимает арена в памяти
+		/// и ровно столько весит её дамп: блок и есть сериализованное представление.
+		/// </summary>
+		public int BlockSize => header.Value().Size + BumpHeader.HeaderSize;
 
 		public ref BumpHeader Value => ref header.Value();
 
@@ -47,29 +53,25 @@ namespace Sapientia.Memory
 			this.header = header;
 		}
 
-		/// <summary>
-		/// Типизированный хэндл на значение арены по смещению <paramref name="offset"/>.
-		/// Копируется по значению; валиден, пока арена жива (блок неподвижен).
-		/// </summary>
-		public readonly BumpPtr<T> GetBumpPtr<T>(PtrOffset<T> offset)
-			where T : unmanaged
+		public Span<byte> GetDataSpan()
 		{
-			return new BumpPtr<T>(header, offset);
+			return header.Value().GetDataSpan();
 		}
 
-		/// <summary>
-		/// Хэндл на корневую структуру арены — первую аллокацию, лежащую сразу за inline-заголовком.
-		/// Стандартная точка входа для арен-дампов с известным корневым типом.
-		/// </summary>
-		public readonly BumpPtr<T> GetRootPtr<T>()
-			where T : unmanaged
+		/// <summary>Блок целиком (данные + inline-заголовок) — дамп арены, принимаемый Deserialize.</summary>
+		public Span<byte> GetBlockSpan()
 		{
-			return GetBumpPtr(new PtrOffset<T>(BumpHeader.HeaderSize));
+			return header.Value().GetBlockSpan();
 		}
 
 		public void Serialize(ref StreamBufferWriter stream)
 		{
 			header.Value().Serialize(ref stream);
+		}
+
+		public byte[] SerializeData()
+		{
+			return header.Value().SerializeData();
 		}
 
 		public static RawBumpAllocator Deserialize(ref StreamBufferReader stream)
@@ -81,6 +83,20 @@ namespace Sapientia.Memory
 		{
 			// В стрим записан полный размер блока (включая заголовок) — выделяем ровно столько.
 			var totalSize = stream.Read<int>();
+			return Deserialize(memoryId, ref stream, totalSize);
+		}
+
+		/// <summary>
+		/// Приём блока, размер которого известен СНАРУЖИ (например, блок — это весь файл/ассет целиком):
+		/// тогда дублировать его отдельным полем в потоке не нужно.
+		/// </summary>
+		public static RawBumpAllocator Deserialize(ref StreamBufferReader stream, int totalSize)
+		{
+			return Deserialize(default, ref stream, totalSize);
+		}
+
+		public static RawBumpAllocator Deserialize(Id<MemoryManager> memoryId, ref StreamBufferReader stream, int totalSize)
+		{
 			var block = memoryId.GetManager().MemAlloc(totalSize, ClearOptions.ClearMemory);
 			stream.Read(block, totalSize);
 

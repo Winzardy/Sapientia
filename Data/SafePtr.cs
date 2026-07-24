@@ -131,6 +131,30 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<byte> GetSpan(int length)
+		{
+			return GetSpan<byte>(0, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> GetSpan<T>(int length) where T: unmanaged
+		{
+			return this.Cast<T>().GetSpan(0, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<byte> GetSpan(int index, int length)
+		{
+			return GetSpan<byte>(index, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Span<T> GetSpan<T>(int index, int length) where T: unmanaged
+		{
+			return this.Cast<T>().GetSpan(index, length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		[Conditional(E.DEBUG)]
 		public void AssertValidLength(int length)
 		{

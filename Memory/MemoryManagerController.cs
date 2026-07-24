@@ -48,11 +48,25 @@ namespace Submodules.Sapientia.Memory
 		private const TrackingType DefaultTrackingType = TrackingType.DeepTracking;
 #endif
 
+		/// <summary>
+		/// Менеджеры созданы и ими можно аллоцировать. В Unity-эдиторе вне Play Mode это false до
+		/// первого явного <see cref="Initialize"/>: <see cref="UnityEngine.RuntimeInitializeOnLoadMethod"/>
+		/// срабатывает только при входе в Play Mode, а <see cref="DisposeAll"/> снимает флаг обратно.
+		/// </summary>
+		public static bool IsInitialized { get; private set; }
+
 #if UNITY_5_3_OR_NEWER
 		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.AfterSceneLoad)]
 #endif
 		public static void Initialize()
 		{
+			// Идемпотентность нужна, чтобы edit-mode код (бейк ассетов) мог инициализировать менеджеры
+			// сам, не рискуя пересоздать уже живые и потерять их аллокации при входе в Play Mode
+			// с выключенным Domain Reload.
+			if (IsInitialized)
+				return;
+			IsInitialized = true;
+
 			Inner = new MemoryManager(MemoryManager.InnerMemoryId);
 			Inner.SetTracker(InnerTrackingType);
 
@@ -136,6 +150,8 @@ namespace Submodules.Sapientia.Memory
 
 		public static void DisposeAll()
 		{
+			IsInitialized = false;
+
 			foreach (ref var manager in CustomManagers.GetValuesSpan())
 			{
 				manager.Dispose();

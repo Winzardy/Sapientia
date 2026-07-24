@@ -4,11 +4,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Sapientia.Collections;
 using Sapientia.Reflection;
+using Sapientia.Utility;
 #if ENABLE_CONTENT_CONTAINS_CHECK
 using Sapientia.Extensions;
 #endif
@@ -23,6 +26,8 @@ namespace Content.Management
 	/// ⚠️ Важно: нет поддержки полиморфизма. Хранилище организовано строго по типу.
 	/// Элементы дочерних типов не будут возвращены при запросе по базовому типу.
 	/// </remarks>
+	///
+
 	public sealed partial class ContentResolver : IDisposable
 	{
 		private List<IContentEntry> _entries = new();
@@ -32,20 +37,29 @@ namespace Content.Management
 			Clear();
 		}
 
-		internal async Task PopulateAsync(IContentImporter importer, CancellationToken token = default)
+		internal async Task PopulateAsync(IContentImporter importer, IAsyncFlowController flowController = null, [CanBeNull] IProgress<float> progress = null, CancellationToken token = default)
 		{
 #if CONTENT_ENTRY_BUFFER
 			ContentEntryBuffer.Clear();
 #endif
 			var entries = await importer.ImportAsync(token);
 
+			progress?.Report(0.1f);
+
 			if (token.IsCancellationRequested)
 				return;
 
 			_entries.AddRange(entries);
 
+			float i = 0;
 			foreach (var entry in entries)
+			{
 				entry.Register();
+				i += 1;
+				progress?.Report(0.1f + (i / entries.Count) * 0.8f);
+				if (flowController != null)
+					await flowController.NextIterationAsync(token);
+			}
 
 			ContentEntryMap.Populated?.Invoke(entries);
 

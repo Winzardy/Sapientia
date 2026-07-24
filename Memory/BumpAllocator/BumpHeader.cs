@@ -1,3 +1,4 @@
+using System;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Memory;
@@ -116,24 +117,24 @@ namespace Sapientia.Memory
 			return GetPtr(offset);
 		}
 
-		public SafePtr GetPtr(PtrOffset offset)
+		public SafePtr GetPtr(PtrOffset offset = default)
 		{
 			return Memory + offset;
 		}
 
-		public SafePtr<T> GetPtr<T>(PtrOffset<T> offset)
+		public SafePtr<T> GetPtr<T>(PtrOffset<T> offset = default)
 			where T : unmanaged
 		{
 			return Memory + offset;
 		}
 
-		public ref T GetValue<T>(PtrOffset<T> offset)
+		public ref T GetValue<T>(PtrOffset<T> offset = default)
 			where T : unmanaged
 		{
 			return ref (Memory + offset).Value();
 		}
 
-		public ref T GetValue<T>(PtrOffset offset)
+		public ref T GetValue<T>(PtrOffset offset = default)
 			where T : unmanaged
 		{
 			return ref (Memory + offset).Value<T>();
@@ -149,6 +150,35 @@ namespace Sapientia.Memory
 			stream.Write(_reservedSize);
 			stream.Write(Memory, _reservedSize);
 			// Мы знаем, что состояние аллокатора сохранено в начале памяти, поэтому ничего больше сериализовать не нужно
+		}
+
+		public byte[] SerializeData()
+		{
+			var span = GetDataSpan();
+			var result = new byte[span.Length];
+			span.CopyTo(result);
+			
+			return result;
+		}
+
+		/// <summary>
+		/// Полезная нагрузка БЕЗ inline-заголовка. Обратно такой span уже не принять: заголовок лежит
+		/// в байте 0 блока и без него арену не восстановить — для дампа нужен <see cref="GetBlockSpan"/>.
+		/// </summary>
+		public Span<byte> GetDataSpan()
+		{
+			var length = _rover.byteOffset - HeaderSize;
+			var from = Memory + HeaderSize;
+			return from.GetSpan(length);
+		}
+
+		/// <summary>
+		/// Блок целиком, включая inline-заголовок — ровно то, что пишет <see cref="Serialize"/> и что
+		/// принимает <c>RawBumpAllocator.Deserialize</c>. Это и есть сериализованное представление арены.
+		/// </summary>
+		public Span<byte> GetBlockSpan()
+		{
+			return Memory.GetSpan(_reservedSize);
 		}
 
 		public void Reset()
