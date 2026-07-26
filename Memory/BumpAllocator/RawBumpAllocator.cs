@@ -107,7 +107,7 @@ namespace Sapientia.Memory
 		{
 			if (!IsValid)
 				return;
-			memoryId.GetManager().MemFree((SafePtr)header);
+			memoryId.GetManager().MemFree(header);
 			this = default;
 		}
 	}

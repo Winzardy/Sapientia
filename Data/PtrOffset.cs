@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using Sapientia.Extensions;
 
@@ -70,8 +71,7 @@ namespace Sapientia.Data
 		}
 	}
 
-	public struct PtrOffset<T>
-		where T : unmanaged
+	public struct PtrOffset<T> : IEquatable<PtrOffset<T>> where T : unmanaged
 	{
 		public readonly int byteOffset;
 		public readonly bool isValid;
@@ -183,6 +183,21 @@ namespace Sapientia.Data
 		public static PtrOffset<T> operator -(PtrOffset<T> offset)
 		{
 			return new PtrOffset<T>(-offset.byteOffset);
+		}
+
+		public bool Equals(PtrOffset<T> other)
+		{
+			return byteOffset == other.byteOffset && isValid == other.isValid;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return obj is PtrOffset<T> other && Equals(other);
+		}
+
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(byteOffset, isValid);
 		}
 	}
 }
