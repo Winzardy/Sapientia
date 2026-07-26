@@ -5,7 +5,7 @@ namespace Sapientia.Collections
 {
 	public static class SpanExt
 	{
-		public static bool Contains<T>(this Span<T> span, T value) where T: unmanaged, IEquatable<T>
+		public static bool Contains<T>(Span<T> span, in T value) where T: unmanaged, IEquatable<T>
 		{
 			for (var i = 0; i < span.Length; i++)
 			{

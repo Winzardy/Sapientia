@@ -73,9 +73,9 @@ namespace Sapientia.Memory
 
 	public static class BumpArrayExt
 	{
-		public static bool Contains<T>(this ref BumpArray<T> bumpArray, T value) where T : unmanaged, IEquatable<T>
+		public static bool Contains<T>(this ref BumpArray<T> bumpArray, in T value) where T : unmanaged, IEquatable<T>
 		{
-			return bumpArray.GetSpan().Contains(value);
+			return SpanExt.Contains(bumpArray.GetSpan(), value);
 		}
 	}
 }
