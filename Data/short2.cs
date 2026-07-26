@@ -23,6 +23,13 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public short2(int x, int y)
+		{
+			this.x = (short)x;
+			this.y = (short)y;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(short2 other) => x == other.x && y == other.y;
 
 		public override bool Equals(object obj) => obj is short2 other && Equals(other);
@@ -42,5 +49,11 @@ namespace Sapientia.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static explicit operator short2(int2 value) => new short2((short)value.x, (short)value.y);
 #endif
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static short2 operator -(short2 lhs, short2 rhs) { return new short2 (lhs.x - rhs.x, lhs.y - rhs.y); }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static short2 operator +(short2 lhs, short2 rhs) { return new short2 (lhs.x + rhs.x, lhs.y + rhs.y); }
 	}
 }

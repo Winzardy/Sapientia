@@ -1,4 +1,5 @@
 using System;
+using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
 
@@ -51,6 +52,11 @@ namespace Sapientia.Memory
 		{
 			var fieldPtr = (SafePtr)offset.AsSafePtr();
 			return new SafePtr(fieldPtr.ptr + offset.byteOffset, length * TSize<T>.size).Cast<T>();
+		}
+
+		public PtrArray<T> GetPtrArray()
+		{
+			return new PtrArray<T>(GetPtr(), length);
 		}
 
 		public ref T Get(int index)
