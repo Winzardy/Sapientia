@@ -132,13 +132,19 @@ namespace Sapientia.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator PtrOffset<T>(PtrOffset  offset)
+		public static implicit operator PtrOffset<T>(int byteOffset)
+		{
+			return new PtrOffset<T>(byteOffset);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator PtrOffset<T>(PtrOffset offset)
 		{
 			return new PtrOffset<T>(offset.byteOffset);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator PtrOffset(PtrOffset<T>  offset)
+		public static implicit operator PtrOffset(PtrOffset<T> offset)
 		{
 			return new PtrOffset(offset.byteOffset);
 		}
@@ -197,7 +203,7 @@ namespace Sapientia.Data
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(byteOffset, isValid);
+			return byteOffset;
 		}
 	}
 }

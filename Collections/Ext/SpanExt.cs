@@ -5,6 +5,16 @@ namespace Sapientia.Collections
 {
 	public static class SpanExt
 	{
+		public static bool Contains<T>(this Span<T> span, T value) where T: unmanaged, IEquatable<T>
+		{
+			for (var i = 0; i < span.Length; i++)
+			{
+				if (span[i].Equals(value))
+					return true;
+			}
+			return false;
+		}
+
 		public static void RemoveAtSwapBack<T>(this ref Span<T> span, int index)
 		{
 			(span[index], span[^1]) = (span[^1], span[index]);

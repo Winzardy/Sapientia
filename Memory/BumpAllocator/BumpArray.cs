@@ -70,4 +70,12 @@ namespace Sapientia.Memory
 			return GetPtr().GetSpan(length);
 		}
 	}
+
+	public static class BumpArrayExt
+	{
+		public static bool Contains<T>(this ref BumpArray<T> bumpArray, T value) where T : unmanaged, IEquatable<T>
+		{
+			return bumpArray.GetSpan().Contains(value);
+		}
+	}
 }
