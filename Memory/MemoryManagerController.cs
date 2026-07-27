@@ -55,9 +55,6 @@ namespace Submodules.Sapientia.Memory
 		/// </summary>
 		public static bool IsInitialized { get; private set; }
 
-#if UNITY_5_3_OR_NEWER
-		[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.AfterSceneLoad)]
-#endif
 		public static void Initialize()
 		{
 			// Идемпотентность нужна, чтобы edit-mode код (бейк ассетов) мог инициализировать менеджеры
