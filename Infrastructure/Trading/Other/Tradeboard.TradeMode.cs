@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Sapientia;
 using Sapientia.Pooling;
 
 namespace Trading
@@ -9,8 +8,15 @@ namespace Trading
 	{
 		private bool _tradeMode;
 
-		private HashSet<TradeReward> _rewards;
-		private HashSet<TradeCost> _costs;
+		/// <summary>
+		/// Награды используемые в сделке в порядке очереди
+		/// </summary>
+		private Queue<TradeReward> _rewards;
+
+		/// <summary>
+		/// Цены используемые в сделке в порядке очереди
+		/// </summary>
+		private Queue<TradeCost> _costs;
 
 		/// <summary>
 		/// Режим сделки!
@@ -19,14 +25,12 @@ namespace Trading
 
 		internal void RegisterInternal(TradeReward reward)
 		{
-			if (!_rewards.Add(reward))
-				throw TradingDebug.Exception("Already registered...");
+			_rewards.Enqueue(reward);
 		}
 
 		internal void RegisterInternal(TradeCost cost)
 		{
-			if (!_costs.Add(cost))
-				throw TradingDebug.Exception("Already registered...");
+			_costs.Enqueue(cost);
 		}
 
 		private void OnBeginTrade()
@@ -34,8 +38,8 @@ namespace Trading
 			if (_tradeMode)
 				throw TradingDebug.Exception("Trade mode is already active");
 
-			_rewards = HashSetPool<TradeReward>.Get();
-			_costs   = HashSetPool<TradeCost>.Get();
+			_rewards = QueuePool<TradeReward>.Get();
+			_costs = QueuePool<TradeCost>.Get();
 
 			_tradeMode = true;
 		}
@@ -69,7 +73,7 @@ namespace Trading
 
 			public TradeScope(Tradeboard tradeboard, bool value = true)
 			{
-				_value      = value;
+				_value = value;
 				_tradeboard = tradeboard;
 
 				if (!value)
