@@ -95,12 +95,19 @@ namespace Sapientia.Collections
 			}
 		}
 
-		public void Remove(TKey key)
+		public bool Remove(TKey key) => Remove(key, out _);
+
+		public bool Remove(TKey key, out TValue? value)
 		{
 			if (!_keyToIndex.TryGetValue(key, out var index))
-				return;
+			{
+				value = null;
+				return false;
+			}
 
 			var lastIndex = _keyToIndex[_last.key];
+
+			value = _values[index];
 
 			if (index != lastIndex)
 			{
@@ -113,7 +120,7 @@ namespace Sapientia.Collections
 			_keyToIndex.Remove(key);
 
 			if (_values.Count <= 0)
-				return;
+				return true;
 
 			foreach (var (k, i) in _keyToIndex)
 			{
@@ -123,6 +130,8 @@ namespace Sapientia.Collections
 				_last = (k, true);
 				break;
 			}
+
+			return true;
 		}
 
 		public ref TValue GetOrAdd(TKey key, HashMapFactory<TValue>? factory = null)
