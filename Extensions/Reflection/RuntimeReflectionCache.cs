@@ -1,4 +1,6 @@
-﻿using Sapientia.Collections;
+﻿#nullable enable
+
+using Sapientia.Collections;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,10 +14,10 @@ namespace Sapientia.Utility
 		private readonly bool _trackAssemblyLoads;
 
 		private readonly ConcurrentDictionary<Type, List<Type>> _derivedTypesCache = new ConcurrentDictionary<Type, List<Type>>();
-		private readonly ConcurrentDictionary<Type, ConstructorInfo> _constructorsCache = new ConcurrentDictionary<Type, ConstructorInfo>();
+		private readonly ConcurrentDictionary<Type, ConstructorInfo?> _constructorsCache = new ConcurrentDictionary<Type, ConstructorInfo?>();
 		private readonly ConcurrentDictionary<Assembly, Type[]> _assemblyTypesCache = new ConcurrentDictionary<Assembly, Type[]>();
 
-		private volatile Assembly[] _allowedAssemblies;
+		private volatile Assembly[]? _allowedAssemblies;
 		private bool _subscribed;
 		private bool _disposed;
 
@@ -75,7 +77,7 @@ namespace Sapientia.Utility
 			return built;
 		}
 
-		public Type[] GetTypes(Assembly assembly)
+		public Type[] GetTypes(Assembly? assembly)
 		{
 			if (assembly == null)
 				return Array.Empty<Type>();
@@ -94,7 +96,10 @@ namespace Sapientia.Utility
 
 				foreach (var loaderException in e.LoaderExceptions)
 				{
-					UnityEngine.Debug.LogException(loaderException);
+					if (loaderException != null)
+					{
+						UnityEngine.Debug.LogException(loaderException);
+					}
 				}
 #endif
 				types = SalvageTypes(e);
@@ -114,9 +119,10 @@ namespace Sapientia.Utility
 				var loaded = new List<Type>(e.Types.Length);
 				for (int i = 0; i < e.Types.Length; i++)
 				{
-					if (e.Types[i] != null)
+					var type = e.Types[i];
+					if (type != null)
 					{
-						loaded.Add(e.Types[i]);
+						loaded.Add(type);
 					}
 				}
 
@@ -128,7 +134,7 @@ namespace Sapientia.Utility
 		/// Call once on the main thread before any background work starts.
 		/// Removes every write from the hot path, so later reads never contend.
 		/// </summary>
-		public void Warmup(params Type[] baseTypes)
+		public void Warmup(params Type?[]? baseTypes)
 		{
 			var assemblies = GetAssemblies();
 
@@ -140,7 +146,7 @@ namespace Sapientia.Utility
 			if (baseTypes.IsNullOrEmpty())
 				return;
 
-			for (int i = 0; i < baseTypes.Length; i++)
+			for (int i = 0; i < baseTypes!.Length; i++)
 			{
 				var baseType = baseTypes[i];
 				if (baseType != null && !_derivedTypesCache.ContainsKey(baseType))
@@ -158,9 +164,10 @@ namespace Sapientia.Utility
 			_allowedAssemblies = null;
 			_assemblyTypesCache.Clear();
 			_derivedTypesCache.Clear();
+			_constructorsCache.Clear();
 		}
 
-		public object CreateInstance(Type type)
+		public object? CreateInstance(Type? type)
 		{
 			if (type == null ||
 				type.IsAbstract ||
@@ -186,7 +193,7 @@ namespace Sapientia.Utility
 				Activator.CreateInstance(type);
 		}
 
-		public List<Type> GetAllDerivedTypes(Type baseType, Func<Type, bool> predicate = null)
+		public List<Type>? GetAllDerivedTypes(Type? baseType, Func<Type, bool>? predicate = null)
 		{
 			if (baseType == null)
 				return null;
@@ -232,6 +239,9 @@ namespace Sapientia.Utility
 		{
 			var assemblyName = assembly.FullName;
 
+			if (assemblyName == null)
+				return false;
+
 			for (int i = 0; i < _allowedAssemblyTags.Length; i++)
 			{
 				if (assemblyName.Contains(_allowedAssemblyTags[i]))
@@ -266,7 +276,7 @@ namespace Sapientia.Utility
 			return list;
 		}
 
-		private void HandleAssemblyLoaded(object sender, AssemblyLoadEventArgs args)
+		private void HandleAssemblyLoaded(object? sender, AssemblyLoadEventArgs args)
 		{
 			// Only an allowed assembly can change any answer we've cached.
 			if (IsAllowed(args.LoadedAssembly))
