@@ -137,6 +137,142 @@ namespace Sapientia
 			return utcNow > dateTime && utcAt < dateTime;
 		}
 
+		#region Window
+
+		/// <summary>Длительность окна точки по индексу: вне массива — момент</summary>
+		public static long GetWindowDuration(this in ScheduleScheme scheme, int index)
+		{
+			var durations = scheme.durations;
+
+			if (durations == null || index < 0 || index >= durations.Length)
+				return 0;
+
+			return Math.Max(0, durations[index]);
+		}
+
+		/// <inheritdoc cref="TryGetActiveWindow(ref ScheduleScheme, DateTime, DateTime, out DateTime, out DateTime)"/>
+		public static bool IsActive(this ref ScheduleScheme scheme, DateTime utcAt, DateTime utcNow)
+			=> TryGetActiveWindow(ref scheme, utcAt, utcNow, out _, out _);
+
+		/// <summary>
+		/// Окно схемы, накрывающее <paramref name="utcNow"/>. Если активных несколько,
+		/// отдаётся то, что кончается позже — именно его показывает таймер «до конца»
+		/// </summary>
+		/// <param name="utcAt">
+		/// Точка отсчёта расписания — как во всём остальном <see cref="ScheduleUtility"/>:
+		/// вхождения до неё не существуют, Interval раскладывается от неё
+		/// </param>
+		public static bool TryGetActiveWindow(this ref ScheduleScheme scheme, DateTime utcAt, DateTime utcNow,
+			out DateTime start, out DateTime end)
+		{
+			start = default;
+			end = default;
+
+			if (scheme.points.IsNullOrEmpty())
+				return false;
+
+			var found = false;
+
+			for (var i = 0; i < scheme.points.Length; i++)
+			{
+				var duration = scheme.GetWindowDuration(i);
+
+				if (duration <= 0)
+					continue;
+
+				if (!TryGetActiveWindow(ref scheme.points[i], duration, utcAt, utcNow, out var pointStart, out var pointEnd))
+					continue;
+
+				if (found && pointEnd <= end)
+					continue;
+
+				found = true;
+				start = pointStart;
+				end = pointEnd;
+			}
+
+			return found;
+		}
+
+		/// <inheritdoc cref="TryGetActiveWindow{T}(ref T, long, DateTime, DateTime, out DateTime, out DateTime)"/>
+		public static bool IsActive<T>(this ref T point, long duration, DateTime utcAt, DateTime utcNow)
+			where T : struct, ISchedulePoint
+			=> TryGetActiveWindow(ref point, duration, utcAt, utcNow, out _, out _);
+
+		/// <summary>Окно точки, накрывающее <paramref name="utcNow"/></summary>
+		/// <param name="duration">
+		/// Длительность окна в секундах — лежит рядом с точкой, в
+		/// <see cref="ScheduleScheme.durations"/>
+		/// </param>
+		/// <param name="utcAt">Точка отсчёта расписания: вхождения до неё не существуют</param>
+		/// <remarks>
+		/// Хватает одного <see cref="ToDateTime{T}"/>: активным может быть только окно,
+		/// начавшееся не раньше, чем <paramref name="duration"/> назад, а ближайшее вхождение
+		/// от этой границы — единственный кандидат. Перебирать вхождения не нужно
+		/// </remarks>
+		public static bool TryGetActiveWindow<T>(this ref T point, long duration, DateTime utcAt, DateTime utcNow,
+			out DateTime start, out DateTime end)
+			where T : struct, ISchedulePoint
+		{
+			start = default;
+			end = default;
+
+			if (duration <= 0 || utcNow < utcAt)
+				return false;
+
+			// У Interval окна нет: он без абсолютной привязки, «отрезок каждые N секунд» —
+			// это уже не расписание-момент, а другой механизм. Валидация в инспекторе не даст
+			// задать ему длительность
+			if (point.GetKind() == SchedulePointKind.Interval)
+				return false;
+
+			var from = SubtractSeconds(utcNow, duration);
+
+			// Расписание ещё не началось — окна до якоря не существуют
+			if (from < utcAt)
+				from = utcAt;
+
+			var candidate = ToDateTime(point.Code, from);
+
+			// Верхняя граница — из-за Date: он отдаёт свою дату при любом курсоре, и без
+			// проверки разовое окно осталось бы активным навсегда
+			if (candidate <= from || candidate > utcNow)
+				return false;
+
+			start = candidate;
+			end = candidate.AddSeconds(duration);
+
+			return true;
+		}
+
+		/// <summary>
+		/// Минимальный период повторения в секундах: окно длиннее него начнёт накладываться
+		/// само на себя. У неповторяющихся видов — <see cref="long.MaxValue"/>
+		/// </summary>
+		public static long GetMinPeriodSeconds(SchedulePointKind kind)
+			=> kind switch
+			{
+				SchedulePointKind.Daily => TimeUtility.SECS_IN_ONE_DAY,
+				SchedulePointKind.Weekly => TimeUtility.SECS_IN_ONE_DAY * 7L,
+
+				// Февраль — самый короткий месяц, по нему и считаем нижнюю границу
+				SchedulePointKind.Monthly or SchedulePointKind.MonthlyOnWeekday
+					=> TimeUtility.SECS_IN_ONE_DAY * 28L,
+
+				SchedulePointKind.Yearly or SchedulePointKind.YearlyOnWeekday
+					=> TimeUtility.SECS_IN_ONE_DAY * 365L,
+
+				_ => long.MaxValue
+			};
+
+		private static DateTime SubtractSeconds(DateTime utc, long seconds)
+		{
+			var limit = (utc - DateTime.MinValue).TotalSeconds;
+			return seconds >= limit ? DateTime.MinValue : utc.AddSeconds(-seconds);
+		}
+
+		#endregion
+
 		/// <returns>Ближайшую дату</returns>
 		public static DateTime ToDateTime(this ScheduleScheme scheme, DateTime utcAt)
 		{
