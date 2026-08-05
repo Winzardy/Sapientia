@@ -8,13 +8,12 @@ namespace Sapientia
 {
 	public static class ScheduleUtility
 	{
-		private static readonly int KIND_LENGHT = Enum.GetValues(typeof(SchedulePointKind)).Length;
 		private const int WHILE_SAFEGUARD = 20;
 
 		/// <inheritdoc cref="SchedulePointKind"/>
 		public static SchedulePointKind GetKind(long raw)
 		{
-			var rawType = (int) Math.Clamp(Math.Abs(raw % ISchedulePoint.TYPE_OFFSET), 0, KIND_LENGHT);
+			var rawType = (int) Math.Abs(raw % ISchedulePoint.TYPE_OFFSET);
 			return rawType.ToEnum<SchedulePointKind>();
 		}
 
@@ -55,13 +54,23 @@ namespace Sapientia
 		public static int CalculatePassedPointCount<T>(this ref T point, DateTime utcAt, DateTime utcNow)
 			where T : struct, ISchedulePoint
 		{
-			if (point.Kind == SchedulePointKind.Interval)
+			var kind = point.GetKind();
+			if (kind == SchedulePointKind.Interval)
 			{
 				var decode = point.Decode();
+				if (decode.sec <= 0)
+					return 0;
 				var timeSpan = utcNow - utcAt;
 				if (timeSpan.TotalSeconds <= 0)
 					return 0;
 				return (int) (timeSpan.TotalSeconds / decode.sec);
+			}
+
+			// Date — одноразовая точка: считается только если попала в окно (utcAt, utcNow)
+			if (kind == SchedulePointKind.Date)
+			{
+				var date = ToDateTime(point.Code, utcAt);
+				return utcAt < date && utcNow >= date ? 1 : 0;
 			}
 
 			var nextData = ToDateTime(ref point, utcAt);
@@ -74,7 +83,7 @@ namespace Sapientia
 					throw new InvalidOperationException(
 						"Invalid SchedulePoint progression. " +
 						$"Next DateTime [ {dateTime:O} ] is not greater than previous [ {nextData:O} ] " +
-						$"(code: {point.Code}, utcAt: {utcAt:0}, utcNow: {utcNow:0})"
+						$"(code: {point.Code}, utcAt: {utcAt:O}, utcNow: {utcNow:O})"
 					);
 
 				nextData = dateTime;
@@ -116,10 +125,14 @@ namespace Sapientia
 
 		public static bool IsPassed(long rawCode, DateTime utcAt, DateTime utcNow)
 		{
-			var dateTime = ToDateTime(rawCode, utcAt);
+			var dateTime = ToDateTime(rawCode, utcAt, out var kind);
 
 			if (utcAt == utcNow)
 				return utcAt >= dateTime;
+
+			// Date — одноразовая точка: учитывается только если попала в окно (utcAt, utcNow)
+			if (kind == SchedulePointKind.Date)
+				return utcNow >= dateTime && utcAt < dateTime;
 
 			return utcNow > dateTime && utcAt < dateTime;
 		}
@@ -154,7 +167,13 @@ namespace Sapientia
 
 		private static DateTime ToDateTime(long rawCode, DateTime utcAt)
 		{
+			return ToDateTime(rawCode, utcAt, out _);
+		}
+
+		private static DateTime ToDateTime(long rawCode, DateTime utcAt, out SchedulePointKind kind)
+		{
 			SchedulePointDecode decode = rawCode;
+			kind = decode.kind;
 			var decodeMonthToDateMonth = decode.mh + 1;
 			var decodeDayToDateDay = decode.day + 1;
 			switch (decode.kind)
@@ -178,57 +197,30 @@ namespace Sapientia
 				{
 					var dailyStart = new DateTime(utcAt.Year, utcAt.Month, utcAt.Day,
 						0, 0, 0, kind: DateTimeKind.Utc);
-					if (utcAt.Hour >= decode.hr)
+					var timeOfDay = new TimeSpan(decode.hr, decode.min, (int) decode.sec);
+					if (utcAt.TimeOfDay >= timeOfDay)
 						dailyStart = dailyStart.AddDays(1);
 
-					return dailyStart
-						.AddHours(decode.hr)
-						.AddMinutes(decode.min)
-						.AddSeconds(decode.sec);
+					return dailyStart.Add(timeOfDay);
 				}
 
 				case SchedulePointKind.Monthly:
 				{
-					var monthlyStart = new DateTime(utcAt.Year, utcAt.Month, 1,
+					var monthStart = new DateTime(utcAt.Year, utcAt.Month, 1,
 						0, 0, 0, kind: DateTimeKind.Utc);
 
-					var sign = decode.sign ? 1 : -1;
-					if (!decode.sign)
-						monthlyStart = monthlyStart
-							.AddMonths(1)
-							.AddDays(-1);
-
-					var monthlyDate = monthlyStart
-						.AddDays(sign * decode.day)
-						.AddHours(decode.hr)
-						.AddMinutes(decode.min)
-						.AddSeconds(decode.sec);
-
-					if (monthlyDate < utcAt)
-						monthlyDate = monthlyDate.AddMonths(1);
+					var monthlyDate = GetMonthlyDate(in decode, monthStart);
+					if (monthlyDate <= utcAt)
+						monthlyDate = GetMonthlyDate(in decode, monthStart.AddMonths(1));
 
 					return monthlyDate;
 				}
 
 				case SchedulePointKind.Yearly:
 				{
-					var yearlyDate = new DateTime(utcAt.Year, decodeMonthToDateMonth, 1,
-						0, 0, 0, kind: DateTimeKind.Utc);
-
-					var sign = decode.sign ? 1 : -1;
-
-					if (!decode.sign)
-						yearlyDate = yearlyDate
-							.AddMonths(1)
-							.AddDays(-1);
-
-					yearlyDate = yearlyDate.AddDays(sign * decode.day)
-						.AddHours(decode.hr)
-						.AddMinutes(decode.min)
-						.AddSeconds(decode.sec);
-
-					if (yearlyDate < utcAt)
-						yearlyDate = yearlyDate.AddYears(1);
+					var yearlyDate = GetYearlyDate(in decode, utcAt.Year);
+					if (yearlyDate <= utcAt)
+						yearlyDate = GetYearlyDate(in decode, utcAt.Year + 1);
 
 					return yearlyDate;
 				}
@@ -267,6 +259,28 @@ namespace Sapientia
 			}
 		}
 
+		private static DateTime GetMonthlyDate(in SchedulePointDecode decode, in DateTime monthStart)
+		{
+			var daysInMonth = DateTime.DaysInMonth(monthStart.Year, monthStart.Month);
+			// День зажимается в границы месяца: «31-е число» в феврале = последний день февраля
+			var day = decode.sign
+				? Math.Min(decode.day + 1, daysInMonth)
+				: Math.Max(daysInMonth - decode.day, 1);
+
+			return monthStart
+				.AddDays(day - 1)
+				.AddHours(decode.hr)
+				.AddMinutes(decode.min)
+				.AddSeconds(decode.sec);
+		}
+
+		private static DateTime GetYearlyDate(in SchedulePointDecode decode, int year)
+		{
+			var monthStart = new DateTime(year, decode.mh + 1, 1,
+				0, 0, 0, kind: DateTimeKind.Utc);
+			return GetMonthlyDate(in decode, monthStart);
+		}
+
 		private static DateTime GetMonthlyOnWeekdayDate(in SchedulePointDecode decode, in DateTime utcAt)
 		{
 			var year = utcAt.Year;
@@ -274,25 +288,16 @@ namespace Sapientia
 			var dayOfWeek = (int) decode.day + 1;
 			int weekIndex = decode.weekOfMonth;
 
-			DateTime date;
 			var t = WHILE_SAFEGUARD;
-			while (!TryGetDateTime(in decode, out date))
+			while (t-- > 0)
 			{
-				if (t-- <= 0)
-					return DateTime.MinValue;
-
-				AddMonth();
-			}
-
-			if (date <= utcAt)
-			{
-				AddMonth();
-
-				if (TryGetDateTime(in decode, out date))
+				if (TryGetDateTime(in decode, out var date) && date > utcAt)
 					return date;
+
+				AddMonth();
 			}
 
-			return date;
+			return DateTime.MinValue;
 
 			bool TryGetDateTime(in SchedulePointDecode decode, out DateTime dateTime)
 			{
@@ -345,25 +350,16 @@ namespace Sapientia
 			var dayOfWeek = (int) decode.day + 1;
 			int weekIndex = decode.weekOfMonth;
 
-			DateTime dateTime;
-
 			var t = WHILE_SAFEGUARD;
-			while (!TryGetDateTime(in decode, out dateTime))
+			while (t-- > 0)
 			{
-				if (t-- <= 0)
-					return DateTime.MinValue;
-
-				year++;
-			}
-
-			if (dateTime <= utcAt)
-			{
-				year++;
-				if (TryGetDateTime(in decode, out dateTime))
+				if (TryGetDateTime(in decode, out var dateTime) && dateTime > utcAt)
 					return dateTime;
+
+				year++;
 			}
 
-			return dateTime;
+			return DateTime.MinValue;
 
 			bool TryGetDateTime(in SchedulePointDecode decode, out DateTime date)
 			{
