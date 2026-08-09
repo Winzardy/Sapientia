@@ -27,7 +27,7 @@ namespace Trading.Advertising
 		[NotNull]
 		public ContentReference<RewardedAdPlacementEntry> placement;
 
-		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
+		[Key(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
 
 		public EvaluatedValue<Blackboard, int> count = 1;
