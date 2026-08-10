@@ -1,5 +1,6 @@
 using System;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Data;
 
 namespace Content
 {
@@ -22,6 +23,15 @@ namespace Content
 		public ContentReferenceArrayPointer(in ArrayPointer point, in ContentReference<T[]> arrayReference)
 		{
 			_pointer = point;
+			_arrayReference = arrayReference;
+		}
+
+		/// <summary>
+		/// Типизированный индекс. Каст живёт здесь, чтобы в вызывающем коде его не было.
+		/// </summary>
+		public ContentReferenceArrayPointer(in Id<T> point, in ContentReference<T[]> arrayReference)
+		{
+			_pointer = (int)point;
 			_arrayReference = arrayReference;
 		}
 
