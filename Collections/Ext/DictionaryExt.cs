@@ -61,6 +61,18 @@ namespace Sapientia.Collections
 			return true;
 		}
 
+		/// <summary>
+		/// Скопировать пары в существующий словарь, в отличие от <see cref="Clone{TKey,TValue}"/> без аллокации нового
+		/// </summary>
+		public static void AddRange<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, Dictionary<TKey, TValue> source)
+		{
+			// Резервируем сразу, иначе таблица будет рехешироваться по ходу копирования
+			dictionary.EnsureCapacity(dictionary.Count + source.Count);
+
+			foreach (var (key, value) in source)
+				dictionary[key] = value;
+		}
+
 		public static Dictionary<TKey, TValue> Clone<TKey, TValue>(this Dictionary<TKey, TValue> source)
 			where TValue : ICloneable<TValue>
 		{
