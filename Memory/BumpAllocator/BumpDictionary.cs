@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Data;
 
 namespace Sapientia.Memory
 {
@@ -94,11 +95,11 @@ namespace Sapientia.Memory
 
 		/// <summary>
 		/// Читает значение КОПИЕЙ. Если TValue содержит self-relative данные (<see cref="BumpArray{T}"/> и т.п.),
-		/// копия невалидна - используйте <see cref="TryGetIndex"/> и доступ к <see cref="entries"/> по ref.
+		/// копия невалидна - используйте <see cref="TryGetEntryId"/> и доступ к <see cref="entries"/> по ref.
 		/// </summary>
 		public bool TryGetValue(in TKey key, out TValue value)
 		{
-			if (!TryGetIndex(in key, out var index))
+			if (!TryGetEntryId(in key, out var index))
 			{
 				value = default;
 				return false;
@@ -112,23 +113,23 @@ namespace Sapientia.Memory
 		/// Индекс entry ключа в <see cref="entries"/> - стабильный дескриптор, который можно хранить
 		/// вне арены и разыменовывать по ref без копирования значения.
 		/// </summary>
-		public bool TryGetIndex(in TKey key, out int index)
+		public bool TryGetEntryId(in TKey key, out Id<TValue> entryId)
 		{
 			if (entries.Length == 0)
 			{
-				index = -1;
+				entryId = -1;
 				return false;
 			}
 
-			index = buckets.Get(key.GetHashCode() & (buckets.Length - 1));
-			while (index >= 0)
+			entryId = buckets.Get(key.GetHashCode() & (buckets.Length - 1));
+			while (entryId >= 0)
 			{
-				ref var entry = ref entries.Get(index);
+				ref var entry = ref entries.Get(entryId);
 				if (entry.key.Equals(key))
 				{
 					return true;
 				}
-				index = entry.next;
+				entryId = entry.next;
 			}
 
 			return false;

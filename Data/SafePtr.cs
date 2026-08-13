@@ -248,7 +248,7 @@ namespace Sapientia.Data
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly unsafe struct SafePtr<T> where T : unmanaged
+	public readonly unsafe struct SafePtr<T> : IEquatable<SafePtr<T>> where T : unmanaged
 	{
 		[NativeDisableUnsafePtrRestriction]
 		public readonly T* ptr;
@@ -516,6 +516,18 @@ namespace Sapientia.Data
 				return true;
 #endif
 			return left.ptr != right.ptr;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool Equals(SafePtr<T> other)
+		{
+			return this == other;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override bool Equals(object obj)
+		{
+			return obj is SafePtr<T> other && Equals(other);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

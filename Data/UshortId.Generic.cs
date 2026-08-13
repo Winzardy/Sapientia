@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 namespace Submodules.Sapientia.Data
 {
 	[Serializable]
-	public struct UshortId<T> : IEquatable<UshortId<T>>
+	public struct UshortId<T> : IEquatable<UshortId<T>>, IComparable<UshortId<T>>
 	{
 		public static readonly UshortId<T> Invalid = new UshortId<T>
 		{
@@ -83,6 +83,11 @@ namespace Submodules.Sapientia.Data
 			{
 				id = a.id - b,
 			};
+		}
+
+		public int CompareTo(UshortId<T> other)
+		{
+			return id.CompareTo(other.id);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
