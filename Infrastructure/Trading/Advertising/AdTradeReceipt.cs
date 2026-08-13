@@ -10,7 +10,7 @@ namespace Trading.Advertising
 	{
 		internal const string AD_TOKEN_LABEL_CATALOG = "AdTokenGroup";
 
-		[ContextLabel(AD_TOKEN_LABEL_CATALOG)]
+		[Key(AD_TOKEN_LABEL_CATALOG)]
 		public int group;
 
 		public AdPlacementType type;

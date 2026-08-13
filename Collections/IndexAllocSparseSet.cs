@@ -97,9 +97,14 @@ namespace Sapientia.Collections
 			_nextIdToAllocate = 0;
 		}
 
-		public IEnumerator<T> GetEnumerator()
+		public SparseSet<T>.Enumerator GetEnumerator()
 		{
 			return _sparseSet.GetEnumerator();
+		}
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
