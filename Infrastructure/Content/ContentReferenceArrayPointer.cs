@@ -35,6 +35,16 @@ namespace Content
 			_arrayReference = arrayReference;
 		}
 
+		/// <summary>
+		/// Разовый индекс из цикла: без этой перегрузки голый int неоднозначен между
+		/// <see cref="ArrayPointer"/> и <see cref="Id{T}"/>.
+		/// </summary>
+		public ContentReferenceArrayPointer(int point, in ContentReference<T[]> arrayReference)
+		{
+			_pointer = point;
+			_arrayReference = arrayReference;
+		}
+
 		public bool Equals(ContentReferenceArrayPointer<T> other) =>
 			_arrayReference.Equals(other._arrayReference) && _pointer == other._pointer;
 
