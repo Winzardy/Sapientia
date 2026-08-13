@@ -10,7 +10,7 @@ namespace Trading.Advertising
 	{
 		public EvaluatedValue<Blackboard, int> count = 1;
 
-		[ContextLabel(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
+		[Key(AdTradeReceipt.AD_TOKEN_LABEL_CATALOG)]
 		public int group;
 
 		protected override bool CanReceive(Tradeboard board, out TradeReceiveError? error)

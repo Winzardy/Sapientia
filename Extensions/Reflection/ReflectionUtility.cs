@@ -37,6 +37,13 @@ namespace Sapientia.Utility
 		};
 
 		private static readonly string _editorAssemblyTag = "Editor";
+		private static IReflectionCache _cache;
+
+		public static bool HasCache { get => _cache != null; }
+		public static IReadOnlyList<string> AllowedAssemblyTags { get => _allowedAssemblyTags; }
+		public static string EditorAssemblyTag { get => _editorAssemblyTag; }
+
+		public static void SetCache(IReflectionCache cache) => _cache = cache;
 
 		public static bool HasAttribute<T>(this Type type, bool inherit = false) where T : Attribute
 		{
@@ -64,7 +71,7 @@ namespace Sapientia.Utility
 			for (int i = 0; i < retrievedTypes.Count; i++)
 			{
 				var type = retrievedTypes[i];
-				if (type.TryCreateInstance(out T instance))
+				if (TryCreateInstance(type, out T instance))
 				{
 					dictionary[type] = instance;
 					activator?.Invoke(instance);
@@ -87,11 +94,25 @@ namespace Sapientia.Utility
 			for (int i = 0; i < retrievedTypes.Count; i++)
 			{
 				var type = retrievedTypes[i];
-				if (type.TryCreateInstance(out T instance))
+				if (TryCreateInstance(type, out T instance))
 				{
 					yield return instance;
 				}
 			}
+		}
+
+		private static bool TryCreateInstance<T>(Type type, out T instance)
+		{
+			if (_cache != null)
+			{
+				if (_cache.CreateInstance(type) is T cached)
+				{
+					instance = cached;
+					return true;
+				}
+			}
+
+			return type.TryCreateInstance(out instance);
 		}
 
 		public static IEnumerable<Assembly> GetAssemblies(Func<Assembly, bool> predicate)
@@ -117,6 +138,13 @@ namespace Sapientia.Utility
 
 		public static IEnumerable<Assembly> GetAllowedAssemblies(bool editor = false)
 		{
+			if (_cache != null)
+			{
+				var assemblies = _cache.GetAssemblies();
+				if (assemblies != null)
+					return assemblies;
+			}
+
 			return GetAssemblies(Predicate);
 
 			bool Predicate(Assembly assembly)
@@ -192,9 +220,21 @@ namespace Sapientia.Utility
 			return false;
 		}
 
+		public static Type[] GetAssemblyTypes(this Assembly assembly)
+		{
+			if (_cache != null)
+			{
+				var types = _cache.GetTypes(assembly);
+				if (types != null)
+					return types;
+			}
+
+			return assembly.GetTypes();
+		}
+
 		public static Type GetTypeByName(this Assembly assembly, string typeName, bool checkFullName = false)
 		{
-			var types = assembly.GetTypes();
+			var types = assembly.GetAssemblyTypes();
 
 			for (int i = 0; i < types.Length; i++)
 			{
@@ -213,14 +253,24 @@ namespace Sapientia.Utility
 		/// <summary>
 		/// Исключает абстрактные и интерфейсные типы
 		/// </summary>
-		public static List<Type> GetAllTypes<T>(bool includeSelf = false, bool editor = false) =>
-			typeof(T).GetAllTypes(_allowedAssemblyTags, includeSelf, editor);
+		public static List<Type> GetAllTypes<T>(bool includeSelf = false, bool editor = false)
+			=> typeof(T).GetAllTypes(includeSelf, editor);
 
 		public static List<Type> GetAllTypes<T>(string[] assemblyTags, bool includeSelf = false, bool editor = false)
 			=> typeof(T).GetAllTypes(assemblyTags, includeSelf, editor);
 
-		public static List<Type> GetAllTypes(this Type type, bool includeSelf = false, bool editor = false) =>
-			type.GetAllTypes(_allowedAssemblyTags, includeSelf, editor);
+		public static List<Type> GetAllTypes(this Type type, bool includeSelf = false, bool editor = false)
+		{
+			if (_cache != null &&
+				_cache.TryGetAllDerivedTypes(type, out var cachedTypes))
+			{
+				return IsTypeSuitable(type, type, includeSelf) ?
+					new List<Type>(cachedTypes) { type } :
+					new List<Type>(cachedTypes);
+			}
+
+			return type.GetAllTypes(_allowedAssemblyTags, includeSelf, editor);
+		}
 
 		public static List<Type> GetAllTypes(this Type baseType,
 			string[] assemblyTags,
@@ -247,7 +297,7 @@ namespace Sapientia.Utility
 			{
 				try
 				{
-					foreach (var type in assembly.GetTypes())
+					foreach (var type in assembly.GetAssemblyTypes())
 					{
 						if (IsTypeSuitable(baseType, type, includeSelf))
 							list.Add(type);
@@ -317,11 +367,11 @@ namespace Sapientia.Utility
 			return list;
 #endif
 
-			foreach (Assembly assembly in GetAssemblies(_allowedAssemblyTags, editor))
+			foreach (Assembly assembly in GetAllowedAssemblies(editor))
 			{
 				try
 				{
-					foreach (Type type in assembly.GetTypes())
+					foreach (Type type in assembly.GetAssemblyTypes())
 					{
 						if (IsGenericTypeSuitable(baseType, type, out var argument))
 							list.Add((type, argument!));
@@ -353,8 +403,8 @@ namespace Sapientia.Utility
 			var parent = type.BaseType;
 
 			if (parent != null &&
-			    parent.IsGenericType &&
-			    parent.GetGenericTypeDefinition() == baseType)
+				parent.IsGenericType &&
+				parent.GetGenericTypeDefinition() == baseType)
 			{
 				argumentType = parent.GetGenericArguments()[0];
 				return true;
@@ -544,7 +594,7 @@ namespace Sapientia.Utility
 			var values = new List<T>();
 			foreach (var fi in type.GetConstantFieldInfos())
 			{
-				var value = (T) fi.GetValue(null);
+				var value = (T)fi.GetValue(null);
 				values.Add(value);
 			}
 
@@ -631,13 +681,13 @@ namespace Sapientia.Utility
 		public CachedFieldInfo(string name, BindingFlags bindingFlags = BindingFlags.NonPublic | BindingFlags.Instance) : this()
 		{
 			_bindingFlags = bindingFlags;
-			_name         = name;
+			_name = name;
 
 			var type = typeof(T);
 			_field = type.GetField(_name, _bindingFlags);
 		}
 
 		public void SetValue<TValue>(T obj, TValue value) => _field.SetValue(obj, value);
-		public TValue GetValue<TValue>(T obj) => (TValue) _field.GetValue(obj);
+		public TValue GetValue<TValue>(T obj) => (TValue)_field.GetValue(obj);
 	}
 }
