@@ -59,7 +59,30 @@ namespace Sapientia.TypeIndexer
 				}
 			}
 
+			types.RemoveWhere(type => IsTestAssembly(type.Assembly));
+
 			return types.OrderBy(t => t.FullName).ToArray();
+		}
+
+		/// <summary>
+		/// Тест-сборки грузятся в редакторе, но сгенерированный инициализатор лежит без asmdef, компилится
+		/// в Assembly-CSharp и их не референсит — их индексируемые типы дают CS0234. Признак тест-сборки —
+		/// precompiled-референс на nunit.framework.
+		///
+		/// Фильтр по player-набору (<c>CompilationPipeline.GetAssemblies(AssembliesType.Player)</c>) выглядит
+		/// более общим предикатом, но НЕ работает: тест-asmdef'ы всеплатформенные (<c>includePlatforms: []</c>)
+		/// и гейтятся только <c>defineConstraints: [UNITY_INCLUDE_TESTS]</c>, который в редакторе выполнен —
+		/// Unity кладёт их в player-набор. Проверено прогоном: CS0234 возвращаются.
+		/// </summary>
+		private static bool IsTestAssembly(Assembly assembly)
+		{
+			foreach (var reference in assembly.GetReferencedAssemblies())
+			{
+				if (reference.Name == "nunit.framework")
+					return true;
+			}
+
+			return false;
 		}
 
 		private static string CreateTypeIndexProvider()

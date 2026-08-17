@@ -483,6 +483,7 @@ namespace Sapientia.Collections
 
 		public Span<T> AsSpan(int index, int length)
 		{
+			E.ASSERT(index >= 0 && length >= 0 && index + length <= _count);
 			return _array.AsSpan(index, length);
 		}
 

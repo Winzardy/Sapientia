@@ -1,4 +1,5 @@
 using System;
+using Sapientia.Collections;
 using Sapientia.Data;
 using Sapientia.Extensions;
 
@@ -53,6 +54,11 @@ namespace Sapientia.Memory
 			return new SafePtr(fieldPtr.ptr + offset.byteOffset, length * TSize<T>.size).Cast<T>();
 		}
 
+		public PtrArray<T> GetPtrArray()
+		{
+			return new PtrArray<T>(GetPtr(), length);
+		}
+
 		public ref T Get(int index)
 		{
 			E.ASSERT((uint)index < (uint)length, "[BumpArray] Индекс за пределами массива.");
@@ -62,6 +68,14 @@ namespace Sapientia.Memory
 		public Span<T> GetSpan()
 		{
 			return GetPtr().GetSpan(length);
+		}
+	}
+
+	public static class BumpArrayExt
+	{
+		public static bool Contains<T>(this ref BumpArray<T> bumpArray, in T value) where T : unmanaged, IEquatable<T>
+		{
+			return SpanExt.Contains(bumpArray.GetSpan(), value);
 		}
 	}
 }

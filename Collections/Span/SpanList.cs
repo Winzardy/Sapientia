@@ -31,6 +31,11 @@ namespace Sapientia.Collections
 			return GetSpan().GetEnumerator();
 		}
 
+		public static implicit operator Span<T>(SpanList<T> spanList)
+		{
+			return spanList.GetSpan();
+		}
+
 		public static implicit operator SpanList<T>(Span<T> span)
 		{
 			return new SpanList<T>(span);
