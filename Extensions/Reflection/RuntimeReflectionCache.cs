@@ -146,13 +146,25 @@ namespace Sapientia.Utility
 			if (baseTypes.IsNullOrEmpty())
 				return;
 
-			for (int i = 0; i < baseTypes!.Length; i++)
+			var pending = new List<Type>(baseTypes!.Length);
+
+			for (int i = 0; i < baseTypes.Length; i++)
 			{
 				var baseType = baseTypes[i];
 				if (baseType != null && !_derivedTypesCache.ContainsKey(baseType))
 				{
-					_derivedTypesCache[baseType] = BuildDerivedTypes(baseType);
+					pending.Add(baseType);
 				}
+			}
+
+			if (pending.Count == 0)
+				return;
+
+			var results = BuildDerivedTypes(assemblies, pending);
+
+			for (int i = 0; i < pending.Count; i++)
+			{
+				_derivedTypesCache[pending[i]] = results[i];
 			}
 		}
 
@@ -274,6 +286,41 @@ namespace Sapientia.Utility
 			}
 
 			return list;
+		}
+
+		private List<Type>[] BuildDerivedTypes(Assembly[] assemblies, List<Type> baseTypes)
+		{
+			var results = new List<Type>[baseTypes.Count];
+
+			for (int i = 0; i < results.Length; i++)
+			{
+				results[i] = new List<Type>();
+			}
+
+			for (int i = 0; i < assemblies.Length; i++)
+			{
+				var types = GetTypes(assemblies[i]);
+
+				for (int j = 0; j < types.Length; j++)
+				{
+					var type = types[j];
+
+					if (type.IsInterface || type.IsAbstract)
+						continue;
+
+					for (int k = 0; k < baseTypes.Count; k++)
+					{
+						var baseType = baseTypes[k];
+
+						if (type != baseType && baseType.IsAssignableFrom(type))
+						{
+							results[k].Add(type);
+						}
+					}
+				}
+			}
+
+			return results;
 		}
 
 		private void HandleAssemblyLoaded(object? sender, AssemblyLoadEventArgs args)

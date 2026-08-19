@@ -256,27 +256,18 @@ namespace Sapientia.Utility
 		public static List<Type> GetAllTypes<T>(bool includeSelf = false, bool editor = false)
 			=> typeof(T).GetAllTypes(includeSelf, editor);
 
-		public static List<Type> GetAllTypes<T>(string[] assemblyTags, bool includeSelf = false, bool editor = false)
-			=> typeof(T).GetAllTypes(assemblyTags, includeSelf, editor);
-
-		public static List<Type> GetAllTypes(this Type type, bool includeSelf = false, bool editor = false)
-		{
-			if (_cache != null &&
-				_cache.TryGetAllDerivedTypes(type, out var cachedTypes))
-			{
-				return IsTypeSuitable(type, type, includeSelf) ?
-					new List<Type>(cachedTypes) { type } :
-					new List<Type>(cachedTypes);
-			}
-
-			return type.GetAllTypes(_allowedAssemblyTags, includeSelf, editor);
-		}
-
 		public static List<Type> GetAllTypes(this Type baseType,
-			string[] assemblyTags,
 			bool includeSelf = false,
 			bool editor = false)
 		{
+			if (_cache != null &&
+				_cache.TryGetAllDerivedTypes(baseType, out var cachedTypes))
+			{
+				return IsTypeSuitable(baseType, baseType, includeSelf) ?
+					new List<Type>(cachedTypes) { baseType } :
+					new List<Type>(cachedTypes);
+			}
+
 			var list = new List<Type>();
 
 #if UNITY_EDITOR && LIGHT_EDITOR_MODE
@@ -284,7 +275,7 @@ namespace Sapientia.Utility
 
 			foreach (var type in types)
 			{
-				if (!AllowedAssembly(type.Assembly, assemblyTags)) // По идее, можно вообще отказаться от проверки по assemblyTags при использовании UnityEditor.TypeCache. Но тогда поведение будет отличаться в билде
+				if (!AllowedAssembly(type.Assembly, _allowedAssemblyTags)) // По идее, можно вообще отказаться от проверки по assemblyTags при использовании UnityEditor.TypeCache. Но тогда поведение будет отличаться в билде
 					continue;
 
 				if (IsTypeSuitable(baseType, type, includeSelf))
@@ -293,7 +284,7 @@ namespace Sapientia.Utility
 
 			return list;
 #endif
-			foreach (var assembly in GetAssemblies(assemblyTags, editor))
+			foreach (var assembly in GetAllowedAssemblies(editor))
 			{
 				try
 				{

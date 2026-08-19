@@ -41,6 +41,9 @@ namespace Sapientia.Deterministic
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Fix64_2(float2 value) => new(value.x, value.y);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator float2(Fix64_2 value) => new(value.x, value.y);
 #endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

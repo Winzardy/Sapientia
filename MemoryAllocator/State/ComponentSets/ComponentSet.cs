@@ -258,7 +258,10 @@ namespace Sapientia.MemoryAllocator.State
 				}
 			}
 			success = false;
-			return ref _elements.GetValuePtr<T>(worldState)[0];
+			// Отдавать `_elements` нельзя: там лежат `ComponentSetElement<T>`, и приведение к `T` смещает чтение
+			// на заголовок `Entity` - вызывающий получает мусорные `MemPtr` вместо компонента и пишет в чужой элемент.
+			// Как и в `TryGetService`, при `success == false` результат использовать нельзя.
+			return ref worldState.GetZeroRef<T>();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

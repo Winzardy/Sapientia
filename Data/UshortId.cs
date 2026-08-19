@@ -49,6 +49,39 @@ namespace Submodules.Sapientia.Data
 			return a.id != b.id;
 		}
 
+		/// <summary>
+		/// Сравнение идёт по СЫРОМУ id, а не по значению: без этих операторов сравнение двух UshortId
+		/// уезжало бы в неявную конверсию в ushort, которая вычитает единицу, и <see cref="Invalid"/>
+		/// (сырой 0) превращался бы в 65535 — то есть в «больше всех». Порядок валидных id от сдвига
+		/// на единицу не меняется, а Invalid встаёт туда, где ему и место: ниже любого валидного.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator >(UshortId a, UshortId b)
+		{
+			return a.id > b.id;
+		}
+
+		/// <inheritdoc cref="op_GreaterThan"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator <(UshortId a, UshortId b)
+		{
+			return a.id < b.id;
+		}
+
+		/// <inheritdoc cref="op_GreaterThan"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator >=(UshortId a, UshortId b)
+		{
+			return a.id >= b.id;
+		}
+
+		/// <inheritdoc cref="op_GreaterThan"/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator <=(UshortId a, UshortId b)
+		{
+			return a.id <= b.id;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UshortId operator +(UshortId a, ushort b)
 		{
