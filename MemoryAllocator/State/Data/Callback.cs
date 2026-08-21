@@ -1,6 +1,7 @@
+using Sapientia.MemoryAllocator.State;
 using Sapientia.TypeIndexer;
 
-namespace Sapientia.MemoryAllocator.State
+namespace Sapientia.MemoryAllocator
 {
 	public struct Callback<TCallback>  where TCallback: unmanaged, IProxy
 	{
