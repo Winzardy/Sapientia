@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 
 #if CLIENT
@@ -17,7 +18,7 @@ namespace Sapientia
 	}
 
 	[Serializable]
-	public partial struct Toggle<T> : IToggle<T>
+	public partial struct Toggle<T> : IToggle<T>, IEquatable<Toggle<T>>
 	{
 #if CLIENT
 		[FormerlySerializedAs("use")]
@@ -59,5 +60,11 @@ namespace Sapientia
 
 		bool IToggle.Enable => enable;
 		T IToggle<T>.Value => value;
+		public bool Equals(Toggle<T> other)
+			=> enable == other.enable && EqualityComparer<T>.Default.Equals(value, other.value);
+
+		public override bool Equals(object obj) => obj is Toggle<T> other && Equals(other);
+
+		public override int GetHashCode() => HashCode.Combine(enable, value);
 	}
 }

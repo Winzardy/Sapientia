@@ -20,7 +20,7 @@ namespace Trading
 	}
 
 	[Serializable]
-	public struct TradeResultSnapshot
+	public struct TradeResultSnapshot : IEquatable<TradeResultSnapshot>
 	{
 		public string tradeId;
 
@@ -80,6 +80,14 @@ namespace Trading
 				costs = null;
 			}
 		}
+		public bool Equals(TradeResultSnapshot other)
+			=> tradeId == other.tradeId &&
+				rewards.SequenceEquals(other.rewards) &&
+				costs.SequenceEquals(other.costs);
+
+		public override bool Equals(object obj) => obj is TradeResultSnapshot other && Equals(other);
+
+		public override int GetHashCode() => HashCode.Combine(tradeId, rewards?.Length ?? 0, costs?.Length ?? 0);
 	}
 
 	public static class TradeResultSnapshotUtility
