@@ -18,6 +18,11 @@ namespace Content
 
 		public bool Dropdown { get; private set;}
 
+		/// <summary>
+		/// Конфига по ссылке может не существовать: сырой id остаётся как есть и не считается ошибкой
+		/// </summary>
+		public bool Optional { get; set; }
+
 		public ContentReferenceAttribute(Type type, bool inlineEditor = true, bool dropdown = false)
 		{
 			Type = type;
