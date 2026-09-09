@@ -63,7 +63,15 @@ namespace Sapientia.MemoryAllocator
 
 			ref var updateStatePart = ref _world.worldState.GetService<UpdateLocalStatePart>();
 			if (updateStatePart.IsPaused())
+			{
+				// Геймплейный Update осознанно не идёт на паузе, но LateUpdate (View-слой)
+				// должен продолжать тикать - см. UpdateLocalStatePart.ShouldLateUpdate.
+				// Update() выше - единственное место, где обычно взводится ScheduleLateUpdate,
+				// поэтому на паузе форсируем его явно, иначе View полностью замирает вместе
+				// с симуляцией и не может среагировать на паузу/дождаться отложенного дестроя.
+				_world.RequestLateUpdate();
 				return;
+			}
 
 			var tickTime = updateStatePart.stateUpdateData.tickTime;
 

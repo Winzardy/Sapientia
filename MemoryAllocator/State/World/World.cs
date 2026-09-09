@@ -135,6 +135,15 @@ namespace Sapientia.MemoryAllocator
 			ScheduleLateUpdate = true;
 		}
 
+		/// <summary>
+		/// Форсирует выполнение LateUpdate на следующий вызов, даже если обычный Update
+		/// в этом кадре не вызывался (например, мир стоит на паузе - см.
+		/// WorldLifecycleManager.Update). LateUpdate (View-слой) не должен замирать вместе
+		/// с геймплейным Update - см. UpdateLocalStatePart.ShouldLateUpdate.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RequestLateUpdate() => ScheduleLateUpdate = true;
+
 		public void LateUpdate()
 		{
 			if (!ScheduleLateUpdate)
