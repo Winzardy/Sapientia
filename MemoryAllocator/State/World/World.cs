@@ -162,6 +162,17 @@ namespace Sapientia.MemoryAllocator
 			SendLateUpdateMessage();
 		}
 
+		public void PausedLateUpdate()
+		{
+			using var scope = worldState.GetWorldScope();
+
+			ref var elementsService = ref worldState.GetService<WorldElementsService>();
+			foreach (ref var system in elementsService.worldSystems.GetEnumerable(worldState))
+			{
+				system.PausedLateUpdate(worldState, worldState, system);
+			}
+		}
+
 		public void Dispose()
 		{
 			using var scope = worldState.GetWorldScope();

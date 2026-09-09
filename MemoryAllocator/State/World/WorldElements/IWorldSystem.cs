@@ -14,6 +14,12 @@ namespace Sapientia.MemoryAllocator
 		public virtual void AfterLateUpdate(WorldState worldState, IndexedPtr self) {}
 
 		/// <summary>
+		/// Зовётся вместо <see cref="LateUpdate"/>, пока симуляция на паузе - для систем,
+		/// которым надо обновлять презентацию и на паузе.
+		/// </summary>
+		public virtual void PausedLateUpdate(WorldState worldState, IndexedPtr self) {}
+
+		/// <summary>
 		/// Положить в <paramref name="roots"/> свои корневые сущности для копирования их поддеревьев в новый
 		/// мир - аналог <see cref="IWorldStatePart.AppendEntities"/> для системы. Ссылки на чужие
 		/// сущности не класть, их перенастроит <see cref="InnerCopy"/>.
