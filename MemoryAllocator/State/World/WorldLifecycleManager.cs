@@ -111,10 +111,10 @@ namespace Sapientia.MemoryAllocator
 			if (!updateStatePart.ShouldLateUpdate())
 				return;
 
+			_world.LateUpdate();
+
 			if (updateStatePart.IsPaused())
 				_world.PausedLateUpdate();
-			else
-				_world.LateUpdate();
 		}
 
 		public void Dispose()

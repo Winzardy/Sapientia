@@ -14,8 +14,8 @@ namespace Sapientia.MemoryAllocator
 		public virtual void AfterLateUpdate(WorldState worldState, IndexedPtr self) {}
 
 		/// <summary>
-		/// Зовётся вместо <see cref="LateUpdate"/>, пока симуляция на паузе - для систем,
-		/// которым надо обновлять презентацию и на паузе.
+		/// Зовётся каждый кадр паузы дополнительно к <see cref="LateUpdate"/> - для систем,
+		/// которым надо обновлять презентацию, пока симуляция стоит.
 		/// </summary>
 		public virtual void PausedLateUpdate(WorldState worldState, IndexedPtr self) {}
 
