@@ -14,10 +14,11 @@ namespace Sapientia.Data
 
 	[DebuggerTypeProxy(typeof(EnumMask<>.EnumMaskProxy))]
 	[Serializable]
-	public struct EnumMask<T>
+	public struct EnumMask<T> :
 #if UNITY_EDITOR
-		: IEnumMask
+		IEnumMask,
 #endif
+		IEquatable<EnumMask<T>>
 		where T : unmanaged, Enum
 	{
 		public const int BitsCount = 32;
@@ -287,5 +288,10 @@ namespace Sapientia.Data
 				}
 			}
 		}
+		public bool Equals(EnumMask<T> other) => mask == other.mask;
+
+		public override bool Equals(object obj) => obj is EnumMask<T> other && Equals(other);
+
+		public override int GetHashCode() => mask;
 	}
 }

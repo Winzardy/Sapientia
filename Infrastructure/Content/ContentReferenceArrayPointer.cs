@@ -1,5 +1,6 @@
 using System;
 using Sapientia.Extensions;
+using Submodules.Sapientia.Data;
 
 namespace Content
 {
@@ -20,6 +21,25 @@ namespace Content
 		public readonly T1 ReadAs<T1>() where T1 : class, T => UnsafeExt.As<T, T1>(Read());
 
 		public ContentReferenceArrayPointer(in ArrayPointer point, in ContentReference<T[]> arrayReference)
+		{
+			_pointer = point;
+			_arrayReference = arrayReference;
+		}
+
+		/// <summary>
+		/// Типизированный индекс. Каст живёт здесь, чтобы в вызывающем коде его не было.
+		/// </summary>
+		public ContentReferenceArrayPointer(in Id<T> point, in ContentReference<T[]> arrayReference)
+		{
+			_pointer = (int)point;
+			_arrayReference = arrayReference;
+		}
+
+		/// <summary>
+		/// Разовый индекс из цикла: без этой перегрузки голый int неоднозначен между
+		/// <see cref="ArrayPointer"/> и <see cref="Id{T}"/>.
+		/// </summary>
+		public ContentReferenceArrayPointer(int point, in ContentReference<T[]> arrayReference)
 		{
 			_pointer = point;
 			_arrayReference = arrayReference;

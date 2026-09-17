@@ -118,6 +118,44 @@ namespace Trading
 			}
 		}
 
+		/// <summary>
+		/// Временная привязка сделки, по выходу из области возвращает предыдущий идентификатор
+		/// </summary>
+		/// <remarks>
+		/// Нужна когда через один <see cref="Tradeboard"/> последовательно проходит несколько сделок:
+		/// обычный <see cref="Bind(Trading.Tradeboard,string,bool)"/> уже привязанный борд молча игнорирует
+		/// </remarks>
+		public static TradeBindScope BindScope(this Tradeboard board, string tradeId)
+		{
+			var previousId = board.Id;
+			board.SetId(tradeId);
+			return new TradeBindScope(board, previousId);
+		}
+
+		/// <inheritdoc cref="BindScope(Trading.Tradeboard,string)"/>
+		public static TradeBindScope BindScope(this Tradeboard board, in ContentReference<TradeCost> reference)
+		{
+			return BindScope(board, reference.GetTradeId());
+		}
+
+		/// <inheritdoc cref="BindScope(Trading.Tradeboard,string)"/>
+		public static TradeBindScope BindScope(this Tradeboard board, in ContentReference<TradeReward> reference)
+		{
+			return BindScope(board, reference.GetTradeId());
+		}
+
+		/// <inheritdoc cref="BindScope(Trading.Tradeboard,string)"/>
+		public static TradeBindScope BindScope(this Tradeboard board, ContentEntry<TradeCost> reference)
+		{
+			return BindScope(board, reference.GetTradeId());
+		}
+
+		/// <inheritdoc cref="BindScope(Trading.Tradeboard,string)"/>
+		public static TradeBindScope BindScope(this Tradeboard board, in TradeConfig config)
+		{
+			return BindScope(board, config.Id);
+		}
+
 		public static void Unbind(this Tradeboard board)
 		{
 			board.SetId(null);
@@ -127,5 +165,20 @@ namespace Trading
 		{
 			return board.Register(true, SUPPRESS_BIND_WARNING_KEY);
 		}
+	}
+
+	/// <inheritdoc cref="TradeboardUtility.BindScope(Trading.Tradeboard,string)"/>
+	public readonly struct TradeBindScope : IDisposable
+	{
+		private readonly Tradeboard _tradeboard;
+		private readonly string _previousId;
+
+		public TradeBindScope(Tradeboard tradeboard, string previousId)
+		{
+			_tradeboard = tradeboard;
+			_previousId = previousId;
+		}
+
+		public void Dispose() => _tradeboard.SetId(_previousId);
 	}
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 
 namespace Sapientia
@@ -7,7 +8,7 @@ namespace Sapientia
 	}
 
 	[Serializable]
-	public partial struct Range<T> : IMinMax, IContainer<T>
+	public partial struct Range<T> : IMinMax, IContainer<T>, IEquatable<Range<T>>
 	{
 		public T min;
 		public T max;
@@ -25,6 +26,12 @@ namespace Sapientia
 		{
 			return $"[{min}, {max}]";
 		}
+		public bool Equals(Range<T> other)
+			=> EqualityComparer<T>.Default.Equals(min, other.min) && EqualityComparer<T>.Default.Equals(max, other.max);
+
+		public override bool Equals(object obj) => obj is Range<T> other && Equals(other);
+
+		public override int GetHashCode() => HashCode.Combine(min, max);
 	}
 
 	public static class RangeUtility
