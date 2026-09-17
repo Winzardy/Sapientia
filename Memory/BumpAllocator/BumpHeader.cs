@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Sapientia.Data;
 using Sapientia.Extensions;
 using Submodules.Sapientia.Memory;
@@ -22,9 +23,24 @@ namespace Sapientia.Memory
 	/// через указатель/ссылку в блок — <see cref="SafePtr{T}"/>, <see cref="PtrOffset{T}"/>
 	/// (см. <see cref="BumpHeaderExt"/>) или <c>ref</c>. Любое <c>var copy = ptr.Value();</c> с последующим
 	/// вызовом метода уведёт <c>&amp;this</c> на стековую копию и тихо повредит память.
+	///
+	/// Второй инвариант: <b>каждое выданное смещение кратно <see cref="ALIGN"/></b> (см. <see cref="MemAlloc(int)"/>).
+	/// Без этого 64-битное поле садится на нечётный офсет, и на 32-битном ARM (ARMv7 в списке
+	/// целевых архитектур) его чтение — SIGBUS, а не тихий медленный доступ, как на x64/arm64.
 	/// </summary>
+	// Size задан явно: HeaderSize обязан быть кратен ALIGN, иначе первая же пользовательская
+	// аллокация (корень формата, идущий сразу за заголовком) приезжает на невыровненный офсет.
+	[StructLayout(LayoutKind.Sequential, Size = ALIGN * 2)]
 	public struct BumpHeader
 	{
+		/// <summary>
+		/// Выравнивание всех выдаваемых смещений. Фиксированная константа, а не <c>TAlign&lt;T&gt;</c>:
+		/// раскладка арены обязана совпадать байт-в-байт между выпечкой (редактор, x64) и рантаймом
+		/// (arm64/armv7), иначе запечённый дамп читается по чужим смещениям. 8 покрывает все скалярные
+		/// типы; SIMD-типов (выравнивание 16) в аренах нет.
+		/// </summary>
+		public const int ALIGN = 8;
+
 		private int _reservedSize;
 		private PtrOffset _rover;
 
@@ -51,9 +67,13 @@ namespace Sapientia.Memory
 		/// <paramref name="reservedSize"/> байт (включая место под сам заголовок). Память НЕ выделяется —
 		/// это делает обёртка.
 		/// </summary>
-		public static SafePtr<BumpHeader> Create(SafePtr memory, int reservedSize)
+		public static unsafe SafePtr<BumpHeader> Create(SafePtr memory, int reservedSize)
 		{
 			E.ASSERT(reservedSize > TSize<BumpHeader>.size);
+			// Выравнивание смещений внутри арены бесполезно, если сама база блока не выровнена:
+			// абсолютный адрес поля = база + смещение.
+			E.ASSERT(((ulong)memory.ptr & (ALIGN - 1)) == 0,
+				"[BumpHeader] База блока арены не выровнена — обёртка выдала невыровненную память.");
 
 			ref var result = ref memory.Value<BumpHeader>();
 			result._reservedSize = reservedSize;
@@ -63,12 +83,28 @@ namespace Sapientia.Memory
 			return (SafePtr<BumpHeader>)memory;
 		}
 
+		/// <summary>
+		/// Округляет размер аллокации вверх до <see cref="ALIGN"/>. Расчёт резерва арены обязан
+		/// прогонять через это каждую отдельную аллокацию — иначе прогноз занижен и арена переполнится.
+		/// </summary>
+		public static int Align(int size)
+		{
+			return MemoryExt.Align(size, ALIGN);
+		}
+
 		public PtrOffset MemAlloc(int size)
 		{
 			E.ASSERT(size > 0);
 
-			var result = _rover;
-			_rover += size;
+			// Округляется РАЗМЕР, а не только стартовая позиция: так _rover инвариантно кратен ALIGN,
+			// и расход арены становится композиционным — Σ Align(size_i). Именно на это опирается
+			// предрасчёт резерва (GetReservedSize / ComputeSizeBreakdown), который иначе разъезжается
+			// с фактическим bump на недобитом хвосте последней аллокации.
+			var result = new PtrOffset(MemoryExt.Align(_rover.byteOffset, ALIGN));
+			_rover = result + Align(size);
+
+			E.ASSERT(_rover.byteOffset <= _reservedSize,
+				"[BumpHeader] Арена переполнена: резерв рассчитан без учёта выравнивания аллокаций.");
 
 			return result;
 		}

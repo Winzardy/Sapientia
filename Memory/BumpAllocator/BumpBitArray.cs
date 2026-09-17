@@ -33,7 +33,8 @@ namespace Sapientia.Memory
 		/// <summary>Размер данных в арене для предрасчёта резервируемого размера (сама структура не входит).</summary>
 		public static int GetReservedSize(int length)
 		{
-			return GetWordsCount(length) * TSize<ulong>.size;
+			// Ровно одна аллокация в Alloc — значит ровно одно выравнивание.
+			return BumpHeader.Align(GetWordsCount(length) * TSize<ulong>.size);
 		}
 
 		/// <summary>

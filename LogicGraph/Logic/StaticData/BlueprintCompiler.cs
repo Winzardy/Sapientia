@@ -22,37 +22,50 @@ namespace Sapientia.LogicGraph
 		/// <summary>
 		/// Сколько байт зарезервировать в static-арене. Держится в lockstep с <see cref="SetupLayout"/>
 		/// по нумерованным шагам (1..5) — менять только вместе.
+		///
+		/// Арена округляет вверх КАЖДУЮ аллокацию до <see cref="BumpHeader.ALIGN"/>, поэтому каждое
+		/// слагаемое здесь обёрнуто в <see cref="BumpHeader.Align"/> ПООТДЕЛЬНОСТИ — ровно по одной
+		/// аллокации <see cref="SetupLayout"/> на слагаемое. Выравнивание суммы вместо суммы
+		/// выравниваний занижает резерв, и арена переполняется на длинном графе.
 		/// </summary>
 		public static int CalculateLayoutSizeToReserve(Blueprint blueprint)
 		{
-			var size = TSize<CompiledBlueprintHeader>.size; // 1. сама структура
+			var size = BumpHeader.Align(TSize<CompiledBlueprintHeader>.size); // 1. сама структура
 
 			var nodeCount = blueprint.nodes.Length;
 			if (nodeCount == 0)
 				return size;
 
-			size += TSize<NodeHeader>.size * nodeCount; // 2. заголовки нод (Data)
+			size += BumpHeader.Align(TSize<NodeHeader>.size * nodeCount); // 2. заголовки нод (Data)
 
-			var staticBytes = 0;
+			// 3. static-слайсы нод + константы — каждый аллоцируется отдельно, значит и выравнивается отдельно.
 			foreach (var node in blueprint.nodes)
-				staticBytes += node.DataSizes.GetAligned(MemoryRegion.Static);
-			staticBytes += CalculateConstantsSize(blueprint);
-			size += staticBytes; // 3. static-слайсы нод + константы (каждый аллоцируется отдельно)
+				size += BumpHeader.Align(node.DataSizes.GetAligned(MemoryRegion.Static));
+			size += CalculateConstantsSize(blueprint);
 
-			size += TSize<RegionPtr>.size * CountPorts(blueprint); // 4. блоки In/Out нод (RegionPtr на порт)
+			// 4. блок In/Out — одна аллокация НА НОДУ (нода без портов не аллоцирует ничего).
+			foreach (var node in blueprint.nodes)
+			{
+				var portCount = (node.GetInputs()?.Length ?? 0) + (node.GetOutputs()?.Length ?? 0);
+				size += BumpHeader.Align(portCount * TSize<RegionPtr>.size);
+			}
 
 			// 5. nodeMap: массив relatives + рёбра (inputs/outputs нод) + startNodes.
 			var adjacency = BuildAdjacency(blueprint);
-			size += TSize<NodeRelativesHeader>.size * nodeCount; // 5a. массив relatives (по ноде)
+			size += BumpHeader.Align(TSize<NodeRelativesHeader>.size * nodeCount); // 5a. массив relatives (по ноде)
 			for (var i = 0; i < nodeCount; i++)
-				size += (adjacency.preds[i].Length + adjacency.succs[i].Length) * TSize<Id<NodeHeader>>.size; // 5b. рёбра
-			size += adjacency.startNodes.Length * TSize<Id<NodeHeader>>.size; // 5c. корни
+			{
+				// 5b. рёбра: inputs и outputs ноды — ДВЕ независимые аллокации, не одна на сумму.
+				size += BumpHeader.Align(adjacency.preds[i].Length * TSize<Id<NodeHeader>>.size);
+				size += BumpHeader.Align(adjacency.succs[i].Length * TSize<Id<NodeHeader>>.size);
+			}
+			size += BumpHeader.Align(adjacency.startNodes.Length * TSize<Id<NodeHeader>>.size); // 5c. корни
 
 			// 7. contextTypes: дедуп-union типов ambient-контекста (шаг 6 — флаги NodeState — памяти не занимает).
-			size += TSize<TypeId<INodeContext>>.size * BuildContextTypes(blueprint).Length;
+			size += BumpHeader.Align(TSize<TypeId<INodeContext>>.size * BuildContextTypes(blueprint).Length);
 
 			// 8. cacheCellsTemplate: шаблон Cache-ячеек (по ordinal) с забейканным valueOffset. Значения — per-instance off-allocator.
-			size += TSize<CacheLink>.size * CountCacheCells(blueprint);
+			size += BumpHeader.Align(TSize<CacheLink>.size * CountCacheCells(blueprint));
 
 			return size;
 		}
@@ -420,6 +433,10 @@ namespace Sapientia.LogicGraph
 			return MemoryRegion.Cache;
 		}
 
+		/// <summary>
+		/// Суммарный расход арены под константы. Каждая константа — отдельная аллокация в
+		/// <see cref="SetupMap"/>, поэтому складываются уже выровненные размеры.
+		/// </summary>
 		private static int CalculateConstantsSize(Blueprint blueprint)
 		{
 			if (blueprint.outputs == null)
@@ -446,21 +463,9 @@ namespace Sapientia.LogicGraph
 				placed ??= new HashSet<NodeOutput>();
 				if (!placed.Add(output))
 					continue;
-				size += output.DataSize.AlignUp(DataSizes.Alignment);
+				size += BumpHeader.Align(output.DataSize.AlignUp(DataSizes.Alignment));
 			}
 			return size;
-		}
-
-		private static int CountPorts(Blueprint blueprint)
-		{
-			var count = 0;
-			foreach (var node in blueprint.nodes)
-			{
-				var inputs = node.GetInputs();
-				var outputs = node.GetOutputs();
-				count += (inputs?.Length ?? 0) + (outputs?.Length ?? 0);
-			}
-			return count;
 		}
 
 		/// <summary>Число Cache-ячеек = число Out'ов в Cache-регионе (тот же критерий, что <see cref="GetOutputRegion"/>;
