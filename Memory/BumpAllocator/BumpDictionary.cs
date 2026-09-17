@@ -46,7 +46,9 @@ namespace Sapientia.Memory
 		/// </summary>
 		public static int GetReservedSize(int count)
 		{
-			return GetBucketsCount(count) * TSize<int>.size + count * TSize<Entry>.size;
+			// Две аллокации в Fill (buckets, затем entries) — выравнивание считается по каждой отдельно.
+			return BumpHeader.Align(GetBucketsCount(count) * TSize<int>.size) +
+				BumpHeader.Align(count * TSize<Entry>.size);
 		}
 
 		/// <summary>
