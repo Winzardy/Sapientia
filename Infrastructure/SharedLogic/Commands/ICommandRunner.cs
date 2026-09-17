@@ -19,8 +19,7 @@ namespace SharedLogic
 
 		/// <summary>
 		/// Такая же команда уже принята, но ещё не исполнена. Сравнение через
-		/// <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/>, поэтому команде стоит
-		/// реализовать <see cref="System.IEquatable{T}"/>. У синхронного раннера очереди нет
+		/// <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/>. У синхронного раннера очереди нет
 		/// </summary>
 		bool HasPending<T>(in T command) where T : struct, ICommand => false;
 	}

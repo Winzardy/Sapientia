@@ -14,6 +14,10 @@ namespace SharedLogic
 		Immediately,
 	}
 
+	/// <remarks>
+	/// Команда, реализующая <see cref="IEquatable{T}"/>, уникальна в очереди клиента: пока такая же ждёт
+	/// исполнения, повтор отбрасывается
+	/// </remarks>
 	public interface ICommand
 	{
 		CommandPriority Priority { get => CommandPriority.Passive; }
