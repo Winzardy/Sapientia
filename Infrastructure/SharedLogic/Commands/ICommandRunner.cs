@@ -16,6 +16,13 @@ namespace SharedLogic
 		/// </remarks>
 		bool Execute<T>(in T command) where T : struct, ICommand;
 		bool IsEmpty { get; }
+
+		/// <summary>
+		/// Такая же команда уже принята, но ещё не исполнена. Сравнение через
+		/// <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/>, поэтому команде стоит
+		/// реализовать <see cref="System.IEquatable{T}"/>. У синхронного раннера очереди нет
+		/// </summary>
+		bool HasPending<T>(in T command) where T : struct, ICommand => false;
 	}
 
 	public abstract class CommandRunnerDecorator : ICommandRunner
@@ -33,5 +40,10 @@ namespace SharedLogic
 		}
 
 		public virtual bool IsEmpty => _runner.IsEmpty;
+
+		public virtual bool HasPending<T>(in T command) where T : struct, ICommand
+		{
+			return _runner.HasPending(in command);
+		}
 	}
 }
