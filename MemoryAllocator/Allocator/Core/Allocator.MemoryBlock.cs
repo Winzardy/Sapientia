@@ -6,9 +6,19 @@ namespace Sapientia.MemoryAllocator
 {
 	public partial struct Allocator
 	{
-		[StructLayout(LayoutKind.Sequential)]
+		// Размер обязан быть кратен BLOCK_ALIGN: данные блока лежат сразу за этой структурой, поэтому
+		// её размер и есть выравнивание выдаваемых указателей. Без Size DEBUG-сборка давала 20 байт
+		// (8+4+4+4) — и любое 64-битное поле в выданной памяти садилось на офсет, кратный 4, что на
+		// 32-битном ARM читается как SIGBUS.
+		[StructLayout(LayoutKind.Sequential, Size = SIZE)]
 		public struct MemoryBlock
 		{
+#if DEBUG
+			private const int SIZE = 24;
+#else
+			private const int SIZE = 16;
+#endif
+
 			public BlockId id;
 
 			public int prevBlockOffset; // Смещение к предыдущему блоку. Меньше нуля, иначе предыдущего блока нет.
